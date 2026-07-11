@@ -113,7 +113,8 @@ export default function CommentsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Comments</h1>
         <p className="mt-1 text-slate-600">
-          Ask the group something or raise an issue. The supervisor can reply to any comment.
+          Ask the group something or raise an issue. Once posted, a comment can&apos;t be edited — only the supervisor
+          can remove it.
         </p>
       </div>
 

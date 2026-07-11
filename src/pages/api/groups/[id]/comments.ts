@@ -47,7 +47,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       authorName: c.user.name,
       createdAt: c.createdAt.toISOString(),
       repliedAt: c.repliedAt ? c.repliedAt.toISOString() : null,
-      canDelete: c.userId === sessionUser.id || canReply
+      canDelete: canReply
     }));
 
     return ok(res, { comments, canReply, currentUserId: sessionUser.id });

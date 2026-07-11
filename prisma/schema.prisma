@@ -29,6 +29,7 @@ model User {
   mealPlans       MealPlan[]
   expensePayments ExpenseEntry[]    @relation("ExpensePayer")
   expenseHistory  ExpenseHistory[]  @relation("ExpenseHistoryActor")
+  expenseComments ExpenseComment[]  @relation("ExpenseCommentAuthor")
   payments        PaymentStatus[]
   groupsSupervised Group[]          @relation("GroupSupervisor")
   invitationsReceived Invitation[]  @relation("InvitationInvitee")
@@ -213,6 +214,42 @@ model ExpenseEntry {
   publishedAt   DateTime?
   unpublishedAt DateTime?
   payments      PaymentStatus[]
+  items         ExpenseItem[]
+  comments      ExpenseComment[]
+}
+
+model ExpenseItem {
+  id            String       @id @default(uuid())
+  expense       ExpenseEntry @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenseId     String
+  name          String
+  amount        Float
+  sortOrder     Int          @default(0)
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @updatedAt @default(now())
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+}
+
+model ExpenseComment {
+  id            String       @id @default(uuid())
+  expense       ExpenseEntry @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenseId     String
+  user          User         @relation("ExpenseCommentAuthor", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  groupId       String
+  text          String
+  deletedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @updatedAt @default(now())
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
 }
 
 model PaymentStatus {

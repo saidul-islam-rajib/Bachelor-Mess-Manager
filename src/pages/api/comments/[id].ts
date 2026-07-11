@@ -61,8 +61,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  if (comment.userId !== sessionUser.id && !isSupervisor && !admin) {
-    return forbidden(res, 'You can only delete your own comment.');
+  if (!isSupervisor && !admin) {
+    return forbidden(res, 'Only the group supervisor can delete comments.');
   }
 
   await prisma.comment.update({ where: { id: commentId }, data: { deletedAt: new Date() } });
