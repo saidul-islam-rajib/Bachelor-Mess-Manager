@@ -17,7 +17,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isAuthPage = router.pathname.startsWith('/auth');
 
-  // Close the mobile menu whenever navigation completes.
   useEffect(() => {
     const close = () => setOpen(false);
     router.events.on('routeChangeComplete', close);
@@ -41,7 +40,6 @@ export default function Layout({ children }: { children: ReactNode }) {
     links.push({ href: ROUTES.profile, label: 'Profile' });
   }
 
-  // "/groups" stays highlighted while on "/groups/[groupId]".
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(`${href}/`);
 
   const showAuthLinks = !user && !loading && !isAuthPage;
@@ -56,7 +54,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             onClick={() => setOpen(false)}
           >
             <Logo className="h-9 w-auto lg:h-10" />
-            <span className="hidden xl:inline">{STRINGS.layout.appName}</span>
+            <span className="hidden xl:inline">{STRINGS.appName}</span>
           </Link>
 
           <nav className="hidden items-center gap-1 text-sm lg:flex">

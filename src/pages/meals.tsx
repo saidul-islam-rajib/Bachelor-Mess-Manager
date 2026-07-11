@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
+import MealPlanCard from '@/components/MealPlanCard';
 import { daysInMonth, todayKey } from '@/lib/month';
 
 type Member = { id: string; name: string; email: string };
@@ -111,6 +112,7 @@ export default function MealsPage() {
   const isMe = (id: string) => user?.id === id;
   const me = summary?.members.find((m) => m.id === user?.id);
   const others = members.filter((m) => !isMe(m.id));
+  const belongsToGroup = members.some((m) => isMe(m.id));
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
@@ -134,6 +136,8 @@ export default function MealsPage() {
             )}
           </Card>
 
+          {groupId && belongsToGroup && <MealPlanCard groupId={groupId} onApplied={load} />}
+
           {loading ? (
             <Card>Loading meals...</Card>
           ) : (
@@ -150,8 +154,6 @@ export default function MealsPage() {
                   />
                 </div>
               )}
-
-              {/* Phone: one card per day. The member x meal matrix below only works on a wide screen. */}
               <ul className="space-y-3 lg:hidden">
                 {days.map((date) => {
                   const info = dayInfo[date];
@@ -219,8 +221,6 @@ export default function MealsPage() {
                   );
                 })}
               </ul>
-
-              {/* Desktop: the full member x day matrix. */}
               <div className="hidden overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm lg:block">
                 <table className="min-w-full border-collapse text-center text-sm">
                   <thead>
@@ -346,8 +346,6 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
           Total spent {taka(summary.totals.expense)} · {summary.totals.meals} meals
         </p>
       </div>
-
-      {/* Desktop table. */}
       <div className="mt-4 hidden overflow-x-auto sm:block">
         <table className="min-w-full text-sm">
           <thead>
@@ -378,8 +376,6 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
           </tbody>
         </table>
       </div>
-
-      {/* Phone cards. */}
       <ul className="mt-4 space-y-3 sm:hidden">
         {summary.members.map((m) => (
           <li key={m.id} className="rounded-2xl border border-slate-200 p-4">

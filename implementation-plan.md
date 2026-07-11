@@ -1,4 +1,4 @@
-# Mess Management App Implementation Plan
+# Bachelor Point App Implementation Plan
 
 ## 1. Technology Stack
 - Frontend: Next.js (React)

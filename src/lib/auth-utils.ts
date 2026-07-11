@@ -28,7 +28,6 @@ export function requireSupervisorOrAdmin(user: { role?: string } | null) {
   return user?.role === 'ADMIN' || user?.role === 'SUPERVISOR';
 }
 
-// A user "belongs" to a group if they supervise it or have an active membership.
 export async function isGroupMember(groupId: string, userId: string) {
   const group = await prisma.group.findUnique({ where: { id: groupId }, select: { supervisorId: true } });
   if (!group) return false;

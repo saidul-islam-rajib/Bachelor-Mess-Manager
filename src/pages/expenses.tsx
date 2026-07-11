@@ -12,12 +12,60 @@ type Expense = {
   payer: { id: string; name: string; email: string } | null;
 };
 
+type HistoryEvent = {
+  id: string;
+  action: 'CREATED' | 'UPDATED' | 'DELETED' | string;
+  actorName: string;
+  amountFrom: number | null;
+  amountTo: number | null;
+  dateFrom: string | null;
+  dateTo: string | null;
+  noteFrom: string | null;
+  noteTo: string | null;
+  at: string;
+};
+
+const taka = (n: number) => `৳${n.toFixed(2)}`;
+
+function describe(event: HistoryEvent) {
+  const label = event.noteTo || event.noteFrom || 'a purchase';
+
+  if (event.action === 'CREATED') {
+    return `added ${label} for ${event.amountTo !== null ? taka(event.amountTo) : ''}`;
+  }
+  if (event.action === 'DELETED') {
+    return `deleted ${label}${event.amountFrom !== null ? ` (${taka(event.amountFrom)})` : ''}`;
+  }
+
+  const parts: string[] = [];
+  if (event.amountFrom !== null && event.amountTo !== null) {
+    parts.push(`price ${taka(event.amountFrom)} → ${taka(event.amountTo)}`);
+  }
+  if (event.dateFrom && event.dateTo) {
+    parts.push(`date ${event.dateFrom} → ${event.dateTo}`);
+  }
+  if (event.noteFrom !== null && event.noteTo !== null) {
+    parts.push(`note "${event.noteFrom}" → "${event.noteTo}"`);
+  }
+  return `changed ${parts.join(', ')}`;
+}
+
+function when(iso: string) {
+  return new Date(iso).toLocaleString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit'
+  });
+}
+
 export default function ExpensesPage() {
   const { user } = useCurrentUser();
   const toast = useToast();
   const { groups, groupId, setGroupId, month, setMonth, loadingGroups } = useGroupMonth();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [history, setHistory] = useState<HistoryEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [date, setDate] = useState(todayKey());
   const [amount, setAmount] = useState('');
@@ -32,8 +80,12 @@ export default function ExpensesPage() {
     if (!groupId) return;
     setLoading(true);
     try {
-      const data = await fetch(`/api/groups/${groupId}/expenses?month=${month}`).then((r) => r.json());
+      const [data, historyData] = await Promise.all([
+        fetch(`/api/groups/${groupId}/expenses?month=${month}`).then((r) => r.json()),
+        fetch(`/api/groups/${groupId}/expense-history`).then((r) => r.json())
+      ]);
       setExpenses(data.expenses || []);
+      setHistory(historyData.history || []);
     } finally {
       setLoading(false);
     }
@@ -230,10 +282,55 @@ export default function ExpensesPage() {
                 </ul>
               )}
             </div>
+
+            <ChangeHistory history={history} />
           </div>
         )}
       </section>
     </main>
+  );
+}
+
+function ChangeHistory({ history }: { history: HistoryEvent[] }) {
+  const tone: Record<string, string> = {
+    CREATED: 'bg-green-50 text-green-700 ring-green-600/20',
+    UPDATED: 'bg-amber-50 text-amber-700 ring-amber-600/20',
+    DELETED: 'bg-red-50 text-red-700 ring-red-600/20'
+  };
+  const label: Record<string, string> = { CREATED: 'Added', UPDATED: 'Changed', DELETED: 'Deleted' };
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold">Change history</h2>
+      <p className="mt-1 text-sm text-slate-500">
+        Every edit to a grocery price is recorded here so the whole group can see it.
+      </p>
+
+      {history.length === 0 ? (
+        <p className="mt-4 text-slate-500">No changes recorded yet.</p>
+      ) : (
+        <ul className="mt-4 divide-y divide-slate-100">
+          {history.map((event) => (
+            <li key={event.id} className="flex flex-wrap items-start justify-between gap-2 py-3">
+              <div className="min-w-0">
+                <p className="text-sm">
+                  <span className="font-medium">{event.actorName}</span>{' '}
+                  <span className="text-slate-600">{describe(event)}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-slate-400">{when(event.at)}</p>
+              </div>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+                  tone[event.action] ?? tone.UPDATED
+                }`}
+              >
+                {label[event.action] ?? event.action}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 

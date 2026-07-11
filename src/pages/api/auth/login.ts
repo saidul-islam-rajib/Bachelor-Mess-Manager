@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword, serializeCookie } from '@/lib/auth';
 import { USER_STATUS } from '@/lib/constants';
 import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return methodNotAllowed(res, ['POST']);
   }
@@ -33,3 +34,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return ok(res, { user: { id: user.id, name: user.name, email: user.email, role: user.role } });
 }
+
+export default withAudit(handler);

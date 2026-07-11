@@ -194,7 +194,6 @@ function MemberBalances({ members, currentUserId }: { members: MemberRow[]; curr
         <p className="mt-4 text-slate-500">No active members.</p>
       ) : (
         <>
-          {/* Desktop: full table. */}
           <div className="mt-4 hidden overflow-x-auto md:block">
             <table className="min-w-full text-sm">
               <thead>
@@ -231,8 +230,6 @@ function MemberBalances({ members, currentUserId }: { members: MemberRow[]; curr
               </tbody>
             </table>
           </div>
-
-          {/* Mobile: one card per member — a 7-column table is unreadable on a phone. */}
           <ul className="mt-4 space-y-3 md:hidden">
             {members.map((m) => (
               <li key={m.id} className="rounded-2xl border border-slate-200 p-4">

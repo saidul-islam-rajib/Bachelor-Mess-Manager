@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
 const SETTINGS_ID = 'singleton';
 
@@ -14,7 +15,7 @@ async function getSettings() {
   });
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Public read so the footer can render for everyone.
   if (req.method === 'GET') {
     return ok(res, { settings: await getSettings() });
@@ -70,3 +71,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return methodNotAllowed(res, ['GET', 'PATCH']);
 }
+
+export default withAudit(handler);

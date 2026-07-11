@@ -5,7 +5,7 @@ import { useState } from 'react';
 // Bump this if the logo file changes, to bust stale browser caches.
 const LOGO_VERSION = '2';
 
-export default function Logo({ className = 'h-9 w-auto', alt = 'Mess Management Logo' }: { className?: string; alt?: string }) {
+export default function Logo({ className = 'h-9 w-auto', alt = 'Bachelor Point Logo' }: { className?: string; alt?: string }) {
   const [src, setSrc] = useState(`/logo.png?v=${LOGO_VERSION}`);
   return (
     <img

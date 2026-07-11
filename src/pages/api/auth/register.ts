@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/lib/auth';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { badRequest, conflict, created, methodNotAllowed } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return methodNotAllowed(res, ['POST']);
   }
@@ -35,3 +36,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     message: 'Registration submitted. An admin will review your account, and you can sign in once it is approved.'
   });
 }
+
+export default withAudit(handler);

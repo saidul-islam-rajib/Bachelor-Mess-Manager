@@ -1,4 +1,4 @@
-# Mess Management Website Requirements
+# Bachelor Point Website Requirements
 
 ## Overview
 A dynamic mess management website built with Next.js for bachelor mess/flat living. The system must support:

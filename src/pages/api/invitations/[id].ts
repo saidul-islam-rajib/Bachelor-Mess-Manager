@@ -3,10 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { INVITATION_STATUS } from '@/lib/constants';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
 const ALLOWED_RESPONSES = [INVITATION_STATUS.ACCEPTED, INVITATION_STATUS.REJECTED] as string[];
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH' && req.method !== 'DELETE') {
     return methodNotAllowed(res, ['PATCH', 'DELETE']);
   }
@@ -71,3 +72,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return ok(res, { invitation: updated });
 }
+
+export default withAudit(handler);

@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth-utils';
 import { hashPassword } from '@/lib/auth';
 import { badRequest, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH') {
     return methodNotAllowed(res, ['PATCH']);
   }
@@ -42,3 +43,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return ok(res, { user });
 }
+
+export default withAudit(handler);

@@ -1,4 +1,4 @@
-# Mess Management App
+# Bachelor Point App
 
 ## Overview
 This is a Next.js-based mess management application designed for bachelor mess/shared flat living. It uses Tailwind CSS for styling, Jotai for state management, Prisma with Microsoft SQL Server for the database, and Next.js API routes for backend logic.

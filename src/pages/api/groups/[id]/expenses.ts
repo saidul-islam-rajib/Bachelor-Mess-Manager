@@ -3,8 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { dayToUtcDate, parseMonth, utcDateToDay } from '@/lib/month';
+import { recordExpenseCreated } from '@/lib/expense-history';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
@@ -69,8 +71,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
+    await recordExpenseCreated({
+      expenseId: expense.id,
+      groupId,
+      actorId: sessionUser.id,
+      next: { amount: expense.amount, date: expense.date, note: expense.note }
+    });
+
     return created(res, { expense: { id: expense.id, date: utcDateToDay(expense.date), amount: expense.amount, note: expense.note } });
   }
 
   return methodNotAllowed(res, ['GET', 'POST']);
 }
+
+export default withAudit(handler);

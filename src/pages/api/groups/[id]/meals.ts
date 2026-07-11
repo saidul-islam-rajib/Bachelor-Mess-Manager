@@ -3,8 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { dayToUtcDate, parseMonth, todayKey, utcDateToDay } from '@/lib/month';
+import { syncPlansForMonth } from '@/lib/meal-plan';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
@@ -29,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'GET') {
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
+    await syncPlansForMonth(groupId, monthKey);
 
     const memberships = await prisma.membership.findMany({
       where: { groupId, isActive: true },
@@ -70,14 +73,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!body.date || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
       return badRequest(res, 'A valid date (YYYY-MM-DD) is required.');
     }
-
-    // Members set their own meals; only an admin may edit another member's row.
     const targetUserId = admin && body.userId ? body.userId : sessionUser.id;
     if (targetUserId !== sessionUser.id && !admin) {
       return forbidden(res, 'You can only edit your own meals.');
     }
-
-    // Past dates are locked for everyone except admins.
     if (!admin && body.date < todayKey()) {
       return forbidden(res, 'Past dates are locked. You can only edit today or upcoming days.');
     }
@@ -91,10 +90,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const lunch = Math.max(0, Math.trunc(Number(body.lunch ?? 0)));
     const dinner = Math.max(0, Math.trunc(Number(body.dinner ?? 0)));
     const date = dayToUtcDate(body.date);
-
     const entry = await prisma.mealEntry.upsert({
       where: { userId_groupId_date: { userId: targetUserId, groupId, date } },
-      update: { breakfastCount: breakfast, lunchCount: lunch, dinnerCount: dinner, totalMeals: breakfast + lunch + dinner },
+      update: {
+        breakfastCount: breakfast,
+        lunchCount: lunch,
+        dinnerCount: dinner,
+        totalMeals: breakfast + lunch + dinner,
+        fromPlan: false
+      },
       create: {
         userId: targetUserId,
         groupId,
@@ -102,7 +106,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         breakfastCount: breakfast,
         lunchCount: lunch,
         dinnerCount: dinner,
-        totalMeals: breakfast + lunch + dinner
+        totalMeals: breakfast + lunch + dinner,
+        fromPlan: false
       }
     });
 
@@ -119,3 +124,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return methodNotAllowed(res, ['GET', 'PUT']);
 }
+
+export default withAudit(handler);

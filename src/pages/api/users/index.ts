@@ -3,11 +3,12 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
+import { withAudit } from '@/lib/with-audit';
 
 const VALID_STATUSES = Object.values(USER_STATUS) as string[];
 const VALID_ROLES = Object.values(USER_ROLES) as string[];
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return methodNotAllowed(res, ['GET']);
   }
@@ -39,3 +40,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return ok(res, { users });
 }
+
+export default withAudit(handler);

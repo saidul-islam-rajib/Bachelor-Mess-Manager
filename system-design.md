@@ -1,4 +1,4 @@
-# Mess Management System Design
+# Bachelor Point System Design
 
 ## Overview
 This document describes the high-level system design for a dynamic mess management platform. The platform supports web and mobile clients, a Next.js frontend, a backend API, and a database to manage groups, members, meals, expenses, payments, and comments.

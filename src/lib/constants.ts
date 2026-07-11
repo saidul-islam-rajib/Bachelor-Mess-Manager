@@ -1,18 +1,3 @@
-export const APP_TITLE = 'Mess Management';
-
-export const ROUTES = {
-  home: '/',
-  login: '/auth/login',
-  register: '/auth/register',
-  dashboard: '/dashboard',
-  profile: '/profile',
-  meals: '/meals',
-  expenses: '/expenses',
-  payments: '/payments',
-  members: '/members',
-  comments: '/comments'
-};
-
 export const USER_ROLES = {
   ADMIN: 'ADMIN',
   SUPERVISOR: 'SUPERVISOR',
@@ -47,3 +32,16 @@ export const PAYMENT_STATUS = {
   PENDING: 'PENDING',
   PARTIAL: 'PARTIAL'
 } as const;
+
+export const WEEKDAYS = [
+  { value: 0, label: 'Sunday', short: 'Sun' },
+  { value: 1, label: 'Monday', short: 'Mon' },
+  { value: 2, label: 'Tuesday', short: 'Tue' },
+  { value: 3, label: 'Wednesday', short: 'Wed' },
+  { value: 4, label: 'Thursday', short: 'Thu' },
+  { value: 5, label: 'Friday', short: 'Fri' },
+  { value: 6, label: 'Saturday', short: 'Sat' }
+] as const;
+
+export const MEAL_FIELDS = ['breakfast', 'lunch', 'dinner'] as const;
+export type MealField = (typeof MEAL_FIELDS)[number];

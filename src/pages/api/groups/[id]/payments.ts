@@ -5,14 +5,9 @@ import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unautho
 import { buildMealSummary } from '@/lib/meal-summary';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
+import { withAudit } from '@/lib/with-audit';
 
-// A PaymentStatus row is one payment a member handed to the mess fund. What each
-// member still owes is derived, not stored: cost (their meal share) minus what
-// they fronted for groceries minus what they have handed over.
-//   due > 0  -> member owes the mess
-//   due < 0  -> the mess owes the member back
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
@@ -31,8 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!(await isGroupMember(groupId, sessionUser.id)) && !requireAdmin(sessionUser)) {
     return forbidden(res, 'You are not a member of this group.');
   }
-
-  // Only the group's supervisor (or an admin) records money coming in.
   const canManage = group.supervisorId === sessionUser.id || requireAdmin(sessionUser);
 
   if (req.method === 'GET') {
@@ -148,3 +141,5 @@ function paymentState(cost: number, settled: number) {
   if (settled + 0.01 < cost) return PAYMENT_STATUS.PARTIAL;
   return PAYMENT_STATUS.PAID;
 }
+
+export default withAudit(handler);
