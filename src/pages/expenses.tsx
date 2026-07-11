@@ -79,6 +79,7 @@ export default function ExpensesPage() {
   const [isSupervisor, setIsSupervisor] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [addOpen, setAddOpen] = useState(false);
   const [date, setDate] = useState(todayKey());
   const [rows, setRows] = useState<Draft[]>([blankRow(), blankRow()]);
   const [note, setNote] = useState('');
@@ -234,10 +235,28 @@ export default function ExpensesPage() {
           </Card>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-lg font-semibold">Add a purchase</h2>
-            <p className="mt-1 text-sm text-slate-500">List each product with its price. The total is added up for you.</p>
+            <button
+              type="button"
+              onClick={() => setAddOpen((v) => !v)}
+              aria-expanded={addOpen}
+              className="flex w-full items-start justify-between gap-3 text-left"
+            >
+              <span>
+                <span className="block text-lg font-semibold">Add a purchase</span>
+                <span className="mt-1 block text-sm text-slate-500">
+                  List each product with its price. The total is added up for you.
+                </span>
+              </span>
+              <span
+                aria-hidden
+                className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 text-lg leading-none text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              >
+                {addOpen ? '−' : '+'}
+              </span>
+            </button>
 
-            <form className="mt-4" onSubmit={add}>
+            {addOpen && (
+            <form className="mt-5 border-t border-slate-100 pt-5" onSubmit={add}>
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                 <label className="sm:w-48">
                   <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Date</span>
@@ -272,6 +291,7 @@ export default function ExpensesPage() {
                 </button>
               </div>
             </form>
+            )}
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -286,15 +306,15 @@ export default function ExpensesPage() {
               <p className="mt-4 text-slate-500">No purchases logged this month.</p>
             ) : (
               <>
-                <div className="mt-4 hidden overflow-x-auto lg:block">
-                  <table className="min-w-full border-collapse text-sm">
+                <div className="mt-4 hidden lg:block">
+                  <table className="w-full table-fixed border-collapse text-sm">
                     <thead>
                       <tr className="border-y border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                        <th className="w-40 px-3 py-2">Date</th>
-                        <th className="w-44 px-3 py-2">Member</th>
-                        <th className="px-3 py-2">Products</th>
-                        <th className="w-28 px-3 py-2 text-right">Amount</th>
-                        <th className="w-96 px-3 py-2">Comments</th>
+                        <th className="w-[15%] px-3 py-2">Date</th>
+                        <th className="w-[17%] px-3 py-2">Member</th>
+                        <th className="w-[25%] px-3 py-2">Products</th>
+                        <th className="w-[11%] px-3 py-2 text-right">Amount</th>
+                        <th className="w-[32%] px-3 py-2">Comments</th>
                       </tr>
                     </thead>
 
@@ -331,7 +351,10 @@ export default function ExpensesPage() {
                                 return (
                                   <tr key={item.id} className="border-t border-slate-100 align-top">
                                     {showDate && (
-                                      <td rowSpan={dateRowCount} className="bg-slate-50/60 px-3 py-3 font-medium">
+                                      <td
+                                        rowSpan={dateRowCount}
+                                        className="bg-slate-50/60 px-3 py-3 text-center align-middle font-medium"
+                                      >
                                         {longDate(day)}
                                         <span className="mt-1 block text-xs font-normal text-slate-500">
                                           Day total {taka(dayTotal)}
@@ -352,25 +375,15 @@ export default function ExpensesPage() {
                                           <span className="mt-1 block text-xs italic text-slate-400">{expense.note}</span>
                                         )}
                                         {canEditExpense(expense) && (
-                                          <span className="mt-2 flex gap-2">
-                                            <button
-                                              onClick={() => startEdit(expense)}
-                                              className="rounded-full border border-slate-300 px-2.5 py-0.5 text-xs text-slate-600 hover:bg-slate-100"
-                                            >
-                                              Edit
-                                            </button>
-                                            <button
-                                              onClick={() => removeExpense(expense.id)}
-                                              className="rounded-full border border-red-200 px-2.5 py-0.5 text-xs text-red-600 hover:bg-red-50"
-                                            >
-                                              Delete
-                                            </button>
+                                          <span className="mt-2 flex gap-1.5">
+                                            <EditButton onClick={() => startEdit(expense)} />
+                                            <DeleteButton onClick={() => removeExpense(expense.id)} />
                                           </span>
                                         )}
                                       </td>
                                     )}
 
-                                    <td className="px-3 py-2 text-slate-700">{item.name}</td>
+                                    <td className="break-words px-3 py-2 text-slate-700">{item.name}</td>
                                     <td className="px-3 py-2 text-right tabular-nums text-slate-700">
                                       {taka(item.amount)}
                                     </td>
@@ -449,19 +462,9 @@ export default function ExpensesPage() {
                               </ul>
 
                               {canEditExpense(expense) && (
-                                <div className="mt-3 flex gap-2">
-                                  <button
-                                    onClick={() => startEdit(expense)}
-                                    className="rounded-full border border-slate-300 px-3 py-1 text-xs text-slate-600 hover:bg-slate-100"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => removeExpense(expense.id)}
-                                    className="rounded-full border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
-                                  >
-                                    Delete
-                                  </button>
+                                <div className="mt-3 flex gap-1.5">
+                                  <EditButton onClick={() => startEdit(expense)} />
+                                  <DeleteButton onClick={() => removeExpense(expense.id)} />
                                 </div>
                               )}
 
@@ -657,51 +660,63 @@ function CommentBox({
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       {comments.length === 0 ? (
         <p className="text-xs text-slate-400">No comments yet.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-1.5">
           {comments.map((c) => (
-            <li key={c.id} className="rounded-xl bg-slate-50 px-3 py-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-slate-700">
-                    {c.authorName}
-                    {c.authorId === currentUserId && <span className="ml-1 text-green-600">(you)</span>}
-                    <span className="ml-2 font-normal text-slate-400">{when(c.createdAt)}</span>
-                  </p>
-                  <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-700">{c.text}</p>
-                </div>
+            <li key={c.id} className="group/comment rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+              <div className="flex items-center gap-2">
+                <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600">
+                  {c.authorName}
+                  {c.authorId === currentUserId && <span className="ml-1 text-green-600">(you)</span>}
+                  <span className="ml-2 font-normal text-slate-400">{when(c.createdAt)}</span>
+                </p>
                 {canDelete && (
                   <button
                     onClick={() => onDelete(c.id)}
                     aria-label="Delete comment"
-                    className="shrink-0 rounded-full border border-red-200 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50"
+                    title="Delete comment"
+                    className="-mr-1 shrink-0 rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover/comment:text-slate-400"
                   >
-                    ×
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4h8v2" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                    </svg>
                   </button>
                 )}
               </div>
+              <p className="mt-0.5 break-words text-sm text-slate-700">{c.text}</p>
             </li>
           ))}
         </ul>
       )}
 
-      <form className="mt-2 flex gap-2" onSubmit={submit}>
+      <form className="mt-2 flex items-center gap-1.5" onSubmit={submit}>
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={500}
           placeholder="Add a comment"
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-sm"
+          className="w-full min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
         />
         <button
           type="submit"
           disabled={busy || !text.trim()}
-          className="shrink-0 rounded-full bg-slate-900 px-4 py-1.5 text-xs text-white hover:bg-slate-700 disabled:opacity-40"
+          aria-label="Post comment"
+          title="Post comment"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white transition-colors hover:bg-slate-700 disabled:bg-slate-200 disabled:text-slate-400"
         >
-          {busy ? '...' : 'Post'}
+          {busy ? (
+            <span className="text-xs">···</span>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 2L11 13" />
+              <path d="M22 2l-7 20-4-9-9-4 20-7Z" />
+            </svg>
+          )}
         </button>
       </form>
     </div>
@@ -748,6 +763,37 @@ function ChangeHistory({ history }: { history: HistoryEvent[] }) {
         </ul>
       )}
     </div>
+  );
+}
+
+function EditButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+      Edit
+    </button>
+  );
+}
+
+function DeleteButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:border-red-200 hover:bg-red-100 hover:text-red-700"
+    >
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 6h18" />
+        <path d="M8 6V4h8v2" />
+        <path d="M19 6l-1 14H6L5 6" />
+      </svg>
+      Delete
+    </button>
   );
 }
 

@@ -130,7 +130,7 @@ export default function CommentsPage() {
               <select
                 value={groupId}
                 onChange={(e) => setGroupId(e.target.value)}
-                className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5"
+                className="app-select mt-1"
               >
                 {groups.map((g) => (
                   <option key={g.id} value={g.id}>

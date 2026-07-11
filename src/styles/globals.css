@@ -17,3 +17,17 @@ body {
 * {
   @apply box-border;
 }
+
+@layer components {
+  .app-select {
+    @apply w-full appearance-none rounded-2xl border border-slate-300 bg-white py-2.5 pl-4 pr-11 text-slate-900;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2364748b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.9rem center;
+    background-size: 1.15rem 1.15rem;
+  }
+
+  .app-select:focus {
+    @apply border-slate-900 outline-none ring-1 ring-slate-900;
+  }
+}

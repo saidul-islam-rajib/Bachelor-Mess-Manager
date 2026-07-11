@@ -134,7 +134,7 @@ export default function PaymentsPage() {
                       value={payerId}
                       onChange={(e) => setPayerId(e.target.value)}
                       required
-                      className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+                      className="app-select !rounded-xl !py-2"
                     >
                       <option value="">Select member</option>
                       {data.members.map((m) => (
