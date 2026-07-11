@@ -4,6 +4,7 @@ import '../styles/globals.css';
 import Layout from '@/components/Layout';
 import { ToastProvider } from '@/components/ToastProvider';
 import { UserProvider } from '@/components/UserProvider';
+import { InvitationsProvider } from '@/components/InvitationsProvider';
 import { STRINGS } from '@/lib/strings';
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -16,9 +17,11 @@ export default function App({ Component, pageProps }: AppProps) {
       </Head>
       <ToastProvider>
         <UserProvider>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
+          <InvitationsProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </InvitationsProvider>
         </UserProvider>
       </ToastProvider>
     </>

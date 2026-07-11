@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
+import { useInvitations } from '@/components/InvitationsProvider';
+import InvitationCard from '@/components/InvitationCard';
 
 export default function ProfilePage() {
   const toast = useToast();
@@ -42,26 +44,28 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <section className="mx-auto max-w-2xl px-4 py-8 sm:py-10">
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold sm:text-3xl">Profile</h1>
-          <p className="mt-1 text-slate-600">Update your personal details.</p>
-        </div>
+    <section className="mx-auto max-w-2xl px-4 py-8 sm:py-10">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold sm:text-3xl">Profile</h1>
+        <p className="mt-1 text-slate-600">Your details and anything waiting for you.</p>
+      </div>
 
-        {loading ? (
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-slate-600">Loading...</div>
-        ) : !user ? (
-          <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm text-amber-800">
-            Please sign in to view your profile.
-          </div>
-        ) : (
+      {loading ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">Loading...</div>
+      ) : !user ? (
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow-sm">
+          Please sign in to view your profile.
+        </div>
+      ) : (
+        <div className="space-y-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <div className="mb-6 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+            <h2 className="text-lg font-semibold">Your details</h2>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
               <span className="rounded-full bg-slate-100 px-3 py-1">{user.email}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1">{user.role}</span>
             </div>
-            <form className="space-y-5" onSubmit={handleSubmit}>
+
+            <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
               <div>
                 <label className="block text-sm font-medium text-slate-700">Name</label>
                 <input
@@ -99,8 +103,81 @@ export default function ProfilePage() {
               </button>
             </form>
           </div>
-        )}
-      </section>
-    </main>
+
+          <InvitationsSection />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function InvitationsSection() {
+  const { invitations, count, loading } = useInvitations();
+  const [open, setOpen] = useState(false);
+  const [touched, setTouched] = useState(false);
+
+  useEffect(() => {
+    if (!touched && count > 0) setOpen(true);
+  }, [count, touched]);
+
+  function toggle() {
+    setTouched(true);
+    setOpen((v) => !v);
+  }
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <h2>
+        <button
+          type="button"
+          onClick={toggle}
+          aria-expanded={open}
+          className="flex w-full items-start justify-between gap-3 text-left"
+        >
+          <span>
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-lg font-semibold">Invitations</span>
+              {count > 0 && (
+                <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-600 ring-1 ring-inset ring-red-600/20">
+                  {count} pending
+                </span>
+              )}
+            </span>
+            <span className="mt-1 block text-sm font-normal text-slate-500">
+              Messes that have invited you to join.
+            </span>
+          </span>
+          <span
+            aria-hidden
+            className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 text-lg leading-none text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+          >
+            {open ? '−' : '+'}
+          </span>
+        </button>
+      </h2>
+
+      {open && (
+        <div className="mt-5 border-t border-slate-100 pt-5">
+          {loading ? (
+            <p className="text-sm text-slate-400">Loading...</p>
+          ) : count === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-center">
+              <p className="text-sm font-medium text-slate-600">No pending invitations</p>
+              <p className="mt-1 text-xs text-slate-400">
+                When a supervisor invites you to a mess, it shows up here and in the bell at the top.
+              </p>
+            </div>
+          ) : (
+            <ul className="space-y-3">
+              {invitations.map((invitation) => (
+                <li key={invitation.id}>
+                  <InvitationCard invitation={invitation} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

@@ -175,7 +175,7 @@ function MemberDashboard() {
             You have {inviteCount} pending invitation{inviteCount === 1 ? '' : 's'}.
           </p>
           <Link
-            href={ROUTES.invitations}
+            href={ROUTES.profile}
             className="mt-3 inline-flex rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700"
           >
             View invitations
