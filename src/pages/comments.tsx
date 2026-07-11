@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
 import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
+import { encodeMentions } from '@/lib/mentions';
 
 type Reply = {
   id: string;
@@ -36,6 +37,7 @@ export default function CommentsPage() {
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [mentionNames, setMentionNames] = useState<Record<string, string>>({});
   const [isSupervisor, setIsSupervisor] = useState(false);
   const [currentUserId, setCurrentUserId] = useState('');
   const [text, setText] = useState('');
@@ -54,6 +56,7 @@ export default function CommentsPage() {
       if (!res.ok) throw new Error(body?.error ?? 'Could not load comments.');
       setComments(body.comments || []);
       setMembers(body.members || []);
+      setMentionNames(body.mentionNames || {});
       setIsSupervisor(Boolean(body.isSupervisor));
       setCurrentUserId(body.currentUserId || '');
     } catch (err) {
@@ -76,7 +79,7 @@ export default function CommentsPage() {
       const res = await fetch(`/api/groups/${groupId}/comments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text })
+        body: JSON.stringify({ text: encodeMentions(text, members) })
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error ?? 'Could not post.');
@@ -97,7 +100,7 @@ export default function CommentsPage() {
       const res = await fetch(`/api/comments/${commentId}/replies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: replyText })
+        body: JSON.stringify({ text: encodeMentions(replyText, members) })
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error ?? 'Could not reply.');
@@ -220,7 +223,7 @@ export default function CommentsPage() {
                     </div>
 
                     <div className="mt-2">
-                      <MentionText text={comment.text} members={members} />
+                      <MentionText text={comment.text} members={members} mentionNames={mentionNames} />
                     </div>
 
                     {comment.replies.length > 0 && (
@@ -242,7 +245,7 @@ export default function CommentsPage() {
                                   <span className="ml-2 font-normal text-slate-400">{when(reply.createdAt)}</span>
                                 </p>
                                 <div className="mt-0.5 text-sm">
-                                  <MentionText text={reply.text} members={members} />
+                                  <MentionText text={reply.text} members={members} mentionNames={mentionNames} />
                                 </div>
                               </div>
                               {isSupervisor && (

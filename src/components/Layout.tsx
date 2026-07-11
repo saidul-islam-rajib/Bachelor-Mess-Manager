@@ -6,6 +6,7 @@ import { STRINGS } from '@/lib/strings';
 import { USER_ROLES } from '@/lib/constants';
 import { useCurrentUser } from '@/components/UserProvider';
 import NotificationBell from '@/components/NotificationBell';
+import ProfileMenu from '@/components/ProfileMenu';
 import Logo from '@/components/Logo';
 import Footer from '@/components/Footer';
 
@@ -35,7 +36,6 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (user.role === USER_ROLES.ADMIN) {
       links.push({ href: ROUTES.admin, label: 'Admin' });
     }
-    links.push({ href: ROUTES.profile, label: 'Profile' });
   }
 
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(`${href}/`);
@@ -77,12 +77,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <>
                 <span className="mx-1 h-6 w-px bg-slate-200" />
                 <NotificationBell />
-                <button
-                  onClick={logout}
-                  className="ml-1 rounded-full border border-slate-300 px-4 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-                >
-                  Logout
-                </button>
+                <ProfileMenu />
               </>
             ) : showAuthLinks ? (
               <>
@@ -102,6 +97,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           {(user || showAuthLinks) && (
             <div className="flex items-center gap-1 lg:hidden">
               {user && <NotificationBell />}
+              {user && <ProfileMenu />}
               <button
                 onClick={() => setOpen((prev) => !prev)}
                 aria-label="Toggle menu"
@@ -136,15 +132,27 @@ export default function Layout({ children }: { children: ReactNode }) {
                 );
               })}
               {user ? (
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    logout();
-                  }}
-                  className="mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100"
-                >
-                  Logout
-                </button>
+                <>
+                  <Link
+                    href={ROUTES.profile}
+                    onClick={() => setOpen(false)}
+                    aria-current={isActive(ROUTES.profile) ? 'page' : undefined}
+                    className={`rounded-xl px-3 py-2.5 transition-colors ${
+                      isActive(ROUTES.profile) ? 'bg-slate-900 font-semibold text-white' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      logout();
+                    }}
+                    className="mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100"
+                  >
+                    Log out
+                  </button>
+                </>
               ) : showAuthLinks ? (
                 <>
                   <Link href={ROUTES.auth.login} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-100">

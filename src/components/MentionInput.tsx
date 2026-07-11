@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { parseMentions } from '@/lib/mentions';
 
 export type Member = { id: string; name: string };
 
@@ -145,33 +146,16 @@ export function MentionInput({
   );
 }
 
-export function MentionText({ text, members }: { text: string; members: Member[] }) {
-  const names = [...members]
-    .map((m) => m.name)
-    .sort((a, b) => b.length - a.length)
-    .filter(Boolean);
-
-  const parts: Array<string | { name: string }> = [];
-  let rest = text;
-
-  while (rest.length > 0) {
-    const at = rest.indexOf('@');
-    if (at === -1) {
-      parts.push(rest);
-      break;
-    }
-
-    const matched = names.find((name) => rest.slice(at + 1).toLowerCase().startsWith(name.toLowerCase()));
-    if (!matched) {
-      parts.push(rest.slice(0, at + 1));
-      rest = rest.slice(at + 1);
-      continue;
-    }
-
-    if (at > 0) parts.push(rest.slice(0, at));
-    parts.push({ name: matched });
-    rest = rest.slice(at + 1 + matched.length);
-  }
+export function MentionText({
+  text,
+  members,
+  mentionNames = {}
+}: {
+  text: string;
+  members: Member[];
+  mentionNames?: Record<string, string>;
+}) {
+  const parts = parseMentions(text, mentionNames, members);
 
   return (
     <p className="whitespace-pre-wrap break-words text-slate-700">
@@ -179,10 +163,7 @@ export function MentionText({ text, members }: { text: string; members: Member[]
         typeof part === 'string' ? (
           <span key={index}>{part}</span>
         ) : (
-          <span
-            key={index}
-            className="rounded bg-slate-900/5 px-1 font-medium text-slate-900"
-          >
+          <span key={index} className="rounded bg-slate-900/5 px-1 font-medium text-slate-900">
             @{part.name}
           </span>
         )

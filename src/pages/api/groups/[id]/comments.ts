@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { mentionIdsIn } from '@/lib/mentions';
 import { withAudit } from '@/lib/with-audit';
 
 const MAX_LENGTH = 1000;
@@ -73,9 +74,27 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }))
     }));
 
+    // Mentions are stored as user ids, so a rename shows up everywhere. Resolve
+    // them against the users table, not the group, so people who have since left
+    // still render with their real name.
+    const mentioned = new Set<string>();
+    for (const c of comments) {
+      for (const id of mentionIdsIn(c.text)) mentioned.add(id);
+      for (const r of c.replies) {
+        for (const id of mentionIdsIn(r.text)) mentioned.add(id);
+      }
+    }
+
+    const mentionedUsers = mentioned.size
+      ? await prisma.user.findMany({ where: { id: { in: [...mentioned] } }, select: { id: true, name: true } })
+      : [];
+    const mentionNames: Record<string, string> = {};
+    for (const u of mentionedUsers) mentionNames[u.id] = u.name;
+
     return ok(res, {
       comments,
       members: [...memberMap.values()].sort((a, b) => a.name.localeCompare(b.name)),
+      mentionNames,
       isSupervisor,
       currentUserId: sessionUser.id
     });
