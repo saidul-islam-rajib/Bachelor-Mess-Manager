@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 130" fill="none">
+  <defs>
+    <linearGradient id="blueGlow" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6dc3ff" />
+      <stop offset="100%" stop-color="#2e6bfd" />
+    </linearGradient>
+    <linearGradient id="blueShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#70c4ff" stop-opacity="0.88" />
+      <stop offset="100%" stop-color="#1f4bc0" stop-opacity="0.95" />
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000000" flood-opacity="0.25" />
+    </filter>
+  </defs>
+
+  <rect width="130" height="130" fill="transparent" />
+
+  <g filter="url(#softShadow)">
+    <path d="M34 24C22 24 12 34 12 46V56C12 62.6274 17.3726 68 24 68H30C32.2091 68 34 69.7909 34 72V88C34 90.2091 32.2091 92 30 92H24C17.3726 92 12 97.3726 12 104V114C12 126 22 136 34 136H96C108 136 118 126 118 114V104C118 97.3726 112.627 92 106 92H100C97.7909 92 96 90.2091 96 88V72C96 69.7909 97.7909 68 100 68H106C112.627 68 118 62.6274 118 56V46C118 34 108 24 96 24H34Z" fill="url(#blueGlow)" />
+    <path d="M32 36C20 36 20 46 32 46H36C38.2091 46 40 47.7909 40 50V74C40 76.2091 38.2091 78 36 78H32C20 78 20 88 32 88" stroke="#ffffff" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter" opacity="0.24" />
+    <path d="M98 36C110 36 110 46 98 46H94C91.7909 46 90 47.7909 90 50V74C90 76.2091 91.7909 78 94 78H98C110 78 110 88 98 88" stroke="#ffffff" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter" opacity="0.24" />
+    <path d="M32 94C20 94 20 104 32 104H36C38.2091 104 40 105.791 40 108V112C40 114.209 38.2091 116 36 116H32C20 116 20 126 32 126" stroke="#ffffff" stroke-width="10" stroke-linecap="butt" stroke-linejoin="miter" opacity="0.24" />
+    <path d="M98 94C110 94 110 104 98 104H94C91.7909 104 90 105.791 90 108V112C90 114.209 91.7909 116 94 116H98C110 116 110 126 98 126" stroke="#ffffff" stroke-width="10" s

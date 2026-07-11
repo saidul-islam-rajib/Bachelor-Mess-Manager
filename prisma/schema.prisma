@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(uuid())
+  name            String
+  email           String           @unique
+  password        String
+  phone           String?
+  profileImage    String?
+  role            String           @default("MEMBER")
+  status          String           @default("PENDING")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  memberships      Membership[]
+  comments        Comment[]
+  mealEntries     MealEntry[]
+  expensePayments ExpenseEntry[]    @relation("ExpensePayer")
+  payments        PaymentStatus[]
+  groupsSupervised Group[]          @relation("GroupSupervisor")
+  invitationsReceived Invitation[]  @relation("InvitationInvitee")
+  invitationsSent     Invitation[]  @relation("InvitationInviter")
+}
+
+model Group {
+  id           String        @id @default(uuid())
+  name         String
+  supervisor   User          @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supervisorId String
+  status       String        @default("ACTIVE")
+  mealWeightBreakfast Float   @default(0.5)
+  mealWeightLunch     Float   @default(1)
+  mealWeightDinner    Float   @default(1)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  memberships  Membership[]
+  meals        MealEntry[]
+  expenses     ExpenseEntry[]
+  payments     PaymentStatus[]
+  comments     Comment[]
+  invitations  Invitation[]
+}
+
+model SiteSettings {
+  id                String   @id @default("singleton")
+  companyName       String   @default("Team Sober")
+  tagline           String?
+  address           String?
+  contactEmail      String?
+  contactPhone      String?
+  copyrightOwner    String   @default("Team Sober")
+  facebookUrl       String?
+  twitterUrl        String?
+  newsletterEnabled Boolean  @default(true)
+  updatedAt         DateTime @updatedAt @default(now())
+}
+
+model Subscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Invitation {
+  id          String   @id @default(uuid())
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId     String
+  invitee     User     @relation("InvitationInvitee", fields: [inviteeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inviteeId   String
+  inviter     User     @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  invitedById String
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  respondedAt DateTime?
+}
+
+model Membership {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId    String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId   String
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+  isActive  Boolean  @default(true)
+}
+
+model MealEntry {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId         String
+  group          Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId        String
+  date           DateTime
+  breakfastCount Int      @default(0)
+  lunchCount     Int      @default(0)
+  dinnerCount    Int      @default(0)
+  totalMeals     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, groupId, date])
+}
+
+model ExpenseEntry {
+  id         String         @id @default(uuid())
+  group      Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId    String
+  type       String
+  amount     Float
+  date       DateTime
+  payer      User?          @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  payerId    String?
+  isReceived Boolean        @default(false)
+  splitMethod String
+  note       String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+  payments   PaymentStatus[]
+}
+
+model PaymentStatus {
+  id         String        @id @default(uuid())
+  user       User          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId     String
+  group      Group         @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId    String
+  expense    ExpenseEntry? @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  expenseId  String?
+  amountDue  Float
+  amountPaid Float         @default(0)
+  status     String
+  dueDate    DateTime
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId     String
+  group      Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId    String
+  text       String
+  replyText  String?
+  createdAt  DateTime @default(now())
+  repliedAt  DateTime?
+  deletedAt  DateTime?
+}
