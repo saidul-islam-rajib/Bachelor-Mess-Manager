@@ -28,8 +28,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return forbidden(res, 'Your account is not active. Please contact an admin.');
   }
 
-  // Session stays valid for 24 hours (or until the user logs out).
-  const cookie = serializeCookie('mess_session_user_id', user.id, { maxAge: 60 * 60 * 24 });
+  const cookie = serializeCookie('mess_session_user_id', user.id, { maxAge: 60 * 60 * 24 * 30 });
   res.setHeader('Set-Cookie', cookie);
 
   return ok(res, { user: { id: user.id, name: user.name, email: user.email, role: user.role } });

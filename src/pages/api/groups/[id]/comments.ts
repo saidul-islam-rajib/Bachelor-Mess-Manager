@@ -30,27 +30,55 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return forbidden(res, 'You are not a member of this group.');
   }
 
-  const canReply = group.supervisorId === sessionUser.id || admin;
+  const isSupervisor = group.supervisorId === sessionUser.id || admin;
 
   if (req.method === 'GET') {
-    const rows = await prisma.comment.findMany({
-      where: { groupId, deletedAt: null },
-      include: { user: { select: { id: true, name: true } } },
-      orderBy: { createdAt: 'desc' }
-    });
+    const [rows, memberships, supervisor] = await Promise.all([
+      prisma.comment.findMany({
+        where: { groupId, deletedAt: null },
+        include: {
+          user: { select: { id: true, name: true } },
+          replies: {
+            where: { deletedAt: null },
+            include: { user: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'asc' }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.membership.findMany({
+        where: { groupId, isActive: true },
+        include: { user: { select: { id: true, name: true } } }
+      }),
+      prisma.user.findUnique({ where: { id: group.supervisorId }, select: { id: true, name: true } })
+    ]);
+
+    const memberMap = new Map<string, { id: string; name: string }>();
+    for (const m of memberships) memberMap.set(m.user.id, m.user);
+    if (supervisor) memberMap.set(supervisor.id, supervisor);
 
     const comments = rows.map((c) => ({
       id: c.id,
       text: c.text,
-      replyText: c.replyText,
       authorId: c.userId,
       authorName: c.user.name,
       createdAt: c.createdAt.toISOString(),
-      repliedAt: c.repliedAt ? c.repliedAt.toISOString() : null,
-      canDelete: canReply
+      replies: c.replies.map((r) => ({
+        id: r.id,
+        text: r.text,
+        authorId: r.userId,
+        authorName: r.user.name,
+        isSupervisor: r.userId === group.supervisorId,
+        createdAt: r.createdAt.toISOString()
+      }))
     }));
 
-    return ok(res, { comments, canReply, currentUserId: sessionUser.id });
+    return ok(res, {
+      comments,
+      members: [...memberMap.values()].sort((a, b) => a.name.localeCompare(b.name)),
+      isSupervisor,
+      currentUserId: sessionUser.id
+    });
   }
 
   if (req.method === 'POST') {
@@ -72,12 +100,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       comment: {
         id: comment.id,
         text: comment.text,
-        replyText: null,
         authorId: sessionUser.id,
         authorName: sessionUser.name,
         createdAt: comment.createdAt.toISOString(),
-        repliedAt: null,
-        canDelete: true
+        replies: []
       }
     });
   }

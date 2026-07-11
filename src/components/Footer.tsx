@@ -102,9 +102,13 @@ export default function Footer() {
               <p className="mt-3 text-sm text-slate-500">Get updates from {companyName}.</p>
               <form className="mt-3 flex flex-col gap-2 sm:flex-row" onSubmit={subscribe}>
                 <input
+                  id="newsletter-email"
+                  name="newsletterEmail"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="email"
+                  autoComplete="email"
+                  aria-label="Email for newsletter"
                   required
                   placeholder="you@example.com"
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm"

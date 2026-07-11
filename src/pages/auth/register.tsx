@@ -44,31 +44,46 @@ export default function RegisterPage() {
           <h1 className="text-2xl font-semibold">{strings.title}</h1>
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-slate-700">{strings.name}</label>
+              <label htmlFor="name" className="block text-sm font-medium text-slate-700">
+                {strings.name}
+              </label>
               <input
+                id="name"
+                name="name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 type="text"
+                autoComplete="name"
                 required
                 className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">{strings.email}</label>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+                {strings.email}
+              </label>
               <input
+                id="email"
+                name="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 type="email"
+                autoComplete="username"
                 required
                 className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">{strings.password}</label>
+              <label htmlFor="new-password" className="block text-sm font-medium text-slate-700">
+                {strings.password}
+              </label>
               <input
+                id="new-password"
+                name="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 type="password"
+                autoComplete="new-password"
                 required
                 className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3"
               />

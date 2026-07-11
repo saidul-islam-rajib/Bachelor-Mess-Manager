@@ -4,11 +4,9 @@ import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { withAudit } from '@/lib/with-audit';
 
-const MAX_LENGTH = 1000;
-
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'PATCH' && req.method !== 'DELETE') {
-    return methodNotAllowed(res, ['PATCH', 'DELETE']);
+  if (req.method !== 'DELETE') {
+    return methodNotAllowed(res, ['DELETE']);
   }
 
   const sessionUser = await getSessionUser(req);
@@ -29,39 +27,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Comment not found.');
   }
 
-  const admin = requireAdmin(sessionUser);
   const isSupervisor = comment.group.supervisorId === sessionUser.id;
-
-  if (req.method === 'PATCH') {
-    if (!isSupervisor && !admin) {
-      return forbidden(res, 'Only the group supervisor can reply.');
-    }
-
-    const { replyText } = req.body as { replyText?: string };
-    const value = typeof replyText === 'string' ? replyText.trim() : '';
-
-    if (!value) {
-      return badRequest(res, 'Write a reply first.');
-    }
-    if (value.length > MAX_LENGTH) {
-      return badRequest(res, `Keep it under ${MAX_LENGTH} characters.`);
-    }
-
-    const updated = await prisma.comment.update({
-      where: { id: commentId },
-      data: { replyText: value, repliedAt: new Date() }
-    });
-
-    return ok(res, {
-      comment: {
-        id: updated.id,
-        replyText: updated.replyText,
-        repliedAt: updated.repliedAt ? updated.repliedAt.toISOString() : null
-      }
-    });
-  }
-
-  if (!isSupervisor && !admin) {
+  if (!isSupervisor && !requireAdmin(sessionUser)) {
     return forbidden(res, 'Only the group supervisor can delete comments.');
   }
 

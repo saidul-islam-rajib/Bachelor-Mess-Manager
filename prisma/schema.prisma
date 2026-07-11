@@ -30,6 +30,8 @@ model User {
   expensePayments ExpenseEntry[]    @relation("ExpensePayer")
   expenseHistory  ExpenseHistory[]  @relation("ExpenseHistoryActor")
   expenseComments ExpenseComment[]  @relation("ExpenseCommentAuthor")
+  commentReplies  CommentReply[]    @relation("CommentReplyAuthor")
+  groupOrders     GroupOrder[]
   payments        PaymentStatus[]
   groupsSupervised Group[]          @relation("GroupSupervisor")
   invitationsReceived Invitation[]  @relation("InvitationInvitee")
@@ -57,6 +59,7 @@ model Group {
   mealPlans           MealPlan[]
   expenses            ExpenseEntry[]
   expenseHistory      ExpenseHistory[]
+  orders              GroupOrder[]
   payments            PaymentStatus[]
   comments            Comment[]
   invitations         Invitation[]
@@ -273,6 +276,24 @@ model PaymentStatus {
   unpublishedAt DateTime?
 }
 
+model GroupOrder {
+  id            String    @id @default(uuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  position      Int
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @updatedAt @default(now())
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([userId, groupId])
+}
+
 model ExpenseHistory {
   id            String    @id @default(uuid())
   expenseId     String?
@@ -297,16 +318,34 @@ model ExpenseHistory {
   unpublishedAt DateTime?
 }
 
-model Comment {
+model CommentReply {
   id            String    @id @default(uuid())
-  user          User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  comment       Comment   @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  commentId     String
+  user          User      @relation("CommentReplyAuthor", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userId        String
-  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  text          String
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @updatedAt @default(now())
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+}
+
+model Comment {
+  id            String         @id @default(uuid())
+  user          User           @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
   text          String
   replyText     String?
   repliedAt     DateTime?
   deletedAt     DateTime?
+  replies       CommentReply[]
   createdAt     DateTime  @default(now())
   createdById   String?
   updatedAt     DateTime  @updatedAt @default(now())

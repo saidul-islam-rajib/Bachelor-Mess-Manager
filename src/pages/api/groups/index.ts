@@ -30,8 +30,23 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       orderBy: { createdAt: 'desc' }
     });
 
+    const orders = await prisma.groupOrder.findMany({
+      where: { userId: sessionUser.id, groupId: { in: groups.map((g) => g.id) } },
+      select: { groupId: true, position: true }
+    });
+    const positionOf = new Map(orders.map((o) => [o.groupId, o.position]));
+
+    const sorted = [...groups].sort((a, b) => {
+      const pa = positionOf.get(a.id);
+      const pb = positionOf.get(b.id);
+      if (pa !== undefined && pb !== undefined) return pa - pb;
+      if (pa !== undefined) return -1;
+      if (pb !== undefined) return 1;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    });
+
     return ok(res, {
-      groups: groups.map((group) => ({
+      groups: sorted.map((group) => ({
         id: group.id,
         name: group.name,
         supervisor: { id: group.supervisor.id, name: group.supervisor.name, email: group.supervisor.email },
