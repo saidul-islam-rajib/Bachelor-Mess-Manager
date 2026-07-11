@@ -29,7 +29,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return forbidden(res, 'You are not a member of this group.');
   }
 
-  const history = await listExpenseHistory(groupId);
+  const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
+  const history = await listExpenseHistory(groupId, monthKey);
 
   return ok(res, { history });
 }

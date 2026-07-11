@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { utcDateToDay } from '@/lib/month';
+import { parseMonth, utcDateToDay } from '@/lib/month';
 
 export const EXPENSE_ACTIONS = {
   CREATED: 'CREATED',
@@ -21,6 +21,7 @@ export async function recordExpenseCreated(params: {
       groupId: params.groupId,
       actorId: params.actorId,
       action: EXPENSE_ACTIONS.CREATED,
+      expenseDate: params.next.date,
       amountTo: params.next.amount,
       dateTo: params.next.date,
       noteTo: params.next.note
@@ -49,6 +50,7 @@ export async function recordExpenseUpdated(params: {
       groupId: params.groupId,
       actorId: params.actorId,
       action: EXPENSE_ACTIONS.UPDATED,
+      expenseDate: next.date,
       amountFrom: amountChanged ? previous.amount : null,
       amountTo: amountChanged ? next.amount : null,
       dateFrom: dateChanged ? previous.date : null,
@@ -71,6 +73,7 @@ export async function recordExpenseDeleted(params: {
       groupId: params.groupId,
       actorId: params.actorId,
       action: EXPENSE_ACTIONS.DELETED,
+      expenseDate: params.previous.date,
       amountFrom: params.previous.amount,
       dateFrom: params.previous.date,
       noteFrom: params.previous.note
@@ -78,9 +81,11 @@ export async function recordExpenseDeleted(params: {
   });
 }
 
-export async function listExpenseHistory(groupId: string, limit = 50) {
+export async function listExpenseHistory(groupId: string, monthKey?: string, limit = 50) {
+  const { start, nextStart } = parseMonth(monthKey);
+
   const rows = await prisma.expenseHistory.findMany({
-    where: { groupId },
+    where: { groupId, expenseDate: { gte: start, lt: nextStart } },
     include: { actor: { select: { id: true, name: true } } },
     orderBy: { createdAt: 'desc' },
     take: limit

@@ -98,7 +98,7 @@ export default function ExpensesPage() {
     try {
       const [data, hist] = await Promise.all([
         fetch(`/api/groups/${groupId}/expenses?month=${month}`).then((r) => r.json()),
-        fetch(`/api/groups/${groupId}/expense-history`).then((r) => r.json())
+        fetch(`/api/groups/${groupId}/expense-history?month=${month}`).then((r) => r.json())
       ]);
       setExpenses(data.expenses || []);
       setIsSupervisor(Boolean(data.isSupervisor));

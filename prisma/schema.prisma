@@ -281,6 +281,7 @@ model ExpenseHistory {
   actor         User?     @relation("ExpenseHistoryActor", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   actorId       String?
   action        String
+  expenseDate   DateTime?
   amountFrom    Float?
   amountTo      Float?
   dateFrom      DateTime?
