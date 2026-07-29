@@ -1,24 +1,60 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/session';
 
-const PUBLIC_FILE = /\.(.*)$/;
-const AUTH_PATHS = ['/auth/login', '/auth/register', '/api/auth/login', '/api/auth/register', '/api/auth/me', '/api/auth/logout', '/api/health'];
+// Routes reachable without a session.
+const PUBLIC_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/registration-submitted',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/me',
+  '/api/auth/logout',
+  '/api/health'
+];
+
+// Static assets under /public (logo.svg, favicon.png, ...). Deliberately does NOT
+// apply to /api/*: an API route whose path happens to contain a dot must still be
+// authenticated — /api/uploads/[file] is exactly that case.
+const PUBLIC_FILE = /\.[^/]+$/;
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
 };
 
-export function middleware(req: NextRequest) {
-  if (AUTH_PATHS.some((path) => req.nextUrl.pathname.startsWith(path)) || PUBLIC_FILE.test(req.nextUrl.pathname)) {
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const isApi = pathname.startsWith('/api/');
+
+  if (PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
+    return NextResponse.next();
+  }
+  if (!isApi && PUBLIC_FILE.test(pathname)) {
     return NextResponse.next();
   }
 
-  const cookie = req.cookies.get('mess_session_user_id');
-  if (!cookie) {
-    const url = req.nextUrl.clone();
-    url.pathname = '/auth/login';
-    return NextResponse.redirect(url);
+  // Verify the signature here, not just the cookie's presence: a forged or
+  // expired token must be turned away at the edge, before it reaches a page.
+  // API routes re-check against the database; this is the cheap first gate.
+  const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+  const session = await verifySessionToken(token);
+
+  if (session) {
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // APIs get a JSON 401 — a redirect to an HTML page would break every fetch().
+  if (isApi) {
+    return NextResponse.json({ error: 'You must be signed in.' }, { status: 401 });
+  }
+
+  const url = req.nextUrl.clone();
+  url.pathname = '/auth/login';
+  // Remember where they were headed so login can send them back.
+  url.search = pathname === '/' ? '' : `?next=${encodeURIComponent(pathname + req.nextUrl.search)}`;
+
+  const response = NextResponse.redirect(url);
+  if (token) response.cookies.delete(SESSION_COOKIE_NAME);
+  return response;
 }

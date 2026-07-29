@@ -28,6 +28,7 @@ export default function GroupsPage() {
   const [name, setName] = useState('');
   const [creating, setCreating] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [limits, setLimits] = useState<{ maxGroups: number; ownedCount: number; canCreate: boolean } | null>(null);
 
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const groupsRef = useRef<GroupSummary[]>([]);
@@ -77,6 +78,7 @@ export default function GroupsPage() {
       const data = await response.json();
       const list: GroupSummary[] = data.groups || [];
       setGroups(list);
+      setLimits(data.limits ?? null);
       savedOrder.current = list.map((g) => g.id);
     } catch (err) {
       setError((err as Error).message);
@@ -190,23 +192,39 @@ export default function GroupsPage() {
 
       {canCreate && (
         <div className="mb-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-lg font-semibold">Create a group</h2>
-          <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={createGroup}>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              required
-              placeholder="Group (mess) name"
-              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3"
-            />
-            <button
-              type="submit"
-              disabled={creating}
-              className="rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-700 disabled:opacity-50"
-            >
-              {creating ? 'Creating...' : 'Create'}
-            </button>
-          </form>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold">Create a group</h2>
+            {limits && (
+              <span className="text-sm text-slate-500">
+                {limits.ownedCount} of {limits.maxGroups} used
+              </span>
+            )}
+          </div>
+
+          {limits && !limits.canCreate ? (
+            <p className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              You have reached the limit of {limits.maxGroups} groups. Close or hand over an existing group before
+              creating another.
+            </p>
+          ) : (
+            <form className="mt-4 flex flex-col gap-2 sm:flex-row" onSubmit={createGroup}>
+              <input
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                required
+                maxLength={80}
+                placeholder="Group (mess) name"
+                className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3"
+              />
+              <button
+                type="submit"
+                disabled={creating}
+                className="rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-700 disabled:opacity-50"
+              >
+                {creating ? 'Creating...' : 'Create'}
+              </button>
+            </form>
+          )}
         </div>
       )}
 

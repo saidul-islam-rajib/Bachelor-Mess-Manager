@@ -16,6 +16,9 @@ model User {
   profileImage    String?
   role            String            @default("MEMBER")
   status          String            @default("PENDING")
+  /// Bumped on password change so previously issued session cookies stop verifying.
+  tokenVersion    Int               @default(0)
+  lastLoginAt     DateTime?
   createdAt       DateTime          @default(now())
   createdById     String?
   updatedAt       DateTime          @updatedAt @default(now())
@@ -30,6 +33,7 @@ model User {
   expensePayments ExpenseEntry[]    @relation("ExpensePayer")
   expenseHistory  ExpenseHistory[]  @relation("ExpenseHistoryActor")
   expenseComments ExpenseComment[]  @relation("ExpenseCommentAuthor")
+  expenseShares   ExpenseShare[]
   commentReplies  CommentReply[]    @relation("CommentReplyAuthor")
   groupOrders     GroupOrder[]
   payments        PaymentStatus[]
@@ -219,6 +223,28 @@ model ExpenseEntry {
   payments      PaymentStatus[]
   items         ExpenseItem[]
   comments      ExpenseComment[]
+  shares        ExpenseShare[]
+}
+
+/// One member's slice of a non-bazar cost (rent, utilities, chef, wifi, ...).
+/// Written for every split method so reporting never has to re-derive the maths,
+/// and so a later membership change cannot silently rewrite last month's bill.
+model ExpenseShare {
+  id            String       @id @default(uuid())
+  expense       ExpenseEntry @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenseId     String
+  user          User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  amount        Float
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @updatedAt @default(now())
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([expenseId, userId])
 }
 
 model ExpenseItem {
@@ -342,8 +368,6 @@ model Comment {
   group         Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
   text          String
-  replyText     String?
-  repliedAt     DateTime?
   deletedAt     DateTime?
   replies       CommentReply[]
   createdAt     DateTime  @default(now())

@@ -1,16 +1,45 @@
 require('dotenv').config();
 const crypto = require('crypto');
+const { promisify } = require('util');
 const { PrismaClient } = require('@prisma/client');
 
 const prisma = new PrismaClient();
 
-const ADMINS = 1;
-const SUPERVISORS = 10;
-const MEMBERS = 100;
-const GROUPS = 20;
+// 4 supervisors sharing 10 groups keeps every supervisor under the 10-group cap.
+// 120 members for 10 groups of 10 leaves 20 people free to be invited around,
+// which matters because a member may only ever be active in ONE group.
+const SUPERVISORS = 4;
+const GROUPS = 10;
+const MEMBERS = 120;
 const MEMBERS_PER_GROUP = 10;
 
-const hashPassword = (password) => crypto.createHash('sha256').update(password).digest('hex');
+const scrypt = promisify(crypto.scrypt);
+
+// Must stay in step with src/lib/password.ts — same format, same parameters.
+const SCRYPT_N = 16384;
+const SCRYPT_R = 8;
+const SCRYPT_P = 1;
+
+async function hashPassword(password) {
+  const salt = crypto.randomBytes(16);
+  const derived = await scrypt(password.normalize('NFKC'), salt, 64, {
+    N: SCRYPT_N,
+    r: SCRYPT_R,
+    p: SCRYPT_P,
+    maxmem: 256 * SCRYPT_N * SCRYPT_R
+  });
+  return ['scrypt', SCRYPT_N, SCRYPT_R, SCRYPT_P, salt.toString('base64'), derived.toString('base64')].join('$');
+}
+
+/** Hash in small batches — scrypt is deliberately slow, so run a few at a time. */
+async function hashAll(passwords) {
+  const out = [];
+  for (let i = 0; i < passwords.length; i += 8) {
+    out.push(...(await Promise.all(passwords.slice(i, i + 8).map(hashPassword))));
+  }
+  return out;
+}
+
 const uuid = () => crypto.randomUUID();
 
 // Deterministic PRNG so a re-seed produces the same database every time.
@@ -36,6 +65,17 @@ const GROCERIES = [
   ['1 kg beef', 780], ['1 kg potato', 45], ['1 kg onion', 100], ['1 kg lentil (masoor)', 140],
   ['500 g green chilli', 60], ['1 kg tomato', 90], ['1 dozen eggs', 145], ['1 kg sugar', 130],
   ['500 g garlic', 110], ['1 kg flour', 65], ['Mixed vegetables', 150], ['Spices and salt', 90]
+];
+
+// [type, label for the note, rough monthly amount]
+const BILL_TEMPLATES = [
+  ['RENT', 'Monthly house rent', 18000, 32000],
+  ['ELECTRICITY', 'Electricity bill', 2200, 6500],
+  ['WATER', 'Water bill', 600, 1400],
+  ['WASTE', 'Waste collection', 200, 500],
+  ['CHEF', 'Cook salary', 4000, 8000],
+  ['WIFI', 'Broadband', 900, 1600],
+  ['OTHER', 'Cleaning supplies and gas', 500, 2500]
 ];
 
 const COMMENT_TEXTS = [
@@ -79,11 +119,24 @@ async function insertMany(model, rows) {
 const utcDay = (y, m, d) => new Date(Date.UTC(y, m, d));
 const at = (date, hour, minute) => new Date(date.getTime() + hour * 3600000 + minute * 60000);
 
+/** Even split with the leftover paisa handed to the first members — mirrors src/lib/bills.ts. */
+function splitEqually(total, userIds) {
+  const paisa = Math.round(total * 100);
+  const base = Math.floor(paisa / userIds.length);
+  let remainder = paisa - base * userIds.length;
+  return userIds.map((userId) => {
+    const extra = remainder > 0 ? 1 : 0;
+    remainder -= extra;
+    return { userId, amount: round2((base + extra) / 100) };
+  });
+}
+
 async function wipe() {
   await prisma.mealPlanDay.deleteMany();
   await prisma.mealPlan.deleteMany();
   await prisma.mealEntry.deleteMany();
   await prisma.expenseComment.deleteMany();
+  await prisma.expenseShare.deleteMany();
   await prisma.expenseItem.deleteMany();
   await prisma.paymentStatus.deleteMany();
   await prisma.expenseHistory.deleteMany();
@@ -110,86 +163,48 @@ async function main() {
   await wipe();
 
   // ---------------------------------------------------------------- users
-  const users = [];
   const nameFor = (i) => `${FIRST[i % FIRST.length]} ${LAST[(i * 7) % LAST.length]}`;
   const phoneFor = (i) => `+8801${String(300000000 + i * 1234567).slice(0, 9)}`;
 
-  const admin = {
-    id: uuid(),
-    name: 'Admin User',
-    email: 'admin@gmail.com',
-    password: hashPassword('admin@gmail.com'),
-    phone: '+8801700000000',
-    role: 'ADMIN',
-    status: 'APPROVED',
-    publishedAt: now
-  };
-  users.push(admin);
-
-  const supervisors = [];
+  // Every account's password is its own email address. Build the list first,
+  // then hash them all — scrypt is intentionally slow, so this is the slow step.
+  const accounts = [{ email: 'admin@gmail.com', role: 'ADMIN', status: 'APPROVED', nameIndex: 0 }];
   for (let i = 1; i <= SUPERVISORS; i += 1) {
-    const email = `supervisor-${i}@gmail.com`;
-    const s = {
-      id: uuid(),
-      name: nameFor(i + 2),
-      email,
-      password: hashPassword(email),
-      phone: phoneFor(i),
-      role: 'SUPERVISOR',
-      status: 'APPROVED',
-      createdById: admin.id,
-      publishedAt: now
-    };
-    supervisors.push(s);
-    users.push(s);
+    accounts.push({ email: `supervisor-${i}@gmail.com`, role: 'SUPERVISOR', status: 'APPROVED', nameIndex: i + 2 });
   }
-
-  const members = [];
   for (let i = 1; i <= MEMBERS; i += 1) {
-    const email = `member-${i}@gmail.com`;
-    const m = {
-      id: uuid(),
-      name: nameFor(i + 11),
-      email,
-      password: hashPassword(email),
-      phone: phoneFor(i + 20),
-      role: 'MEMBER',
-      status: 'APPROVED',
-      publishedAt: now
-    };
-    members.push(m);
-    users.push(m);
+    accounts.push({ email: `member-${i}@gmail.com`, role: 'MEMBER', status: 'APPROVED', nameIndex: i + 11 });
   }
-
-  // Accounts that exercise the approval queue and the rejection path.
-  const pendingUsers = [];
   for (let i = 1; i <= 5; i += 1) {
-    const email = `pending-${i}@gmail.com`;
-    const u = {
-      id: uuid(),
-      name: nameFor(i + 40),
-      email,
-      password: hashPassword(email),
-      phone: phoneFor(i + 130),
-      role: 'MEMBER',
-      status: 'PENDING'
-    };
-    pendingUsers.push(u);
-    users.push(u);
+    accounts.push({ email: `pending-${i}@gmail.com`, role: 'MEMBER', status: 'PENDING', nameIndex: i + 40 });
   }
   for (let i = 1; i <= 3; i += 1) {
-    const email = `rejected-${i}@gmail.com`;
-    users.push({
-      id: uuid(),
-      name: nameFor(i + 50),
-      email,
-      password: hashPassword(email),
-      phone: phoneFor(i + 150),
-      role: 'MEMBER',
-      status: 'REJECTED',
-      updatedById: admin.id,
-      unpublishedAt: now
-    });
+    accounts.push({ email: `rejected-${i}@gmail.com`, role: 'MEMBER', status: 'REJECTED', nameIndex: i + 50 });
+  }
+
+  console.log(`Hashing ${accounts.length} passwords with scrypt (this takes a few seconds)...`);
+  const hashes = await hashAll(accounts.map((a) => a.email));
+
+  const users = accounts.map((account, index) => ({
+    id: uuid(),
+    name: account.email === 'admin@gmail.com' ? 'Admin User' : nameFor(account.nameIndex),
+    email: account.email,
+    password: hashes[index],
+    phone: phoneFor(index + 1),
+    role: account.role,
+    status: account.status,
+    publishedAt: account.status === 'APPROVED' ? now : null,
+    unpublishedAt: account.status === 'REJECTED' ? now : null
+  }));
+
+  const admin = users[0];
+  const supervisors = users.filter((u) => u.role === 'SUPERVISOR');
+  const members = users.filter((u) => u.role === 'MEMBER' && u.status === 'APPROVED');
+  const pendingUsers = users.filter((u) => u.status === 'PENDING');
+
+  for (const user of users) {
+    if (user.role === 'SUPERVISOR') user.createdById = admin.id;
+    if (user.status === 'REJECTED') user.updatedById = admin.id;
   }
 
   await insertMany(prisma.user, users);
@@ -212,16 +227,22 @@ async function main() {
     });
   }
   await insertMany(prisma.group, groups);
-  console.log(`groups              : ${groups.length}  (${GROUPS - 2} active, 2 inactive)`);
+  console.log(`groups              : ${groups.length}  (${GROUPS - 2} active, 2 inactive, max ${Math.ceil(GROUPS / SUPERVISORS)} per supervisor)`);
 
   // ---------------------------------------------------- memberships / roster
   const memberships = [];
   const rosterOf = new Map(); // groupId -> [users] (members + supervisor)
 
-  groups.forEach((group, gi) => {
+  // Each member is dealt to exactly one group: the app enforces one active
+  // membership per member, and seed data must obey the same rule.
+  let nextMember = 0;
+  groups.forEach((group) => {
     const roster = [];
     for (let k = 0; k < MEMBERS_PER_GROUP; k += 1) {
-      const member = members[(gi * MEMBERS_PER_GROUP + k) % MEMBERS];
+      const member = members[nextMember];
+      nextMember += 1;
+      if (!member) break;
+
       roster.push(member);
       memberships.push({
         id: uuid(),
@@ -229,11 +250,13 @@ async function main() {
         groupId: group.id,
         joinedAt: utcDay(year, month, 1),
         isActive: true,
-        createdById: group.supervisorId
+        createdById: group.supervisorId,
+        publishedAt: now
       });
     }
 
     // The supervisor eats too, so they get a membership and a meal column.
+    // Supervisors are exempt from the one-group rule for exactly this reason.
     const supervisor = users.find((u) => u.id === group.supervisorId);
     roster.push(supervisor);
     memberships.push({
@@ -242,33 +265,55 @@ async function main() {
       groupId: group.id,
       joinedAt: utcDay(year, month, 1),
       isActive: true,
-      createdById: supervisor.id
+      createdById: supervisor.id,
+      publishedAt: now
     });
 
     rosterOf.set(group.id, roster);
   });
 
+  // A few people who joined and later left, so the members page has history.
+  const unassigned = members.slice(nextMember);
+  unassigned.slice(0, 4).forEach((member, i) => {
+    const group = groups[i % groups.length];
+    memberships.push({
+      id: uuid(),
+      userId: member.id,
+      groupId: group.id,
+      joinedAt: utcDay(year, month - 3 < 0 ? 0 : month - 3, 1),
+      leftAt: utcDay(year, month, Math.max(1, Math.min(today, daysInMonth) - 5)),
+      isActive: false,
+      createdById: group.supervisorId,
+      publishedAt: now
+    });
+  });
+
   await insertMany(prisma.membership, memberships);
-  console.log(`memberships         : ${memberships.length}  (${MEMBERS_PER_GROUP} members + supervisor per group)`);
+  console.log(`memberships         : ${memberships.length}  (${MEMBERS_PER_GROUP} members + supervisor per group, 4 who left)`);
 
   // ---------------------------------------------------------- invitations
+  // Only people with no active membership can be invited — anyone else could
+  // not accept anyway.
+  const freeMembers = unassigned.slice(4);
   const invitations = [];
+
   groups.forEach((group, gi) => {
     const roster = rosterOf.get(group.id);
-    const outsiders = members.filter((m) => !roster.some((r) => r.id === m.id));
 
-    for (let k = 0; k < 2; k += 1) {
+    for (let k = 0; k < 2 && freeMembers.length > 0; k += 1) {
       invitations.push({
         id: uuid(),
         groupId: group.id,
-        inviteeId: outsiders[(gi * 3 + k) % outsiders.length].id,
+        inviteeId: freeMembers[(gi * 2 + k) % freeMembers.length].id,
         invitedById: group.supervisorId,
         status: 'PENDING',
         createdAt: at(utcDay(year, month, Math.max(1, today - 2)), 10, k * 7),
-        createdById: group.supervisorId
+        createdById: group.supervisorId,
+        publishedAt: now
       });
     }
 
+    // One already accepted (that is how roster[0] got in) and one turned down.
     invitations.push({
       id: uuid(),
       groupId: group.id,
@@ -277,19 +322,23 @@ async function main() {
       status: 'ACCEPTED',
       respondedAt: at(utcDay(year, month, 1), 12, 0),
       createdAt: at(utcDay(year, month, 1), 9, 0),
-      createdById: group.supervisorId
+      createdById: group.supervisorId,
+      publishedAt: now
     });
 
-    invitations.push({
-      id: uuid(),
-      groupId: group.id,
-      inviteeId: outsiders[(gi * 5 + 2) % outsiders.length].id,
-      invitedById: group.supervisorId,
-      status: 'REJECTED',
-      respondedAt: at(utcDay(year, month, 2), 18, 30),
-      createdAt: at(utcDay(year, month, 2), 8, 0),
-      createdById: group.supervisorId
-    });
+    if (freeMembers.length > 0) {
+      invitations.push({
+        id: uuid(),
+        groupId: group.id,
+        inviteeId: freeMembers[(gi * 5 + 2) % freeMembers.length].id,
+        invitedById: group.supervisorId,
+        status: 'REJECTED',
+        respondedAt: at(utcDay(year, month, 2), 18, 30),
+        createdAt: at(utcDay(year, month, 2), 8, 0),
+        createdById: group.supervisorId,
+        publishedAt: now
+      });
+    }
 
     // A supervisor also invites one of the accounts still awaiting approval.
     invitations.push({
@@ -299,11 +348,22 @@ async function main() {
       invitedById: group.supervisorId,
       status: 'PENDING',
       createdAt: at(utcDay(year, month, Math.max(1, today - 1)), 11, 0),
-      createdById: group.supervisorId
+      createdById: group.supervisorId,
+      publishedAt: now
     });
   });
-  await insertMany(prisma.invitation, invitations);
-  console.log(`invitations         : ${invitations.length}  (pending / accepted / rejected)`);
+
+  // Drop duplicate (group, invitee) pairs the round-robin may have produced.
+  const seenInvites = new Set();
+  const uniqueInvitations = invitations.filter((inv) => {
+    const key = `${inv.groupId}:${inv.inviteeId}`;
+    if (seenInvites.has(key)) return false;
+    seenInvites.add(key);
+    return true;
+  });
+
+  await insertMany(prisma.invitation, uniqueInvitations);
+  console.log(`invitations         : ${uniqueInvitations.length}  (pending / accepted / rejected)`);
 
   // ------------------------------------------------------------ group order
   const orders = [];
@@ -314,7 +374,7 @@ async function main() {
   await insertMany(prisma.groupOrder, orders);
   console.log(`group orders        : ${orders.length}`);
 
-  // ------------------------------------------------- expenses + items + history
+  // ------------------------------------------------- bazar + items + history
   const expenses = [];
   const items = [];
   const history = [];
@@ -440,11 +500,78 @@ async function main() {
     });
   });
 
-  await insertMany(prisma.expenseEntry, expenses);
+  // ------------------------------------------------------ bills + shares
+  // Rent, utilities, chef, wifi and other costs — split across the roster and
+  // stored as ExpenseShare rows, exactly as the app writes them.
+  const bills = [];
+  const shares = [];
+
+  groups.forEach((group) => {
+    const roster = rosterOf.get(group.id);
+    const rosterIds = roster.map((r) => r.id);
+
+    BILL_TEMPLATES.forEach(([type, label, low, high], index) => {
+      // Bills land early in the month; skip any that fall after "today".
+      const day = Math.min(1 + index * 2, Math.min(today, daysInMonth));
+      const date = utcDay(year, month, day);
+      const amount = round2(low + rnd() * (high - low));
+      const billId = uuid();
+
+      // Most bills are shared by everyone; the odd one is assigned to a few
+      // people (a room-specific extra, say), which is the CUSTOM path.
+      const custom = type === 'OTHER' && chance(0.5);
+      const targets = custom ? rosterIds.slice(0, Math.max(2, Math.floor(rosterIds.length / 2))) : rosterIds;
+
+      bills.push({
+        id: billId,
+        groupId: group.id,
+        type,
+        amount,
+        date,
+        payerId: group.supervisorId,
+        isReceived: chance(0.7),
+        splitMethod: custom ? 'CUSTOM' : 'EQUAL',
+        note: label,
+        createdAt: at(date, 10, int(0, 59)),
+        createdById: group.supervisorId,
+        updatedById: group.supervisorId,
+        publishedAt: now
+      });
+
+      splitEqually(amount, targets).forEach((share) => {
+        shares.push({
+          id: uuid(),
+          expenseId: billId,
+          userId: share.userId,
+          amount: share.amount,
+          createdById: group.supervisorId,
+          publishedAt: now
+        });
+      });
+
+      history.push({
+        id: uuid(),
+        expenseId: billId,
+        groupId: group.id,
+        actorId: group.supervisorId,
+        action: 'CREATED',
+        expenseDate: date,
+        amountTo: amount,
+        dateTo: date,
+        noteTo: label,
+        createdAt: at(date, 10, int(0, 59)),
+        createdById: group.supervisorId
+      });
+    });
+  });
+
+  await insertMany(prisma.expenseEntry, [...expenses, ...bills]);
   await insertMany(prisma.expenseItem, items);
+  await insertMany(prisma.expenseShare, shares);
   await insertMany(prisma.expenseHistory, history);
   await insertMany(prisma.expenseComment, expenseComments);
-  console.log(`expenses            : ${expenses.length}  (${items.length} product lines)`);
+  console.log(`bazar entries       : ${expenses.length}  (${items.length} product lines)`);
+  console.log(`bills               : ${bills.length}  (${shares.length} member shares, rent/utilities/chef/wifi/other)`);
   console.log(`expense history     : ${history.length}  (created / updated / deleted)`);
   console.log(`expense comments    : ${expenseComments.length}`);
 
@@ -476,7 +603,8 @@ async function main() {
           totalMeals,
           fromPlan: false,
           createdById: person.id,
-          updatedById: person.id
+          updatedById: person.id,
+          publishedAt: now
         });
       }
 
@@ -490,7 +618,8 @@ async function main() {
           isActive: chance(0.85),
           startDate: utcDay(year, month, today),
           createdById: person.id,
-          updatedById: person.id
+          updatedById: person.id,
+          publishedAt: now
         });
 
         for (let weekday = 0; weekday < 7; weekday += 1) {
@@ -503,7 +632,8 @@ async function main() {
             breakfast: off ? 0 : chance(0.5) ? 1 : 0,
             lunch: off ? 0 : 1,
             dinner: off ? 0 : 1,
-            createdById: person.id
+            createdById: person.id,
+            publishedAt: now
           });
         }
       }
@@ -535,7 +665,8 @@ async function main() {
           status: paid >= amount ? 'PAID' : paid > 0 ? 'PARTIAL' : 'PENDING',
           dueDate: utcDay(year, month, day),
           createdById: group.supervisorId,
-          updatedById: group.supervisorId
+          updatedById: group.supervisorId,
+          publishedAt: now
         });
       }
     });
@@ -567,6 +698,7 @@ async function main() {
         text,
         createdAt,
         createdById: author.id,
+        publishedAt: now,
         deletedAt: chance(0.08) ? at(createdAt, 2, 0) : null
       });
 
@@ -579,7 +711,8 @@ async function main() {
           userId: replier.id,
           text: chance(0.5) ? `@[u:${mention.id}] ${pick(REPLY_TEXTS)}` : pick(REPLY_TEXTS),
           createdAt: at(createdAt, 1 + r, int(0, 59)),
-          createdById: replier.id
+          createdById: replier.id,
+          publishedAt: now
         });
       }
     }
@@ -617,8 +750,8 @@ async function main() {
   console.log('');
   console.log('Sign in with (password is always the same as the email):');
   console.log('  admin@gmail.com        / admin@gmail.com');
-  console.log('  supervisor-1@gmail.com / supervisor-1@gmail.com   ... up to supervisor-10');
-  console.log('  member-1@gmail.com     / member-1@gmail.com       ... up to member-100');
+  console.log(`  supervisor-1@gmail.com / supervisor-1@gmail.com   ... up to supervisor-${SUPERVISORS}`);
+  console.log(`  member-1@gmail.com     / member-1@gmail.com       ... up to member-${MEMBERS}`);
   console.log('  pending-1@gmail.com    (awaiting admin approval — cannot sign in yet)');
   console.log('  rejected-1@gmail.com   (rejected — cannot sign in)');
 }

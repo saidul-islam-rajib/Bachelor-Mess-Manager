@@ -1,8 +1,13 @@
-import type { NextApiRequest } from 'next';
-import crypto from 'crypto';
-import { prisma } from '@/lib/prisma';
+import type { NextApiResponse } from 'next';
+import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from '@/lib/session';
 
-export const SESSION_COOKIE_NAME = 'mess_session_user_id';
+export { SESSION_COOKIE_NAME } from '@/lib/session';
+
+/**
+ * The pre-hardening cookie held a bare user id and was trivially forgeable.
+ * We clear it alongside every session write so old browsers drop it.
+ */
+export const LEGACY_SESSION_COOKIE_NAME = 'mess_session_user_id';
 
 export function parseCookies(cookieHeader?: string) {
   const cookies: Record<string, string> = {};
@@ -45,14 +50,21 @@ export function serializeCookie(
   return parts.join('; ');
 }
 
-export function hashPassword(password: string) {
-  return crypto.createHash('sha256').update(password).digest('hex');
+/** Append a Set-Cookie header without dropping ones already queued on the response. */
+export function appendCookie(res: NextApiResponse, cookie: string) {
+  const existing = res.getHeader('Set-Cookie');
+  const list = Array.isArray(existing) ? existing : existing ? [String(existing)] : [];
+  res.setHeader('Set-Cookie', [...list, cookie]);
 }
 
-export async function getUserFromRequest(req: NextApiRequest) {
-  const cookies = parseCookies(req.headers.cookie);
-  const userId = cookies[SESSION_COOKIE_NAME];
-  if (!userId) return null;
+/** Issue a fresh signed session cookie for this user. */
+export async function setSessionCookie(res: NextApiResponse, userId: string, tokenVersion: number) {
+  const token = await createSessionToken(userId, tokenVersion);
+  appendCookie(res, serializeCookie(SESSION_COOKIE_NAME, token, { maxAge: SESSION_MAX_AGE_SECONDS }));
+  appendCookie(res, serializeCookie(LEGACY_SESSION_COOKIE_NAME, '', { maxAge: 0 }));
+}
 
-  return prisma.user.findUnique({ where: { id: userId } });
+export function clearSessionCookie(res: NextApiResponse) {
+  appendCookie(res, serializeCookie(SESSION_COOKIE_NAME, '', { maxAge: 0 }));
+  appendCookie(res, serializeCookie(LEGACY_SESSION_COOKIE_NAME, '', { maxAge: 0 }));
 }

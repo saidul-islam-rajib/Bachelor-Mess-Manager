@@ -30,8 +30,10 @@ export default function Layout({ children }: { children: ReactNode }) {
     links.push({ href: ROUTES.dashboard, label: 'Dashboard' });
     links.push({ href: ROUTES.groups, label: 'Groups' });
     links.push({ href: ROUTES.meals, label: 'Meals' });
-    links.push({ href: ROUTES.expenses, label: 'Expenses' });
+    links.push({ href: ROUTES.expenses, label: 'Bazar' });
+    links.push({ href: ROUTES.bills, label: 'Bills' });
     links.push({ href: ROUTES.payments, label: 'Payments' });
+    links.push({ href: ROUTES.members, label: 'Members' });
     links.push({ href: ROUTES.comments, label: 'Comments' });
     if (user.role === USER_ROLES.ADMIN) {
       links.push({ href: ROUTES.admin, label: 'Admin' });

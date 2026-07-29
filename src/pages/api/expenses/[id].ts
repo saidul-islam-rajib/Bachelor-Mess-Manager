@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { EXPENSE_TYPES } from '@/lib/constants';
 import { dayToUtcDate, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
 import { parseItems } from '@/lib/expense-items';
@@ -24,6 +25,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const expense = await prisma.expenseEntry.findUnique({ where: { id: expenseId } });
   if (!expense) {
+    return notFound(res, 'Expense not found.');
+  }
+  if (expense.type !== EXPENSE_TYPES.BAZAR) {
+    // Rent/utilities/etc. are supervisor-owned and split into shares; they go
+    // through /api/bills/[id], which keeps those shares consistent.
     return notFound(res, 'Expense not found.');
   }
 
