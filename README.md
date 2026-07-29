@@ -24,6 +24,9 @@ npm run dev
 
 `npm run setup` chains the three database steps (`migrate deploy`, `db:sync-roles`, `admin:init`).
 
+> **[docs/ACCOUNTS.md](docs/ACCOUNTS.md)** — administrator commands, and how supervisors and
+> members sign in. Start there for day-to-day account management.
+
 ---
 
 ## Creating the administrator
