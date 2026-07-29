@@ -445,6 +445,7 @@ const en = {
     post: 'Post',
     reply: 'Reply',
     replies: (count: number) => `${count} ${count === 1 ? 'reply' : 'replies'}`,
+    mentionHint: 'Type @ to mention someone.',
     deleted: 'This message was deleted.',
     empty: 'No messages yet. Start the conversation.',
     textRequired: 'Write something first.',

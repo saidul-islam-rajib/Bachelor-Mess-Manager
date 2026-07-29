@@ -23,8 +23,10 @@ deactivated member and revokes their sessions.
 
 ### Update `.env`
 
-**Required.** The app recreates the administrator from these variables when the server starts.
-If you leave the old values in place, `admin@mess.local` comes back as an admin on the next boot.
+The startup bootstrap only creates an administrator when **none exists**, so a stale
+`ADMIN_EMAIL` will not resurrect an old admin behind your back. Still update it — otherwise
+the variables no longer describe your real admin, and if you ever wipe the database the app
+would recreate the *old* account instead of yours.
 
 ```env
 ADMIN_EMAIL="your.email@gmail.com"
@@ -213,7 +215,23 @@ the database, so they apply immediately without a restart.
 
 ---
 
-## 6. First-ever account on an empty database
+## 6. Mentioning someone in a comment
+
+Type `@` in any comment box — on **Comments** (`/comments`) or on a bazar entry in
+**Bazar** (`/expenses`). A dropdown of group members appears and filters as you keep typing.
+
+- **↑ / ↓** move, **Enter** or **Tab** picks, **Esc** dismisses, or click a name
+- **Ctrl/Cmd + Enter** posts
+- The `@` must be at the start or after a space
+- Only active members of that group can be mentioned; there is no `@everyone`
+
+Mentions are stored by **user ID**, not by name, so if that person later renames themselves
+every past mention updates automatically.
+
+> **Mentions do not send a notification yet.** The bell icon only carries group invitations.
+> A mention highlights the name in the thread; the person finds out by reading it.
+
+## 7. First-ever account on an empty database
 
 If the database has **no users at all**, the first person to register at `/auth/register`
 automatically becomes an approved administrator and is signed in immediately. This exists so a
