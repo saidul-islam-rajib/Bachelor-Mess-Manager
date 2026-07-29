@@ -45,7 +45,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 3000
+              containerPort: 8080
           envFrom:
             - configMapRef:
                 name: bachelor-point-config

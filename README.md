@@ -79,10 +79,10 @@ attempts, site settings, and subscribers.
 
 | Account | Password |
 | --- | --- |
-| `supervisor-1@mess.local` … `supervisor-4@mess.local` | same as the email |
-| `member-1@mess.local` … `member-120@mess.local` | same as the email |
-| `pending-1@mess.local` | awaiting approval — cannot sign in |
-| `rejected-1@mess.local` | rejected — cannot sign in |
+| `supervisor-1@bachelorpoint.local` … `supervisor-4@bachelorpoint.local` | same as the email |
+| `member-1@bachelorpoint.local` … `member-120@bachelorpoint.local` | same as the email |
+| `pending-1@bachelorpoint.local` | awaiting approval — cannot sign in |
+| `rejected-1@bachelorpoint.local` | rejected — cannot sign in |
 
 The domain and every count are configurable (`SEED_EMAIL_DOMAIN`, `SEED_MEMBERS`, …).
 

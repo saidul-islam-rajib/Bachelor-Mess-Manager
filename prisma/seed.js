@@ -18,7 +18,7 @@ const readInt = (key, fallback) => {
   return Number.isFinite(value) && value > 0 ? Math.trunc(value) : fallback;
 };
 
-const EMAIL_DOMAIN = process.env.SEED_EMAIL_DOMAIN || 'mess.local';
+const EMAIL_DOMAIN = process.env.SEED_EMAIL_DOMAIN || 'bachelorpoint.local';
 const SUPERVISORS = readInt('SEED_SUPERVISORS', 4);
 const MEMBERS = readInt('SEED_MEMBERS', 120);
 const GROUPS = readInt('SEED_GROUPS', 10);

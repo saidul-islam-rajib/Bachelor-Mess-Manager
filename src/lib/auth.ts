@@ -3,7 +3,7 @@ import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from
 
 export { SESSION_COOKIE_NAME } from '@/lib/session';
 
-export const LEGACY_SESSION_COOKIE_NAME = 'mess_session_user_id';
+export const LEGACY_SESSION_COOKIE_NAME = 'bachelor_point_legacy_session';
 
 export function parseCookies(cookieHeader?: string) {
   const cookies: Record<string, string> = {};

@@ -8,7 +8,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const user = await getSessionUser(req, res);
 
-  if (!user && req.headers.cookie?.includes('mess_session')) {
+  if (!user && req.headers.cookie?.includes('bachelor_point_session')) {
     clearSessionCookie(res);
   }
 

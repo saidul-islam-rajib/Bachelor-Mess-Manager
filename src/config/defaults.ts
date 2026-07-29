@@ -17,8 +17,8 @@ export const AUTHOR = {
 } as const;
 
 export const SESSION_DEFAULTS = {
-  cookieName: 'mess_session',
-  legacyCookieName: 'mess_session_user_id',
+  cookieName: 'bachelor_point_session',
+  legacyCookieName: 'bachelor_point_legacy_session',
   maxAgeSeconds: 60 * 60 * 24 * 30,
   refreshAfterSeconds: 60 * 60 * 24,
   minSecretLength: 32

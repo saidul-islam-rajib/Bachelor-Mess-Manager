@@ -149,7 +149,7 @@ export const uiConfig = {
 
 export const seedConfig = {
   enabled: readBoolean('SEED_ENABLED', !isProduction),
-  emailDomain: readString('SEED_EMAIL_DOMAIN', 'mess.local'),
+  emailDomain: readString('SEED_EMAIL_DOMAIN', 'bachelorpoint.local'),
   supervisors: readInt('SEED_SUPERVISORS', 4),
   members: readInt('SEED_MEMBERS', 120),
   groups: readInt('SEED_GROUPS', 10),

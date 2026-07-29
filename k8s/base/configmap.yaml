@@ -5,7 +5,7 @@ metadata:
   namespace: bachelor-point
 data:
   NODE_ENV: "production"
-  PORT: "3000"
+  PORT: "8080"
   HOSTNAME: "0.0.0.0"
 
   APP_NAME: "Bachelor Point"

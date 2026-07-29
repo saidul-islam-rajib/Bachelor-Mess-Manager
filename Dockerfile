@@ -17,7 +17,7 @@ RUN npm run build
 FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
+ENV PORT=8080
 ENV HOSTNAME=0.0.0.0
 ENV UPLOAD_DIR=/data/uploads
 
@@ -38,10 +38,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_module
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/dotenv ./node_modules/dotenv
 
 USER nextjs
-EXPOSE 3000
+EXPOSE 8080
 VOLUME ["/data/uploads"]
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/api/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "server.js"]
