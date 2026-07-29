@@ -62,7 +62,7 @@ Optional flags: `--name`, `--phone`.
 
 ```bash
 npm run admin:init -- --email "your.email@gmail.com" --password "YourStrongPassword2026"
-npm run admin:init -- --remove --email "admin@mess.local"
+npm run admin:init -- --remove --email "admin@bachelorpoint.local"
 ```
 
 `--remove` deletes the account when it has no linked records. If it does have linked data, the
@@ -176,12 +176,12 @@ current group first (`/members` → **Leave this group**), then accept the new i
 
 | Account | Password | Notes |
 | --- | --- | --- |
-| `supervisor-1@mess.local` … `supervisor-4@mess.local` | same as the email | Each runs 2-3 groups |
-| `member-1@mess.local` … `member-120@mess.local` | same as the email | Most are already in a group |
-| `pending-1@mess.local` … `pending-5@mess.local` | same as the email | Awaiting approval — cannot sign in |
-| `rejected-1@mess.local` … `rejected-3@mess.local` | same as the email | Rejected — cannot sign in |
+| `supervisor-1@bachelorpoint.local` … `supervisor-4@bachelorpoint.local` | same as the email | Each runs 2-3 groups |
+| `member-1@bachelorpoint.local` … `member-120@bachelorpoint.local` | same as the email | Most are already in a group |
+| `pending-1@bachelorpoint.local` … `pending-5@bachelorpoint.local` | same as the email | Awaiting approval — cannot sign in |
+| `rejected-1@bachelorpoint.local` … `rejected-3@bachelorpoint.local` | same as the email | Rejected — cannot sign in |
 
-Example: email `member-1@mess.local`, password `member-1@mess.local`.
+Example: email `member-1@bachelorpoint.local`, password `member-1@bachelorpoint.local`.
 
 The seed **never creates an administrator** and never touches existing admin accounts, so
 re-seeding a development database will not remove yours.
