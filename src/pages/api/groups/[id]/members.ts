@@ -25,8 +25,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const canManage = await canManageGroup(groupId, sessionUser);
 
-  // ---------------------------------------------------------------- roster
-  // Current and past members with stay duration, for the members/report views.
   if (req.method === 'GET') {
     const isMember = await prisma.membership.findFirst({
       where: { groupId, userId: sessionUser.id, isActive: true },
@@ -60,7 +58,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  // Admin can add members directly; supervisors invite instead (see /invitations).
   if (req.method === 'POST') {
     if (!requireAdmin(sessionUser)) {
       return forbidden(res, 'Only admins can add members directly. Supervisors should invite members.');
@@ -84,7 +81,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return conflict(res, 'That user is already a member of this group.');
     }
 
-    // Spec rule: one active group per member.
     const joinable = await canJoinGroup(member.id, groupId);
     if (!joinable.ok) {
       return conflict(res, joinable.error);
@@ -95,7 +91,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return created(res, { membership, member: { id: member.id, name: member.name, email: member.email } });
   }
 
-  // Re-activate a member who previously left, without going through an invitation.
   if (req.method === 'PATCH') {
     if (!canManage) {
       return forbidden(res, "Only this group's supervisor can change membership.");
@@ -135,8 +130,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, { membership: updated });
   }
 
-  // Remove a member. The supervisor/admin can remove anyone; a member can remove
-  // themselves — the spec says members may leave a group on their own.
   if (req.method === 'DELETE') {
     const { userId } = req.body as { userId?: string };
     const targetId = userId ?? sessionUser.id;
@@ -159,8 +152,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return notFound(res, isSelf ? 'You are not an active member of this group.' : 'That user is not an active member of this group.');
     }
 
-    // Soft leave: isActive false with leftAt set, so meals, expenses, and the
-    // stay history for the months they were here all stay intact.
     await prisma.membership.update({
       where: { id: membership.id },
       data: { isActive: false, leftAt: new Date() }

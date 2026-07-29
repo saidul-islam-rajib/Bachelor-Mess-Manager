@@ -4,13 +4,6 @@ import { methodNotAllowed, notFound, unauthorized } from '@/lib/http';
 import { readProfileImage } from '@/lib/uploads';
 import { withAudit } from '@/lib/with-audit';
 
-/**
- * Serves an uploaded profile image.
- *
- * These live outside `public/` because Next.js snapshots that directory at build
- * time, so files written at runtime would 404 under `next start`. Reading from
- * disk per request also lets us require a session — avatars stay inside the mess.
- */
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return methodNotAllowed(res, ['GET', 'HEAD']);
@@ -33,7 +26,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   res.setHeader('Content-Type', file.contentType);
   res.setHeader('Content-Length', file.body.length);
-  // File names carry a random suffix, so a given URL's bytes never change.
+
   res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
   res.setHeader('X-Content-Type-Options', 'nosniff');
 

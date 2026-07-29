@@ -1,28 +1,33 @@
+import { appConfig } from '@/config';
+import { strings } from '@/lib/i18n';
+
 export const STRINGS = {
-  appName: 'Bachelor Point',
+  appName: appConfig.name,
   home: {
-    title: 'Bachelor Point',
-    description: 'Manage groups, meals, expenses, and member dashboards in one place.',
-    login: 'Login',
-    register: 'Register'
+    title: appConfig.name,
+    description: strings.common.appTagline,
+    login: strings.nav.login,
+    register: strings.nav.register
   },
   auth: {
     login: {
-      title: 'Login',
-      email: 'Email',
-      password: 'Password',
-      submit: 'Sign in',
-      registerLink: "Don't have an account?",
-      register: 'Register'
+      title: strings.auth.login.title,
+      email: strings.auth.login.email,
+      password: strings.auth.login.password,
+      submit: strings.auth.login.submit,
+      registerLink: strings.auth.login.registerPrompt,
+      register: strings.auth.login.registerLink
     },
     register: {
-      title: 'Register',
-      name: 'Name',
-      email: 'Email',
-      password: 'Password',
-      submit: 'Create account',
-      loginLink: 'Already have an account?',
-      login: 'Login'
+      title: strings.auth.register.title,
+      name: strings.auth.register.name,
+      email: strings.auth.register.email,
+      password: strings.auth.register.password,
+      submit: strings.auth.register.submit,
+      loginLink: strings.auth.register.loginPrompt,
+      login: strings.auth.register.loginLink
     }
   }
 };
+
+export { strings };

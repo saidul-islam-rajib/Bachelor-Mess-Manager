@@ -319,7 +319,6 @@ function BillRow({
   );
 }
 
-/** Shared by the add and edit forms — the fields and the split editor are identical. */
 function useBillForm(initial?: Bill, members: Member[] = []) {
   const [type, setType] = useState(initial?.type ?? BILL_TYPES[0].value);
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
@@ -338,7 +337,6 @@ function useBillForm(initial?: Bill, members: Member[] = []) {
     [custom]
   );
 
-  /** Deal the amount out evenly across whoever is currently ticked. */
   function spreadEvenly() {
     const selected = Object.keys(custom);
     const total = Number(amount);
@@ -548,7 +546,7 @@ function AddBillForm({
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  // Remount on month/group change so a stale draft never leaks across contexts.
+
   const { fields, body } = useBillForm(undefined, members);
 
   async function submit(event: FormEvent<HTMLFormElement>) {

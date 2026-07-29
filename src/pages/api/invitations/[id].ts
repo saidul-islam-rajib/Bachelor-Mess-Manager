@@ -28,7 +28,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Invitation not found.');
   }
 
-  // Cancel: the supervisor who sent it (or an admin) can withdraw a pending invitation.
   if (req.method === 'DELETE') {
     if (invitation.invitedById !== sessionUser.id && !requireAdmin(sessionUser)) {
       return forbidden(res, 'Only the sender can cancel this invitation.');
@@ -37,7 +36,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, { cancelled: true });
   }
 
-  // Only the person who was invited can accept or reject it.
   if (invitation.inviteeId !== sessionUser.id) {
     return forbidden(res, 'This invitation is not addressed to you.');
   }
@@ -50,9 +48,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, 'Status must be ACCEPTED or REJECTED.');
   }
 
-  // Accepting makes the user a member — but only if the one-active-group rule
-  // allows it. Check before writing, so a refusal leaves the invitation pending
-  // and the member can accept it after leaving their current mess.
   if (status === INVITATION_STATUS.ACCEPTED) {
     const joinable = await canJoinGroupSelf(sessionUser.id, invitation.groupId);
     if (!joinable.ok) {

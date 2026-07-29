@@ -122,8 +122,6 @@ export default function GroupsPage() {
     function onMove(event: PointerEvent) {
       const current = dragIndex as number;
 
-      // Let a swap finish animating before allowing the next one, so cards
-      // don't thrash while the pointer sits near a boundary.
       if (Date.now() - lastSwap.current < 200) return;
 
       let target = current;

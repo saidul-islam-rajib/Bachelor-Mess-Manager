@@ -52,8 +52,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, {
       canManage,
       currentUserId: sessionUser.id,
-      // Names kept stable for the payments page; `mealCost` and `billShare` now
-      // break the total down so a member can see where their dues come from.
       members: report.members.map((m) => ({
         id: m.id,
         name: m.name,

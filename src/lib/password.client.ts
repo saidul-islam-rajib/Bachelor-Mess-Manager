@@ -1,14 +1,9 @@
-// The parts of the password policy that are pure logic, with no Node crypto.
-//
-// Split out so the sign-up and profile pages can import the exact same rules the
-// server enforces without dragging `node:crypto` into the browser bundle.
-// Server code should import from `@/lib/password`, which re-exports all of this.
+import { passwordConfig } from '@/config';
+import { strings } from '@/lib/i18n';
 
-export const PASSWORD_MIN_LENGTH = 8;
-export const PASSWORD_MAX_LENGTH = 200;
+export const PASSWORD_MIN_LENGTH = passwordConfig.minLength;
+export const PASSWORD_MAX_LENGTH = passwordConfig.maxLength;
 
-// Small blocklist of the passwords that show up first in every credential-stuffing
-// list. Not a substitute for a full breach corpus, but it stops the worst choices.
 const COMMON_PASSWORDS = new Set([
   '12345678',
   '123456789',
@@ -34,29 +29,26 @@ const COMMON_PASSWORDS = new Set([
   'messmess'
 ]);
 
-/**
- * Password policy. Deliberately length-first (per NIST SP 800-63B) rather than
- * demanding a symbol/digit zoo: long passphrases beat short cryptic ones, and
- * composition rules mostly push people towards "Password1!".
- */
-export function validatePassword(password: unknown): { ok: true } | { ok: false; error: string } {
+export type PasswordValidationResult = { ok: true } | { ok: false; error: string };
+
+export function validatePassword(password: unknown): PasswordValidationResult {
   if (typeof password !== 'string' || password.length === 0) {
-    return { ok: false, error: 'Password is required.' };
+    return { ok: false, error: strings.validation.passwordRequired };
   }
   if (password.length < PASSWORD_MIN_LENGTH) {
-    return { ok: false, error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters.` };
+    return { ok: false, error: strings.validation.passwordTooShort(PASSWORD_MIN_LENGTH) };
   }
   if (password.length > PASSWORD_MAX_LENGTH) {
-    return { ok: false, error: `Password must be at most ${PASSWORD_MAX_LENGTH} characters.` };
+    return { ok: false, error: strings.validation.passwordTooLong(PASSWORD_MAX_LENGTH) };
   }
   if (/^\s|\s$/.test(password)) {
-    return { ok: false, error: 'Password cannot start or end with a space.' };
+    return { ok: false, error: strings.validation.passwordSpaces };
   }
   if (COMMON_PASSWORDS.has(password.toLowerCase())) {
-    return { ok: false, error: 'That password is too common. Please choose a different one.' };
+    return { ok: false, error: strings.validation.passwordCommon };
   }
   if (/^(.)\1+$/.test(password)) {
-    return { ok: false, error: 'Password cannot be a single repeated character.' };
+    return { ok: false, error: strings.validation.passwordRepeated };
   }
   return { ok: true };
 }

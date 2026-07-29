@@ -40,7 +40,7 @@ export function MentionInput({
       setQuery(null);
       return;
     }
-    // Stop offering names once the fragment is clearly no longer a name.
+
     if (match[1].length > 30) {
       setQuery(null);
       return;

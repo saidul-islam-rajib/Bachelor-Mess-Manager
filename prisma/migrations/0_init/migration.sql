@@ -3,6 +3,55 @@ BEGIN TRY
 BEGIN TRAN;
 
 -- CreateTable
+CREATE TABLE [dbo].[Role] (
+    [code] NVARCHAR(1000) NOT NULL,
+    [name] NVARCHAR(1000) NOT NULL,
+    [description] NVARCHAR(1000),
+    [rank] INT NOT NULL CONSTRAINT [Role_rank_df] DEFAULT 0,
+    [isSystem] BIT NOT NULL CONSTRAINT [Role_isSystem_df] DEFAULT 1,
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Role_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [createdById] NVARCHAR(1000),
+    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Role_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [updatedById] NVARCHAR(1000),
+    [isPublished] BIT NOT NULL CONSTRAINT [Role_isPublished_df] DEFAULT 1,
+    [publishedAt] DATETIME2,
+    [unpublishedAt] DATETIME2,
+    CONSTRAINT [Role_pkey] PRIMARY KEY CLUSTERED ([code])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[Permission] (
+    [code] NVARCHAR(1000) NOT NULL,
+    [name] NVARCHAR(1000) NOT NULL,
+    [description] NVARCHAR(1000),
+    [category] NVARCHAR(1000) NOT NULL,
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Permission_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [createdById] NVARCHAR(1000),
+    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Permission_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [updatedById] NVARCHAR(1000),
+    [isPublished] BIT NOT NULL CONSTRAINT [Permission_isPublished_df] DEFAULT 1,
+    [publishedAt] DATETIME2,
+    [unpublishedAt] DATETIME2,
+    CONSTRAINT [Permission_pkey] PRIMARY KEY CLUSTERED ([code])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[RolePermission] (
+    [id] NVARCHAR(1000) NOT NULL,
+    [roleCode] NVARCHAR(1000) NOT NULL,
+    [permissionCode] NVARCHAR(1000) NOT NULL,
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [RolePermission_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [createdById] NVARCHAR(1000),
+    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [RolePermission_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [updatedById] NVARCHAR(1000),
+    [isPublished] BIT NOT NULL CONSTRAINT [RolePermission_isPublished_df] DEFAULT 1,
+    [publishedAt] DATETIME2,
+    [unpublishedAt] DATETIME2,
+    CONSTRAINT [RolePermission_pkey] PRIMARY KEY CLUSTERED ([id]),
+    CONSTRAINT [RolePermission_roleCode_permissionCode_key] UNIQUE NONCLUSTERED ([roleCode],[permissionCode])
+);
+
+-- CreateTable
 CREATE TABLE [dbo].[User] (
     [id] NVARCHAR(1000) NOT NULL,
     [name] NVARCHAR(1000) NOT NULL,
@@ -23,6 +72,24 @@ CREATE TABLE [dbo].[User] (
     [unpublishedAt] DATETIME2,
     CONSTRAINT [User_pkey] PRIMARY KEY CLUSTERED ([id]),
     CONSTRAINT [User_email_key] UNIQUE NONCLUSTERED ([email])
+);
+
+-- CreateTable
+CREATE TABLE [dbo].[LoginAttempt] (
+    [id] NVARCHAR(1000) NOT NULL,
+    [email] NVARCHAR(1000) NOT NULL,
+    [ipAddress] NVARCHAR(1000) NOT NULL,
+    [userAgent] NVARCHAR(1000),
+    [successful] BIT NOT NULL CONSTRAINT [LoginAttempt_successful_df] DEFAULT 0,
+    [reason] NVARCHAR(1000),
+    [createdAt] DATETIME2 NOT NULL CONSTRAINT [LoginAttempt_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [createdById] NVARCHAR(1000),
+    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [LoginAttempt_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
+    [updatedById] NVARCHAR(1000),
+    [isPublished] BIT NOT NULL CONSTRAINT [LoginAttempt_isPublished_df] DEFAULT 1,
+    [publishedAt] DATETIME2,
+    [unpublishedAt] DATETIME2,
+    CONSTRAINT [LoginAttempt_pkey] PRIMARY KEY CLUSTERED ([id])
 );
 
 -- CreateTable
@@ -47,15 +114,22 @@ CREATE TABLE [dbo].[Group] (
 -- CreateTable
 CREATE TABLE [dbo].[SiteSettings] (
     [id] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_id_df] DEFAULT 'singleton',
-    [companyName] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_companyName_df] DEFAULT 'Team Sober',
+    [companyName] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_companyName_df] DEFAULT 'Bachelor Point',
     [tagline] NVARCHAR(1000),
     [address] NVARCHAR(1000),
     [contactEmail] NVARCHAR(1000),
     [contactPhone] NVARCHAR(1000),
-    [copyrightOwner] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_copyrightOwner_df] DEFAULT 'Team Sober',
+    [copyrightOwner] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_copyrightOwner_df] DEFAULT 'Bachelor Point',
     [facebookUrl] NVARCHAR(1000),
     [twitterUrl] NVARCHAR(1000),
     [newsletterEnabled] BIT NOT NULL CONSTRAINT [SiteSettings_newsletterEnabled_df] DEFAULT 1,
+    [maxLoginAttempts] INT NOT NULL CONSTRAINT [SiteSettings_maxLoginAttempts_df] DEFAULT 5,
+    [loginLockoutMinutes] INT NOT NULL CONSTRAINT [SiteSettings_loginLockoutMinutes_df] DEFAULT 15,
+    [maxLoginAttemptsPerIp] INT NOT NULL CONSTRAINT [SiteSettings_maxLoginAttemptsPerIp_df] DEFAULT 40,
+    [ipLockoutMinutes] INT NOT NULL CONSTRAINT [SiteSettings_ipLockoutMinutes_df] DEFAULT 15,
+    [maxRegistrationsPerIp] INT NOT NULL CONSTRAINT [SiteSettings_maxRegistrationsPerIp_df] DEFAULT 5,
+    [registrationWindowMinutes] INT NOT NULL CONSTRAINT [SiteSettings_registrationWindowMinutes_df] DEFAULT 60,
+    [requireStrongPasswords] BIT NOT NULL CONSTRAINT [SiteSettings_requireStrongPasswords_df] DEFAULT 0,
     [createdAt] DATETIME2 NOT NULL CONSTRAINT [SiteSettings_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
     [createdById] NVARCHAR(1000),
     [updatedAt] DATETIME2 NOT NULL CONSTRAINT [SiteSettings_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
@@ -344,6 +418,90 @@ CREATE TABLE [dbo].[Comment] (
     [unpublishedAt] DATETIME2,
     CONSTRAINT [Comment_pkey] PRIMARY KEY CLUSTERED ([id])
 );
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [RolePermission_roleCode_idx] ON [dbo].[RolePermission]([roleCode]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [User_role_idx] ON [dbo].[User]([role]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [User_status_idx] ON [dbo].[User]([status]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [User_createdAt_idx] ON [dbo].[User]([createdAt]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [LoginAttempt_email_createdAt_idx] ON [dbo].[LoginAttempt]([email], [createdAt]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [LoginAttempt_ipAddress_createdAt_idx] ON [dbo].[LoginAttempt]([ipAddress], [createdAt]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [LoginAttempt_createdAt_idx] ON [dbo].[LoginAttempt]([createdAt]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Group_supervisorId_idx] ON [dbo].[Group]([supervisorId]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Group_status_idx] ON [dbo].[Group]([status]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Invitation_inviteeId_status_idx] ON [dbo].[Invitation]([inviteeId], [status]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Invitation_groupId_status_idx] ON [dbo].[Invitation]([groupId], [status]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Membership_userId_isActive_idx] ON [dbo].[Membership]([userId], [isActive]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Membership_groupId_isActive_idx] ON [dbo].[Membership]([groupId], [isActive]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [MealEntry_groupId_date_idx] ON [dbo].[MealEntry]([groupId], [date]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [MealEntry_userId_date_idx] ON [dbo].[MealEntry]([userId], [date]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [ExpenseEntry_groupId_type_date_idx] ON [dbo].[ExpenseEntry]([groupId], [type], [date]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [ExpenseEntry_groupId_date_idx] ON [dbo].[ExpenseEntry]([groupId], [date]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [ExpenseShare_userId_idx] ON [dbo].[ExpenseShare]([userId]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [ExpenseItem_expenseId_idx] ON [dbo].[ExpenseItem]([expenseId]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [ExpenseComment_expenseId_idx] ON [dbo].[ExpenseComment]([expenseId]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [PaymentStatus_groupId_dueDate_idx] ON [dbo].[PaymentStatus]([groupId], [dueDate]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [PaymentStatus_userId_dueDate_idx] ON [dbo].[PaymentStatus]([userId], [dueDate]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [ExpenseHistory_groupId_expenseDate_idx] ON [dbo].[ExpenseHistory]([groupId], [expenseDate]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [CommentReply_commentId_idx] ON [dbo].[CommentReply]([commentId]);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Comment_groupId_createdAt_idx] ON [dbo].[Comment]([groupId], [createdAt]);
+
+-- AddForeignKey
+ALTER TABLE [dbo].[RolePermission] ADD CONSTRAINT [RolePermission_roleCode_fkey] FOREIGN KEY ([roleCode]) REFERENCES [dbo].[Role]([code]) ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[RolePermission] ADD CONSTRAINT [RolePermission_permissionCode_fkey] FOREIGN KEY ([permissionCode]) REFERENCES [dbo].[Permission]([code]) ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE [dbo].[User] ADD CONSTRAINT [User_role_fkey] FOREIGN KEY ([role]) REFERENCES [dbo].[Role]([code]) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[Group] ADD CONSTRAINT [Group_supervisorId_fkey] FOREIGN KEY ([supervisorId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;

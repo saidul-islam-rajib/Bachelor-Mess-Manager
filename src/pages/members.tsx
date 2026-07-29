@@ -95,7 +95,7 @@ export default function MembersPage() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error ?? 'Could not leave the group.');
       toast.success('You have left the group.');
-      // The group list itself changed, so reload rather than patching state.
+
       window.location.reload();
     } catch (err) {
       toast.error((err as Error).message);
@@ -250,7 +250,7 @@ export default function MembersPage() {
 
 function Avatar({ member, muted = false }: { member: Member; muted?: boolean }) {
   if (member.profileImage) {
-    // eslint-disable-next-line @next/next/no-img-element
+
     return <img src={member.profileImage} alt="" className={`h-10 w-10 rounded-full object-cover ${muted ? 'opacity-60' : ''}`} />;
   }
   const initials = member.name

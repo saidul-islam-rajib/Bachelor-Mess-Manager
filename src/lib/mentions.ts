@@ -55,8 +55,6 @@ export function parseMentions(
 
   if (cursor < text.length) parts.push(text.slice(cursor));
 
-  // Comments written before mentions were stored by id still hold plain "@Name"
-  // text. Highlight those against the names we know, longest first.
   const byLongestName = [...fallbackMembers].filter((m) => m.name).sort((a, b) => b.name.length - a.name.length);
   if (byLongestName.length === 0) return parts;
 

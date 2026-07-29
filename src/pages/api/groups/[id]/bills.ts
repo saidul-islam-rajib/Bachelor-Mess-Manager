@@ -30,7 +30,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const canManage = await canManageGroup(groupId, sessionUser);
 
-  // ------------------------------------------------------------------ list
   if (req.method === 'GET') {
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
@@ -63,7 +62,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       shares: row.shares.map((s) => ({ userId: s.userId, userName: s.user.name, amount: round2(s.amount) }))
     }));
 
-    // Per-type and per-member roll-ups, so the page never re-derives the maths.
     const byType: Record<string, number> = {};
     const byMember = new Map<string, number>();
     for (const bill of bills) {
@@ -88,10 +86,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
 
-  // ---------------------------------------------------------------- create
   if (req.method === 'POST') {
-    // Bills are the supervisor's job: they are group-wide obligations, unlike
-    // bazar which any member can log after doing the shopping.
+
     if (!canManage) {
       return forbidden(res, "Only this group's supervisor can record bills.");
     }
@@ -144,8 +140,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       include: { shares: true }
     });
 
-    // Bills land in the same change history as bazar, so "Change history" stays
-    // one honest timeline of everything money-related in the group.
     await recordExpenseCreated({
       expenseId: bill.id,
       groupId,

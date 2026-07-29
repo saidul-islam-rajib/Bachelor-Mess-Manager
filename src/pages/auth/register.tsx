@@ -31,8 +31,6 @@ export default function RegisterPage() {
     setErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
   }
 
-  // Mirrors the server's rules so mistakes surface before a round trip; the
-  // server still re-validates everything, because a client can be bypassed.
   function validate(): Errors {
     const next: Errors = {};
 
@@ -78,7 +76,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // The first account on a fresh database is made admin and signed straight in.
       if (data.signedIn) {
         await refresh();
         toast.success(data.message ?? 'Welcome!');

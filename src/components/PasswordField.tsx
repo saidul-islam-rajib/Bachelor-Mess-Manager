@@ -6,7 +6,6 @@ type Props = {
   value: string;
   onChange: (value: string) => void;
   autoComplete?: 'current-password' | 'new-password';
-  /** Show the 0-4 strength meter (sign-up and password-change forms). */
   showStrength?: boolean;
   error?: string;
   hint?: string;
@@ -58,7 +57,7 @@ export function PasswordField({
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          // Password managers and screen readers both need to know what this does.
+
           aria-label={visible ? 'Hide password' : 'Show password'}
           className="absolute inset-y-0 right-0 px-4 text-sm font-medium text-slate-500 hover:text-slate-900"
         >

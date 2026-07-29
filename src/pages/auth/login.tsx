@@ -9,7 +9,6 @@ import { ROUTES } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
 import { isValidEmail } from '@/lib/validation';
 
-/** Only ever redirect to a path on this site — never to an attacker's URL. */
 function safeNext(next: unknown): string | null {
   if (typeof next !== 'string') return null;
   if (!next.startsWith('/') || next.startsWith('//')) return null;
@@ -57,7 +56,6 @@ export default function LoginPage() {
         return;
       }
 
-      // Refresh the shared user context so the nav/role update without a reload.
       await refresh();
       toast.success(`Welcome back, ${data.user?.name ?? ''}`.trim() + '.');
       await router.push(safeNext(router.query.next) ?? ROUTES.dashboard);

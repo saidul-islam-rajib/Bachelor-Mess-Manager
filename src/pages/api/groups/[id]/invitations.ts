@@ -23,7 +23,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Group not found.');
   }
 
-  // Only the group's supervisor (or an admin) can send or view invitations.
   const canManage = group.supervisorId === sessionUser.id || requireAdmin(sessionUser);
   if (!canManage) {
     return forbidden(res, 'Only this group\'s supervisor can manage invitations.');
@@ -66,7 +65,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       where: { groupId, inviteeId: invitee.id, status: INVITATION_STATUS.PENDING }
     });
 
-    // Never create a duplicate: if one is still pending, just re-send (refresh) it.
     const invitation = pendingInvite
       ? await prisma.invitation.update({
           where: { id: pendingInvite.id },
@@ -81,8 +79,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           }
         });
 
-    // The invite is allowed either way, but tell the supervisor if this person
-    // still has to leave another mess before they can accept it.
     const joinable = await canJoinGroup(invitee.id, groupId);
 
     return created(res, {

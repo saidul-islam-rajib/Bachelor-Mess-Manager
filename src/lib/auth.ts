@@ -3,10 +3,6 @@ import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from
 
 export { SESSION_COOKIE_NAME } from '@/lib/session';
 
-/**
- * The pre-hardening cookie held a bare user id and was trivially forgeable.
- * We clear it alongside every session write so old browsers drop it.
- */
 export const LEGACY_SESSION_COOKIE_NAME = 'mess_session_user_id';
 
 export function parseCookies(cookieHeader?: string) {
@@ -50,14 +46,12 @@ export function serializeCookie(
   return parts.join('; ');
 }
 
-/** Append a Set-Cookie header without dropping ones already queued on the response. */
 export function appendCookie(res: NextApiResponse, cookie: string) {
   const existing = res.getHeader('Set-Cookie');
   const list = Array.isArray(existing) ? existing : existing ? [String(existing)] : [];
   res.setHeader('Set-Cookie', [...list, cookie]);
 }
 
-/** Issue a fresh signed session cookie for this user. */
 export async function setSessionCookie(res: NextApiResponse, userId: string, tokenVersion: number) {
   const token = await createSessionToken(userId, tokenVersion);
   appendCookie(res, serializeCookie(SESSION_COOKIE_NAME, token, { maxAge: SESSION_MAX_AGE_SECONDS }));

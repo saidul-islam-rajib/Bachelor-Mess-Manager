@@ -1,18 +1,3 @@
-// The single source of truth for "who owes what" in a group, for one month.
-//
-// A member's balance has four moving parts:
-//
-//   meal cost    their share of the bazar, priced day by day at that day's rate
-//   bill share   their slice of rent, utilities, chef, wifi, other
-//   bazar paid   money they fronted by doing the shopping themselves
-//   collected    money the supervisor has recorded as received from them
-//
-//   due = mealCost + billShare - bazarPaid - collected
-//
-// A negative due means the mess owes them (they shopped more than they ate).
-// Every screen that shows money — payments, dashboards, the group page — reads
-// this, so no two pages can disagree about a member's balance.
-
 import { prisma } from '@/lib/prisma';
 import { billSharesByUser, billTotalsByType } from '@/lib/bills';
 import { buildMealSummary, type MealSummary } from '@/lib/meal-summary';
@@ -66,7 +51,7 @@ type GroupInput = {
 export function paymentState(cost: number, settled: number): string {
   if (cost <= 0) return PAYMENT_STATUS.PAID;
   if (settled <= 0) return PAYMENT_STATUS.PENDING;
-  // A hair of tolerance so float noise does not report a fully paid member as partial.
+
   if (settled + 0.01 < cost) return PAYMENT_STATUS.PARTIAL;
   return PAYMENT_STATUS.PAID;
 }
@@ -133,8 +118,6 @@ export async function buildGroupReport(group: GroupInput, monthKey?: string): Pr
       bills: billsTotal,
       expense: round2(summary.totals.expense + billsTotal),
       meals: totalMeals,
-      // Month-level average. The per-day rates in `days` are what actually price
-      // each member's meals; this is the headline number people ask for.
       mealRate: totalMeals > 0 ? round2(summary.totals.expense / totalMeals) : 0,
       mealCost: summary.totals.cost,
       collected: round2(members.reduce((a, m) => a + m.collected, 0)),

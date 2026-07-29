@@ -157,7 +157,6 @@ export default function DashboardPage() {
   );
 }
 
-// -------------------------------------------------------------------- admin
 function AdminDashboard({ report }: { report: AdminReport }) {
   return (
     <div className="space-y-6">
@@ -200,7 +199,6 @@ function AdminDashboard({ report }: { report: AdminReport }) {
   );
 }
 
-// --------------------------------------------------------------- supervisor
 function SupervisorDashboard({ report }: { report: SupervisorReport }) {
   const { totals } = report;
 
@@ -312,7 +310,6 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
   );
 }
 
-// ------------------------------------------------------------------- member
 function MemberDashboard({ report, currentUserId }: { report: MemberReport; currentUserId?: string }) {
   if (!report.group || !report.current) {
     return (
@@ -445,7 +442,6 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
   );
 }
 
-// ------------------------------------------------------------------ shared
 function CostBreakdown({ byType, total }: { byType: Record<string, number>; total: number }) {
   const rows = Object.entries(byType)
     .filter(([, amount]) => amount > 0)

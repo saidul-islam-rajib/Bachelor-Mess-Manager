@@ -8,7 +8,6 @@ import { currentMonthKey, parseMonth, round2 } from '@/lib/month';
 import { stayDays } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
-/** The month before `key` ("2026-01" -> "2025-12"). */
 function previousMonthKey(key: string): string {
   const [year, month] = key.split('-').map(Number);
   const date = new Date(Date.UTC(year, month - 2, 1));
@@ -24,8 +23,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return methodNotAllowed(res, ['GET']);
   }
 
-  // This endpoint used to be unauthenticated and returned totals across every
-  // group in the system. It is now scoped to whoever is asking.
   const sessionUser = await getSessionUser(req, res);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
@@ -45,7 +42,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   return ok(res, { role: USER_ROLES.MEMBER, month, member: await memberReport(sessionUser.id, month) });
 }
 
-// ------------------------------------------------------------------- admin
 async function adminReport() {
   const [pendingUsers, users, groups, activeMemberships] = await Promise.all([
     prisma.user.count({ where: { status: USER_STATUS.PENDING } }),
@@ -67,7 +63,6 @@ async function adminReport() {
   };
 }
 
-// -------------------------------------------------------------- supervisor
 async function supervisorReport(supervisorId: string, month: string) {
   const groups = await prisma.group.findMany({
     where: { supervisorId },
@@ -140,13 +135,11 @@ async function supervisorReport(supervisorId: string, month: string) {
       outstanding: totalOutstanding
     },
     byType,
-    // Biggest debts first — that is the list a supervisor actually chases.
     unpaid: unpaid.sort((a, b) => b.due - a.due).slice(0, 10),
     longestStaying: longestStaying.sort((a, b) => b.days - a.days).slice(0, 5)
   };
 }
 
-// ------------------------------------------------------------------ member
 async function memberReport(userId: string, month: string) {
   const [membership, pendingInvitations] = await Promise.all([
     getActiveMembership(userId),

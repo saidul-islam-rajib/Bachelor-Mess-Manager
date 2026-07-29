@@ -1,6 +1,3 @@
-// Helpers for month-scoped queries. Everything is UTC and day-granular so that
-// storage, filtering, and the date lock stay consistent across the app.
-
 export function currentMonthKey(): string {
   const now = new Date();
   return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
@@ -24,7 +21,6 @@ export function daysInMonth(monthKey?: string): string[] {
   return days;
 }
 
-// "YYYY-MM-DD" -> UTC midnight Date (used as the canonical per-day key).
 export function dayToUtcDate(dayKey: string): Date {
   return new Date(`${dayKey}T00:00:00.000Z`);
 }
@@ -41,7 +37,6 @@ export function round2(n: number): number {
   return Math.round((n + Number.EPSILON) * 100) / 100;
 }
 
-// Month choices for a dropdown, newest first (default selection = current month).
 export function monthOptions(back = 11, forward = 1): { key: string; label: string }[] {
   const now = new Date();
   const opts: { key: string; label: string }[] = [];

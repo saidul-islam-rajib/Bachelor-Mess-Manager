@@ -2,25 +2,28 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { setSessionCookie } from '@/lib/auth';
-import { hashPassword, validatePassword } from '@/lib/password';
+import { hashPassword, validatePasswordWithPolicy } from '@/lib/password';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
-import { badRequest, conflict, created, methodNotAllowed } from '@/lib/http';
-import { clientIp, rateLimit } from '@/lib/rate-limit';
+import { badRequest, conflict, created, methodNotAllowed, tooManyRequests } from '@/lib/http';
+import { clientIp } from '@/lib/rate-limit';
+import { countRecentRegistrations, recordRegistrationAttempt } from '@/lib/login-attempts';
+import { getSecurityPolicy } from '@/lib/settings-service';
+import { strings } from '@/lib/i18n';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
 import { withAudit } from '@/lib/with-audit';
-
-const PER_IP_LIMIT = 5;
-const PER_IP_WINDOW_MS = 60 * 60 * 1000;
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return methodNotAllowed(res, ['POST']);
   }
 
-  const limit = rateLimit(`register:ip:${clientIp(req)}`, PER_IP_LIMIT, PER_IP_WINDOW_MS);
-  if (!limit.allowed) {
-    res.setHeader('Retry-After', String(limit.retryAfter));
-    return res.status(429).json({ error: 'Too many sign-up attempts. Please try again later.' });
+  const policy = await getSecurityPolicy();
+  const ipAddress = clientIp(req);
+
+  const recentRegistrations = await countRecentRegistrations(ipAddress);
+  if (recentRegistrations >= policy.maxRegistrationsPerIp) {
+    res.setHeader('Retry-After', String(policy.registrationWindowMinutes * 60));
+    return tooManyRequests(res, strings.errors.tooManySignups);
   }
 
   const { name, email, password, phone } = req.body as Record<string, unknown>;
@@ -34,19 +37,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const phoneCheck = validatePhone(phone);
   if (!phoneCheck.ok) return badRequest(res, phoneCheck.error);
 
-  const passwordCheck = validatePassword(password);
+  const passwordCheck = validatePasswordWithPolicy(password, policy.requireStrongPasswords);
   if (!passwordCheck.ok) return badRequest(res, passwordCheck.error);
 
   const existing = await prisma.user.findUnique({ where: { email: emailCheck.value }, select: { id: true } });
   if (existing) {
-    // This app's user list is already visible to admins and every account needs
-    // manual approval, so a clear "already registered" beats a vague success
-    // message that would leave someone waiting for an approval that never comes.
-    return conflict(res, 'That email is already registered. Try signing in instead.');
+    return conflict(res, strings.errors.emailTaken);
   }
 
-  // Bootstrap: the very first account on a fresh database becomes the admin and
-  // is signed in immediately — otherwise there would be nobody to approve anyone.
   const isFirstUser = (await prisma.user.count()) === 0;
 
   try {
@@ -62,24 +60,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     });
 
+    await recordRegistrationAttempt(emailCheck.value, ipAddress);
+
     if (isFirstUser) {
       await setSessionCookie(res, user.id, user.tokenVersion);
       return created(res, {
-        message: 'Welcome! As the first account on this system you have been made the administrator.',
+        message: strings.success.registrationSubmitted,
         signedIn: true,
         user: { id: user.id, name: user.name, email: user.email, role: user.role }
       });
     }
 
     return created(res, {
-      message:
-        'Registration submitted. An admin will review your account, and you can sign in once it is approved.',
+      message: strings.auth.submitted.body,
       signedIn: false
     });
   } catch (error) {
-    // Two people submitting the same email at the same moment lose the race here.
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return conflict(res, 'That email is already registered. Try signing in instead.');
+      return conflict(res, strings.errors.emailTaken);
     }
     throw error;
   }

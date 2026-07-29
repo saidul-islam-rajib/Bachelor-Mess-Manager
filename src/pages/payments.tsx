@@ -10,11 +10,8 @@ type MemberRow = {
   name: string;
   email: string;
   meals: number;
-  /** Share of the bazar, priced at each day's meal rate. */
   mealCost: number;
-  /** Share of rent, utilities, chef, wifi and other bills. */
   billShare: number;
-  /** mealCost + billShare. */
   cost: number;
   bazarPaid: number;
   collected: number;

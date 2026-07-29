@@ -132,7 +132,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
 
   async function upload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    // Let the same file be picked again after a failure.
+
     event.target.value = '';
     if (!file) return;
 
@@ -199,7 +199,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
   return (
     <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6">
       {image ? (
-        // eslint-disable-next-line @next/next/no-img-element
+
         <img src={image} alt="" className="h-20 w-20 rounded-full object-cover" />
       ) : (
         <span className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-xl font-medium text-slate-600">

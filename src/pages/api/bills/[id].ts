@@ -25,8 +25,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const bill = await prisma.expenseEntry.findUnique({ where: { id: billId } });
   if (!bill || !BILL_TYPE_VALUES.includes(bill.type)) {
-    // Bazar entries are edited through /api/expenses/[id], which has its own
-    // "only the person who paid" rule. Keep the two doors separate.
+
     return notFound(res, 'Bill not found.');
   }
 
@@ -35,7 +34,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'DELETE') {
-    // Shares cascade with the expense row.
+
     await prisma.expenseEntry.delete({ where: { id: billId } });
 
     await recordExpenseDeleted({
@@ -97,8 +96,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, 'Nothing to update.');
   }
 
-  // Any change to the amount or the split invalidates the stored shares, so we
-  // recompute them as one unit rather than leaving a half-updated bill behind.
   const total = (data.amount as number | undefined) ?? bill.amount;
   const method =
     splitMethod === undefined
@@ -111,8 +108,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   let computedShares: { userId: string; amount: number }[] | null = null;
   if (mustRecompute) {
-    // A CUSTOM bill being re-split without new shares has nothing to divide by,
-    // so fall back to the shares it already has.
+
     const shareInput =
       shares !== undefined
         ? shares

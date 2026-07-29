@@ -7,7 +7,6 @@ export type GroupOption = {
   supervisor: { id: string; name: string; email: string };
 };
 
-// Loads the user's groups and holds the selected group + month.
 export function useGroupMonth() {
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [groupId, setGroupId] = useState('');

@@ -10,8 +10,7 @@ import { withAudit } from '@/lib/with-audit';
 
 export const config = {
   api: {
-    // Profile images travel as base64 in the JSON body; 2 MB of image is ~2.7 MB
-    // encoded, so allow headroom above the 1 MB Next.js default.
+
     bodyParser: { sizeLimit: '4mb' }
   }
 };
@@ -52,8 +51,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const check = validatePassword(password);
     if (!check.ok) return badRequest(res, check.error);
 
-    // Changing a password requires proving you know the current one. Without
-    // this, anyone who walks up to an unlocked browser owns the account.
     if (typeof currentPassword !== 'string' || !currentPassword) {
       return badRequest(res, 'Enter your current password to set a new one.');
     }
@@ -67,11 +64,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     data.password = await hashPassword(password as string);
-    // Invalidate every other session that was signed in with the old password.
+
     data.tokenVersion = { increment: 1 };
   }
 
-  // Image: either a new data URL, or an explicit removal.
   let previousImage: string | null = null;
   if (removeImage === true) {
     previousImage = sessionUser.profileImage;
@@ -101,13 +97,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
   });
 
-  // Only after the row is safely updated do we drop the old file.
   if (previousImage && previousImage !== user.profileImage) {
     await deleteProfileImage(previousImage);
   }
 
-  // A password change bumped tokenVersion, which would log this browser out too.
-  // Re-issue the cookie so the person who made the change stays signed in.
   if (data.tokenVersion) {
     await setSessionCookie(res, user.id, user.tokenVersion);
   }

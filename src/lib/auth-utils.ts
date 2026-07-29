@@ -18,16 +18,6 @@ export function readSessionToken(req: NextApiRequest): string | undefined {
   return parseCookies(req.headers.cookie)[SESSION_COOKIE_NAME];
 }
 
-/**
- * Resolve the signed-in user, or null.
- *
- * A session is only good if the cookie's signature verifies, it has not expired,
- * the user still exists, their tokenVersion still matches (so a password change
- * kills older sessions), and their account is still APPROVED (so a rejected or
- * suspended user is logged out at their next request rather than at next login).
- *
- * Pass `res` to let an ageing-but-valid session slide forward.
- */
 export async function getSessionUser(req: NextApiRequest, res?: NextApiResponse): Promise<SessionUser | null> {
   const payload = await verifySessionToken(readSessionToken(req));
   if (!payload) return null;
@@ -74,7 +64,6 @@ export async function isGroupMember(groupId: string, userId: string) {
   return Boolean(membership);
 }
 
-/** The group's own supervisor, or any admin. */
 export async function canManageGroup(groupId: string, user: { id: string; role: string } | null) {
   if (!user) return false;
   if (requireAdmin(user)) return true;
@@ -82,13 +71,6 @@ export async function canManageGroup(groupId: string, user: { id: string; role: 
   return group?.supervisorId === user.id;
 }
 
-/**
- * The single group a user is currently active in, if any.
- *
- * The product rule is one active membership at a time, so this is the whole of a
- * member's group context. Supervisors are exempt: they hold a membership in each
- * group they run so their own meals are counted.
- */
 export async function getActiveMembership(userId: string) {
   return prisma.membership.findFirst({
     where: { userId, isActive: true },

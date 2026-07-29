@@ -87,9 +87,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, 'Nothing to update.');
   }
 
-  // Revoking approval or changing someone's role must take effect immediately,
-  // not whenever their 30-day cookie happens to expire. Bumping tokenVersion
-  // invalidates every session they already hold.
   if ((data.status !== undefined && data.status !== target.status) || (data.role !== undefined && data.role !== target.role)) {
     data.tokenVersion = { increment: 1 };
   }

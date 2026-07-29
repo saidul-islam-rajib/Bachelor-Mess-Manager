@@ -1,87 +1,131 @@
-// Shared input validation. Used by the API routes; the auth pages import the
-// same helpers so the client shows the same rules the server enforces.
+import { validationConfig } from '@/config';
+import { strings } from '@/lib/i18n';
 
-/**
- * Deliberately permissive. Over-strict email regexes reject valid addresses, and
- * the only reliable proof an address works is sending mail to it — so we check
- * shape only: something, one @, a dotted domain, no spaces.
- */
+export type ValidationResult<T> = { ok: true; value: T } | { ok: false; error: string };
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/;
 
-export const NAME_MIN_LENGTH = 2;
-export const NAME_MAX_LENGTH = 80;
-export const EMAIL_MAX_LENGTH = 254; // RFC 5321 limit
-
-/** Lower-cases and trims so `Saidul@Gmail.com` and `saidul@gmail.com` are one account. */
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
 export function isValidEmail(email: string): boolean {
   const value = normalizeEmail(email);
-  return value.length <= EMAIL_MAX_LENGTH && EMAIL_PATTERN.test(value);
+  return value.length <= validationConfig.emailMaxLength && EMAIL_PATTERN.test(value);
 }
 
-export function validateEmail(email: unknown): { ok: true; value: string } | { ok: false; error: string } {
+export function validateEmail(email: unknown): ValidationResult<string> {
   if (typeof email !== 'string' || !email.trim()) {
-    return { ok: false, error: 'Email is required.' };
+    return { ok: false, error: strings.validation.emailRequired };
   }
   const value = normalizeEmail(email);
   if (!isValidEmail(value)) {
-    return { ok: false, error: 'Enter a valid email address.' };
+    return { ok: false, error: strings.validation.emailInvalid };
   }
   return { ok: true, value };
 }
 
-export function validateName(name: unknown): { ok: true; value: string } | { ok: false; error: string } {
+export function validateName(name: unknown): ValidationResult<string> {
   if (typeof name !== 'string' || !name.trim()) {
-    return { ok: false, error: 'Name is required.' };
+    return { ok: false, error: strings.validation.nameRequired };
   }
-  // Collapse runs of whitespace so "Saidul    Islam" stores as "Saidul Islam".
   const value = name.trim().replace(/\s+/g, ' ');
-  if (value.length < NAME_MIN_LENGTH) {
-    return { ok: false, error: `Name must be at least ${NAME_MIN_LENGTH} characters.` };
+  if (value.length < validationConfig.nameMinLength) {
+    return { ok: false, error: strings.validation.nameTooShort(validationConfig.nameMinLength) };
   }
-  if (value.length > NAME_MAX_LENGTH) {
-    return { ok: false, error: `Name must be at most ${NAME_MAX_LENGTH} characters.` };
+  if (value.length > validationConfig.nameMaxLength) {
+    return { ok: false, error: strings.validation.nameTooLong(validationConfig.nameMaxLength) };
   }
   return { ok: true, value };
 }
 
-/**
- * Bangladeshi mobile numbers are the common case, but members abroad exist, so
- * we accept any plausible international number rather than pinning to +880.
- */
-export function validatePhone(phone: unknown): { ok: true; value: string | null } | { ok: false; error: string } {
+export function validatePhone(phone: unknown): ValidationResult<string | null> {
   if (phone === undefined || phone === null) return { ok: true, value: null };
-  if (typeof phone !== 'string') return { ok: false, error: 'Enter a valid phone number.' };
+  if (typeof phone !== 'string') {
+    return {
+      ok: false,
+      error: strings.validation.phoneInvalid(validationConfig.phoneMinDigits, validationConfig.phoneMaxDigits)
+    };
+  }
 
   const value = phone.trim();
   if (!value) return { ok: true, value: null };
 
   const digits = value.replace(/[\s()-]/g, '');
-  if (!/^\+?\d{6,15}$/.test(digits)) {
-    return { ok: false, error: 'Enter a valid phone number (6-15 digits, optionally starting with +).' };
+  const pattern = new RegExp(`^\\+?\\d{${validationConfig.phoneMinDigits},${validationConfig.phoneMaxDigits}}$`);
+  if (!pattern.test(digits)) {
+    return {
+      ok: false,
+      error: strings.validation.phoneInvalid(validationConfig.phoneMinDigits, validationConfig.phoneMaxDigits)
+    };
   }
   return { ok: true, value: digits };
 }
 
-/** A rough 0-4 strength score for the sign-up meter. Client-side hint only. */
-export function passwordStrength(password: string): { score: 0 | 1 | 2 | 3 | 4; label: string } {
-  if (!password) return { score: 0, label: 'Too short' };
+export function validateText(value: unknown, maxLength: number, required = false): ValidationResult<string> {
+  if (typeof value !== 'string') {
+    return required ? { ok: false, error: strings.validation.required(strings.common.note) } : { ok: true, value: '' };
+  }
+  const trimmed = value.trim();
+  if (required && !trimmed) {
+    return { ok: false, error: strings.validation.required(strings.common.note) };
+  }
+  if (trimmed.length > maxLength) {
+    return { ok: false, error: strings.validation.textTooLong(maxLength) };
+  }
+  return { ok: true, value: trimmed };
+}
+
+export function validateAmount(amount: unknown): ValidationResult<number> {
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) {
+    return { ok: false, error: strings.validation.amountPositive };
+  }
+  if (value > validationConfig.maxMoneyAmount) {
+    return { ok: false, error: strings.validation.amountTooLarge };
+  }
+  return { ok: true, value };
+}
+
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export function isValidDayKey(value: unknown): value is string {
+  return typeof value === 'string' && DATE_PATTERN.test(value);
+}
+
+export function validateDayKey(value: unknown): ValidationResult<string> {
+  if (!isValidDayKey(value)) {
+    return { ok: false, error: strings.validation.dateRequired };
+  }
+  return { ok: true, value };
+}
+
+export type PasswordScore = 0 | 1 | 2 | 3 | 4;
+
+const STRENGTH_LABELS = [
+  strings.auth.passwordStrength.tooShort,
+  strings.auth.passwordStrength.weak,
+  strings.auth.passwordStrength.fair,
+  strings.auth.passwordStrength.good,
+  strings.auth.passwordStrength.strong
+];
+
+export const STRONG_PASSWORD_MIN_SCORE: PasswordScore = 3;
+
+export function passwordStrength(password: string): { score: PasswordScore; label: string } {
+  if (!password) return { score: 0, label: STRENGTH_LABELS[0] };
 
   let score = 0;
   if (password.length >= 8) score += 1;
   if (password.length >= 12) score += 1;
   if (password.length >= 16) score += 1;
 
-  const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((re) => re.test(password)).length;
+  const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((pattern) => pattern.test(password)).length;
   if (classes >= 3) score += 1;
 
-  // A long string of one repeated character should never read as strong.
   if (/^(.)\1+$/.test(password) || /^(..)\1+$/.test(password)) score = Math.min(score, 1);
   if (password.length < 8) score = 0;
 
-  const clamped = Math.min(4, score) as 0 | 1 | 2 | 3 | 4;
-  return { score: clamped, label: ['Too short', 'Weak', 'Fair', 'Good', 'Strong'][clamped] };
+  const clamped = Math.min(4, score) as PasswordScore;
+  return { score: clamped, label: STRENGTH_LABELS[clamped] };
 }

@@ -28,13 +28,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Expense not found.');
   }
   if (expense.type !== EXPENSE_TYPES.BAZAR) {
-    // Rent/utilities/etc. are supervisor-owned and split into shares; they go
-    // through /api/bills/[id], which keeps those shares consistent.
+    
     return notFound(res, 'Expense not found.');
   }
 
-  // Only the member who logged it (or an admin) may change it — supervisors and
-  // other members can view but never edit someone else's entry.
   if (expense.payerId !== sessionUser.id && !requireAdmin(sessionUser)) {
     return forbidden(res, 'You can only edit your own expenses.');
   }
