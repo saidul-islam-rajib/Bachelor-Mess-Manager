@@ -10,7 +10,8 @@ const PUBLIC_PATHS = [
   '/api/auth/register',
   '/api/auth/me',
   '/api/auth/logout',
-  '/api/health'
+  '/api/health',
+  '/api/live'
 ];
 
 const PUBLIC_FILE = /\.[^/]+$/;

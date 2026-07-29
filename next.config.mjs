@@ -26,6 +26,7 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  output: 'standalone',
   compiler: {
     styledComponents: false,
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false
