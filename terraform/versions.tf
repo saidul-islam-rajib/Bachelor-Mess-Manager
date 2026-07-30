@@ -13,10 +13,10 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = "REPLACE-terraform-state-bucket"
+    bucket         = "bachelor-point-tfstate-team-sober-2026"
     key            = "bachelor-point/terraform.tfstate"
     region         = "ap-southeast-1"
-    dynamodb_table = "REPLACE-terraform-locks"
+    dynamodb_table = "bachelor-point-tflocks"
     encrypt        = true
   }
 }
