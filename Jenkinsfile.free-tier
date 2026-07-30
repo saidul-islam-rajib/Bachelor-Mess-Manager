@@ -75,8 +75,7 @@ pipeline {
           sh '''
             ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
               cd ${REMOTE_DIR} &&
-              sed -i 's|REPLACE_WITH_INGRESS_HOST|${SERVER_IP}.nip.io|g' k8s/free-tier/ingress.yaml &&
-              sudo k3s kubectl apply -k k8s/free-tier/
+              sudo k3s kubectl kustomize k8s/free-tier/ | sed 's|REPLACE_IMAGE|docker.io/library/${IMAGE}|g' | sudo k3s kubectl apply -f -
             "
           '''
         }

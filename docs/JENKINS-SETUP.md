@@ -228,18 +228,47 @@ You should now see two credentials listed, with IDs `ssh-key-ec2` and `server-ip
 
 ---
 
-## Step 4 — Add a GitHub credential (only if the repo is private)
+## Step 4 — Add a GitHub credential (required)
 
-If `https://github.com/saidul-islam-rajib/Bachelor-Mess-Manager` is public, skip this.
+**This repository is private**, so Jenkins cannot clone it anonymously. Without this step,
+Step 5 shows:
 
-If it is private, Jenkins cannot clone it without credentials. Use a Personal Access Token, not
-your GitHub password:
+```
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+fatal: Authentication failed for 'https://github.com/saidul-islam-rajib/Bachelor-Mess-Manager.git/'
+```
 
-1. Create a token at <https://github.com/settings/tokens> with the **`repo`** scope
-2. In Jenkins, **+ Add Credentials** → **Username with password**
-   - Username: `saidul-islam-rajib`
-   - Password: the token
-   - ID: `github-creds`
+GitHub stopped accepting account passwords for Git in 2021, so you need a **Personal Access
+Token**.
+
+### Create the token
+
+1. Go to <https://github.com/settings/tokens> → **Tokens (classic)** →
+   **Generate new token (classic)**
+2. Note: `Jenkins bachelor-point`
+3. Expiration: your choice — if it expires, builds start failing with this same error
+4. Scope: tick **`repo`** (the top-level checkbox, which selects everything beneath it)
+5. **Generate token** and copy it immediately — GitHub shows it once
+
+### Add it to Jenkins
+
+You can do this without leaving the job configuration page: click **+ Add** next to the
+**Credentials** dropdown, then **Jenkins**.
+
+| Field | Value |
+| --- | --- |
+| Kind | **Username with password** |
+| Username | `saidul-islam-rajib` |
+| Password | the token you just copied |
+| ID | `github-creds` |
+
+Click **Add**, then select `github-creds` in the **Credentials** dropdown.
+
+The red error disappears within a second or two once Jenkins can authenticate. If it does not,
+the token is wrong or lacks the `repo` scope.
+
+> This credential is only for cloning. It is separate from `ssh-key-ec2`, which is for
+> deploying. Both are needed and they are not interchangeable.
 
 ---
 
