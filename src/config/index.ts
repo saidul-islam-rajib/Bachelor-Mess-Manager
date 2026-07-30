@@ -12,19 +12,63 @@ import {
   VALIDATION_DEFAULTS
 } from '@/config/defaults';
 
+const BROWSER_ENV: Record<string, string | undefined> = {
+  APP_NAME: process.env.APP_NAME,
+  APP_TAGLINE: process.env.APP_TAGLINE,
+  APP_LOCALE: process.env.APP_LOCALE,
+  APP_CURRENCY_CODE: process.env.APP_CURRENCY_CODE,
+  APP_CURRENCY_SYMBOL: process.env.APP_CURRENCY_SYMBOL,
+  APP_DATE_LOCALE: process.env.APP_DATE_LOCALE,
+  APP_TIME_ZONE: process.env.APP_TIME_ZONE,
+  APP_AUTHOR_NAME: process.env.APP_AUTHOR_NAME,
+  APP_AUTHOR_EMAIL: process.env.APP_AUTHOR_EMAIL,
+  APP_AUTHOR_ROLE: process.env.APP_AUTHOR_ROLE,
+  APP_LICENSE: process.env.APP_LICENSE,
+  APP_COPYRIGHT_START_YEAR: process.env.APP_COPYRIGHT_START_YEAR,
+  PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH: process.env.PASSWORD_MAX_LENGTH,
+  GROUP_MAX_PER_SUPERVISOR: process.env.GROUP_MAX_PER_SUPERVISOR,
+  GROUP_MAX_NAME_LENGTH: process.env.GROUP_MAX_NAME_LENGTH,
+  GROUP_MEAL_WEIGHT_BREAKFAST: process.env.GROUP_MEAL_WEIGHT_BREAKFAST,
+  GROUP_MEAL_WEIGHT_LUNCH: process.env.GROUP_MEAL_WEIGHT_LUNCH,
+  GROUP_MEAL_WEIGHT_DINNER: process.env.GROUP_MEAL_WEIGHT_DINNER,
+  VALIDATION_NAME_MIN_LENGTH: process.env.VALIDATION_NAME_MIN_LENGTH,
+  VALIDATION_NAME_MAX_LENGTH: process.env.VALIDATION_NAME_MAX_LENGTH,
+  VALIDATION_EMAIL_MAX_LENGTH: process.env.VALIDATION_EMAIL_MAX_LENGTH,
+  VALIDATION_PHONE_MIN_DIGITS: process.env.VALIDATION_PHONE_MIN_DIGITS,
+  VALIDATION_PHONE_MAX_DIGITS: process.env.VALIDATION_PHONE_MAX_DIGITS,
+  VALIDATION_NOTE_MAX_LENGTH: process.env.VALIDATION_NOTE_MAX_LENGTH,
+  VALIDATION_COMMENT_MAX_LENGTH: process.env.VALIDATION_COMMENT_MAX_LENGTH,
+  VALIDATION_MAX_MONEY_AMOUNT: process.env.VALIDATION_MAX_MONEY_AMOUNT,
+  UPLOAD_MAX_IMAGE_BYTES: process.env.UPLOAD_MAX_IMAGE_BYTES,
+  PAGINATION_PAGE_SIZE: process.env.PAGINATION_PAGE_SIZE,
+  PAGINATION_MAX_PAGE_SIZE: process.env.PAGINATION_MAX_PAGE_SIZE,
+  UI_TOAST_DURATION_MS: process.env.UI_TOAST_DURATION_MS,
+  UI_TOAST_DEDUPE_WINDOW_MS: process.env.UI_TOAST_DEDUPE_WINDOW_MS,
+  UI_SEARCH_DEBOUNCE_MS: process.env.UI_SEARCH_DEBOUNCE_MS,
+  UI_MONTHS_BACK: process.env.UI_MONTHS_BACK,
+  UI_MONTHS_FORWARD: process.env.UI_MONTHS_FORWARD
+};
+
+function readRaw(key: string): string | undefined {
+  const direct = process.env[key];
+  if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+  const inlined = BROWSER_ENV[key];
+  return typeof inlined === 'string' && inlined.trim() ? inlined.trim() : undefined;
+}
+
 function readString(key: string, fallback: string): string {
-  const value = process.env[key];
-  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+  return readRaw(key) ?? fallback;
 }
 
 function readOptionalString(key: string): string | null {
-  const value = process.env[key];
-  return typeof value === 'string' && value.trim() ? value.trim() : null;
+  return readRaw(key) ?? null;
 }
 
 function readNumber(key: string, fallback: number): number {
-  const raw = process.env[key];
-  if (raw === undefined || raw.trim() === '') return fallback;
+  const raw = readRaw(key);
+  if (raw === undefined) return fallback;
   const value = Number(raw);
   return Number.isFinite(value) ? value : fallback;
 }
@@ -35,9 +79,9 @@ function readInt(key: string, fallback: number, min = 1): number {
 }
 
 function readBoolean(key: string, fallback: boolean): boolean {
-  const raw = process.env[key];
-  if (raw === undefined || raw.trim() === '') return fallback;
-  return ['1', 'true', 'yes', 'on'].includes(raw.trim().toLowerCase());
+  const raw = readRaw(key);
+  if (raw === undefined) return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(raw.toLowerCase());
 }
 
 export const nodeEnv = readString('NODE_ENV', 'development');

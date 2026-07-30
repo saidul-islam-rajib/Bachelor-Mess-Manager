@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Logo from '@/components/Logo';
 import { useToast } from '@/components/ToastProvider';
-import { authorConfig } from '@/config';
+import { appConfig, authorConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 
 type Settings = {
@@ -30,8 +30,8 @@ export default function Footer() {
   }, []);
 
   const year = new Date().getFullYear();
-  const companyName = settings?.companyName ?? 'Team Sober';
-  const copyrightOwner = settings?.copyrightOwner ?? 'Team Sober';
+  const companyName = settings?.companyName ?? appConfig.name;
+  const copyrightOwner = settings?.copyrightOwner ?? appConfig.name;
   const showNewsletter = settings?.newsletterEnabled !== false;
 
   async function subscribe(event: FormEvent<HTMLFormElement>) {

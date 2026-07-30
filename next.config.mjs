@@ -22,8 +22,51 @@ const securityHeaders = [
   }
 ];
 
+const BROWSER_ENV_KEYS = [
+  'APP_NAME',
+  'APP_TAGLINE',
+  'APP_LOCALE',
+  'APP_CURRENCY_CODE',
+  'APP_CURRENCY_SYMBOL',
+  'APP_DATE_LOCALE',
+  'APP_TIME_ZONE',
+  'APP_AUTHOR_NAME',
+  'APP_AUTHOR_EMAIL',
+  'APP_AUTHOR_ROLE',
+  'APP_LICENSE',
+  'APP_COPYRIGHT_START_YEAR',
+  'PASSWORD_MIN_LENGTH',
+  'PASSWORD_MAX_LENGTH',
+  'GROUP_MAX_PER_SUPERVISOR',
+  'GROUP_MAX_NAME_LENGTH',
+  'GROUP_MEAL_WEIGHT_BREAKFAST',
+  'GROUP_MEAL_WEIGHT_LUNCH',
+  'GROUP_MEAL_WEIGHT_DINNER',
+  'VALIDATION_NAME_MIN_LENGTH',
+  'VALIDATION_NAME_MAX_LENGTH',
+  'VALIDATION_EMAIL_MAX_LENGTH',
+  'VALIDATION_PHONE_MIN_DIGITS',
+  'VALIDATION_PHONE_MAX_DIGITS',
+  'VALIDATION_NOTE_MAX_LENGTH',
+  'VALIDATION_COMMENT_MAX_LENGTH',
+  'VALIDATION_MAX_MONEY_AMOUNT',
+  'UPLOAD_MAX_IMAGE_BYTES',
+  'PAGINATION_PAGE_SIZE',
+  'PAGINATION_MAX_PAGE_SIZE',
+  'UI_TOAST_DURATION_MS',
+  'UI_TOAST_DEDUPE_WINDOW_MS',
+  'UI_SEARCH_DEBOUNCE_MS',
+  'UI_MONTHS_BACK',
+  'UI_MONTHS_FORWARD'
+];
+
+const browserEnv = Object.fromEntries(
+  BROWSER_ENV_KEYS.filter((key) => typeof process.env[key] === 'string').map((key) => [key, process.env[key]])
+);
+
 const nextConfig = {
   reactStrictMode: true,
+  env: browserEnv,
   poweredByHeader: false,
   compress: true,
   output: 'standalone',

@@ -624,6 +624,173 @@ const en = {
       onlyAdmin: 'Only admins can change site settings.'
     }
   },
+  landing: {
+    meta: {
+      title: (appName: string) => `${appName} — meals, bazar and bills for shared messes`,
+      description:
+        'Track every meal, every bazar receipt and every bill in one place, then let the app work out exactly what each person owes at the end of the month.'
+    },
+    hero: {
+      eyebrow: 'For bachelor messes, hostels and shared flats',
+      title: 'Run your mess without the month-end argument.',
+      subtitle:
+        'Everyone logs their meals. Whoever goes to the bazar records the receipt. The supervisor adds rent, electricity and Wi-Fi. Bachelor Point does the maths and shows each person exactly what they owe.',
+      primary: 'Create your account',
+      secondary: 'Sign in',
+      dashboard: 'Go to dashboard',
+      groups: 'View your groups',
+      signedInAs: (name: string) => `You are signed in as ${name}.`,
+      note: 'Free to use. A new account is reviewed by an administrator before the first sign-in.',
+      previewLabel: 'Preview of the member dashboard showing meals, meal rate and dues for the month',
+      chipRate: 'Meal rate calculated nightly',
+      chipSplit: 'Bills split automatically'
+    },
+    problem: {
+      title: 'The notebook on the fridge never adds up',
+      subtitle: 'Every shared kitchen runs into the same three arguments. Bachelor Point removes all three.',
+      items: [
+        {
+          title: '"How many meals did I actually eat?"',
+          body: 'Someone was away for nine days, someone skips breakfast every morning. By the 30th nobody remembers, so the cost gets split evenly and half the mess feels cheated.'
+        },
+        {
+          title: '"I paid for the bazar last week"',
+          body: 'Receipts live in pockets and phone galleries. The person who spends the most on groceries is usually the one who gets paid back the least.'
+        },
+        {
+          title: '"Who still has not paid?"',
+          body: 'Rent, electricity, water, Wi-Fi and the chef all arrive at once, and chasing seven people for seven different amounts falls on one tired volunteer.'
+        }
+      ]
+    },
+    features: {
+      title: 'What you can do here',
+      subtitle: 'Everything a shared kitchen needs, and nothing it does not.',
+      items: [
+        {
+          icon: 'meals',
+          title: 'Daily meal sheet',
+          body: 'Tick breakfast, lunch and dinner for each day. Breakfast counts as half a meal by default, so the totals stay fair. Past days lock automatically so nobody can edit history.'
+        },
+        {
+          icon: 'bazar',
+          title: 'Itemised bazar',
+          body: 'Record a grocery run item by item — rice, chicken, vegetables, oil — with the amount for each. Every change is kept in a history trail, so an edited receipt is never a mystery.'
+        },
+        {
+          icon: 'bills',
+          title: 'Bills and fixed costs',
+          body: 'Rent, electricity, water, waste, chef and Wi-Fi. Split them evenly across the mess or assign exact amounts to the people a cost actually belongs to.'
+        },
+        {
+          icon: 'payments',
+          title: 'Dues and payments',
+          body: 'See who has paid, who still owes and who the mess owes money back to. Record cash as it comes in and the balances update straight away.'
+        },
+        {
+          icon: 'groups',
+          title: 'Groups and invitations',
+          body: 'A supervisor creates the mess and invites members by email. People join, leave and rejoin over time, and the history of who stayed when is kept.'
+        },
+        {
+          icon: 'comments',
+          title: 'Notes for the house',
+          body: 'Leave a message for everyone, mention a specific person with @ and get a notification when it is your turn to buy the bazar.'
+        }
+      ]
+    },
+    screens: {
+      title: 'A look inside',
+      subtitle: 'These are the three screens you will spend your month in.',
+      meals: {
+        tag: 'Meals',
+        title: 'One tap per meal, per person',
+        body: 'Open the day, tick who ate what and move on. Members record their own meals; the supervisor can fill in for anyone who forgot. Breakfast is weighted at half a meal, so a light eater is never charged like a heavy one.'
+      },
+      bazar: {
+        tag: 'Bazar',
+        title: 'Receipts that survive the month',
+        body: 'Whoever shops enters the items and amounts. The total is credited to them immediately, so at settlement time the mess pays them back instead of arguing about it.'
+      },
+      balances: {
+        tag: 'Payments',
+        title: 'One table that ends the debate',
+        body: 'Meal share, bills share, groceries bought and cash paid, per member, for the month. A negative figure means the mess owes that person a refund.'
+      }
+    },
+    math: {
+      title: 'The maths is not hidden from you',
+      subtitle:
+        'There is no secret formula and no rounding tricks. Every number on your dashboard comes from these two lines, and you can check them yourself.',
+      rateCaption: 'The meal rate is simply what the month cost divided by how much the mess ate.',
+      diagramLabel: 'Diagram: total bazar spend divided by total meals gives the meal rate per meal',
+      balanceTitle: 'And what each person owes',
+      totalBazar: 'Total bazar',
+      totalMeals: 'Total meals',
+      mealRate: 'Meal rate'
+    },
+    steps: {
+      title: 'Getting started takes about five minutes',
+      items: [
+        { title: 'Create an account', body: 'Your name, email and a password. Nothing else.' },
+        {
+          title: 'Wait for approval',
+          body: 'An administrator checks new registrations, which keeps strangers out of your kitchen accounts.'
+        },
+        {
+          title: 'Join or start a mess',
+          body: 'Accept an invitation from your supervisor, or ask for supervisor access and create the group yourself.'
+        },
+        {
+          title: 'Log meals and bazar',
+          body: 'From the first day of the month. The rate, the shares and the dues are worked out for you.'
+        }
+      ]
+    },
+    roles: {
+      title: 'Three kinds of people use it',
+      items: [
+        {
+          role: 'MEMBER',
+          body: 'Records their own meals, sees what the month is costing them, and knows exactly what is still due.'
+        },
+        {
+          role: 'SUPERVISOR',
+          body: 'Runs one or more messes: invites members, records bills, confirms payments and publishes the monthly report.'
+        },
+        {
+          role: 'ADMIN',
+          body: 'Approves new registrations, manages users and groups, and looks after site settings and security.'
+        }
+      ]
+    },
+    trust: {
+      title: 'Built to be safe with your household money',
+      items: [
+        {
+          icon: 'shield',
+          title: 'Accounts are reviewed',
+          body: 'Registrations wait for an administrator, and repeated failed sign-ins lock an account before anyone can guess their way in.'
+        },
+        {
+          icon: 'history',
+          title: 'Nothing changes quietly',
+          body: 'Bazar entries keep a change history, and every record stores who created it and who last touched it.'
+        },
+        {
+          icon: 'lock',
+          title: 'Only your mess sees your mess',
+          body: 'Meals, bills and balances are visible to the members of that group and nobody else.'
+        }
+      ]
+    },
+    cta: {
+      title: 'Settle this month properly',
+      subtitle: 'Set the mess up once and the arguing stops for good.',
+      primary: 'Create your account',
+      secondary: 'Sign in'
+    }
+  },
   footer: {
     newsletter: 'Newsletter',
     newsletterHint: 'Get occasional updates. No spam.',

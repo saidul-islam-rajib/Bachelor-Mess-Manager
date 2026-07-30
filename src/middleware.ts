@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { readSessionClaims, SESSION_COOKIE_NAME } from '@/lib/session';
+import { ROUTES } from '@/lib/routes';
 
 const PUBLIC_PATHS = [
   '/auth/login',
@@ -26,6 +27,9 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isApi = pathname.startsWith('/api/');
 
+  if (pathname === ROUTES.home) {
+    return NextResponse.next();
+  }
   if (PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`))) {
     return NextResponse.next();
   }
