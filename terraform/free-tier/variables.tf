@@ -47,6 +47,15 @@ variable "db_engine_version" {
   default = "15.00.4415.2.v1"
 }
 
+variable "db_backup_retention_days" {
+  description = <<-EOT
+    Automated backup retention. AWS Free Tier *account plans* cap this at 1 day;
+    asking for more fails with FreeTierRestrictionError. Raise it on a paid plan.
+  EOT
+  type    = number
+  default = 1
+}
+
 variable "db_username" {
   type    = string
   default = "bpadmin"

@@ -227,9 +227,9 @@ the certificate ARN.
 
 | File | Replace | With |
 | --- | --- | --- |
-| `k8s/base/uploads-pvc.yaml` | `REPLACE_WITH_EFS_FILESYSTEM_ID` | `terraform output efs_file_system_id` |
-| `k8s/base/ingress.yaml` | `REPLACE_WITH_ACM_CERTIFICATE_ARN` | the ARN from 5.6 |
-| `k8s/base/ingress.yaml` | `REPLACE_WITH_YOUR_DOMAIN` | your hostname |
+| `k8s/production/uploads-pvc.yaml` | `REPLACE_WITH_EFS_FILESYSTEM_ID` | `terraform output efs_file_system_id` |
+| `k8s/production/ingress.yaml` | `REPLACE_WITH_ACM_CERTIFICATE_ARN` | the ARN from 5.6 |
+| `k8s/production/ingress.yaml` | `REPLACE_WITH_YOUR_DOMAIN` | your hostname |
 
 ### 5.8 Create the Kubernetes secret
 
@@ -255,13 +255,13 @@ kubectl -n bachelor-point create secret generic bachelor-point-secrets \
 ```bash
 kubectl apply -f k8s/base/namespace.yaml
 kubectl apply -f k8s/base/configmap.yaml
-kubectl apply -f k8s/base/uploads-pvc.yaml
+kubectl apply -f k8s/production/uploads-pvc.yaml
 kubectl apply -f k8s/base/deployment-blue.yaml
 kubectl apply -f k8s/base/deployment-green.yaml
 kubectl apply -f k8s/base/service.yaml
-kubectl apply -f k8s/base/autoscaling.yaml
-kubectl apply -f k8s/base/networkpolicy.yaml
-kubectl apply -f k8s/base/ingress.yaml
+kubectl apply -f k8s/production/autoscaling.yaml
+kubectl apply -f k8s/production/networkpolicy.yaml
+kubectl apply -f k8s/production/ingress.yaml
 
 # build and push the first image by hand
 aws ecr get-login-password --region ap-southeast-1 \
@@ -432,7 +432,7 @@ Profile photos are written to `UPLOAD_DIR` on local disk. With more than one pod
 uploaded to pod A is a 404 on pod B, and it vanishes on restart.
 
 **Solved here with EFS**, mounted `ReadWriteMany` so every pod in both colours shares one
-directory (`k8s/base/uploads-pvc.yaml`, `reclaimPolicy: Retain`).
+directory (`k8s/production/uploads-pvc.yaml`, `reclaimPolicy: Retain`).
 
 EFS is slower and pricier than object storage. The better long-term fix is S3 + CloudFront.
 Only two functions touch storage — `saveProfileImage` and `readProfileImage` in
