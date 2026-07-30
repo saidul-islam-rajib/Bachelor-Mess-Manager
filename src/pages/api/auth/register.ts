@@ -5,6 +5,7 @@ import { USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { badRequest, created, methodNotAllowed, tooManyRequests } from '@/lib/http';
 import { clientIp } from '@/lib/rate-limit';
 import { countRecentRegistrations, recordRegistrationAttempt } from '@/lib/login-attempts';
+import { checkEmailQuality } from '@/lib/email-quality';
 import { getSecurityPolicy } from '@/lib/settings-service';
 import { isMailConfigured, passwordSetupEmail, sendMail } from '@/lib/mailer';
 import { issuePasswordToken, TOKEN_PURPOSE } from '@/lib/password-tokens';
@@ -42,6 +43,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const phoneCheck = validatePhone(phone);
   if (!phoneCheck.ok) return badRequest(res, phoneCheck.error);
+
+  const quality = await checkEmailQuality(emailCheck.value);
+  if (!quality.ok) {
+    return badRequest(
+      res,
+      quality.reason === 'disposable' ? strings.errors.disposableEmail : strings.errors.emailDomainUnreachable
+    );
+  }
 
   const existing = await prisma.user.findUnique({
     where: { email: emailCheck.value },

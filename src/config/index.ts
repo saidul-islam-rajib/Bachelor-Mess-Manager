@@ -183,6 +183,15 @@ export const appUrlConfig = {
   publicUrl: readOptionalString('APP_PUBLIC_URL')
 } as const;
 
+export const emailQualityConfig = {
+  requireMx: readBoolean('EMAIL_REQUIRE_MX', true),
+  mxResolvers: readString('EMAIL_MX_RESOLVERS', '1.1.1.1,8.8.8.8')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
+  mxTimeoutMs: readInt('EMAIL_MX_TIMEOUT_MS', 3000)
+} as const;
+
 export const passwordTokenConfig = {
   minutes: readInt('PASSWORD_TOKEN_MINUTES', MAIL_DEFAULTS.passwordTokenMinutes),
   bytes: MAIL_DEFAULTS.passwordTokenBytes

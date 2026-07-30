@@ -186,6 +186,8 @@ const en = {
     methodNotAllowed: 'Method not allowed',
     invalidCredentials: 'Invalid email or password.',
     suspiciousInput: 'That input looks like a script injection attempt and was blocked.',
+    disposableEmail: 'Temporary or disposable email addresses are not accepted. Please use a permanent address.',
+    emailDomainUnreachable: 'That email domain cannot receive mail. Please check the address and try again.',
     accountPending: 'Your account is awaiting admin approval.',
     accountInactive: 'Your account is not active. Please contact an admin.',
     tooManyAttempts: (minutes: number) =>
