@@ -59,10 +59,15 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-4 py-10">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
-            <div className="flex items-center gap-2">
+            <a
+              href={authorConfig.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl transition hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+            >
               <Logo className="h-10 w-auto" />
               <span className="text-lg font-semibold">{companyName}</span>
-            </div>
+            </a>
             {settings?.tagline && <p className="mt-3 max-w-xs text-sm text-slate-500">{settings.tagline}</p>}
           </div>
 
@@ -130,7 +135,10 @@ export default function Footer() {
         <div className="mt-8 space-y-1 border-t border-slate-100 pt-6 text-center text-sm text-slate-500">
           <p>
             &copy; {authorConfig.copyrightStartYear === year ? year : `${authorConfig.copyrightStartYear}-${year}`}{' '}
-            {copyrightOwner}. {strings.footer.rights}
+            <a href={authorConfig.url} target="_blank" rel="noreferrer" className="font-medium text-slate-600 hover:underline">
+              {copyrightOwner}
+            </a>
+            . {strings.footer.rights}
           </p>
           <p className="text-xs text-slate-400">
             {strings.footer.builtBy(authorConfig.name)} ·{' '}

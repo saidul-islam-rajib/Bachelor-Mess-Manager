@@ -23,6 +23,7 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   APP_AUTHOR_NAME: process.env.APP_AUTHOR_NAME,
   APP_AUTHOR_EMAIL: process.env.APP_AUTHOR_EMAIL,
   APP_AUTHOR_ROLE: process.env.APP_AUTHOR_ROLE,
+  APP_AUTHOR_URL: process.env.APP_AUTHOR_URL,
   APP_LICENSE: process.env.APP_LICENSE,
   APP_COPYRIGHT_START_YEAR: process.env.APP_COPYRIGHT_START_YEAR,
   PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
@@ -103,7 +104,8 @@ export const authorConfig = {
   email: readString('APP_AUTHOR_EMAIL', AUTHOR.email),
   role: readString('APP_AUTHOR_ROLE', AUTHOR.role),
   license: readString('APP_LICENSE', AUTHOR.license),
-  copyrightStartYear: readInt('APP_COPYRIGHT_START_YEAR', AUTHOR.copyrightStartYear)
+  copyrightStartYear: readInt('APP_COPYRIGHT_START_YEAR', AUTHOR.copyrightStartYear),
+  url: readString('APP_AUTHOR_URL', AUTHOR.url)
 } as const;
 
 export const sessionConfig = {

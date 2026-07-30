@@ -31,20 +31,34 @@ function Hero() {
     <section className="relative overflow-hidden border-b border-slate-200 bg-white">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 -top-40 h-80 bg-gradient-to-b from-slate-200/70 to-transparent blur-3xl"
+        className="pointer-events-none absolute inset-0 opacity-70 [background-image:radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px]"
       />
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:py-20 lg:grid-cols-2 lg:items-center lg:gap-16">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/40 via-white/85 to-white"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-slate-300/30 blur-3xl"
+      />
+
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:py-24 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
         <div>
-          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur">
+            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
             {landing.hero.eyebrow}
           </span>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
-            {landing.hero.title}
+
+          <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
+            {landing.hero.title} <span className="text-slate-400">{landing.hero.titleAccent}</span>
           </h1>
-          <p className="mt-5 text-base leading-relaxed text-slate-600 sm:text-lg">{landing.hero.subtitle}</p>
+
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+            {landing.hero.subtitle}
+          </p>
 
           {user ? (
-            <div className="mt-8">
+            <div className="mt-9">
               <p className="text-sm text-slate-600">{landing.hero.signedInAs(user.name)}</p>
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                 <LinkButton href={ROUTES.dashboard} size="lg">
@@ -56,28 +70,37 @@ function Hero() {
               </div>
             </div>
           ) : (
-            <div className="mt-8">
+            <div className="mt-9">
               <div className="flex flex-col gap-3 sm:flex-row">
-                <LinkButton href={ROUTES.auth.register} size="lg">
+                <LinkButton href={ROUTES.auth.register} size="lg" className="shadow-lg shadow-slate-900/15">
                   {landing.hero.primary}
                 </LinkButton>
-                <LinkButton href={ROUTES.auth.login} size="lg" variant="secondary">
+                <LinkButton href={ROUTES.auth.login} size="lg" variant="secondary" className="bg-white">
                   {landing.hero.secondary}
                 </LinkButton>
               </div>
               <p className="mt-4 text-xs text-slate-500">{landing.hero.note}</p>
             </div>
           )}
+
+          <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-slate-200 pt-6">
+            {landing.hero.highlights.map((highlight) => (
+              <li key={highlight} className="flex items-center gap-2 text-sm text-slate-600">
+                <LandingIcon name="check" className="h-4 w-4 text-slate-400" />
+                {highlight}
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="relative">
-          <DashboardPreview />
-          <span className="absolute -left-3 top-8 hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-600 shadow-lg xl:inline-block">
-            {landing.hero.chipRate}
-          </span>
-          <span className="absolute -right-4 bottom-10 hidden rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-medium text-slate-600 shadow-lg xl:inline-block">
-            {landing.hero.chipSplit}
-          </span>
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -inset-4 rounded-[2.5rem] bg-gradient-to-tr from-slate-300/40 via-white to-slate-200/50 blur-2xl"
+          />
+          <div className="relative">
+            <DashboardPreview />
+          </div>
         </div>
       </div>
     </section>
@@ -271,35 +294,38 @@ function FinalCta() {
   const { user } = useCurrentUser();
 
   return (
-    <section className="bg-slate-900">
-      <div className="mx-auto max-w-4xl px-4 py-16 text-center sm:py-20">
-        <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{landing.cta.title}</h2>
-        <p className="mt-3 text-slate-300">{landing.cta.subtitle}</p>
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+    <section className="relative overflow-hidden bg-slate-900">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.18] [background-image:radial-gradient(#ffffff_1px,transparent_1px)] [background-size:26px_26px]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-24 left-1/2 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-slate-500/20 blur-3xl"
+      />
+
+      <div className="relative mx-auto max-w-3xl px-4 py-20 text-center sm:py-24">
+        <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">{landing.cta.title}</h2>
+        <p className="mx-auto mt-4 max-w-xl text-base text-slate-300 sm:text-lg">{landing.cta.subtitle}</p>
+
+        <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
           {user ? (
-            <LinkButton href={ROUTES.dashboard} size="lg" className="bg-white text-slate-900 hover:bg-slate-100">
+            <LinkButton href={ROUTES.dashboard} size="lg" variant="inverse">
               {landing.hero.dashboard}
             </LinkButton>
           ) : (
             <>
-              <LinkButton
-                href={ROUTES.auth.register}
-                size="lg"
-                className="bg-white text-slate-900 hover:bg-slate-100"
-              >
+              <LinkButton href={ROUTES.auth.register} size="lg" variant="inverse">
                 {landing.cta.primary}
               </LinkButton>
-              <LinkButton
-                href={ROUTES.auth.login}
-                size="lg"
-                variant="secondary"
-                className="border-slate-600 text-slate-100 hover:bg-slate-800"
-              >
+              <LinkButton href={ROUTES.auth.login} size="lg" variant="inverseSecondary">
                 {landing.cta.secondary}
               </LinkButton>
             </>
           )}
         </div>
+
+        {!user && <p className="mt-6 text-xs text-slate-400">{landing.hero.note}</p>}
       </div>
     </section>
   );

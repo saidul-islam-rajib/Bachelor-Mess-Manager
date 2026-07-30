@@ -13,7 +13,8 @@ export const AUTHOR = {
   email: 'saidul.is.rajib@gmail.com',
   role: 'Author & Lead Developer',
   license: 'MIT',
-  copyrightStartYear: 2026
+  copyrightStartYear: 2026,
+  url: 'https://team-sober.com/'
 } as const;
 
 export const SESSION_DEFAULTS = {

@@ -9,7 +9,8 @@ export type LandingIconName =
   | 'comments'
   | 'shield'
   | 'history'
-  | 'lock';
+  | 'lock'
+  | 'check';
 
 const PATHS: Record<LandingIconName, ReactNode> = {
   meals: (
@@ -74,6 +75,12 @@ const PATHS: Record<LandingIconName, ReactNode> = {
       <path d="M5.5 11.2a1.7 1.7 0 0 1 1.7-1.7h9.6a1.7 1.7 0 0 1 1.7 1.7v7.4a1.7 1.7 0 0 1-1.7 1.7H7.2a1.7 1.7 0 0 1-1.7-1.7Z" />
       <path d="M8.4 9.5V7.4a3.6 3.6 0 0 1 7.2 0v2.1" />
       <path d="M12 14v2.4" />
+    </>
+  ),
+  check: (
+    <>
+      <path d="M12 3.6a8.4 8.4 0 1 0 0 16.8 8.4 8.4 0 0 0 0-16.8Z" />
+      <path d="m8.2 12.1 2.6 2.6 5-5.4" />
     </>
   )
 };

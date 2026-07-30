@@ -632,7 +632,8 @@ const en = {
     },
     hero: {
       eyebrow: 'For bachelor messes, hostels and shared flats',
-      title: 'Run your mess without the month-end argument.',
+      title: 'Run your mess',
+      titleAccent: 'without the month-end argument.',
       subtitle:
         'Everyone logs their meals. Whoever goes to the bazar records the receipt. The supervisor adds rent, electricity and Wi-Fi. Bachelor Point does the maths and shows each person exactly what they owe.',
       primary: 'Create your account',
@@ -642,8 +643,7 @@ const en = {
       signedInAs: (name: string) => `You are signed in as ${name}.`,
       note: 'Free to use. A new account is reviewed by an administrator before the first sign-in.',
       previewLabel: 'Preview of the member dashboard showing meals, meal rate and dues for the month',
-      chipRate: 'Meal rate calculated nightly',
-      chipSplit: 'Bills split automatically'
+      highlights: ['Fair, meal-based split', 'Bills divided automatically', 'Works on any phone']
     },
     problem: {
       title: 'The notebook on the fridge never adds up',
