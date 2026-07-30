@@ -57,5 +57,5 @@ spec:
             - name: tmp
               mountPath: /tmp
       volumes:
-        - n Indiaame: tmp
+        - name: tmp
           emptyDir: {}

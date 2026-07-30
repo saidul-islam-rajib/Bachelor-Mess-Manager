@@ -86,3 +86,11 @@ export const UI_DEFAULTS = {
   monthsBack: 11,
   monthsForward: 1
 } as const;
+
+export const MAIL_DEFAULTS = {
+  port: 587,
+  helo: 'bachelor-point',
+  timeoutMs: 15000,
+  passwordTokenHours: 24,
+  passwordTokenBytes: 32
+} as const;

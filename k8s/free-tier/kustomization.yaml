@@ -6,6 +6,7 @@ namespace: bachelor-point
 resources:
   - ../base
   - uploads-pvc.yaml
+  - caddy.yaml
 
 patches:
   - path: patch-resources.yaml

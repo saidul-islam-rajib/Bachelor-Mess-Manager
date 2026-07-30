@@ -90,6 +90,9 @@ const en = {
       loginLink: 'Login',
       phonePlaceholder: '+8801XXXXXXXXX'
     },
+    checkEmail: 'Check your email for a link to create your password.',
+    checkEmailDevMode: 'Email is not configured, so use the link below to create your password.',
+    mailFailed: 'Account created, but the email could not be sent. Ask an administrator for a setup link.',
     submitted: {
       title: 'Registration submitted',
       body: 'An admin will review your account. You can sign in once it has been approved.',
@@ -104,7 +107,50 @@ const en = {
       strong: 'Strong'
     },
     showPassword: 'Show password',
-    hidePassword: 'Hide password'
+    hidePassword: 'Hide password',
+    setPassword: {
+      title: 'Create your password',
+      subtitle: (name: string) => `Welcome ${name}. Choose a password to finish setting up your account.`,
+      submit: 'Create password',
+      submitting: 'Saving...',
+      checking: 'Checking your link...',
+      invalidTitle: 'This link cannot be used',
+      requestNew: 'Back to sign in',
+      successSignedIn: 'Password created. You are signed in.',
+      successPending: 'Password created. An administrator will review your account before you can sign in.'
+    }
+  },
+  roleRequests: {
+    title: 'Role requests',
+    subtitle: 'Members asking to become supervisors.',
+    yourRole: 'Your role',
+    becomeSupervisor: 'Request supervisor access',
+    becomeMember: 'Switch back to member',
+    reasonLabel: 'Why do you need supervisor access?',
+    reasonPlaceholder: 'I run the mess at Mirpur and need to manage bills.',
+    submit: 'Send request',
+    submitted: 'Request sent. An administrator will review it.',
+    autoApproved: (role: string) => `You are now a ${role.toLowerCase()}. Sign in again to use the new permissions.`,
+    pending: 'Your request is waiting for a decision.',
+    cancel: 'Cancel request',
+    cancelled: 'Request cancelled.',
+    approve: 'Approve',
+    reject: 'Reject',
+    approvedMessage: (role: string) => `Approved. The member is now a ${role.toLowerCase()}.`,
+    rejectedMessage: 'Request rejected.',
+    noneP: 'No role requests waiting.',
+    invalidRole: 'You can only request the supervisor or member role.',
+    idRequired: 'Request ID is required.',
+    notFound: 'Request not found.',
+    notYours: 'That request is not yours.',
+    alreadyDecided: 'That request has already been decided.',
+    approveRequired: 'approve must be true or false.',
+    switchNote: 'Changing your role signs you out of other devices.',
+    requestedOn: (date: string) => `requested ${date}`,
+    autoApproveLabel: 'Automatically approve supervisor requests',
+    autoApproveHint: 'When on, a member becomes a supervisor immediately without admin review.',
+    allowSelfSwitchLabel: 'Allow members to step down to member on their own',
+    allowSelfSwitchHint: 'Supervisors who run no groups can switch themselves back to member.'
   },
   validation: {
     required: (field: string) => `${field} is required.`,
