@@ -1,19 +1,50 @@
 {
   "name": "bachelor-point",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "description": "Mess management for bachelor messes and shared flats: approvals, groups, meals, bazar, bills, dues and payments.",
+  "author": {
+    "name": "Team Sober",
+    "email": "saidul.is.rajib@gmail.com",
+    "url": "https://team-sober.com/"
+  },
+  "contributors": [
+    {
+      "name": "Team Sober",
+      "email": "saidul.is.rajib@gmail.com",
+      "role": "Author & Lead Developer"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "mess-management",
+    "meal-tracking",
+    "expense-sharing",
+    "nextjs",
+    "prisma",
+    "sql-server"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "verify": "npm run typecheck && npm run lint && npm run build",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init",
-    "seed:db": "node prisma/seed.js"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset --force",
+    "db:sync-roles": "node scripts/sync-roles.js",
+    "admin:init": "node scripts/init-admin.js",
+    "seed:db": "node prisma/seed.js",
+    "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
-    "jotai": "^2.0.0",
     "next": "14.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1"
@@ -24,6 +55,8 @@
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "dotenv": "^17.4.2",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.5",
     "postcss": "^8.4.35",
     "prisma": "^5.0.0",
     "tailwindcss": "^3.4.4",

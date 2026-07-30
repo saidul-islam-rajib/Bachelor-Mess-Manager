@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
+import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
+import { encodeMentions } from '@/lib/mentions';
 import { todayKey } from '@/lib/month';
 
 type Item = { id: string; name: string; amount: number };
@@ -76,6 +78,8 @@ export default function ExpensesPage() {
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [history, setHistory] = useState<HistoryEvent[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [mentionNames, setMentionNames] = useState<Record<string, string>>({});
   const [isSupervisor, setIsSupervisor] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -101,6 +105,8 @@ export default function ExpensesPage() {
         fetch(`/api/groups/${groupId}/expense-history?month=${month}`).then((r) => r.json())
       ]);
       setExpenses(data.expenses || []);
+      setMembers(data.members || []);
+      setMentionNames(data.mentionNames || {});
       setIsSupervisor(Boolean(data.isSupervisor));
       setHistory(hist.history || []);
     } finally {
@@ -394,6 +400,8 @@ export default function ExpensesPage() {
                                           comments={expense.comments}
                                           currentUserId={user?.id}
                                           canDelete={isSupervisor}
+                                          members={members}
+                                          mentionNames={mentionNames}
                                           onAdd={(text) => addComment(expense.id, text)}
                                           onDelete={removeComment}
                                           onError={(m) => toast.error(m)}
@@ -473,6 +481,8 @@ export default function ExpensesPage() {
                                   comments={expense.comments}
                                   currentUserId={user?.id}
                                   canDelete={isSupervisor}
+                                  members={members}
+                                  mentionNames={mentionNames}
                                   onAdd={(text) => addComment(expense.id, text)}
                                   onDelete={removeComment}
                                   onError={(m) => toast.error(m)}
@@ -631,6 +641,8 @@ function CommentBox({
   comments,
   currentUserId,
   canDelete,
+  members,
+  mentionNames,
   onAdd,
   onDelete,
   onError
@@ -638,6 +650,8 @@ function CommentBox({
   comments: ExpenseComment[];
   currentUserId?: string;
   canDelete: boolean;
+  members: Member[];
+  mentionNames: Record<string, string>;
   onAdd: (text: string) => Promise<void>;
   onDelete: (id: string) => void;
   onError: (message: string) => void;
@@ -645,18 +659,22 @@ function CommentBox({
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
 
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!text.trim()) return;
+  async function post() {
+    if (!text.trim() || busy) return;
     setBusy(true);
     try {
-      await onAdd(text);
+      await onAdd(encodeMentions(text, members));
       setText('');
     } catch (err) {
       onError((err as Error).message);
     } finally {
       setBusy(false);
     }
+  }
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await post();
   }
 
   return (
@@ -688,19 +706,25 @@ function CommentBox({
                   </button>
                 )}
               </div>
-              <p className="mt-0.5 break-words text-sm text-slate-700">{c.text}</p>
+              <MentionText
+                text={c.text}
+                members={members}
+                mentionNames={mentionNames}
+                className="mt-0.5 break-words text-sm text-slate-700"
+              />
             </li>
           ))}
         </ul>
       )}
 
       <form className="mt-2 flex items-center gap-1.5" onSubmit={submit}>
-        <input
+        <MentionInput
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={500}
+          onChange={setText}
+          members={members}
+          variant="inline"
           placeholder="Add a comment"
-          className="w-full min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+          onSubmit={post}
         />
         <button
           type="submit"

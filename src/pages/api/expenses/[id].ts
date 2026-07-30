@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { EXPENSE_TYPES } from '@/lib/constants';
 import { dayToUtcDate, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
 import { parseItems } from '@/lib/expense-items';
@@ -26,9 +27,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (!expense) {
     return notFound(res, 'Expense not found.');
   }
+  if (expense.type !== EXPENSE_TYPES.BAZAR) {
+    
+    return notFound(res, 'Expense not found.');
+  }
 
-  // Only the member who logged it (or an admin) may change it — supervisors and
-  // other members can view but never edit someone else's entry.
   if (expense.payerId !== sessionUser.id && !requireAdmin(sessionUser)) {
     return forbidden(res, 'You can only edit your own expenses.');
   }

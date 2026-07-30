@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: bachelor-point-active
+  namespace: bachelor-point
+  labels:
+    app: bachelor-point
+    role: active
+  annotations:
+    description: "Live traffic. The 'color' selector is flipped by scripts/blue-green-switch.sh."
+spec:
+  type: ClusterIP
+  selector:
+    app: bachelor-point
+    color: blue
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bachelor-point-preview
+  namespace: bachelor-point
+  labels:
+    app: bachelor-point
+    role: preview
+  annotations:
+    description: "Points at the idle color so CI can smoke-test the new version before the switch."
+spec:
+  type: ClusterIP
+  selector:
+    app: bachelor-point
+    color: green
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

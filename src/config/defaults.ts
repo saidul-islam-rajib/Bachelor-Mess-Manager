@@ -1,0 +1,88 @@
+export const APP_DEFAULTS = {
+  name: 'Bachelor Point',
+  tagline: 'Manage your mess without the arguments.',
+  locale: 'en',
+  currencyCode: 'BDT',
+  currencySymbol: '৳',
+  dateLocale: 'en-GB',
+  timeZone: 'UTC'
+} as const;
+
+export const AUTHOR = {
+  name: 'Saidul Islam Rajib',
+  email: 'saidul.is.rajib@gmail.com',
+  role: 'Author & Lead Developer',
+  license: 'MIT',
+  copyrightStartYear: 2026
+} as const;
+
+export const SESSION_DEFAULTS = {
+  cookieName: 'bachelor_point_session',
+  legacyCookieName: 'bachelor_point_legacy_session',
+  maxAgeSeconds: 60 * 60 * 24 * 30,
+  refreshAfterSeconds: 60 * 60 * 24,
+  minSecretLength: 32
+} as const;
+
+export const PASSWORD_DEFAULTS = {
+  minLength: 8,
+  maxLength: 200,
+  scryptCost: 16384,
+  scryptBlockSize: 8,
+  scryptParallelism: 1,
+  scryptKeyLength: 64,
+  scryptSaltLength: 16
+} as const;
+
+export const SECURITY_DEFAULTS = {
+  maxLoginAttempts: 5,
+  loginLockoutMinutes: 15,
+  maxLoginAttemptsPerIp: 40,
+  ipLockoutMinutes: 15,
+  maxRegistrationsPerIp: 5,
+  registrationWindowMinutes: 60,
+  maxWriteRequestsPerMinute: 120,
+  maxReadRequestsPerMinute: 600,
+  maxRequestBodyBytes: 1024 * 1024,
+  loginAttemptRetentionDays: 30
+} as const;
+
+export const GROUP_DEFAULTS = {
+  maxGroupsPerSupervisor: 10,
+  maxNameLength: 80,
+  mealWeightBreakfast: 0.5,
+  mealWeightLunch: 1,
+  mealWeightDinner: 1
+} as const;
+
+export const VALIDATION_DEFAULTS = {
+  nameMinLength: 2,
+  nameMaxLength: 80,
+  emailMaxLength: 254,
+  phoneMinDigits: 6,
+  phoneMaxDigits: 15,
+  noteMaxLength: 500,
+  commentMaxLength: 2000,
+  maxMoneyAmount: 100_000_000
+} as const;
+
+export const UPLOAD_DEFAULTS = {
+  directoryName: 'uploads',
+  maxImageBytes: 2 * 1024 * 1024,
+  routePrefix: '/api/uploads/',
+  cacheMaxAgeSeconds: 31_536_000
+} as const;
+
+export const PAGINATION_DEFAULTS = {
+  pageSize: 20,
+  maxPageSize: 100,
+  pageSizeOptions: [10, 20, 50, 100]
+} as const;
+
+export const UI_DEFAULTS = {
+  toastDurationMs: 4000,
+  toastDedupeWindowMs: 1000,
+  searchDebounceMs: 300,
+  monthsBack: 11,
+  monthsForward: 1
+} as const;

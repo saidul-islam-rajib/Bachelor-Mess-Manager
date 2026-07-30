@@ -1,12 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { USER_STATUS } from '@/lib/constants';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { activateMembership, canJoinGroup, stayDays } from '@/lib/groups';
+import { normalizeEmail } from '@/lib/validation';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const sessionUser = await getSessionUser(req);
+  const sessionUser = await getSessionUser(req, res);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
   }
@@ -21,7 +23,41 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Group not found.');
   }
 
-  // Admin can add members directly; supervisors invite instead (see /invitations).
+  const canManage = await canManageGroup(groupId, sessionUser);
+
+  if (req.method === 'GET') {
+    const isMember = await prisma.membership.findFirst({
+      where: { groupId, userId: sessionUser.id, isActive: true },
+      select: { id: true }
+    });
+    if (!isMember && !canManage) {
+      return forbidden(res, 'You are not a member of this group.');
+    }
+
+    const memberships = await prisma.membership.findMany({
+      where: { groupId },
+      include: { user: { select: { id: true, name: true, email: true, phone: true, profileImage: true } } },
+      orderBy: [{ isActive: 'desc' }, { joinedAt: 'asc' }]
+    });
+
+    return ok(res, {
+      canManage,
+      members: memberships.map((m) => ({
+        membershipId: m.id,
+        id: m.user.id,
+        name: m.user.name,
+        email: m.user.email,
+        phone: m.user.phone,
+        profileImage: m.user.profileImage,
+        isActive: m.isActive,
+        isSupervisor: m.userId === group.supervisorId,
+        joinedAt: m.joinedAt.toISOString(),
+        leftAt: m.leftAt ? m.leftAt.toISOString() : null,
+        stayDays: stayDays(m.joinedAt, m.leftAt)
+      }))
+    });
+  }
+
   if (req.method === 'POST') {
     if (!requireAdmin(sessionUser)) {
       return forbidden(res, 'Only admins can add members directly. Supervisors should invite members.');
@@ -32,7 +68,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return badRequest(res, 'Member email is required.');
     }
 
-    const member = await prisma.user.findUnique({ where: { email } });
+    const member = await prisma.user.findUnique({ where: { email: normalizeEmail(email) } });
     if (!member) {
       return notFound(res, 'No registered user found with that email.');
     }
@@ -45,31 +81,75 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return conflict(res, 'That user is already a member of this group.');
     }
 
-    const membership = existing
-      ? await prisma.membership.update({ where: { id: existing.id }, data: { isActive: true, leftAt: null } })
-      : await prisma.membership.create({ data: { groupId, userId: member.id, isActive: true } });
+    const joinable = await canJoinGroup(member.id, groupId);
+    if (!joinable.ok) {
+      return conflict(res, joinable.error);
+    }
+
+    const membership = await activateMembership(groupId, member.id);
 
     return created(res, { membership, member: { id: member.id, name: member.name, email: member.email } });
   }
 
-  // Admin or the group's supervisor can remove a member.
-  if (req.method === 'DELETE') {
-    const isGroupSupervisor = group.supervisorId === sessionUser.id;
-    if (!isGroupSupervisor && !requireAdmin(sessionUser)) {
-      return forbidden(res, 'Only this group\'s supervisor can remove members.');
+  if (req.method === 'PATCH') {
+    if (!canManage) {
+      return forbidden(res, "Only this group's supervisor can change membership.");
     }
 
-    const { userId } = req.body as { userId?: string };
+    const { userId, isActive } = req.body as { userId?: string; isActive?: boolean };
     if (!userId) {
       return badRequest(res, 'User ID is required.');
     }
+    if (typeof isActive !== 'boolean') {
+      return badRequest(res, 'isActive must be true or false.');
+    }
     if (userId === group.supervisorId) {
-      return badRequest(res, 'The group supervisor cannot be removed.');
+      return badRequest(res, 'The group supervisor is always a member of their own group.');
     }
 
-    const membership = await prisma.membership.findFirst({ where: { groupId, userId, isActive: true } });
+    const membership = await prisma.membership.findFirst({ where: { groupId, userId } });
     if (!membership) {
-      return notFound(res, 'That user is not an active member of this group.');
+      return notFound(res, 'That user has never been a member of this group.');
+    }
+    if (membership.isActive === isActive) {
+      return ok(res, { membership });
+    }
+
+    if (isActive) {
+      const joinable = await canJoinGroup(userId, groupId);
+      if (!joinable.ok) {
+        return conflict(res, joinable.error);
+      }
+      return ok(res, { membership: await activateMembership(groupId, userId) });
+    }
+
+    const updated = await prisma.membership.update({
+      where: { id: membership.id },
+      data: { isActive: false, leftAt: new Date() }
+    });
+    return ok(res, { membership: updated });
+  }
+
+  if (req.method === 'DELETE') {
+    const { userId } = req.body as { userId?: string };
+    const targetId = userId ?? sessionUser.id;
+    const isSelf = targetId === sessionUser.id;
+
+    if (!isSelf && !canManage) {
+      return forbidden(res, "Only this group's supervisor can remove other members.");
+    }
+    if (targetId === group.supervisorId) {
+      return badRequest(
+        res,
+        isSelf
+          ? 'You supervise this group, so you cannot leave it. Ask an admin to reassign or close the group first.'
+          : 'The group supervisor cannot be removed.'
+      );
+    }
+
+    const membership = await prisma.membership.findFirst({ where: { groupId, userId: targetId, isActive: true } });
+    if (!membership) {
+      return notFound(res, isSelf ? 'You are not an active member of this group.' : 'That user is not an active member of this group.');
     }
 
     await prisma.membership.update({
@@ -77,10 +157,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       data: { isActive: false, leftAt: new Date() }
     });
 
-    return ok(res, { removed: true });
+    return ok(res, { removed: true, left: isSelf });
   }
 
-  return methodNotAllowed(res, ['POST', 'DELETE']);
+  return methodNotAllowed(res, ['GET', 'POST', 'PATCH', 'DELETE']);
 }
 
 export default withAudit(handler);

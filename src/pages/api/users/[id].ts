@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
+import { validateEmail, validateName, validatePhone } from '@/lib/validation';
 import { withAudit } from '@/lib/with-audit';
 
 const EDITABLE_ROLES = [USER_ROLES.SUPERVISOR, USER_ROLES.MEMBER] as string[];
@@ -39,16 +40,29 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     status?: string;
   };
 
-  const data: { name?: string; email?: string; phone?: string | null; role?: string; status?: string } = {};
+  const data: {
+    name?: string;
+    email?: string;
+    phone?: string | null;
+    role?: string;
+    status?: string;
+    tokenVersion?: { increment: number };
+  } = {};
 
-  if (typeof name === 'string' && name.trim()) {
-    data.name = name.trim();
+  if (name !== undefined) {
+    const check = validateName(name);
+    if (!check.ok) return badRequest(res, check.error);
+    data.name = check.value;
   }
-  if (typeof email === 'string' && email.trim()) {
-    data.email = email.trim();
+  if (email !== undefined) {
+    const check = validateEmail(email);
+    if (!check.ok) return badRequest(res, check.error);
+    data.email = check.value;
   }
-  if (typeof phone === 'string') {
-    data.phone = phone.trim() || null;
+  if (phone !== undefined) {
+    const check = validatePhone(phone);
+    if (!check.ok) return badRequest(res, check.error);
+    data.phone = check.value;
   }
   if (role !== undefined) {
     if (!EDITABLE_ROLES.includes(role)) {
@@ -71,6 +85,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (Object.keys(data).length === 0) {
     return badRequest(res, 'Nothing to update.');
+  }
+
+  if ((data.status !== undefined && data.status !== target.status) || (data.role !== undefined && data.role !== target.role)) {
+    data.tokenVersion = { increment: 1 };
   }
 
   try {

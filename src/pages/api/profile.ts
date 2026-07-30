@@ -1,34 +1,82 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth-utils';
-import { hashPassword } from '@/lib/auth';
+import { setSessionCookie } from '@/lib/auth';
+import { hashPassword, validatePassword, verifyPassword } from '@/lib/password';
 import { badRequest, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { deleteProfileImage, saveProfileImage } from '@/lib/uploads';
+import { validateName, validatePhone } from '@/lib/validation';
 import { withAudit } from '@/lib/with-audit';
+
+export const config = {
+  api: {
+
+    bodyParser: { sizeLimit: '4mb' }
+  }
+};
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH') {
     return methodNotAllowed(res, ['PATCH']);
   }
 
-  const sessionUser = await getSessionUser(req);
+  const sessionUser = await getSessionUser(req, res);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
   }
 
-  const { name, phone, password } = req.body as { name?: string; phone?: string; password?: string };
+  const { name, phone, password, currentPassword, image, removeImage } = req.body as Record<string, unknown>;
 
-  const data: { name?: string; phone?: string | null; password?: string } = {};
-  if (typeof name === 'string' && name.trim()) {
-    data.name = name.trim();
+  const data: {
+    name?: string;
+    phone?: string | null;
+    password?: string;
+    tokenVersion?: { increment: number };
+    profileImage?: string | null;
+  } = {};
+
+  if (name !== undefined) {
+    const check = validateName(name);
+    if (!check.ok) return badRequest(res, check.error);
+    data.name = check.value;
   }
-  if (typeof phone === 'string') {
-    data.phone = phone.trim() || null;
+
+  if (phone !== undefined) {
+    const check = validatePhone(phone);
+    if (!check.ok) return badRequest(res, check.error);
+    data.phone = check.value;
   }
-  if (typeof password === 'string' && password.length > 0) {
-    if (password.length < 6) {
-      return badRequest(res, 'Password must be at least 6 characters.');
+
+  if (password !== undefined && password !== '') {
+    const check = validatePassword(password);
+    if (!check.ok) return badRequest(res, check.error);
+
+    if (typeof currentPassword !== 'string' || !currentPassword) {
+      return badRequest(res, 'Enter your current password to set a new one.');
     }
-    data.password = hashPassword(password);
+
+    const account = await prisma.user.findUnique({
+      where: { id: sessionUser.id },
+      select: { password: true }
+    });
+    if (!account || !(await verifyPassword(currentPassword, account.password))) {
+      return badRequest(res, 'Your current password is not correct.');
+    }
+
+    data.password = await hashPassword(password as string);
+
+    data.tokenVersion = { increment: 1 };
+  }
+
+  let previousImage: string | null = null;
+  if (removeImage === true) {
+    previousImage = sessionUser.profileImage;
+    data.profileImage = null;
+  } else if (typeof image === 'string' && image.trim()) {
+    const saved = await saveProfileImage(image, sessionUser.id);
+    if (!saved.ok) return badRequest(res, saved.error);
+    previousImage = sessionUser.profileImage;
+    data.profileImage = saved.url;
   }
 
   if (Object.keys(data).length === 0) {
@@ -38,10 +86,27 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const user = await prisma.user.update({
     where: { id: sessionUser.id },
     data,
-    select: { id: true, name: true, email: true, role: true, phone: true, profileImage: true }
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      phone: true,
+      profileImage: true,
+      tokenVersion: true
+    }
   });
 
-  return ok(res, { user });
+  if (previousImage && previousImage !== user.profileImage) {
+    await deleteProfileImage(previousImage);
+  }
+
+  if (data.tokenVersion) {
+    await setSessionCookie(res, user.id, user.tokenVersion);
+  }
+
+  const { tokenVersion: _tokenVersion, ...safeUser } = user;
+  return ok(res, { user: safeUser, passwordChanged: Boolean(data.password) });
 }
 
 export default withAudit(handler);

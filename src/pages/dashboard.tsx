@@ -2,204 +2,547 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { ROUTES } from '@/lib/routes';
-import { USER_ROLES } from '@/lib/constants';
+import { EXPENSE_TYPE_LABELS, USER_ROLES } from '@/lib/constants';
+import { currentMonthKey, monthOptions } from '@/lib/month';
 
-type AdminUser = { id: string; role: string; status: string };
-type GroupSummary = { id: string; name: string; memberCount: number; supervisor: { id: string; name: string } };
+const taka = (n: number) => `৳${n.toFixed(2)}`;
+
+type AdminReport = {
+  pendingApprovals: number;
+  members: number;
+  supervisors: number;
+  activeGroups: number;
+  inactiveGroups: number;
+  activeMemberships: number;
+};
+
+type SupervisorReport = {
+  groups: {
+    id: string;
+    name: string;
+    status: string;
+    memberCount: number;
+    meals: number;
+    mealRate: number;
+    expense: number;
+    collected: number;
+    outstanding: number;
+  }[];
+  totals: {
+    groups: number;
+    members: number;
+    meals: number;
+    bazar: number;
+    bills: number;
+    expense: number;
+    collected: number;
+    outstanding: number;
+  };
+  byType: Record<string, number>;
+  unpaid: { groupId: string; groupName: string; id: string; name: string; due: number; status: string }[];
+  longestStaying: { id: string; name: string; groupName: string; days: number }[];
+};
+
+type MemberReport = {
+  group: { id: string; name: string; memberCount: number; joinedAt: string; stayDays: number } | null;
+  pendingInvitations: number;
+  current: {
+    meals: number;
+    mealCost: number;
+    billShare: number;
+    totalCost: number;
+    bazarPaid: number;
+    collected: number;
+    due: number;
+    status: string;
+    mealRate: number;
+    groupMeals: number;
+    groupExpense: number;
+    groupBazar: number;
+    groupBills: number;
+    byType: Record<string, number>;
+    members: { id: string; name: string; meals: number; totalCost: number; due: number; status: string }[];
+  } | null;
+  previous: {
+    month: string;
+    meals: number;
+    totalCost: number;
+    due: number;
+    mealRate: number;
+    groupExpense: number;
+  } | null;
+};
+
+type DashboardData = {
+  role: string;
+  month: string;
+  admin?: AdminReport;
+  supervisor?: SupervisorReport;
+  member?: MemberReport;
+};
 
 export default function DashboardPage() {
-  const { user, loading } = useCurrentUser();
+  const { user, loading: userLoading } = useCurrentUser();
+  const [month, setMonth] = useState(currentMonthKey());
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+
+    fetch(`/api/reports/dashboard?month=${month}`)
+      .then(async (res) => {
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error ?? 'Could not load your dashboard.');
+        return body as DashboardData;
+      })
+      .then((body) => {
+        if (!cancelled) setData(body);
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [month]);
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
-        <div className="mb-6">
+    <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
           <h1 className="text-2xl font-semibold sm:text-3xl">Dashboard</h1>
           <p className="mt-1 text-slate-600">
-            {user ? `Signed in as ${user.name} (${user.role})` : 'Your mess at a glance.'}
+            {user ? `Signed in as ${user.name} (${user.role.toLowerCase()})` : 'Your mess at a glance.'}
           </p>
         </div>
 
-        {loading ? (
-          <Panel>Loading...</Panel>
-        ) : !user ? (
-          <Panel>Please sign in.</Panel>
-        ) : user.role === USER_ROLES.ADMIN ? (
-          <AdminDashboard />
-        ) : user.role === USER_ROLES.SUPERVISOR ? (
-          <SupervisorDashboard />
-        ) : (
-          <MemberDashboard />
+        {data?.role !== USER_ROLES.ADMIN && (
+          <label className="min-w-[12rem]">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Month</span>
+            <select value={month} onChange={(e) => setMonth(e.target.value)} className="app-select mt-1">
+              {monthOptions().map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
         )}
-      </section>
-    </main>
+      </div>
+
+      {userLoading || loading ? (
+        <Panel>Loading...</Panel>
+      ) : error ? (
+        <Panel>{error}</Panel>
+      ) : !data ? (
+        <Panel>Please sign in.</Panel>
+      ) : data.admin ? (
+        <AdminDashboard report={data.admin} />
+      ) : data.supervisor ? (
+        <SupervisorDashboard report={data.supervisor} />
+      ) : data.member ? (
+        <MemberDashboard report={data.member} currentUserId={user?.id} />
+      ) : (
+        <Panel>Nothing to show yet.</Panel>
+      )}
+    </section>
   );
 }
 
-function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm text-slate-600">{children}</div>;
-}
-
-function Stat({ label, value }: { label: string; value: number | string }) {
+function AdminDashboard({ report }: { report: AdminReport }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="text-sm uppercase tracking-wide text-slate-500">{label}</div>
-      <div className="mt-3 text-3xl font-semibold">{value}</div>
+    <div className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Pending approvals" value={report.pendingApprovals} tone={report.pendingApprovals > 0 ? 'amber' : undefined} />
+        <Stat label="Approved members" value={report.members} />
+        <Stat label="Supervisors" value={report.supervisors} />
+        <Stat label="Active groups" value={report.activeGroups} />
+      </div>
+
+      <Card>
+        <h2 className="text-lg font-semibold">Admin tools</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          {report.pendingApprovals > 0
+            ? `${report.pendingApprovals} registration${report.pendingApprovals === 1 ? '' : 's'} waiting for a decision.`
+            : 'Approve registrations, manage users and groups, and edit site settings.'}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href={ROUTES.admin} className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700">
+            Open admin dashboard
+          </Link>
+          <Link
+            href={ROUTES.groups}
+            className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+          >
+            All groups
+          </Link>
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold">System</h2>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Field label="Inactive groups" value={String(report.inactiveGroups)} />
+          <Field label="Active memberships" value={String(report.activeMemberships)} />
+          <Field label="Total accounts" value={String(report.members + report.supervisors)} />
+        </dl>
+      </Card>
     </div>
   );
 }
 
-function AdminDashboard() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [groups, setGroups] = useState<GroupSummary[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([
-      fetch('/api/users').then((r) => r.json()),
-      fetch('/api/groups').then((r) => r.json())
-    ])
-      .then(([u, g]) => {
-        setUsers(u.users || []);
-        setGroups(g.groups || []);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <Panel>Loading...</Panel>;
-
-  const pending = users.filter((u) => u.status === 'PENDING').length;
-  const approvedMembers = users.filter((u) => u.status === 'APPROVED' && u.role === USER_ROLES.MEMBER).length;
-  const supervisors = users.filter((u) => u.role === USER_ROLES.SUPERVISOR).length;
+function SupervisorDashboard({ report }: { report: SupervisorReport }) {
+  const { totals } = report;
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Pending approvals" value={pending} />
-        <Stat label="Approved members" value={approvedMembers} />
-        <Stat label="Supervisors" value={supervisors} />
-        <Stat label="Groups" value={groups.length} />
+        <Stat label="Your groups" value={`${totals.groups} / 10`} />
+        <Stat label="Members" value={totals.members} />
+        <Stat label="Spent this month" value={taka(totals.expense)} />
+        <Stat label="Outstanding dues" value={taka(totals.outstanding)} tone={totals.outstanding > 0 ? 'red' : 'green'} />
       </div>
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold">Admin tools</h2>
-        <p className="mt-1 text-sm text-slate-500">Approve registrations, manage users and groups, and edit site settings.</p>
-        <Link
-          href={ROUTES.admin}
-          className="mt-4 inline-flex rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700"
-        >
-          Open admin dashboard
-        </Link>
-      </div>
-    </div>
-  );
-}
 
-function SupervisorDashboard() {
-  const [groups, setGroups] = useState<GroupSummary[]>([]);
-  const [loading, setLoading] = useState(true);
+      <CostBreakdown byType={report.byType} total={totals.expense} />
 
-  useEffect(() => {
-    fetch('/api/groups')
-      .then((r) => r.json())
-      .then((d) => setGroups(d.groups || []))
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <Panel>Loading...</Panel>;
-
-  const totalMembers = groups.reduce((sum, g) => sum + g.memberCount, 0);
-
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Stat label="Your groups" value={groups.length} />
-        <Stat label="Total members" value={totalMembers} />
-      </div>
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
+      <Card>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">Your groups</h2>
           <Link href={ROUTES.groups} className="text-sm font-medium text-slate-900 hover:underline">
             Manage
           </Link>
         </div>
-        {groups.length === 0 ? (
+
+        {report.groups.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
             You haven&apos;t created a group yet. Head to Groups to create your first mess.
           </p>
         ) : (
-          <ul className="mt-4 divide-y divide-slate-100">
-            {groups.map((g) => (
-              <li key={g.id} className="flex items-center justify-between py-3">
-                <Link href={`/groups/${g.id}`} className="font-medium hover:underline">
-                  {g.name}
-                </Link>
-                <span className="text-sm text-slate-500">{g.memberCount} members</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-2">Group</th>
+                  <th className="px-3 py-2 text-right">Members</th>
+                  <th className="px-3 py-2 text-right">Meals</th>
+                  <th className="px-3 py-2 text-right">Meal rate</th>
+                  <th className="px-3 py-2 text-right">Spent</th>
+                  <th className="px-3 py-2 text-right">Outstanding</th>
+                </tr>
+              </thead>
+              <tbody>
+                {report.groups.map((group) => (
+                  <tr key={group.id} className="border-b border-slate-100 last:border-0">
+                    <td className="px-3 py-3 font-medium">
+                      <Link href={`/groups/${group.id}`} className="hover:underline">
+                        {group.name}
+                      </Link>
+                      {group.status === 'INACTIVE' && (
+                        <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">inactive</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-right text-slate-600">{group.memberCount}</td>
+                    <td className="px-3 py-3 text-right text-slate-600">{group.meals}</td>
+                    <td className="px-3 py-3 text-right text-slate-600">{taka(group.mealRate)}</td>
+                    <td className="px-3 py-3 text-right">{taka(group.expense)}</td>
+                    <td className={`px-3 py-3 text-right font-medium ${group.outstanding > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {taka(group.outstanding)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
+      </Card>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <h2 className="text-lg font-semibold">Who still owes</h2>
+          {report.unpaid.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">Everyone is settled up this month.</p>
+          ) : (
+            <ul className="mt-4 divide-y divide-slate-100">
+              {report.unpaid.map((row) => (
+                <li key={`${row.groupId}-${row.id}`} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{row.name}</p>
+                    <p className="truncate text-xs text-slate-500">{row.groupName}</p>
+                  </div>
+                  <span className="shrink-0 font-semibold text-red-600">{taka(row.due)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Link href={ROUTES.payments} className="mt-4 inline-flex text-sm font-medium text-slate-900 hover:underline">
+            Record a payment →
+          </Link>
+        </Card>
+
+        <Card>
+          <h2 className="text-lg font-semibold">Longest staying members</h2>
+          {report.longestStaying.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-500">No members yet.</p>
+          ) : (
+            <ul className="mt-4 divide-y divide-slate-100">
+              {report.longestStaying.map((row) => (
+                <li key={`${row.groupName}-${row.id}`} className="flex items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{row.name}</p>
+                    <p className="truncate text-xs text-slate-500">{row.groupName}</p>
+                  </div>
+                  <span className="shrink-0 text-sm text-slate-600">{formatStay(row.days)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
     </div>
   );
 }
 
-function MemberDashboard() {
-  const [groups, setGroups] = useState<GroupSummary[]>([]);
-  const [inviteCount, setInviteCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+function MemberDashboard({ report, currentUserId }: { report: MemberReport; currentUserId?: string }) {
+  if (!report.group || !report.current) {
+    return (
+      <div className="space-y-6">
+        {report.pendingInvitations > 0 && <InvitationBanner count={report.pendingInvitations} />}
+        <Panel>
+          You&apos;re not in a group yet. Once a supervisor invites you and you accept, your meals, costs, and dues
+          will show up here.
+        </Panel>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    Promise.all([
-      fetch('/api/groups').then((r) => r.json()),
-      fetch('/api/invitations').then((r) => r.json())
-    ])
-      .then(([g, i]) => {
-        setGroups(g.groups || []);
-        setInviteCount((i.invitations || []).length);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return <Panel>Loading...</Panel>;
+  const { current, previous, group } = report;
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Stat label="Your groups" value={groups.length} />
-        <Stat label="Pending invitations" value={inviteCount} />
+      {report.pendingInvitations > 0 && <InvitationBanner count={report.pendingInvitations} />}
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Your meals" value={current.meals} />
+        <Stat label="Meal rate" value={taka(current.mealRate)} />
+        <Stat label="Your total cost" value={taka(current.totalCost)} />
+        <Stat
+          label={current.due < 0 ? 'Mess owes you' : 'You owe'}
+          value={taka(Math.abs(current.due))}
+          tone={current.due > 0.01 ? 'red' : 'green'}
+        />
       </div>
 
-      {inviteCount > 0 && (
-        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
-          <p className="text-amber-800">
-            You have {inviteCount} pending invitation{inviteCount === 1 ? '' : 's'}.
-          </p>
+      <Card>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-lg font-semibold">Your balance</h2>
+          <StatusBadge status={current.status} />
+        </div>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Field label="Meal share (bazar)" value={taka(current.mealCost)} />
+          <Field label="Bills share" value={taka(current.billShare)} />
+          <Field label="Total cost" value={taka(current.totalCost)} />
+          <Field label="Groceries you bought" value={taka(current.bazarPaid)} />
+          <Field label="Cash you paid" value={taka(current.collected)} />
+          <Field
+            label={current.due < 0 ? 'Refund owed to you' : 'Still due'}
+            value={taka(Math.abs(current.due))}
+            tone={current.due > 0.01 ? 'red' : 'green'}
+          />
+        </dl>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <Link href={ROUTES.meals} className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700">
+            Enter meals
+          </Link>
           <Link
-            href={ROUTES.profile}
-            className="mt-3 inline-flex rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700"
+            href={ROUTES.payments}
+            className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
           >
-            View invitations
+            Payments
           </Link>
         </div>
+      </Card>
+
+      {previous && (previous.meals > 0 || previous.totalCost > 0) && (
+        <Card>
+          <h2 className="text-lg font-semibold">Last month ({monthLabel(previous.month)})</h2>
+          <dl className="mt-4 grid gap-4 sm:grid-cols-4">
+            <Field label="Meals" value={String(previous.meals)} />
+            <Field label="Meal rate" value={taka(previous.mealRate)} />
+            <Field label="Your cost" value={taka(previous.totalCost)} />
+            <Field
+              label={previous.due < 0 ? 'Refund' : 'Due'}
+              value={taka(Math.abs(previous.due))}
+              tone={previous.due > 0.01 ? 'red' : undefined}
+            />
+          </dl>
+        </Card>
       )}
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold">Your groups</h2>
-        {groups.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">You&apos;re not part of any group yet.</p>
-        ) : (
-          <ul className="mt-4 divide-y divide-slate-100">
-            {groups.map((g) => (
-              <li key={g.id} className="flex items-center justify-between py-3">
-                <Link href={`/groups/${g.id}`} className="font-medium hover:underline">
-                  {g.name}
-                </Link>
-                <span className="text-sm text-slate-500">Supervisor: {g.supervisor.name}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <CostBreakdown byType={{ ...current.byType, BAZAR: current.groupBazar }} total={current.groupExpense} />
+
+      <Card>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h2 className="text-lg font-semibold">{group.name}</h2>
+          <Link href={`/groups/${group.id}`} className="text-sm font-medium text-slate-900 hover:underline">
+            Group page
+          </Link>
+        </div>
+        <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Field label="Members" value={String(group.memberCount)} />
+          <Field label="Group meals" value={String(current.groupMeals)} />
+          <Field label="Group spend" value={taka(current.groupExpense)} />
+          <Field label="You've been here" value={formatStay(group.stayDays)} />
+        </dl>
+
+        <div className="mt-5 overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-2">Member</th>
+                <th className="px-3 py-2 text-right">Meals</th>
+                <th className="px-3 py-2 text-right">Cost</th>
+                <th className="px-3 py-2 text-right">Due</th>
+              </tr>
+            </thead>
+            <tbody>
+              {current.members.map((m) => (
+                <tr key={m.id} className="border-b border-slate-100 last:border-0">
+                  <td className="px-3 py-2.5 font-medium">
+                    {m.name}
+                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                  </td>
+                  <td className="px-3 py-2.5 text-right text-slate-600">{m.meals}</td>
+                  <td className="px-3 py-2.5 text-right text-slate-600">{taka(m.totalCost)}</td>
+                  <td className={`px-3 py-2.5 text-right font-medium ${m.due > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
+                    {taka(Math.abs(m.due))}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t border-slate-200 text-sm font-semibold">
+                <td className="px-3 py-2.5">Total</td>
+                <td className="px-3 py-2.5 text-right">{current.groupMeals}</td>
+                <td className="px-3 py-2.5 text-right">{taka(current.groupExpense)}</td>
+                <td className="px-3 py-2.5" />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function CostBreakdown({ byType, total }: { byType: Record<string, number>; total: number }) {
+  const rows = Object.entries(byType)
+    .filter(([, amount]) => amount > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <Card>
+      <h2 className="text-lg font-semibold">Where the money went</h2>
+      <ul className="mt-4 space-y-3">
+        {rows.map(([type, amount]) => {
+          const percent = total > 0 ? Math.round((amount / total) * 100) : 0;
+          return (
+            <li key={type}>
+              <div className="flex items-baseline justify-between text-sm">
+                <span className="font-medium">{EXPENSE_TYPE_LABELS[type] ?? type}</span>
+                <span className="text-slate-600">
+                  {taka(amount)} <span className="text-xs text-slate-400">({percent}%)</span>
+                </span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-slate-900" style={{ width: `${percent}%` }} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
+  );
+}
+
+function InvitationBanner({ count }: { count: number }) {
+  return (
+    <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+      <p className="text-amber-800">
+        You have {count} pending invitation{count === 1 ? '' : 's'}.
+      </p>
+      <Link
+        href={ROUTES.invitations}
+        className="mt-3 inline-flex rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700"
+      >
+        View invitations
+      </Link>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const tone =
+    status === 'PAID'
+      ? 'bg-green-100 text-green-700'
+      : status === 'PARTIAL'
+        ? 'bg-amber-100 text-amber-700'
+        : 'bg-red-100 text-red-700';
+  return <span className={`rounded-full px-3 py-1 text-xs font-medium ${tone}`}>{status.toLowerCase()}</span>;
+}
+
+function formatStay(days: number) {
+  if (days < 31) return `${days} day${days === 1 ? '' : 's'}`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? '' : 's'}`;
+  const years = Math.floor(months / 12);
+  const rest = months % 12;
+  return rest === 0 ? `${years} year${years === 1 ? '' : 's'}` : `${years}y ${rest}m`;
+}
+
+function monthLabel(key: string) {
+  const [year, month] = key.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleString('en-US', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC'
+  });
+}
+
+function Panel({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">{children}</div>;
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">{children}</div>;
+}
+
+function Stat({ label, value, tone }: { label: string; value: number | string; tone?: 'green' | 'red' | 'amber' }) {
+  const color =
+    tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : tone === 'amber' ? 'text-amber-600' : '';
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="text-sm uppercase tracking-wide text-slate-500">{label}</div>
+      <div className={`mt-3 text-2xl font-semibold sm:text-3xl ${color}`}>{value}</div>
+    </div>
+  );
+}
+
+function Field({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' }) {
+  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : '';
+  return (
+    <div>
+      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
+      <dd className={`mt-1 text-base font-semibold ${color}`}>{value}</dd>
     </div>
   );
 }

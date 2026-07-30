@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -7,51 +8,129 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  code          String           @id
+  name          String
+  description   String?
+  rank          Int              @default(0)
+  isSystem      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  createdById   String?
+  updatedAt     DateTime         @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean          @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  users         User[]
+  permissions   RolePermission[]
+}
+
+model Permission {
+  code          String           @id
+  name          String
+  description   String?
+  category      String
+  createdAt     DateTime         @default(now())
+  createdById   String?
+  updatedAt     DateTime         @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean          @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  roles         RolePermission[]
+}
+
+model RolePermission {
+  id             String     @id @default(uuid())
+  role           Role       @relation(fields: [roleCode], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  roleCode       String
+  permission     Permission @relation(fields: [permissionCode], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  permissionCode String
+  createdAt      DateTime   @default(now())
+  createdById    String?
+  updatedAt      DateTime   @default(now()) @updatedAt
+  updatedById    String?
+  isPublished    Boolean    @default(true)
+  publishedAt    DateTime?
+  unpublishedAt  DateTime?
+
+  @@unique([roleCode, permissionCode])
+  @@index([roleCode])
+}
+
 model User {
-  id              String            @id @default(uuid())
-  name            String
-  email           String            @unique
-  password        String
-  phone           String?
-  profileImage    String?
-  role            String            @default("MEMBER")
-  status          String            @default("PENDING")
-  createdAt       DateTime          @default(now())
-  createdById     String?
-  updatedAt       DateTime          @updatedAt @default(now())
-  updatedById     String?
-  isPublished     Boolean           @default(true)
-  publishedAt     DateTime?
-  unpublishedAt   DateTime?
-  memberships     Membership[]
-  comments        Comment[]
-  mealEntries     MealEntry[]
-  mealPlans       MealPlan[]
-  expensePayments ExpenseEntry[]    @relation("ExpensePayer")
-  expenseHistory  ExpenseHistory[]  @relation("ExpenseHistoryActor")
-  expenseComments ExpenseComment[]  @relation("ExpenseCommentAuthor")
-  commentReplies  CommentReply[]    @relation("CommentReplyAuthor")
-  groupOrders     GroupOrder[]
-  payments        PaymentStatus[]
-  groupsSupervised Group[]          @relation("GroupSupervisor")
-  invitationsReceived Invitation[]  @relation("InvitationInvitee")
-  invitationsSent     Invitation[]  @relation("InvitationInviter")
+  id                  String           @id @default(uuid())
+  name                String
+  email               String           @unique
+  password            String
+  phone               String?
+  profileImage        String?
+  role                String           @default("MEMBER")
+  roleRef             Role             @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  status              String           @default("PENDING")
+  tokenVersion        Int              @default(0)
+  lastLoginAt         DateTime?
+  createdAt           DateTime         @default(now())
+  createdById         String?
+  updatedAt           DateTime         @default(now()) @updatedAt
+  updatedById         String?
+  isPublished         Boolean          @default(true)
+  publishedAt         DateTime?
+  unpublishedAt       DateTime?
+  memberships         Membership[]
+  comments            Comment[]
+  mealEntries         MealEntry[]
+  mealPlans           MealPlan[]
+  expensePayments     ExpenseEntry[]   @relation("ExpensePayer")
+  expenseHistory      ExpenseHistory[] @relation("ExpenseHistoryActor")
+  expenseComments     ExpenseComment[] @relation("ExpenseCommentAuthor")
+  expenseShares       ExpenseShare[]
+  commentReplies      CommentReply[]   @relation("CommentReplyAuthor")
+  groupOrders         GroupOrder[]
+  payments            PaymentStatus[]
+  groupsSupervised    Group[]          @relation("GroupSupervisor")
+  invitationsReceived Invitation[]     @relation("InvitationInvitee")
+  invitationsSent     Invitation[]     @relation("InvitationInviter")
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model LoginAttempt {
+  id            String    @id @default(uuid())
+  email         String
+  ipAddress     String
+  userAgent     String?
+  successful    Boolean   @default(false)
+  reason        String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+  @@index([createdAt])
 }
 
 model Group {
-  id                  String          @id @default(uuid())
+  id                  String           @id @default(uuid())
   name                String
-  supervisor          User            @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supervisor          User             @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   supervisorId        String
-  status              String          @default("ACTIVE")
-  mealWeightBreakfast Float           @default(0.5)
-  mealWeightLunch     Float           @default(1)
-  mealWeightDinner    Float           @default(1)
-  createdAt           DateTime        @default(now())
+  status              String           @default("ACTIVE")
+  mealWeightBreakfast Float            @default(0.5)
+  mealWeightLunch     Float            @default(1)
+  mealWeightDinner    Float            @default(1)
+  createdAt           DateTime         @default(now())
   createdById         String?
-  updatedAt           DateTime        @updatedAt @default(now())
+  updatedAt           DateTime         @default(now()) @updatedAt
   updatedById         String?
-  isPublished         Boolean         @default(true)
+  isPublished         Boolean          @default(true)
   publishedAt         DateTime?
   unpublishedAt       DateTime?
   memberships         Membership[]
@@ -63,26 +142,38 @@ model Group {
   payments            PaymentStatus[]
   comments            Comment[]
   invitations         Invitation[]
+
+  @@index([supervisorId])
+  @@index([status])
 }
 
 model SiteSettings {
-  id                String    @id @default("singleton")
-  companyName       String    @default("Team Sober")
+  id                String  @id @default("singleton")
+  companyName       String  @default("Bachelor Point")
   tagline           String?
   address           String?
   contactEmail      String?
   contactPhone      String?
-  copyrightOwner    String    @default("Team Sober")
+  copyrightOwner    String  @default("Bachelor Point")
   facebookUrl       String?
   twitterUrl        String?
-  newsletterEnabled Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  createdById       String?
-  updatedAt         DateTime  @updatedAt @default(now())
-  updatedById       String?
-  isPublished       Boolean   @default(true)
-  publishedAt       DateTime?
-  unpublishedAt     DateTime?
+  newsletterEnabled Boolean @default(true)
+
+  maxLoginAttempts          Int     @default(5)
+  loginLockoutMinutes       Int     @default(15)
+  maxLoginAttemptsPerIp     Int     @default(40)
+  ipLockoutMinutes          Int     @default(15)
+  maxRegistrationsPerIp     Int     @default(5)
+  registrationWindowMinutes Int     @default(60)
+  requireStrongPasswords    Boolean @default(false)
+
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
 }
 
 model Subscriber {
@@ -90,7 +181,7 @@ model Subscriber {
   email         String    @unique
   createdAt     DateTime  @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean   @default(true)
   publishedAt   DateTime?
@@ -109,11 +200,14 @@ model Invitation {
   respondedAt   DateTime?
   createdAt     DateTime  @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean   @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([inviteeId, status])
+  @@index([groupId, status])
 }
 
 model Membership {
@@ -127,11 +221,14 @@ model Membership {
   isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean   @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([userId, isActive])
+  @@index([groupId, isActive])
 }
 
 model MealEntry {
@@ -148,13 +245,15 @@ model MealEntry {
   fromPlan       Boolean   @default(false)
   createdAt      DateTime  @default(now())
   createdById    String?
-  updatedAt      DateTime  @updatedAt @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
   updatedById    String?
   isPublished    Boolean   @default(true)
   publishedAt    DateTime?
   unpublishedAt  DateTime?
 
   @@unique([userId, groupId, date])
+  @@index([groupId, date])
+  @@index([userId, date])
 }
 
 model MealPlan {
@@ -167,7 +266,7 @@ model MealPlan {
   startDate     DateTime
   createdAt     DateTime      @default(now())
   createdById   String?
-  updatedAt     DateTime      @updatedAt @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean       @default(true)
   publishedAt   DateTime?
@@ -188,7 +287,7 @@ model MealPlanDay {
   dinner        Int       @default(0)
   createdAt     DateTime  @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean   @default(true)
   publishedAt   DateTime?
@@ -198,27 +297,53 @@ model MealPlanDay {
 }
 
 model ExpenseEntry {
-  id            String          @id @default(uuid())
-  group         Group           @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String           @id @default(uuid())
+  group         Group            @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
   type          String
   amount        Float
   date          DateTime
-  payer         User?           @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  payer         User?            @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   payerId       String?
-  isReceived    Boolean         @default(false)
+  isReceived    Boolean          @default(false)
   splitMethod   String
   note          String?
-  createdAt     DateTime        @default(now())
+  createdAt     DateTime         @default(now())
   createdById   String?
-  updatedAt     DateTime        @updatedAt @default(now())
+  updatedAt     DateTime         @default(now()) @updatedAt
   updatedById   String?
-  isPublished   Boolean         @default(true)
+  isPublished   Boolean          @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
   payments      PaymentStatus[]
   items         ExpenseItem[]
   comments      ExpenseComment[]
+  shares        ExpenseShare[]
+
+  @@index([groupId, type, date])
+  @@index([groupId, date])
+}
+
+/// One member's slice of a non-bazar cost (rent, utilities, chef, wifi, ...).
+/// Written for every split method so reporting never has to re-derive the maths,
+/// and so a later membership change cannot silently rewrite last month's bill.
+model ExpenseShare {
+  id            String       @id @default(uuid())
+  expense       ExpenseEntry @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenseId     String
+  user          User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  amount        Float
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([expenseId, userId])
+  @@index([userId])
 }
 
 model ExpenseItem {
@@ -230,11 +355,13 @@ model ExpenseItem {
   sortOrder     Int          @default(0)
   createdAt     DateTime     @default(now())
   createdById   String?
-  updatedAt     DateTime     @updatedAt @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean      @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([expenseId])
 }
 
 model ExpenseComment {
@@ -248,11 +375,13 @@ model ExpenseComment {
   deletedAt     DateTime?
   createdAt     DateTime     @default(now())
   createdById   String?
-  updatedAt     DateTime     @updatedAt @default(now())
+  updatedAt     DateTime     @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean      @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([expenseId])
 }
 
 model PaymentStatus {
@@ -269,11 +398,14 @@ model PaymentStatus {
   dueDate       DateTime
   createdAt     DateTime      @default(now())
   createdById   String?
-  updatedAt     DateTime      @updatedAt @default(now())
+  updatedAt     DateTime      @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean       @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([groupId, dueDate])
+  @@index([userId, dueDate])
 }
 
 model GroupOrder {
@@ -285,7 +417,7 @@ model GroupOrder {
   position      Int
   createdAt     DateTime  @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean   @default(true)
   publishedAt   DateTime?
@@ -311,11 +443,13 @@ model ExpenseHistory {
   noteTo        String?
   createdAt     DateTime  @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean   @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([groupId, expenseDate])
 }
 
 model CommentReply {
@@ -328,11 +462,13 @@ model CommentReply {
   deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime  @default(now()) @updatedAt
   updatedById   String?
   isPublished   Boolean   @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([commentId])
 }
 
 model Comment {
@@ -342,15 +478,15 @@ model Comment {
   group         Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
   text          String
-  replyText     String?
-  repliedAt     DateTime?
   deletedAt     DateTime?
   replies       CommentReply[]
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime       @default(now())
   createdById   String?
-  updatedAt     DateTime  @updatedAt @default(now())
+  updatedAt     DateTime       @default(now()) @updatedAt
   updatedById   String?
-  isPublished   Boolean   @default(true)
+  isPublished   Boolean        @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
+
+  @@index([groupId, createdAt])
 }

@@ -59,7 +59,7 @@ export default function ProfileMenu() {
         }`}
       >
         {user.profileImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
+
           <img src={user.profileImage} alt="" className="h-10 w-10 rounded-full object-cover" />
         ) : (
           initials(user.name)
@@ -75,7 +75,7 @@ export default function ProfileMenu() {
           >
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
               {user.profileImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
+
                 <img src={user.profileImage} alt="" className="h-11 w-11 rounded-full object-cover" />
               ) : (
                 initials(user.name)

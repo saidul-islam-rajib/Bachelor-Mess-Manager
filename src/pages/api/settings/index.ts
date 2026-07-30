@@ -6,7 +6,6 @@ import { withAudit } from '@/lib/with-audit';
 
 const SETTINGS_ID = 'singleton';
 
-// Ensures the single settings row exists and returns it.
 async function getSettings() {
   return prisma.siteSettings.upsert({
     where: { id: SETTINGS_ID },
@@ -16,7 +15,7 @@ async function getSettings() {
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Public read so the footer can render for everyone.
+  
   if (req.method === 'GET') {
     return ok(res, { settings: await getSettings() });
   }
@@ -49,7 +48,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         data[field] = value || null;
       }
     }
-    // companyName / copyrightOwner should never be blanked out.
+    
     if (typeof body.companyName === 'string' && !(body.companyName as string).trim()) {
       delete data.companyName;
     }

@@ -1,0 +1,35 @@
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.60"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
+  }
+
+  backend "s3" {
+    bucket         = "bachelor-point-tfstate-team-sober-2026"
+    key            = "bachelor-point/terraform.tfstate"
+    region         = "ap-southeast-1"
+    dynamodb_table = "bachelor-point-tflocks"
+    encrypt        = true
+  }
+}
+
+provider "aws" {
+  region = var.aws_region
+
+  default_tags {
+    tags = {
+      Project     = var.project_name
+      Environment = var.environment
+      ManagedBy   = "terraform"
+      Owner       = var.owner_name
+    }
+  }
+}

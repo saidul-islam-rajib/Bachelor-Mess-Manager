@@ -10,6 +10,8 @@ type MemberRow = {
   name: string;
   email: string;
   meals: number;
+  mealCost: number;
+  billShare: number;
   cost: number;
   bazarPaid: number;
   collected: number;
@@ -19,9 +21,24 @@ type MemberRow = {
 
 type Payment = { id: string; userId: string; userName: string; amount: number; date: string };
 
-type Totals = { expense: number; cost: number; collected: number; outstanding: number; refunds: number };
+type Totals = {
+  bazar: number;
+  bills: number;
+  expense: number;
+  cost: number;
+  collected: number;
+  outstanding: number;
+  refunds: number;
+};
 
-type PaymentsData = { canManage: boolean; members: MemberRow[]; payments: Payment[]; totals: Totals };
+type PaymentsData = {
+  canManage: boolean;
+  currentUserId?: string;
+  members: MemberRow[];
+  payments: Payment[];
+  totals: Totals;
+  byType: Record<string, number>;
+};
 
 const taka = (n: number) => `৳${n.toFixed(2)}`;
 
@@ -118,8 +135,9 @@ export default function PaymentsPage() {
             <Card>Loading payments...</Card>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-                <Stat label="Groceries spent" value={taka(data.totals.expense)} />
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+                <Stat label="Bazar" value={taka(data.totals.bazar)} />
+                <Stat label="Bills" value={taka(data.totals.bills)} />
                 <Stat label="Collected" value={taka(data.totals.collected)} tone="green" />
                 <Stat label="Outstanding dues" value={taka(data.totals.outstanding)} tone="red" />
                 <Stat label="To refund" value={taka(data.totals.refunds)} />
@@ -187,7 +205,8 @@ function MemberBalances({ members, currentUserId }: { members: MemberRow[]; curr
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">Member balances</h2>
       <p className="mt-1 text-sm text-slate-500">
-        Due = meal share − groceries they bought − cash they paid. A negative due means the mess owes them.
+        Due = meal share + bills share − groceries they bought − cash they paid. A negative due means the mess owes
+        them.
       </p>
 
       {members.length === 0 ? (
@@ -201,6 +220,8 @@ function MemberBalances({ members, currentUserId }: { members: MemberRow[]; curr
                   <th className="px-3 py-2">Member</th>
                   <th className="px-3 py-2 text-right">Meals</th>
                   <th className="px-3 py-2 text-right">Meal share</th>
+                  <th className="px-3 py-2 text-right">Bills share</th>
+                  <th className="px-3 py-2 text-right">Total cost</th>
                   <th className="px-3 py-2 text-right">Bought groceries</th>
                   <th className="px-3 py-2 text-right">Cash paid</th>
                   <th className="px-3 py-2 text-right">Due</th>
@@ -215,7 +236,9 @@ function MemberBalances({ members, currentUserId }: { members: MemberRow[]; curr
                       {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
                     </td>
                     <td className="px-3 py-3 text-right text-slate-600">{m.meals}</td>
-                    <td className="px-3 py-3 text-right">{taka(m.cost)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.mealCost)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.billShare)}</td>
+                    <td className="px-3 py-3 text-right font-medium">{taka(m.cost)}</td>
                     <td className="px-3 py-3 text-right text-slate-600">{taka(m.bazarPaid)}</td>
                     <td className="px-3 py-3 text-right text-slate-600">{taka(m.collected)}</td>
                     <td className={`px-3 py-3 text-right font-semibold ${m.due > 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -242,7 +265,9 @@ function MemberBalances({ members, currentUserId }: { members: MemberRow[]; curr
                 </div>
                 <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                   <Field label="Meals" value={String(m.meals)} />
-                  <Field label="Meal share" value={taka(m.cost)} />
+                  <Field label="Meal share" value={taka(m.mealCost)} />
+                  <Field label="Bills share" value={taka(m.billShare)} />
+                  <Field label="Total cost" value={taka(m.cost)} />
                   <Field label="Bought groceries" value={taka(m.bazarPaid)} />
                   <Field label="Cash paid" value={taka(m.collected)} />
                 </dl>

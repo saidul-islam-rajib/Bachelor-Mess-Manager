@@ -5,24 +5,28 @@ import Layout from '@/components/Layout';
 import { ToastProvider } from '@/components/ToastProvider';
 import { UserProvider } from '@/components/UserProvider';
 import { InvitationsProvider } from '@/components/InvitationsProvider';
-import { STRINGS } from '@/lib/strings';
+import { ConfirmProvider } from '@/components/ui';
+import { appConfig } from '@/config';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>{STRINGS.appName}</title>
+        <title>{appConfig.name}</title>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content={appConfig.tagline} />
         <link rel="icon" href="/logo.png" />
       </Head>
       <ToastProvider>
-        <UserProvider>
-          <InvitationsProvider>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </InvitationsProvider>
-        </UserProvider>
+        <ConfirmProvider>
+          <UserProvider>
+            <InvitationsProvider>
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </InvitationsProvider>
+          </UserProvider>
+        </ConfirmProvider>
       </ToastProvider>
     </>
   );

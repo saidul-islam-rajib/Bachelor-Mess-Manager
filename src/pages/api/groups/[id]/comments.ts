@@ -74,9 +74,6 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }))
     }));
 
-    // Mentions are stored as user ids, so a rename shows up everywhere. Resolve
-    // them against the users table, not the group, so people who have since left
-    // still render with their real name.
     const mentioned = new Set<string>();
     for (const c of comments) {
       for (const id of mentionIdsIn(c.text)) mentioned.add(id);

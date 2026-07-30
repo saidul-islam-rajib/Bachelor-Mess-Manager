@@ -4,6 +4,7 @@ import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { dayToUtcDate, parseMonth, utcDateToDay } from '@/lib/month';
 import { recordExpenseCreated } from '@/lib/expense-history';
+import { mentionIdsIn } from '@/lib/mentions';
 import { parseItems } from '@/lib/expense-items';
 import { withAudit } from '@/lib/with-audit';
 
@@ -65,7 +66,38 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }))
     }));
 
-    return ok(res, { expenses, isSupervisor, currentUserId: sessionUser.id });
+    const [memberships, supervisor] = await Promise.all([
+      prisma.membership.findMany({
+        where: { groupId, isActive: true },
+        include: { user: { select: { id: true, name: true } } }
+      }),
+      prisma.user.findUnique({ where: { id: group.supervisorId }, select: { id: true, name: true } })
+    ]);
+
+    const memberMap = new Map<string, { id: string; name: string }>();
+    for (const membership of memberships) memberMap.set(membership.user.id, membership.user);
+    if (supervisor) memberMap.set(supervisor.id, supervisor);
+
+    const mentioned = new Set<string>();
+    for (const expense of expenses) {
+      for (const comment of expense.comments) {
+        for (const id of mentionIdsIn(comment.text)) mentioned.add(id);
+      }
+    }
+
+    const mentionedUsers = mentioned.size
+      ? await prisma.user.findMany({ where: { id: { in: [...mentioned] } }, select: { id: true, name: true } })
+      : [];
+    const mentionNames: Record<string, string> = {};
+    for (const user of mentionedUsers) mentionNames[user.id] = user.name;
+
+    return ok(res, {
+      expenses,
+      members: [...memberMap.values()].sort((a, b) => a.name.localeCompare(b.name)),
+      mentionNames,
+      isSupervisor,
+      currentUserId: sessionUser.id
+    });
   }
 
   if (req.method === 'POST') {
