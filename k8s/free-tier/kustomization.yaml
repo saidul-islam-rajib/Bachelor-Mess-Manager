@@ -6,7 +6,8 @@ namespace: bachelor-point
 resources:
   - ../base
   - uploads-pvc.yaml
-  - ingress.yaml
 
 patches:
   - path: patch-resources.yaml
+  - path: patch-service.yaml
+  - path: patch-configmap.yaml

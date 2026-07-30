@@ -1,0 +1,64 @@
+jenkins:
+  systemMessage: "Bachelor Point - deploys develop to k3s with blue-green"
+  numExecutors: 2
+  mode: NORMAL
+  scmCheckoutRetryCount: 2
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+
+  authorizationStrategy:
+    loggedInAuthenticationStrategy:
+      allowAnonymousRead: false
+
+  crumbIssuer:
+    standard:
+      excludeClientIPFromCrumb: true
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - basicSSHUserPrivateKey:
+              scope: GLOBAL
+              id: "ssh-key-ec2"
+              username: "ubuntu"
+              description: "SSH key for the k3s server"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${SSH_PRIVATE_KEY}"
+          - string:
+              scope: GLOBAL
+              id: "server-ip"
+              description: "Elastic IP of the k3s server"
+              secret: "${SERVER_IP}"
+
+unclassified:
+  location:
+    url: "http://localhost:8080/"
+
+jobs:
+  - script: >
+      pipelineJob('bachelor-point-develop') {
+        description('Deploys the develop branch to k3s with blue-green')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url("${GIT_REPO_URL}")
+                }
+                branch('*/develop')
+              }
+            }
+            scriptPath('Jenkinsfile.free-tier')
+          }
+        }
+        triggers {
+          scm('H/2 * * * *')
+        }
+      }
