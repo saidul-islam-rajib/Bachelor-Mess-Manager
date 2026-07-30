@@ -8,7 +8,7 @@ data:
   PORT: "8080"
   HOSTNAME: "0.0.0.0"
 
-  APP_NAME: "Bachelor Point"
+  APP_NAME: "Team Sober"
   APP_TAGLINE: "Manage your mess without the arguments."
   APP_CURRENCY_CODE: "BDT"
   APP_CURRENCY_SYMBOL: "৳"
