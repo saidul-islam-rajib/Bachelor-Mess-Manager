@@ -5,3 +5,4 @@ metadata:
   namespace: bachelor-point
 data:
   SESSION_COOKIE_SECURE: "false"
+  APP_PUBLIC_URL: "https://bachelor-point.team-sober.com"

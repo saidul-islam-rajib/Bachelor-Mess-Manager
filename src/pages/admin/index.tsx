@@ -95,6 +95,7 @@ type SecurityResponse = {
 
 const TABS = [
   { key: 'registrations', label: strings.admin.tabs.registrations },
+  { key: 'roles', label: strings.roleRequests.title },
   { key: 'users', label: strings.admin.tabs.users },
   { key: 'groups', label: strings.admin.tabs.groups },
   { key: 'security', label: strings.admin.tabs.security },
@@ -168,6 +169,7 @@ export default function AdminPage() {
       </div>
 
       {tab === 'registrations' && <RegistrationsPanel />}
+      {tab === 'roles' && <RoleRequestsPanel />}
       {tab === 'users' && <UsersPanel />}
       {tab === 'groups' && <GroupsPanel />}
       {tab === 'security' && <SecurityPanel />}
@@ -1155,5 +1157,165 @@ function SettingsPanel() {
         </Button>
       </div>
     </Card>
+  );
+}
+
+type AdminRoleRequest = {
+  id: string;
+  requestedRole: string;
+  status: string;
+  reason: string | null;
+  createdAt: string;
+  user: { id: string; name: string; email: string; role: string; status: string };
+};
+
+function RoleRequestsPanel() {
+  const toast = useToast();
+  const [rows, setRows] = useState<AdminRoleRequest[]>([]);
+  const [meta, setMeta] = useState<PageMeta | null>(null);
+  const [policy, setPolicy] = useState({ autoApproveSupervisor: false, allowSelfRoleSwitch: true });
+  const [status, setStatus] = useState('PENDING');
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState('');
+  const [savingPolicy, setSavingPolicy] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.get<{
+        requests: AdminRoleRequest[];
+        meta: PageMeta;
+        policy: typeof policy;
+      }>('/api/role-requests', { query: { scope: 'all', status, page } });
+      setRows(data.requests);
+      setMeta(data.meta);
+      setPolicy(data.policy);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  }, [status, page, toast]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function decide(row: AdminRoleRequest, approve: boolean) {
+    setBusy(row.id);
+    try {
+      const result = await api.patch<{ message: string }>(`/api/role-requests/${row.id}`, { approve });
+      toast.success(result.message);
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function savePolicy(next: Partial<typeof policy>) {
+    setSavingPolicy(true);
+    try {
+      await api.patch('/api/settings', next);
+      setPolicy((current) => ({ ...current, ...next }));
+      toast.success(strings.success.saved);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setSavingPolicy(false);
+    }
+  }
+
+  const columns: Column<AdminRoleRequest>[] = [
+    {
+      key: 'user',
+      header: strings.common.name,
+      render: (row) => (
+        <div>
+          <p className="font-medium">{row.user.name}</p>
+          <p className="text-xs text-slate-500">{row.user.email}</p>
+        </div>
+      )
+    },
+    { key: 'from', header: 'From', render: (row) => <Badge>{roleLabel(row.user.role)}</Badge> },
+    { key: 'to', header: 'To', render: (row) => <Badge tone="info">{roleLabel(row.requestedRole)}</Badge> },
+    {
+      key: 'reason',
+      header: 'Reason',
+      render: (row) => <span className="text-xs text-slate-600">{row.reason ?? '—'}</span>
+    },
+    { key: 'createdAt', header: strings.common.date, render: (row) => formatDate(row.createdAt) },
+    {
+      key: 'actions',
+      header: strings.common.actions,
+      align: 'right',
+      render: (row) =>
+        row.status === 'PENDING' ? (
+          <div className="flex justify-end gap-2">
+            <Button size="sm" loading={busy === row.id} onClick={() => decide(row, true)}>
+              {strings.roleRequests.approve}
+            </Button>
+            <Button size="sm" variant="danger" loading={busy === row.id} onClick={() => decide(row, false)}>
+              {strings.roleRequests.reject}
+            </Button>
+          </div>
+        ) : (
+          <StatusBadge status={row.status} />
+        )
+    }
+  ];
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader title={strings.roleRequests.title} description={strings.roleRequests.subtitle} />
+        <div className="mt-4 space-y-3">
+          <Checkbox
+            label={strings.roleRequests.autoApproveLabel}
+            hint={strings.roleRequests.autoApproveHint}
+            checked={policy.autoApproveSupervisor}
+            disabled={savingPolicy}
+            onChange={(checked) => savePolicy({ autoApproveSupervisor: checked })}
+          />
+          <Checkbox
+            label={strings.roleRequests.allowSelfSwitchLabel}
+            hint={strings.roleRequests.allowSelfSwitchHint}
+            checked={policy.allowSelfRoleSwitch}
+            disabled={savingPolicy}
+            onChange={(checked) => savePolicy({ allowSelfRoleSwitch: checked })}
+          />
+        </div>
+      </Card>
+
+      <Card>
+        <div className="mb-4 flex flex-wrap gap-2">
+          {['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].map((value) => (
+            <Button
+              key={value}
+              size="sm"
+              variant={status === value ? 'primary' : 'secondary'}
+              onClick={() => {
+                setStatus(value);
+                setPage(1);
+              }}
+            >
+              {value}
+            </Button>
+          ))}
+        </div>
+
+        <DataTable
+          columns={columns}
+          rows={rows}
+          rowKey={(row) => row.id}
+          loading={loading}
+          emptyTitle={strings.roleRequests.noneP}
+          emptyDescription=""
+        />
+        {meta && <Pagination meta={meta} onPageChange={setPage} disabled={loading} />}
+      </Card>
+    </div>
   );
 }
