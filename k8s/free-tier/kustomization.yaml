@@ -10,3 +10,4 @@ resources:
 patches:
   - path: patch-resources.yaml
   - path: patch-service.yaml
+  - path: patch-configmap.yaml

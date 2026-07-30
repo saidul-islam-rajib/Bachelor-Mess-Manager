@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/session';
+import { readSessionClaims, SESSION_COOKIE_NAME } from '@/lib/session';
 
 const PUBLIC_PATHS = [
   '/auth/login',
@@ -20,7 +20,7 @@ export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
 };
 
-export async function middleware(req: NextRequest) {
+export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isApi = pathname.startsWith('/api/');
 
@@ -32,9 +32,9 @@ export async function middleware(req: NextRequest) {
   }
 
   const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = await verifySessionToken(token);
+  const claims = readSessionClaims(token);
 
-  if (session) {
+  if (claims) {
     return NextResponse.next();
   }
 
@@ -44,7 +44,6 @@ export async function middleware(req: NextRequest) {
 
   const url = req.nextUrl.clone();
   url.pathname = '/auth/login';
-
   url.search = pathname === '/' ? '' : `?next=${encodeURIComponent(pathname + req.nextUrl.search)}`;
 
   const response = NextResponse.redirect(url);

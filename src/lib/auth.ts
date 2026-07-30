@@ -1,5 +1,6 @@
 import type { NextApiResponse } from 'next';
 import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from '@/lib/session';
+import { sessionConfig } from '@/config';
 
 export { SESSION_COOKIE_NAME } from '@/lib/session';
 
@@ -33,7 +34,7 @@ export function serializeCookie(
     path: '/',
     httpOnly: true,
     sameSite: 'lax' as const,
-    secure: process.env.NODE_ENV === 'production',
+    secure: sessionConfig.cookieSecure,
     ...options
   };
 

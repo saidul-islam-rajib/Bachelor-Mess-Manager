@@ -67,7 +67,8 @@ export const sessionConfig = {
   maxAgeSeconds: readInt('SESSION_MAX_AGE_SECONDS', SESSION_DEFAULTS.maxAgeSeconds),
   refreshAfterSeconds: readInt('SESSION_REFRESH_AFTER_SECONDS', SESSION_DEFAULTS.refreshAfterSeconds),
   minSecretLength: SESSION_DEFAULTS.minSecretLength,
-  secret: readOptionalString('AUTH_SECRET')
+  secret: readOptionalString('AUTH_SECRET'),
+  cookieSecure: readBoolean('SESSION_COOKIE_SECURE', isProduction)
 } as const;
 
 export const passwordConfig = {
