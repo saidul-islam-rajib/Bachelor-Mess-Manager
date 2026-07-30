@@ -84,6 +84,15 @@ variable "allowed_admin_cidr" {
   default = "0.0.0.0/0"
 }
 
+variable "ci_server_cidr" {
+  description = <<-EOT
+    CIDR of the Jenkins/CI server, so it can SSH in to deploy.
+    Example: "16.171.254.209/32". Leave empty if CI runs from your own machine.
+  EOT
+  type    = string
+  default = ""
+}
+
 variable "public_key_path" {
   description = "Existing SSH public key to install. Leave empty to generate a new key pair."
   type        = string
