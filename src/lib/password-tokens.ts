@@ -30,7 +30,7 @@ export async function issuePasswordToken(params: {
   req: NextApiRequest;
 }): Promise<{ token: string; expiresAt: Date; link: string }> {
   const token = crypto.randomBytes(passwordTokenConfig.bytes).toString('base64url');
-  const expiresAt = new Date(Date.now() + passwordTokenConfig.hours * 3600_000);
+  const expiresAt = new Date(Date.now() + passwordTokenConfig.minutes * 60_000);
 
   await prisma.passwordToken.updateMany({
     where: { userId: params.userId, purpose: params.purpose, usedAt: null },

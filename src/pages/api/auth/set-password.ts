@@ -48,11 +48,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, passwordCheck.error);
   }
 
+  const current = await prisma.user.findUnique({
+    where: { id: lookup.userId },
+    select: { status: true }
+  });
+
   const user = await prisma.user.update({
     where: { id: lookup.userId },
     data: {
       password: await hashPassword(password as string),
-      tokenVersion: { increment: 1 }
+      tokenVersion: { increment: 1 },
+      ...(current?.status === USER_STATUS.UNVERIFIED ? { status: USER_STATUS.PENDING } : {})
     },
     select: { id: true, name: true, email: true, role: true, status: true, tokenVersion: true }
   });

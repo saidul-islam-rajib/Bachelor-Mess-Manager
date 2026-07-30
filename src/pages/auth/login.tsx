@@ -5,9 +5,11 @@ import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
+import { XssWarningModal } from '@/components/XssWarningModal';
 import { ROUTES } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
 import { isValidEmail } from '@/lib/validation';
+import { findXssField } from '@/lib/xss';
 
 function safeNext(next: unknown): string | null {
   if (typeof next !== 'string') return null;
@@ -26,10 +28,17 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [xssField, setXssField] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (loading) return;
+
+    const offendingField = findXssField({ email, password });
+    if (offendingField) {
+      setXssField(offendingField);
+      return;
+    }
 
     const nextErrors: typeof errors = {};
     if (!email.trim()) nextErrors.email = 'Email is required.';
@@ -68,6 +77,7 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
+      <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
           <h1 className="text-2xl font-semibold">{strings.title}</h1>

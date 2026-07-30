@@ -165,14 +165,14 @@ export async function sendMail(message: MailMessage): Promise<MailResult> {
   }
 }
 
-export function passwordSetupEmail(name: string, link: string, hours: number): MailMessage {
+export function passwordSetupEmail(name: string, link: string, minutes: number): MailMessage {
   const subject = `Set your ${appConfig.name} password`;
 
   const text = [
     `Hello ${name},`,
     '',
     `An account was created for you on ${appConfig.name}.`,
-    'Open the link below to choose a password. It expires in ' + hours + ' hours.',
+    'Open the link below to choose a password. It expires in ' + minutes + ' minutes.',
     '',
     link,
     '',
@@ -187,7 +187,7 @@ export function passwordSetupEmail(name: string, link: string, hours: number): M
     <h1 style="margin:0 0 8px;font-size:20px">${appConfig.name}</h1>
     <p style="margin:0 0 24px;color:#475569;font-size:14px">Hello ${name}, choose a password to finish setting up your account.</p>
     <a href="${link}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:12px 24px;border-radius:999px;font-size:14px">Create your password</a>
-    <p style="margin:24px 0 0;color:#64748b;font-size:12px">This link expires in ${hours} hours. If the button does not work, paste this into your browser:</p>
+    <p style="margin:24px 0 0;color:#64748b;font-size:12px">This link expires in ${minutes} minutes and can only be used once. If the button does not work, paste this into your browser:</p>
     <p style="margin:8px 0 0;color:#64748b;font-size:12px;word-break:break-all">${link}</p>
     <p style="margin:24px 0 0;color:#94a3b8;font-size:12px">If you did not expect this email you can ignore it. No password is set until the link is used.</p>
   </div>

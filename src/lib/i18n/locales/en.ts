@@ -185,6 +185,7 @@ const en = {
     notFound: 'Not found.',
     methodNotAllowed: 'Method not allowed',
     invalidCredentials: 'Invalid email or password.',
+    suspiciousInput: 'That input looks like a script injection attempt and was blocked.',
     accountPending: 'Your account is awaiting admin approval.',
     accountInactive: 'Your account is not active. Please contact an admin.',
     tooManyAttempts: (minutes: number) =>
@@ -639,6 +640,7 @@ const en = {
     yearsMonths: (years: number, months: number) => `${years}y ${months}m`
   },
   status: {
+    UNVERIFIED: 'Unverified',
     PENDING: 'Pending',
     APPROVED: 'Approved',
     REJECTED: 'Rejected',

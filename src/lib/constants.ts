@@ -13,6 +13,7 @@ export const USER_ROLE_VALUES = Object.values(USER_ROLES) as string[];
 export const ASSIGNABLE_ROLES = [USER_ROLES.SUPERVISOR, USER_ROLES.MEMBER] as string[];
 
 export const USER_STATUS = {
+  UNVERIFIED: 'UNVERIFIED',
   PENDING: 'PENDING',
   APPROVED: 'APPROVED',
   REJECTED: 'REJECTED'

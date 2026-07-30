@@ -184,6 +184,6 @@ export const appUrlConfig = {
 } as const;
 
 export const passwordTokenConfig = {
-  hours: readInt('PASSWORD_TOKEN_HOURS', MAIL_DEFAULTS.passwordTokenHours),
+  minutes: readInt('PASSWORD_TOKEN_MINUTES', MAIL_DEFAULTS.passwordTokenMinutes),
   bytes: MAIL_DEFAULTS.passwordTokenBytes
 } as const;

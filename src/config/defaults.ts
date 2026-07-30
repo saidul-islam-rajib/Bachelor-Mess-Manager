@@ -91,6 +91,6 @@ export const MAIL_DEFAULTS = {
   port: 587,
   helo: 'bachelor-point',
   timeoutMs: 15000,
-  passwordTokenHours: 24,
+  passwordTokenMinutes: 5,
   passwordTokenBytes: 32
 } as const;

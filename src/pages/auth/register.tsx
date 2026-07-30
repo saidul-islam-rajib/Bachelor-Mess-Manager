@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { Alert, Button, Input } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
+import { XssWarningModal } from '@/components/XssWarningModal';
 import { ROUTES } from '@/lib/routes';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { isValidEmail, validateName, validatePhone } from '@/lib/validation';
+import { findXssField } from '@/lib/xss';
 
 type Errors = Partial<Record<'name' | 'email' | 'phone', string>>;
 
@@ -25,6 +27,7 @@ export default function RegisterPage() {
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState<RegisterResponse | null>(null);
+  const [xssField, setXssField] = useState<string | null>(null);
 
   function clearError(field: keyof Errors) {
     setErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
@@ -48,6 +51,12 @@ export default function RegisterPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (loading) return;
+
+    const offendingField = findXssField({ name, email, phone });
+    if (offendingField) {
+      setXssField(offendingField);
+      return;
+    }
 
     const nextErrors = validate();
     setErrors(nextErrors);
@@ -98,6 +107,7 @@ export default function RegisterPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
+      <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
           <h1 className="text-2xl font-semibold">{strings.auth.register.title}</h1>
