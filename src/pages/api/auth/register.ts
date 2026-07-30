@@ -68,20 +68,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const message = { ...passwordSetupEmail(user.name, link, passwordTokenConfig.hours), to: user.email };
     const delivery = await sendMail(message);
 
+    const delivered = delivery.ok && delivery.delivered;
+
     const body: Record<string, unknown> = {
-      message: strings.auth.checkEmail,
-      emailSent: true,
+      message: delivered ? strings.auth.checkEmail : strings.auth.mailFailed,
+      emailSent: delivered,
       firstUser: isFirstUser
     };
 
     if (!isMailConfigured() && !isProduction) {
       body.setupLink = link;
       body.message = strings.auth.checkEmailDevMode;
-    }
-
-    if (!delivery.ok) {
-      body.message = strings.auth.mailFailed;
-      body.emailSent = false;
     }
 
     return created(res, body);
