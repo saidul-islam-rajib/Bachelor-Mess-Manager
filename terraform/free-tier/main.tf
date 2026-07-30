@@ -113,11 +113,23 @@ resource "aws_security_group" "server" {
   }
 
   ingress {
-    description = "SSH"
+    description = "SSH from the administrator"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.allowed_admin_cidr]
+  }
+
+  dynamic "ingress" {
+    for_each = var.ci_server_cidr != "" ? [var.ci_server_cidr] : []
+
+    content {
+      description = "SSH from the Jenkins CI server"
+      from_port   = 22
+      to_port     = 22
+      protocol    = "tcp"
+      cidr_blocks = [ingress.value]
+    }
   }
 
   ingress {
@@ -136,18 +148,6 @@ resource "aws_security_group" "server" {
   }
 
   tags = { Name = "${local.name}-server-sg" }
-}
-
-resource "aws_security_group_rule" "ci_ssh" {
-  count = var.ci_server_cidr != "" ? 1 : 0
-
-  type              = "ingress"
-  description       = "SSH from the Jenkins CI server"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  cidr_blocks       = [var.ci_server_cidr]
-  security_group_id = aws_security_group.server.id
 }
 
 resource "aws_security_group" "database" {
