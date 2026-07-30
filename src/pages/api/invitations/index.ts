@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth-utils';
 import { INVITATION_STATUS } from '@/lib/constants';
 import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
     return methodNotAllowed(res, ['GET']);
   }
@@ -25,3 +26,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return ok(res, { invitations });
 }
+
+export default withAudit(handler);

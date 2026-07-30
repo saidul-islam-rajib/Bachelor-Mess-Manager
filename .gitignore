@@ -17,6 +17,10 @@ next-env.d.ts
 .env*.local
 !.env.example
 
+# user-uploaded profile images (runtime data, not source)
+# outside /public on purpose — Next snapshots that directory at build time
+/uploads/
+
 # testing
 /coverage
 
@@ -34,3 +38,16 @@ yarn-error.log*
 # misc
 *.pem
 .vercel
+
+# terraform
+.terraform/
+*.tfplan
+tfplan
+*.tfstate
+*.tfstate.*
+errored.tfstate
+crash.log
+*.tfvars
+!*.tfvars.example
+.terraformrc
+terraform.rc

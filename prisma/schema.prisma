@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -7,149 +8,485 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Role {
+  code          String           @id
+  name          String
+  description   String?
+  rank          Int              @default(0)
+  isSystem      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  createdById   String?
+  updatedAt     DateTime         @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean          @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  users         User[]
+  permissions   RolePermission[]
+}
+
+model Permission {
+  code          String           @id
+  name          String
+  description   String?
+  category      String
+  createdAt     DateTime         @default(now())
+  createdById   String?
+  updatedAt     DateTime         @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean          @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  roles         RolePermission[]
+}
+
+model RolePermission {
+  id             String     @id @default(uuid())
+  role           Role       @relation(fields: [roleCode], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  roleCode       String
+  permission     Permission @relation(fields: [permissionCode], references: [code], onDelete: Cascade, onUpdate: NoAction)
+  permissionCode String
+  createdAt      DateTime   @default(now())
+  createdById    String?
+  updatedAt      DateTime   @default(now()) @updatedAt
+  updatedById    String?
+  isPublished    Boolean    @default(true)
+  publishedAt    DateTime?
+  unpublishedAt  DateTime?
+
+  @@unique([roleCode, permissionCode])
+  @@index([roleCode])
+}
+
 model User {
-  id              String           @id @default(uuid())
-  name            String
-  email           String           @unique
-  password        String
-  phone           String?
-  profileImage    String?
-  role            String           @default("MEMBER")
-  status          String           @default("PENDING")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  memberships      Membership[]
-  comments        Comment[]
-  mealEntries     MealEntry[]
-  expensePayments ExpenseEntry[]    @relation("ExpensePayer")
-  payments        PaymentStatus[]
-  groupsSupervised Group[]          @relation("GroupSupervisor")
-  invitationsReceived Invitation[]  @relation("InvitationInvitee")
-  invitationsSent     Invitation[]  @relation("InvitationInviter")
+  id                  String           @id @default(uuid())
+  name                String
+  email               String           @unique
+  password            String
+  phone               String?
+  profileImage        String?
+  role                String           @default("MEMBER")
+  roleRef             Role             @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  status              String           @default("PENDING")
+  tokenVersion        Int              @default(0)
+  lastLoginAt         DateTime?
+  createdAt           DateTime         @default(now())
+  createdById         String?
+  updatedAt           DateTime         @default(now()) @updatedAt
+  updatedById         String?
+  isPublished         Boolean          @default(true)
+  publishedAt         DateTime?
+  unpublishedAt       DateTime?
+  memberships         Membership[]
+  comments            Comment[]
+  mealEntries         MealEntry[]
+  mealPlans           MealPlan[]
+  expensePayments     ExpenseEntry[]   @relation("ExpensePayer")
+  expenseHistory      ExpenseHistory[] @relation("ExpenseHistoryActor")
+  expenseComments     ExpenseComment[] @relation("ExpenseCommentAuthor")
+  expenseShares       ExpenseShare[]
+  commentReplies      CommentReply[]   @relation("CommentReplyAuthor")
+  groupOrders         GroupOrder[]
+  payments            PaymentStatus[]
+  groupsSupervised    Group[]          @relation("GroupSupervisor")
+  invitationsReceived Invitation[]     @relation("InvitationInvitee")
+  invitationsSent     Invitation[]     @relation("InvitationInviter")
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model LoginAttempt {
+  id            String    @id @default(uuid())
+  email         String
+  ipAddress     String
+  userAgent     String?
+  successful    Boolean   @default(false)
+  reason        String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([email, createdAt])
+  @@index([ipAddress, createdAt])
+  @@index([createdAt])
 }
 
 model Group {
-  id           String        @id @default(uuid())
-  name         String
-  supervisor   User          @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  supervisorId String
-  status       String        @default("ACTIVE")
-  mealWeightBreakfast Float   @default(0.5)
-  mealWeightLunch     Float   @default(1)
-  mealWeightDinner    Float   @default(1)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  memberships  Membership[]
-  meals        MealEntry[]
-  expenses     ExpenseEntry[]
-  payments     PaymentStatus[]
-  comments     Comment[]
-  invitations  Invitation[]
+  id                  String           @id @default(uuid())
+  name                String
+  supervisor          User             @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supervisorId        String
+  status              String           @default("ACTIVE")
+  mealWeightBreakfast Float            @default(0.5)
+  mealWeightLunch     Float            @default(1)
+  mealWeightDinner    Float            @default(1)
+  createdAt           DateTime         @default(now())
+  createdById         String?
+  updatedAt           DateTime         @default(now()) @updatedAt
+  updatedById         String?
+  isPublished         Boolean          @default(true)
+  publishedAt         DateTime?
+  unpublishedAt       DateTime?
+  memberships         Membership[]
+  meals               MealEntry[]
+  mealPlans           MealPlan[]
+  expenses            ExpenseEntry[]
+  expenseHistory      ExpenseHistory[]
+  orders              GroupOrder[]
+  payments            PaymentStatus[]
+  comments            Comment[]
+  invitations         Invitation[]
+
+  @@index([supervisorId])
+  @@index([status])
 }
 
 model SiteSettings {
-  id                String   @id @default("singleton")
-  companyName       String   @default("Team Sober")
+  id                String  @id @default("singleton")
+  companyName       String  @default("Bachelor Point")
   tagline           String?
   address           String?
   contactEmail      String?
   contactPhone      String?
-  copyrightOwner    String   @default("Team Sober")
+  copyrightOwner    String  @default("Bachelor Point")
   facebookUrl       String?
   twitterUrl        String?
-  newsletterEnabled Boolean  @default(true)
-  updatedAt         DateTime @updatedAt @default(now())
+  newsletterEnabled Boolean @default(true)
+
+  maxLoginAttempts          Int     @default(5)
+  loginLockoutMinutes       Int     @default(15)
+  maxLoginAttemptsPerIp     Int     @default(40)
+  ipLockoutMinutes          Int     @default(15)
+  maxRegistrationsPerIp     Int     @default(5)
+  registrationWindowMinutes Int     @default(60)
+  requireStrongPasswords    Boolean @default(false)
+
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
 }
 
 model Subscriber {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
+  id            String    @id @default(uuid())
+  email         String    @unique
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
 }
 
 model Invitation {
-  id          String   @id @default(uuid())
-  group       Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  groupId     String
-  invitee     User     @relation("InvitationInvitee", fields: [inviteeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  inviteeId   String
-  inviter     User     @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  invitedById String
-  status      String   @default("PENDING")
-  createdAt   DateTime @default(now())
-  respondedAt DateTime?
+  id            String    @id @default(uuid())
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  invitee       User      @relation("InvitationInvitee", fields: [inviteeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inviteeId     String
+  inviter       User      @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  invitedById   String
+  status        String    @default("PENDING")
+  respondedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([inviteeId, status])
+  @@index([groupId, status])
 }
 
 model Membership {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  userId    String
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  groupId   String
-  joinedAt  DateTime @default(now())
-  leftAt    DateTime?
-  isActive  Boolean  @default(true)
+  id            String    @id @default(uuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  joinedAt      DateTime  @default(now())
+  leftAt        DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([userId, isActive])
+  @@index([groupId, isActive])
 }
 
 model MealEntry {
-  id             String   @id @default(uuid())
-  user           User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id             String    @id @default(uuid())
+  user           User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userId         String
-  group          Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group          Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId        String
   date           DateTime
-  breakfastCount Int      @default(0)
-  lunchCount     Int      @default(0)
-  dinnerCount    Int      @default(0)
-  totalMeals     Int      @default(0)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  breakfastCount Int       @default(0)
+  lunchCount     Int       @default(0)
+  dinnerCount    Int       @default(0)
+  totalMeals     Int       @default(0)
+  fromPlan       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  createdById    String?
+  updatedAt      DateTime  @default(now()) @updatedAt
+  updatedById    String?
+  isPublished    Boolean   @default(true)
+  publishedAt    DateTime?
+  unpublishedAt  DateTime?
 
   @@unique([userId, groupId, date])
+  @@index([groupId, date])
+  @@index([userId, date])
+}
+
+model MealPlan {
+  id            String        @id @default(uuid())
+  user          User          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group         @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  isActive      Boolean       @default(true)
+  startDate     DateTime
+  createdAt     DateTime      @default(now())
+  createdById   String?
+  updatedAt     DateTime      @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean       @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  days          MealPlanDay[]
+
+  @@unique([userId, groupId])
+}
+
+model MealPlanDay {
+  id            String    @id @default(uuid())
+  plan          MealPlan  @relation(fields: [planId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  planId        String
+  weekday       Int
+  enabled       Boolean   @default(false)
+  breakfast     Int       @default(0)
+  lunch         Int       @default(0)
+  dinner        Int       @default(0)
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([planId, weekday])
 }
 
 model ExpenseEntry {
-  id         String         @id @default(uuid())
-  group      Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  groupId    String
-  type       String
-  amount     Float
-  date       DateTime
-  payer      User?          @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  payerId    String?
-  isReceived Boolean        @default(false)
-  splitMethod String
-  note       String?
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-  payments   PaymentStatus[]
+  id            String           @id @default(uuid())
+  group         Group            @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  type          String
+  amount        Float
+  date          DateTime
+  payer         User?            @relation("ExpensePayer", fields: [payerId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  payerId       String?
+  isReceived    Boolean          @default(false)
+  splitMethod   String
+  note          String?
+  createdAt     DateTime         @default(now())
+  createdById   String?
+  updatedAt     DateTime         @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean          @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  payments      PaymentStatus[]
+  items         ExpenseItem[]
+  comments      ExpenseComment[]
+  shares        ExpenseShare[]
+
+  @@index([groupId, type, date])
+  @@index([groupId, date])
+}
+
+/// One member's slice of a non-bazar cost (rent, utilities, chef, wifi, ...).
+/// Written for every split method so reporting never has to re-derive the maths,
+/// and so a later membership change cannot silently rewrite last month's bill.
+model ExpenseShare {
+  id            String       @id @default(uuid())
+  expense       ExpenseEntry @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenseId     String
+  user          User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  amount        Float
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([expenseId, userId])
+  @@index([userId])
+}
+
+model ExpenseItem {
+  id            String       @id @default(uuid())
+  expense       ExpenseEntry @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenseId     String
+  name          String
+  amount        Float
+  sortOrder     Int          @default(0)
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([expenseId])
+}
+
+model ExpenseComment {
+  id            String       @id @default(uuid())
+  expense       ExpenseEntry @relation(fields: [expenseId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  expenseId     String
+  user          User         @relation("ExpenseCommentAuthor", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  groupId       String
+  text          String
+  deletedAt     DateTime?
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([expenseId])
 }
 
 model PaymentStatus {
-  id         String        @id @default(uuid())
-  user       User          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  userId     String
-  group      Group         @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  groupId    String
-  expense    ExpenseEntry? @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
-  expenseId  String?
-  amountDue  Float
-  amountPaid Float         @default(0)
-  status     String
-  dueDate    DateTime
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id            String        @id @default(uuid())
+  user          User          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group         @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  expense       ExpenseEntry? @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  expenseId     String?
+  amountDue     Float
+  amountPaid    Float         @default(0)
+  status        String
+  dueDate       DateTime
+  createdAt     DateTime      @default(now())
+  createdById   String?
+  updatedAt     DateTime      @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean       @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([groupId, dueDate])
+  @@index([userId, dueDate])
+}
+
+model GroupOrder {
+  id            String    @id @default(uuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  position      Int
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([userId, groupId])
+}
+
+model ExpenseHistory {
+  id            String    @id @default(uuid())
+  expenseId     String?
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  actor         User?     @relation("ExpenseHistoryActor", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId       String?
+  action        String
+  expenseDate   DateTime?
+  amountFrom    Float?
+  amountTo      Float?
+  dateFrom      DateTime?
+  dateTo        DateTime?
+  noteFrom      String?
+  noteTo        String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([groupId, expenseDate])
+}
+
+model CommentReply {
+  id            String    @id @default(uuid())
+  comment       Comment   @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  commentId     String
+  user          User      @relation("CommentReplyAuthor", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  text          String
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([commentId])
 }
 
 model Comment {
-  id         String   @id @default(uuid())
-  user       User     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  userId     String
-  group      Group    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  groupId    String
-  text       String
-  replyText  String?
-  createdAt  DateTime @default(now())
-  repliedAt  DateTime?
-  deletedAt  DateTime?
+  id            String         @id @default(uuid())
+  user          User           @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  text          String
+  deletedAt     DateTime?
+  replies       CommentReply[]
+  createdAt     DateTime       @default(now())
+  createdById   String?
+  updatedAt     DateTime       @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean        @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([groupId, createdAt])
 }

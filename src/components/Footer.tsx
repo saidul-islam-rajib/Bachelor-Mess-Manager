@@ -1,6 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Logo from '@/components/Logo';
 import { useToast } from '@/components/ToastProvider';
+import { authorConfig } from '@/config';
+import { strings } from '@/lib/i18n';
 
 type Settings = {
   companyName: string;
@@ -102,9 +104,13 @@ export default function Footer() {
               <p className="mt-3 text-sm text-slate-500">Get updates from {companyName}.</p>
               <form className="mt-3 flex flex-col gap-2 sm:flex-row" onSubmit={subscribe}>
                 <input
+                  id="newsletter-email"
+                  name="newsletterEmail"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   type="email"
+                  autoComplete="email"
+                  aria-label="Email for newsletter"
                   required
                   placeholder="you@example.com"
                   className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm"
@@ -121,8 +127,18 @@ export default function Footer() {
           )}
         </div>
 
-        <div className="mt-8 border-t border-slate-100 pt-6 text-center text-sm text-slate-500">
-          All rights reserved @{copyrightOwner}, {year}
+        <div className="mt-8 space-y-1 border-t border-slate-100 pt-6 text-center text-sm text-slate-500">
+          <p>
+            &copy; {authorConfig.copyrightStartYear === year ? year : `${authorConfig.copyrightStartYear}-${year}`}{' '}
+            {copyrightOwner}. {strings.footer.rights}
+          </p>
+          <p className="text-xs text-slate-400">
+            {strings.footer.builtBy(authorConfig.name)} ·{' '}
+            <a href={`mailto:${authorConfig.email}`} className="hover:underline">
+              {authorConfig.email}
+            </a>{' '}
+            · {strings.footer.licensed(authorConfig.license)}
+          </p>
         </div>
       </div>
     </footer>

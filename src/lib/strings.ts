@@ -1,87 +1,33 @@
+import { appConfig } from '@/config';
+import { strings } from '@/lib/i18n';
+
 export const STRINGS = {
-  appTitle: 'Mess Management',
+  appName: appConfig.name,
   home: {
-    title: 'Mess Management',
-    description: 'Manage groups, meals, expenses, and member dashboards in one place.',
-    login: 'Login',
-    register: 'Register'
+    title: appConfig.name,
+    description: strings.common.appTagline,
+    login: strings.nav.login,
+    register: strings.nav.register
   },
   auth: {
     login: {
-      title: 'Login',
-      email: 'Email',
-      password: 'Password',
-      submit: 'Sign in',
-      registerLink: "Don't have an account?",
-      register: 'Register'
+      title: strings.auth.login.title,
+      email: strings.auth.login.email,
+      password: strings.auth.login.password,
+      submit: strings.auth.login.submit,
+      registerLink: strings.auth.login.registerPrompt,
+      register: strings.auth.login.registerLink
     },
     register: {
-      title: 'Register',
-      name: 'Name',
-      email: 'Email',
-      password: 'Password',
-      submit: 'Create account',
-      loginLink: 'Already have an account?',
-      login: 'Login'
-    }
-  },
-  layout: {
-    appName: 'Mess Management',
-    nav: {
-      dashboard: 'Dashboard',
-      groups: 'Groups',
-      meals: 'Meals',
-      expenses: 'Expenses',
-      payments: 'Payments',
-      comments: 'Comments',
-      members: 'Members'
-    }
-  },
-  dashboard: {
-    title: 'Dashboard',
-    description: 'Your mess summary, payments, and meals at a glance.',
-    cards: {
-      totalMeals: 'Total meals',
-      totalCost: 'Total cost',
-      currentDue: 'Current due',
-      totalMembers: 'Total members'
-    }
-  },
-  pages: {
-    comments: {
-      title: 'Comments',
-      description: 'Post feedback, view replies, and manage comment threads.',
-      placeholder: 'Comments placeholder'
-    },
-    meals: {
-      title: 'Meal Entry',
-      description: 'Submit meal counts for the current and future dates.',
-      placeholder: 'Meal table placeholder'
-    },
-    expenses: {
-      title: 'Expenses',
-      description: 'Track bazar, rent, utilities, and other group costs.',
-      placeholder: 'Expense list placeholder'
-    },
-    payments: {
-      title: 'Payments',
-      description: 'View due payments, paid status, and member balances.',
-      placeholder: 'Payment details placeholder'
-    },
-    members: {
-      title: 'Members',
-      description: 'See active members, their meal counts, and membership status.',
-      placeholder: 'Member overview placeholder'
-    },
-    profile: {
-      title: 'Profile',
-      description: 'Update your personal details and profile image.',
-      placeholder: 'Profile form placeholder'
-    },
-    group: {
-      title: 'Group Overview',
-      description: 'View group-specific meal and expense summaries.',
-      placeholder: 'Group overview placeholder'
+      title: strings.auth.register.title,
+      name: strings.auth.register.name,
+      email: strings.auth.register.email,
+      password: strings.auth.register.password,
+      submit: strings.auth.register.submit,
+      loginLink: strings.auth.register.loginPrompt,
+      login: strings.auth.register.loginLink
     }
   }
 };
+
+export { strings };

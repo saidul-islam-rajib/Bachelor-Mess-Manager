@@ -2,11 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { INVITATION_STATUS } from '@/lib/constants';
-import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { activateMembership, canJoinGroupSelf } from '@/lib/groups';
+import { withAudit } from '@/lib/with-audit';
 
 const ALLOWED_RESPONSES = [INVITATION_STATUS.ACCEPTED, INVITATION_STATUS.REJECTED] as string[];
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH' && req.method !== 'DELETE') {
     return methodNotAllowed(res, ['PATCH', 'DELETE']);
   }
@@ -26,7 +28,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return notFound(res, 'Invitation not found.');
   }
 
-  // Cancel: the supervisor who sent it (or an admin) can withdraw a pending invitation.
   if (req.method === 'DELETE') {
     if (invitation.invitedById !== sessionUser.id && !requireAdmin(sessionUser)) {
       return forbidden(res, 'Only the sender can cancel this invitation.');
@@ -35,7 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return ok(res, { cancelled: true });
   }
 
-  // Only the person who was invited can accept or reject it.
   if (invitation.inviteeId !== sessionUser.id) {
     return forbidden(res, 'This invitation is not addressed to you.');
   }
@@ -48,26 +48,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return badRequest(res, 'Status must be ACCEPTED or REJECTED.');
   }
 
+  if (status === INVITATION_STATUS.ACCEPTED) {
+    const joinable = await canJoinGroupSelf(sessionUser.id, invitation.groupId);
+    if (!joinable.ok) {
+      return conflict(res, joinable.error);
+    }
+  }
+
   const updated = await prisma.invitation.update({
     where: { id: invitation.id },
     data: { status, respondedAt: new Date() }
   });
 
-  // Accepting the invitation makes the user a member of the group (part of the mess).
   if (status === INVITATION_STATUS.ACCEPTED) {
-    const existing = await prisma.membership.findFirst({
-      where: { groupId: invitation.groupId, userId: invitation.inviteeId }
-    });
-    if (existing) {
-      if (!existing.isActive) {
-        await prisma.membership.update({ where: { id: existing.id }, data: { isActive: true, leftAt: null } });
-      }
-    } else {
-      await prisma.membership.create({
-        data: { groupId: invitation.groupId, userId: invitation.inviteeId, isActive: true }
-      });
-    }
+    await activateMembership(invitation.groupId, invitation.inviteeId);
   }
 
   return ok(res, { invitation: updated });
 }
+
+export default withAudit(handler);

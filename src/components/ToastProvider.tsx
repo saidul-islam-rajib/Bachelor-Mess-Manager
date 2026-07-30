@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
 
 type ToastType = 'success' | 'error' | 'info';
 type Toast = { id: number; type: ToastType; message: string };
@@ -27,8 +27,11 @@ const TYPE_STYLES: Record<ToastType, string> = {
 
 let counter = 0;
 
+const DEDUPE_WINDOW_MS = 1000;
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const lastPush = useRef<{ key: string; at: number }>({ key: '', at: 0 });
 
   const remove = useCallback((id: number) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -36,6 +39,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const push = useCallback(
     (type: ToastType, message: string) => {
+      const key = `${type}|${message}`;
+      const now = Date.now();
+      if (lastPush.current.key === key && now - lastPush.current.at < DEDUPE_WINDOW_MS) return;
+      lastPush.current = { key, at: now };
+
       const id = ++counter;
       setToasts((prev) => [...prev, { id, type, message }]);
       setTimeout(() => remove(id), 4000);

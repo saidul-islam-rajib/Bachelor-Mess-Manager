@@ -2,10 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
 const SETTINGS_ID = 'singleton';
 
-// Ensures the single settings row exists and returns it.
 async function getSettings() {
   return prisma.siteSettings.upsert({
     where: { id: SETTINGS_ID },
@@ -14,8 +14,8 @@ async function getSettings() {
   });
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Public read so the footer can render for everyone.
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  
   if (req.method === 'GET') {
     return ok(res, { settings: await getSettings() });
   }
@@ -48,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         data[field] = value || null;
       }
     }
-    // companyName / copyrightOwner should never be blanked out.
+    
     if (typeof body.companyName === 'string' && !(body.companyName as string).trim()) {
       delete data.companyName;
     }
@@ -70,3 +70,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   return methodNotAllowed(res, ['GET', 'PATCH']);
 }
+
+export default withAudit(handler);

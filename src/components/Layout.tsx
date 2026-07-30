@@ -5,6 +5,8 @@ import { ROUTES } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
 import { USER_ROLES } from '@/lib/constants';
 import { useCurrentUser } from '@/components/UserProvider';
+import NotificationBell from '@/components/NotificationBell';
+import ProfileMenu from '@/components/ProfileMenu';
 import Logo from '@/components/Logo';
 import Footer from '@/components/Footer';
 
@@ -17,7 +19,6 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const isAuthPage = router.pathname.startsWith('/auth');
 
-  // Close the mobile menu whenever navigation completes.
   useEffect(() => {
     const close = () => setOpen(false);
     router.events.on('routeChangeComplete', close);
@@ -28,20 +29,17 @@ export default function Layout({ children }: { children: ReactNode }) {
   if (user) {
     links.push({ href: ROUTES.dashboard, label: 'Dashboard' });
     links.push({ href: ROUTES.groups, label: 'Groups' });
-    if (user.role !== USER_ROLES.ADMIN) {
-      links.push({ href: ROUTES.invitations, label: 'Invitations' });
-    }
     links.push({ href: ROUTES.meals, label: 'Meals' });
-    links.push({ href: ROUTES.expenses, label: 'Expenses' });
+    links.push({ href: ROUTES.expenses, label: 'Bazar' });
+    links.push({ href: ROUTES.bills, label: 'Bills' });
     links.push({ href: ROUTES.payments, label: 'Payments' });
+    links.push({ href: ROUTES.members, label: 'Members' });
     links.push({ href: ROUTES.comments, label: 'Comments' });
     if (user.role === USER_ROLES.ADMIN) {
       links.push({ href: ROUTES.admin, label: 'Admin' });
     }
-    links.push({ href: ROUTES.profile, label: 'Profile' });
   }
 
-  // "/groups" stays highlighted while on "/groups/[groupId]".
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(`${href}/`);
 
   const showAuthLinks = !user && !loading && !isAuthPage;
@@ -56,7 +54,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             onClick={() => setOpen(false)}
           >
             <Logo className="h-9 w-auto lg:h-10" />
-            <span className="hidden xl:inline">{STRINGS.layout.appName}</span>
+            <span className="hidden xl:inline">{STRINGS.appName}</span>
           </Link>
 
           <nav className="hidden items-center gap-1 text-sm lg:flex">
@@ -78,12 +76,11 @@ export default function Layout({ children }: { children: ReactNode }) {
               );
             })}
             {user ? (
-              <button
-                onClick={logout}
-                className="ml-2 rounded-full border border-slate-300 px-4 py-2 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-              >
-                Logout
-              </button>
+              <>
+                <span className="mx-1 h-6 w-px bg-slate-200" />
+                <NotificationBell />
+                <ProfileMenu />
+              </>
             ) : showAuthLinks ? (
               <>
                 <Link href={ROUTES.auth.login} className="rounded-full px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
@@ -100,16 +97,20 @@ export default function Layout({ children }: { children: ReactNode }) {
           </nav>
 
           {(user || showAuthLinks) && (
-            <button
-              onClick={() => setOpen((prev) => !prev)}
-              aria-label="Toggle menu"
-              aria-expanded={open}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 lg:hidden"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-              </svg>
-            </button>
+            <div className="flex items-center gap-1 lg:hidden">
+              {user && <NotificationBell />}
+              {user && <ProfileMenu />}
+              <button
+                onClick={() => setOpen((prev) => !prev)}
+                aria-label="Toggle menu"
+                aria-expanded={open}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+                </svg>
+              </button>
+            </div>
           )}
         </div>
 
@@ -133,15 +134,27 @@ export default function Layout({ children }: { children: ReactNode }) {
                 );
               })}
               {user ? (
-                <button
-                  onClick={() => {
-                    setOpen(false);
-                    logout();
-                  }}
-                  className="mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100"
-                >
-                  Logout
-                </button>
+                <>
+                  <Link
+                    href={ROUTES.profile}
+                    onClick={() => setOpen(false)}
+                    aria-current={isActive(ROUTES.profile) ? 'page' : undefined}
+                    className={`rounded-xl px-3 py-2.5 transition-colors ${
+                      isActive(ROUTES.profile) ? 'bg-slate-900 font-semibold text-white' : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setOpen(false);
+                      logout();
+                    }}
+                    className="mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100"
+                  >
+                    Log out
+                  </button>
+                </>
               ) : showAuthLinks ? (
                 <>
                   <Link href={ROUTES.auth.login} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-100">

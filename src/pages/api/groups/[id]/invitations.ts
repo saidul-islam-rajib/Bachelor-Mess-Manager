@@ -3,8 +3,11 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { INVITATION_STATUS, USER_STATUS } from '@/lib/constants';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { canJoinGroup } from '@/lib/groups';
+import { normalizeEmail } from '@/lib/validation';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
@@ -20,7 +23,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return notFound(res, 'Group not found.');
   }
 
-  // Only the group's supervisor (or an admin) can send or view invitations.
   const canManage = group.supervisorId === sessionUser.id || requireAdmin(sessionUser);
   if (!canManage) {
     return forbidden(res, 'Only this group\'s supervisor can manage invitations.');
@@ -41,12 +43,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return badRequest(res, 'Member email is required.');
     }
 
-    const invitee = await prisma.user.findUnique({ where: { email } });
+    const invitee = await prisma.user.findUnique({ where: { email: normalizeEmail(email) } });
     if (!invitee) {
       return notFound(res, 'No registered user found with that email.');
     }
     if (invitee.status !== USER_STATUS.APPROVED) {
       return badRequest(res, 'That user has not been approved yet.');
+    }
+    if (invitee.id === sessionUser.id) {
+      return badRequest(res, 'You are already part of this group.');
     }
 
     const activeMembership = await prisma.membership.findFirst({
@@ -60,7 +65,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       where: { groupId, inviteeId: invitee.id, status: INVITATION_STATUS.PENDING }
     });
 
-    // Never create a duplicate: if one is still pending, just re-send (refresh) it.
     const invitation = pendingInvite
       ? await prisma.invitation.update({
           where: { id: pendingInvite.id },
@@ -75,12 +79,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
         });
 
+    const joinable = await canJoinGroup(invitee.id, groupId);
+
     return created(res, {
       invitation,
       invitee: { id: invitee.id, name: invitee.name, email: invitee.email },
-      resent: Boolean(pendingInvite)
+      resent: Boolean(pendingInvite),
+      warning: joinable.ok ? null : joinable.error
     });
   }
 
   return methodNotAllowed(res, ['GET', 'POST']);
 }
+
+export default withAudit(handler);

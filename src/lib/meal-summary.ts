@@ -1,10 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { parseMonth, round2, utcDateToDay } from '@/lib/month';
-
-// The mess costing rule: groceries are pooled per day, and each day's spend is
-// divided by that day's total weighted meals to get a ৳/meal rate. A member's
-// cost is the sum of (that day's rate x their weighted meals). "paid" is what a
-// member fronted out of pocket for groceries, so balance = paid - cost.
+import { syncPlansForMonth } from '@/lib/meal-plan';
 
 export type SummaryMember = {
   id: string;
@@ -36,6 +32,8 @@ export async function buildMealSummary(group: GroupWeights, monthKey?: string): 
   const { start, nextStart } = parseMonth(monthKey);
   const groupId = group.id;
 
+  await syncPlansForMonth(groupId, monthKey);
+
   const wB = group.mealWeightBreakfast;
   const wL = group.mealWeightLunch;
   const wD = group.mealWeightDinner;
@@ -49,7 +47,6 @@ export async function buildMealSummary(group: GroupWeights, monthKey?: string): 
     prisma.expenseEntry.findMany({ where: { groupId, type: 'BAZAR', date: { gte: start, lt: nextStart } } })
   ]);
 
-  // day -> total grocery expense
   const expenseByDay = new Map<string, number>();
   const paidByUser = new Map<string, number>();
   for (const e of expenseRows) {
@@ -58,7 +55,6 @@ export async function buildMealSummary(group: GroupWeights, monthKey?: string): 
     if (e.payerId) paidByUser.set(e.payerId, (paidByUser.get(e.payerId) ?? 0) + e.amount);
   }
 
-  // day -> (userId -> weighted meals that day)
   const mealsByDay = new Map<string, Map<string, number>>();
   for (const m of mealRows) {
     const day = utcDateToDay(m.date);

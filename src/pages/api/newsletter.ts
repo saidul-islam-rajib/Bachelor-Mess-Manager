@@ -1,10 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { badRequest, methodNotAllowed, ok } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return methodNotAllowed(res, ['POST']);
   }
@@ -23,3 +24,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await prisma.subscriber.create({ data: { email: normalized } });
   return ok(res, { message: 'Thanks for subscribing!' });
 }
+
+export default withAudit(handler);

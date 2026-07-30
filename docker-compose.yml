@@ -1,0 +1,63 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: bachelor-point-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Local_Dev_Password_123}"
+      MSSQL_PID: Express
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  migrate:
+    build:
+      context: .
+      target: builder
+    container_name: bachelor-point-migrate
+    environment:
+      DATABASE_URL: "sqlserver://db:1433;database=bachelor_point;user=sa;password=${MSSQL_SA_PASSWORD:-Local_Dev_Password_123};encrypt=true;trustServerCertificate=true"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@bachelorpoint.local}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-ChangeThisAdminPassword2026}"
+      ADMIN_NAME: "${ADMIN_NAME:-System Administrator}"
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             node scripts/sync-roles.js &&
+             node scripts/init-admin.js"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runner
+    container_name: bachelor-point-app
+    environment:
+      DATABASE_URL: "sqlserver://db:1433;database=bachelor_point;user=sa;password=${MSSQL_SA_PASSWORD:-Local_Dev_Password_123};encrypt=true;trustServerCertificate=true"
+      AUTH_SECRET: "${AUTH_SECRET:-local-development-secret-at-least-32-characters-long}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@bachelorpoint.local}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-ChangeThisAdminPassword2026}"
+      UPLOAD_DIR: /data/uploads
+      SECURITY_TRUST_PROXY_HEADERS: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - uploads-data:/data/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  mssql-data:
+  uploads-data:

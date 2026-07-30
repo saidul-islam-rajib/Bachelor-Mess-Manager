@@ -3,11 +3,13 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
+import { validateEmail, validateName, validatePhone } from '@/lib/validation';
+import { withAudit } from '@/lib/with-audit';
 
 const EDITABLE_ROLES = [USER_ROLES.SUPERVISOR, USER_ROLES.MEMBER] as string[];
 const EDITABLE_STATUSES = [USER_STATUS.PENDING, USER_STATUS.APPROVED, USER_STATUS.REJECTED] as string[];
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH') {
     return methodNotAllowed(res, ['PATCH']);
   }
@@ -38,16 +40,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     status?: string;
   };
 
-  const data: { name?: string; email?: string; phone?: string | null; role?: string; status?: string } = {};
+  const data: {
+    name?: string;
+    email?: string;
+    phone?: string | null;
+    role?: string;
+    status?: string;
+    tokenVersion?: { increment: number };
+  } = {};
 
-  if (typeof name === 'string' && name.trim()) {
-    data.name = name.trim();
+  if (name !== undefined) {
+    const check = validateName(name);
+    if (!check.ok) return badRequest(res, check.error);
+    data.name = check.value;
   }
-  if (typeof email === 'string' && email.trim()) {
-    data.email = email.trim();
+  if (email !== undefined) {
+    const check = validateEmail(email);
+    if (!check.ok) return badRequest(res, check.error);
+    data.email = check.value;
   }
-  if (typeof phone === 'string') {
-    data.phone = phone.trim() || null;
+  if (phone !== undefined) {
+    const check = validatePhone(phone);
+    if (!check.ok) return badRequest(res, check.error);
+    data.phone = check.value;
   }
   if (role !== undefined) {
     if (!EDITABLE_ROLES.includes(role)) {
@@ -72,6 +87,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return badRequest(res, 'Nothing to update.');
   }
 
+  if ((data.status !== undefined && data.status !== target.status) || (data.role !== undefined && data.role !== target.role)) {
+    data.tokenVersion = { increment: 1 };
+  }
+
   try {
     const user = await prisma.user.update({
       where: { id: userId },
@@ -86,3 +105,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     throw error;
   }
 }
+
+export default withAudit(handler);

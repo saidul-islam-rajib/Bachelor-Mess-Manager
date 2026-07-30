@@ -7,7 +7,6 @@ export type GroupOption = {
   supervisor: { id: string; name: string; email: string };
 };
 
-// Loads the user's groups and holds the selected group + month.
 export function useGroupMonth() {
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [groupId, setGroupId] = useState('');
@@ -49,7 +48,7 @@ export function GroupMonthControls({
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5"
+          className="app-select mt-1"
         >
           {groups.length === 0 && <option value="">No groups</option>}
           {groups.map((g) => (
@@ -64,7 +63,7 @@ export function GroupMonthControls({
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value)}
-          className="mt-1 w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5"
+          className="app-select mt-1"
         >
           {options.map((o) => (
             <option key={o.key} value={o.key}>

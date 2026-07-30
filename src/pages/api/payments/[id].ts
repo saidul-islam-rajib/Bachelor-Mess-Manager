@@ -2,8 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { withAudit } from '@/lib/with-audit';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE') {
     return methodNotAllowed(res, ['DELETE']);
   }
@@ -25,8 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!payment) {
     return notFound(res, 'Payment not found.');
   }
-
-  // Payments are money the supervisor collected, so only they (or an admin) can void one.
   if (payment.group.supervisorId !== sessionUser.id && !requireAdmin(sessionUser)) {
     return forbidden(res, 'Only the group supervisor can remove a payment.');
   }
@@ -34,3 +33,5 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   await prisma.paymentStatus.delete({ where: { id: paymentId } });
   return ok(res, { deleted: true });
 }
+
+export default withAudit(handler);

@@ -1,0 +1,26 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-uploads
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: REPLACE_WITH_EFS_FILESYSTEM_ID
+  directoryPerms: "700"
+  uid: "1001"
+  gid: "1001"
+reclaimPolicy: Retain
+volumeBindingMode: Immediate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: bachelor-point-uploads
+  namespace: bachelor-point
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-uploads
+  resources:
+    requests:
+      storage: 5Gi

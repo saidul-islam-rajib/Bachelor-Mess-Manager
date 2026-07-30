@@ -1,19 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { buildMealSummary } from '@/lib/meal-summary';
+import { buildGroupReport } from '@/lib/group-report';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
+import { withAudit } from '@/lib/with-audit';
 
-// A PaymentStatus row is one payment a member handed to the mess fund. What each
-// member still owes is derived, not stored: cost (their meal share) minus what
-// they fronted for groceries minus what they have handed over.
-//   due > 0  -> member owes the mess
-//   due < 0  -> the mess owes the member back
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const sessionUser = await getSessionUser(req);
+async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const sessionUser = await getSessionUser(req, res);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
   }
@@ -31,43 +26,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (!(await isGroupMember(groupId, sessionUser.id)) && !requireAdmin(sessionUser)) {
     return forbidden(res, 'You are not a member of this group.');
   }
-
-  // Only the group's supervisor (or an admin) records money coming in.
-  const canManage = group.supervisorId === sessionUser.id || requireAdmin(sessionUser);
+  const canManage = await canManageGroup(groupId, sessionUser);
 
   if (req.method === 'GET') {
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
 
-    const [summary, paymentRows] = await Promise.all([
-      buildMealSummary(group, monthKey),
+    const [report, paymentRows] = await Promise.all([
+      buildGroupReport(group, monthKey),
       prisma.paymentStatus.findMany({
         where: { groupId, dueDate: { gte: start, lt: nextStart } },
         include: { user: { select: { id: true, name: true } } },
         orderBy: { dueDate: 'asc' }
       })
     ]);
-
-    const collectedByUser = new Map<string, number>();
-    for (const p of paymentRows) {
-      collectedByUser.set(p.userId, (collectedByUser.get(p.userId) ?? 0) + p.amountPaid);
-    }
-
-    const members = summary.members.map((m) => {
-      const collected = round2(collectedByUser.get(m.id) ?? 0);
-      const due = round2(m.cost - m.paid - collected);
-      return {
-        id: m.id,
-        name: m.name,
-        email: m.email,
-        meals: m.meals,
-        cost: m.cost,
-        bazarPaid: m.paid,
-        collected,
-        due,
-        status: paymentState(m.cost, m.paid + collected)
-      };
-    });
 
     const payments = paymentRows.map((p) => ({
       id: p.id,
@@ -77,21 +49,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       date: utcDateToDay(p.dueDate)
     }));
 
-    const totalCollected = round2(payments.reduce((a, p) => a + p.amount, 0));
-    const outstanding = round2(members.reduce((a, m) => a + Math.max(0, m.due), 0));
-    const refunds = round2(members.reduce((a, m) => a + Math.max(0, -m.due), 0));
-
     return ok(res, {
       canManage,
-      members,
+      currentUserId: sessionUser.id,
+      members: report.members.map((m) => ({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        meals: m.meals,
+        mealCost: m.mealCost,
+        billShare: m.billShare,
+        cost: m.totalCost,
+        bazarPaid: m.bazarPaid,
+        collected: m.collected,
+        due: m.due,
+        status: m.status
+      })),
       payments,
       totals: {
-        expense: summary.totals.expense,
-        cost: summary.totals.cost,
-        collected: totalCollected,
-        outstanding,
-        refunds
-      }
+        bazar: report.totals.bazar,
+        bills: report.totals.bills,
+        expense: report.totals.expense,
+        cost: round2(report.totals.mealCost + report.totals.bills),
+        collected: report.totals.collected,
+        outstanding: report.totals.outstanding,
+        refunds: report.totals.refunds
+      },
+      byType: report.byType
     });
   }
 
@@ -112,6 +96,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!Number.isFinite(value) || value <= 0) {
       return badRequest(res, 'Amount must be a positive number.');
     }
+    if (value > 100_000_000) {
+      return badRequest(res, 'That amount looks wrong. Please check it.');
+    }
     if (!(await isGroupMember(groupId, userId))) {
       return badRequest(res, 'That member does not belong to this group.');
     }
@@ -120,10 +107,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: {
         userId,
         groupId,
-        amountDue: value,
-        amountPaid: value,
+        amountDue: round2(value),
+        amountPaid: round2(value),
         status: PAYMENT_STATUS.PAID,
-        dueDate: dayToUtcDate(date)
+        dueDate: dayToUtcDate(date),
+        publishedAt: new Date()
       },
       include: { user: { select: { name: true } } }
     });
@@ -142,9 +130,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   return methodNotAllowed(res, ['GET', 'POST']);
 }
 
-function paymentState(cost: number, settled: number) {
-  if (cost <= 0) return PAYMENT_STATUS.PAID;
-  if (settled <= 0) return PAYMENT_STATUS.PENDING;
-  if (settled + 0.01 < cost) return PAYMENT_STATUS.PARTIAL;
-  return PAYMENT_STATUS.PAID;
-}
+export default withAudit(handler);

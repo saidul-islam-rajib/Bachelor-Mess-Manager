@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: bachelor-point-migrate
+  namespace: bachelor-point
+  labels:
+    app: bachelor-point
+    component: migrate
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 3600
+  template:
+    metadata:
+      labels:
+        app: bachelor-point
+        component: migrate
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrate
+          image: REPLACE_IMAGE
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              echo "Applying database migrations..."
+              node node_modules/prisma/build/index.js migrate deploy
+              echo "Syncing roles and permissions..."
+              node scripts/sync-roles.js
+              echo "Ensuring administrator account..."
+              node scripts/init-admin.js
+              echo "Database initialisation complete."
+          envFrom:
+            - configMapRef:
+                name: bachelor-point-config
+            - secretRef:
+                name: bachelor-point-secrets
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -1,4 +1,4 @@
-# Mess Management Solution Architecture
+# Bachelor Point Solution Architecture
 
 ## Purpose
 This document describes the best architecture for a modern mess management system. It is designed to be presentable to stakeholders and includes the main layers, technologies, data flows, and why SQL Server is the chosen database.
