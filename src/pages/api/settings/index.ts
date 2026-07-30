@@ -58,6 +58,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (typeof body.newsletterEnabled === 'boolean') {
       data.newsletterEnabled = body.newsletterEnabled;
     }
+    if (typeof body.autoApproveSupervisor === 'boolean') {
+      data.autoApproveSupervisor = body.autoApproveSupervisor;
+    }
+    if (typeof body.allowSelfRoleSwitch === 'boolean') {
+      data.allowSelfRoleSwitch = body.allowSelfRoleSwitch;
+    }
 
     const settings = await prisma.siteSettings.upsert({
       where: { id: SETTINGS_ID },

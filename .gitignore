@@ -51,3 +51,10 @@ crash.log
 !*.tfvars.example
 .terraformrc
 terraform.rc
+
+# local credential dumps - never commit
+*.local.md
+credentials.txt
+
+# jenkins local secrets
+jenkins/.env

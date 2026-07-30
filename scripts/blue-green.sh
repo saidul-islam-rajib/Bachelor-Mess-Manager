@@ -12,7 +12,9 @@ log()  { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 warn() { printf '\033[1;33m  ! %s\033[0m\n' "$*"; }
 die()  { printf '\n\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 
-kc() { kubectl -n "$NAMESPACE" "$@"; }
+KUBECTL="${KUBECTL:-kubectl}"
+
+kc() { $KUBECTL -n "$NAMESPACE" "$@"; }
 
 active_color() {
   kc get service "$ACTIVE_SVC" -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo ""
@@ -29,19 +31,41 @@ point_service_at() {
   kc patch service "$svc" -p "{\"spec\":{\"selector\":{\"app\":\"${APP}\",\"color\":\"${color}\"}}}" >/dev/null
 }
 
+wait_for_endpoints() {
+  local svc="$1" attempt=0
+  while [ "$attempt" -lt 30 ]; do
+    local ready
+    ready="$(kc get endpointslice -l "kubernetes.io/service-name=${svc}" -o jsonpath='{.items[*].endpoints[*].conditions.ready}' 2>/dev/null | tr ' ' '
+' | grep -c true || true)"
+    [ "${ready:-0}" -gt 0 ] && return 0
+    attempt=$((attempt + 1))
+    sleep 2
+  done
+  return 1
+}
+
 smoke_test() {
   local color="$1"
-  local pod deadline
-  log "Smoke-testing the ${color} deployment through ${PREVIEW_SVC}"
+  local code=""
 
+  log "Smoke-testing the ${color} deployment through ${PREVIEW_SVC}"
   point_service_at "$PREVIEW_SVC" "$color"
 
-  pod="$(kc run "smoke-$(date +%s)" --rm -i --restart=Never --image=curlimages/curl:8.10.1 --quiet -- \
-    sh -c "curl -sS -o /dev/null -w '%{http_code}' --max-time 10 --retry 5 --retry-delay 3 --retry-connrefused http://${PREVIEW_SVC}.${NAMESPACE}.svc.cluster.local/api/health" 2>/dev/null || true)"
+  wait_for_endpoints "$PREVIEW_SVC"     || die "${PREVIEW_SVC} never got a ready endpoint for ${color}."
 
-  if [ "$pod" != "200" ]; then
-    die "Smoke test failed: /api/health returned '${pod}' (expected 200) on ${color}."
-  fi
+  local cluster_ip
+  cluster_ip="$(kc get service "$PREVIEW_SVC" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || echo "")"
+  [ -n "$cluster_ip" ] || die "Could not resolve ${PREVIEW_SVC}."
+
+  local attempt=0
+  while [ "$attempt" -lt 20 ]; do
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://${cluster_ip}/api/health" 2>/dev/null || echo "")"
+    [ "$code" = "200" ] && break
+    attempt=$((attempt + 1))
+    sleep 3
+  done
+
+  [ "$code" = "200" ]     || die "Smoke test failed: /api/health returned '${code}' (expected 200) on ${color}."
 
   log "Smoke test passed on ${color}"
 }
@@ -145,6 +169,7 @@ Blue-green deployment control
 Environment:
   NAMESPACE        default: bachelor-point
   ROLLOUT_TIMEOUT  default: 300s
+  KUBECTL          default: kubectl   (use "k3s kubectl" on a k3s node)
 USAGE
 }
 

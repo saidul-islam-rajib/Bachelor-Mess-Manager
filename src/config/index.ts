@@ -7,6 +7,7 @@ import {
   SECURITY_DEFAULTS,
   SESSION_DEFAULTS,
   UI_DEFAULTS,
+  MAIL_DEFAULTS,
   UPLOAD_DEFAULTS,
   VALIDATION_DEFAULTS
 } from '@/config/defaults';
@@ -67,7 +68,8 @@ export const sessionConfig = {
   maxAgeSeconds: readInt('SESSION_MAX_AGE_SECONDS', SESSION_DEFAULTS.maxAgeSeconds),
   refreshAfterSeconds: readInt('SESSION_REFRESH_AFTER_SECONDS', SESSION_DEFAULTS.refreshAfterSeconds),
   minSecretLength: SESSION_DEFAULTS.minSecretLength,
-  secret: readOptionalString('AUTH_SECRET')
+  secret: readOptionalString('AUTH_SECRET'),
+  cookieSecure: readBoolean('SESSION_COOKIE_SECURE', isProduction)
 } as const;
 
 export const passwordConfig = {
@@ -165,4 +167,23 @@ export const adminBootstrapConfig = {
   name: readString('ADMIN_NAME', 'System Administrator'),
   phone: readOptionalString('ADMIN_PHONE'),
   enabled: readBoolean('ADMIN_BOOTSTRAP_ENABLED', true)
+} as const;
+
+export const mailConfig = {
+  host: readOptionalString('SMTP_HOST'),
+  port: readInt('SMTP_PORT', MAIL_DEFAULTS.port),
+  user: readOptionalString('SMTP_USER'),
+  password: readOptionalString('SMTP_PASSWORD'),
+  from: readOptionalString('SMTP_FROM'),
+  helo: readString('SMTP_HELO', MAIL_DEFAULTS.helo),
+  timeoutMs: readInt('SMTP_TIMEOUT_MS', MAIL_DEFAULTS.timeoutMs)
+} as const;
+
+export const appUrlConfig = {
+  publicUrl: readOptionalString('APP_PUBLIC_URL')
+} as const;
+
+export const passwordTokenConfig = {
+  hours: readInt('PASSWORD_TOKEN_HOURS', MAIL_DEFAULTS.passwordTokenHours),
+  bytes: MAIL_DEFAULTS.passwordTokenBytes
 } as const;

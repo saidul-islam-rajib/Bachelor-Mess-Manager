@@ -3,6 +3,7 @@ import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useInvitations } from '@/components/InvitationsProvider';
 import InvitationCard from '@/components/InvitationCard';
+import RoleRequestPanel from '@/components/RoleRequestPanel';
 import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
@@ -118,6 +119,7 @@ export default function ProfilePage() {
 
           <PasswordSection />
 
+          <RoleRequestPanel />
           <InvitationsSection />
         </div>
       )}

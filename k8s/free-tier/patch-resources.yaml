@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bachelor-point-blue
+  namespace: bachelor-point
+spec:
+  replicas: 1
+  template:
+    spec:
+      topologySpreadConstraints: []
+      containers:
+        - name: app
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              cpu: 800m
+              memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bachelor-point-green
+  namespace: bachelor-point
+spec:
+  replicas: 0
+  template:
+    spec:
+      topologySpreadConstraints: []
+      containers:
+        - name: app
+          resources:
+            requests:
+              cpu: 50m
+              memory: 192Mi
+            limits:
+              cpu: 800m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: bachelor-point-quota
+  namespace: bachelor-point
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
+    pods: "10"

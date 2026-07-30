@@ -1,0 +1,154 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    timeout(time: 30, unit: 'MINUTES')
+    disableConcurrentBuilds()
+  }
+
+  environment {
+    SERVER_IP     = credentials('server-ip')
+    K8S_NAMESPACE = 'bachelor-point'
+    APP_NAME      = 'bachelor-point'
+    REMOTE_DIR    = '/home/ubuntu/app'
+  }
+
+  stages {
+
+    stage('Checkout') {
+      steps {
+        checkout scm
+        script {
+          env.TAG = sh(returnStdout: true, script: 'git rev-parse --short=12 HEAD').trim()
+          env.IMAGE = "${env.APP_NAME}:${env.TAG}"
+          currentBuild.displayName = "#${env.BUILD_NUMBER} ${env.TAG}"
+        }
+      }
+    }
+
+    stage('Quality gate') {
+      steps {
+        sh 'npm ci'
+        sh 'npx prisma generate'
+        sh 'npm run typecheck'
+        sh 'npm run lint'
+      }
+    }
+
+    stage('Ship source to server') {
+      steps {
+        sshagent(credentials: ['ssh-key-ec2']) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "mkdir -p ${REMOTE_DIR}"
+            tar --exclude=node_modules --exclude=.next --exclude=.git \
+                --exclude=terraform --exclude=uploads --exclude='*.tfstate*' \
+                -czf - . | ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "tar -xzf - -C ${REMOTE_DIR}"
+          '''
+        }
+      }
+    }
+
+    stage('Build image on server') {
+      steps {
+        sshagent(credentials: ['ssh-key-ec2']) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
+              cd ${REMOTE_DIR} &&
+              sudo docker build -t ${IMAGE} . &&
+              sudo docker save ${IMAGE} | sudo k3s ctr images import -
+            "
+          '''
+        }
+      }
+    }
+
+    stage('Apply manifests') {
+      steps {
+        sshagent(credentials: ['ssh-key-ec2']) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
+              cd ${REMOTE_DIR} &&
+              sed -i 's|REPLACE_WITH_INGRESS_HOST|${SERVER_IP}.nip.io|g' k8s/free-tier/ingress.yaml &&
+              sudo k3s kubectl apply -k k8s/free-tier/
+            "
+          '''
+        }
+      }
+    }
+
+    stage('Database migration') {
+      steps {
+        sshagent(credentials: ['ssh-key-ec2']) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
+              cd ${REMOTE_DIR} &&
+              sudo k3s kubectl -n ${K8S_NAMESPACE} delete job ${APP_NAME}-migrate --ignore-not-found=true &&
+              sed 's|REPLACE_IMAGE|docker.io/library/${IMAGE}|g' k8s/base/migrate-job.yaml | sudo k3s kubectl apply -f - &&
+              sudo k3s kubectl -n ${K8S_NAMESPACE} wait --for=condition=complete job/${APP_NAME}-migrate --timeout=900s &&
+              sudo k3s kubectl -n ${K8S_NAMESPACE} logs job/${APP_NAME}-migrate --tail=20
+            "
+          '''
+        }
+      }
+    }
+
+    stage('Blue-green deploy') {
+      steps {
+        sshagent(credentials: ['ssh-key-ec2']) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
+              cd ${REMOTE_DIR} &&
+              chmod +x scripts/blue-green.sh &&
+              sudo KUBECTL='k3s kubectl' NAMESPACE=${K8S_NAMESPACE} APP=${APP_NAME} \
+                ./scripts/blue-green.sh deploy docker.io/library/${IMAGE}
+            "
+          '''
+        }
+      }
+    }
+
+    stage('Verify live site') {
+      steps {
+        sh 'curl -fsS --max-time 20 --retry 5 --retry-delay 5 http://${SERVER_IP}.nip.io/api/health'
+      }
+    }
+
+    stage('Free memory') {
+      steps {
+        sshagent(credentials: ['ssh-key-ec2']) {
+          sh '''
+            ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
+              cd ${REMOTE_DIR} &&
+              sudo KUBECTL='k3s kubectl' NAMESPACE=${K8S_NAMESPACE} APP=${APP_NAME} \
+                ./scripts/blue-green.sh scale-down-idle
+            "
+          '''
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      echo "Deployed ${env.IMAGE} -> http://${env.SERVER_IP}.nip.io"
+    }
+    failure {
+      sshagent(credentials: ['ssh-key-ec2']) {
+        sh '''
+          ssh -o StrictHostKeyChecking=no ubuntu@${SERVER_IP} "
+            cd ${REMOTE_DIR} &&
+            sudo KUBECTL='k3s kubectl' NAMESPACE=${K8S_NAMESPACE} APP=${APP_NAME} \
+              ./scripts/blue-green.sh rollback
+          " || true
+        '''
+      }
+      echo 'Deploy failed. Rolled back; live traffic is on the previous version.'
+    }
+    always {
+      cleanWs()
+    }
+  }
+}

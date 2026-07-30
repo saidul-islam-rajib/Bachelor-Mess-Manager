@@ -1,31 +1,30 @@
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useState, type FormEvent } from 'react';
-import { PasswordField } from '@/components/PasswordField';
-import { TextField } from '@/components/TextField';
+import { Alert, Button, Input } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
-import { useCurrentUser } from '@/components/UserProvider';
 import { ROUTES } from '@/lib/routes';
-import { STRINGS } from '@/lib/strings';
-import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
+import { api, errorMessage } from '@/lib/api-client';
+import { strings } from '@/lib/i18n';
 import { isValidEmail, validateName, validatePhone } from '@/lib/validation';
 
-type Errors = Partial<Record<'name' | 'email' | 'phone' | 'password' | 'confirm', string>>;
+type Errors = Partial<Record<'name' | 'email' | 'phone', string>>;
+
+type RegisterResponse = {
+  message: string;
+  emailSent: boolean;
+  setupLink?: string;
+};
 
 export default function RegisterPage() {
-  const strings = STRINGS.auth.register;
-  const router = useRouter();
   const toast = useToast();
-  const { refresh } = useCurrentUser();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState<RegisterResponse | null>(null);
 
   function clearError(field: keyof Errors) {
     setErrors((current) => (current[field] ? { ...current, [field]: undefined } : current));
@@ -37,18 +36,11 @@ export default function RegisterPage() {
     const nameCheck = validateName(name);
     if (!nameCheck.ok) next.name = nameCheck.error;
 
-    if (!email.trim()) next.email = 'Email is required.';
-    else if (!isValidEmail(email)) next.email = 'Enter a valid email address.';
+    if (!email.trim()) next.email = strings.validation.emailRequired;
+    else if (!isValidEmail(email)) next.email = strings.validation.emailInvalid;
 
     const phoneCheck = validatePhone(phone);
     if (!phoneCheck.ok) next.phone = phoneCheck.error;
-
-    if (!password) next.password = 'Password is required.';
-    else if (password.length < PASSWORD_MIN_LENGTH) {
-      next.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
-    }
-
-    if (confirm !== password) next.confirm = 'Passwords do not match.';
 
     return next;
   }
@@ -64,52 +56,62 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, phone })
-      });
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        setFormError(data?.error ?? 'Registration failed. Please try again.');
-        return;
-      }
-
-      if (data.signedIn) {
-        await refresh();
-        toast.success(data.message ?? 'Welcome!');
-        await router.push(ROUTES.dashboard);
-        return;
-      }
-
-      toast.success('Registration submitted.');
-      await router.push('/auth/registration-submitted');
-    } catch {
-      setFormError('Could not reach the server. Check your connection and try again.');
+      const data = await api.post<RegisterResponse>('/api/auth/register', { name, email, phone });
+      setDone(data);
+      toast.success(strings.success.registrationSubmitted);
+    } catch (error) {
+      setFormError(errorMessage(error));
     } finally {
       setLoading(false);
     }
+  }
+
+  if (done) {
+    return (
+      <main className="min-h-screen bg-slate-50 text-slate-900">
+        <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
+            <h1 className="text-2xl font-semibold">{strings.auth.register.title}</h1>
+            <Alert tone={done.emailSent ? 'success' : 'warning'} className="mt-6">
+              {done.message}
+            </Alert>
+
+            {done.setupLink && (
+              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <p className="text-xs font-medium text-amber-800">Development link</p>
+                <Link href={done.setupLink} className="mt-1 block break-all text-xs text-amber-900 underline">
+                  {done.setupLink}
+                </Link>
+              </div>
+            )}
+
+            <p className="mt-6 text-center text-sm text-slate-600">
+              <Link href={ROUTES.auth.login} className="font-medium text-slate-900 hover:underline">
+                {strings.auth.register.loginLink}
+              </Link>
+            </p>
+          </div>
+        </section>
+      </main>
+    );
   }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
-          <h1 className="text-2xl font-semibold">{strings.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Create your account. An admin approves it before you can sign in.
-          </p>
+          <h1 className="text-2xl font-semibold">{strings.auth.register.title}</h1>
+          <p className="mt-1 text-sm text-slate-500">{strings.auth.checkEmail}</p>
 
           {formError && (
-            <div role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <Alert tone="danger" className="mt-6">
               {formError}
-            </div>
+            </Alert>
           )}
 
           <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
-            <TextField
-              label={strings.name}
+            <Input
+              label={strings.auth.register.name}
               name="name"
               autoComplete="name"
               value={name}
@@ -121,8 +123,8 @@ export default function RegisterPage() {
               autoFocus
             />
 
-            <TextField
-              label={strings.email}
+            <Input
+              label={strings.auth.register.email}
               name="email"
               type="email"
               autoComplete="username"
@@ -134,12 +136,12 @@ export default function RegisterPage() {
               error={errors.email}
             />
 
-            <TextField
-              label="Phone"
+            <Input
+              label={strings.auth.register.phone}
               name="phone"
               type="tel"
               autoComplete="tel"
-              placeholder="+8801XXXXXXXXX"
+              placeholder={strings.auth.register.phonePlaceholder}
               optional
               required={false}
               value={phone}
@@ -150,44 +152,15 @@ export default function RegisterPage() {
               error={errors.phone}
             />
 
-            <PasswordField
-              label={strings.password}
-              value={password}
-              onChange={(value) => {
-                setPassword(value);
-                clearError('password');
-              }}
-              autoComplete="new-password"
-              showStrength
-              error={errors.password}
-              hint={`At least ${PASSWORD_MIN_LENGTH} characters. A short phrase you'll remember beats a cryptic one.`}
-            />
-
-            <PasswordField
-              label="Confirm password"
-              name="confirm-password"
-              value={confirm}
-              onChange={(value) => {
-                setConfirm(value);
-                clearError('confirm');
-              }}
-              autoComplete="new-password"
-              error={errors.confirm}
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-slate-900 px-6 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? 'Creating account...' : strings.submit}
-            </button>
+            <Button type="submit" loading={loading} fullWidth size="lg">
+              {loading ? strings.auth.register.submitting : strings.auth.register.submit}
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-600">
-            {strings.loginLink}{' '}
+            {strings.auth.register.loginPrompt}{' '}
             <Link href={ROUTES.auth.login} className="font-medium text-slate-900 hover:underline">
-              {strings.login}
+              {strings.auth.register.loginLink}
             </Link>
           </p>
         </div>

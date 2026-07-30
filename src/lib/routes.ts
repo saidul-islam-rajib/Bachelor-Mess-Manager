@@ -2,7 +2,8 @@ export const ROUTES = {
   home: '/',
   auth: {
     login: '/auth/login',
-    register: '/auth/register'
+    register: '/auth/register',
+    setPassword: '/auth/set-password'
   },
   dashboard: '/dashboard',
   groups: '/groups',

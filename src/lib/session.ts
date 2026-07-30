@@ -105,6 +105,26 @@ export async function verifySessionToken(token: string | undefined | null): Prom
   }
 }
 
+export function readSessionClaims(token: string | undefined | null): SessionPayload | null {
+  if (!token) return null;
+
+  const dot = token.indexOf('.');
+  if (dot <= 0 || dot === token.length - 1) return null;
+
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlToBuffer(token.slice(0, dot)))) as SessionPayload;
+
+    if (typeof payload?.uid !== 'string' || !payload.uid) return null;
+    if (typeof payload.exp !== 'number' || typeof payload.iat !== 'number') return null;
+    if (typeof payload.sv !== 'number') return null;
+    if (payload.exp <= Math.floor(Date.now() / 1000)) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 export function shouldRefresh(payload: SessionPayload): boolean {
   return Math.floor(Date.now() / 1000) - payload.iat > sessionConfig.refreshAfterSeconds;
 }
