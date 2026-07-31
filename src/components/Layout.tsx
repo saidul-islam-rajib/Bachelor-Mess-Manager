@@ -56,7 +56,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               <p className="font-medium">
                 {strings.admin.impersonation.banner(user.name)}
                 <span className="ml-2 hidden font-normal text-amber-900 sm:inline">
-                  {strings.admin.impersonation.bannerBack(impersonating.name)}
+                  {strings.admin.impersonation.bannerBack(impersonating.email)}
                 </span>
               </p>
               <button

@@ -61,9 +61,9 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         tabIndex={-1}
-        className={`relative w-full ${SIZE_CLASSES[size]} rounded-3xl border border-slate-200 bg-white p-5 shadow-xl outline-none sm:p-6`}
+        className={`relative flex max-h-full w-full ${SIZE_CLASSES[size]} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl outline-none`}
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex shrink-0 items-start justify-between gap-4 p-5 pb-4 sm:p-6 sm:pb-4">
           <div className="min-w-0">
             <h2 className="text-lg font-semibold">{title}</h2>
             {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
@@ -78,8 +78,14 @@ export function Modal({
           </button>
         </div>
 
-        {children && <div className="mt-4">{children}</div>}
-        {footer && <div className="mt-6 flex flex-wrap justify-end gap-2">{footer}</div>}
+        {children && (
+          <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6 sm:pb-6">{children}</div>
+        )}
+        {footer && (
+          <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-100 bg-white p-5 sm:px-6 sm:py-4">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
