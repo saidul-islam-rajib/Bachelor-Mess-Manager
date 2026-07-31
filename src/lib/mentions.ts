@@ -1,6 +1,7 @@
 export type MentionMember = { id: string; name: string };
 
 const TOKEN = /@\[u:([0-9a-fA-F-]{36})\]/g;
+const UNKNOWN_MENTION = 'Unknown member';
 
 export function encodeMentions(text: string, members: MentionMember[]): string {
   const byLongestName = [...members].filter((m) => m.name).sort((a, b) => b.name.length - a.name.length);
@@ -35,6 +36,10 @@ export function mentionIdsIn(text: string): string[] {
   return [...text.matchAll(TOKEN)].map((m) => m[1]);
 }
 
+export function flattenMentions(text: string, names: Record<string, string>): string {
+  return text.replace(TOKEN, (_token, userId: string) => `@${names[userId] ?? UNKNOWN_MENTION}`);
+}
+
 export type TextPart = string | { userId: string | null; name: string };
 
 export function parseMentions(
@@ -49,7 +54,7 @@ export function parseMentions(
     const start = match.index ?? 0;
     if (start > cursor) parts.push(text.slice(cursor, start));
     const userId = match[1];
-    parts.push({ userId, name: names[userId] ?? 'Unknown member' });
+    parts.push({ userId, name: names[userId] ?? UNKNOWN_MENTION });
     cursor = start + match[0].length;
   }
 

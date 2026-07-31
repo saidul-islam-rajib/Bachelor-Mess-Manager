@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import { ToastProvider } from '@/components/ToastProvider';
 import { UserProvider } from '@/components/UserProvider';
 import { InvitationsProvider } from '@/components/InvitationsProvider';
+import { NotificationsProvider } from '@/components/NotificationsProvider';
 import { ConfirmProvider } from '@/components/ui';
 import { appConfig } from '@/config';
 
@@ -21,9 +22,11 @@ export default function App({ Component, pageProps }: AppProps) {
         <ConfirmProvider>
           <UserProvider>
             <InvitationsProvider>
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
+              <NotificationsProvider>
+                <Layout>
+                  <Component {...pageProps} />
+                </Layout>
+              </NotificationsProvider>
             </InvitationsProvider>
           </UserProvider>
         </ConfirmProvider>

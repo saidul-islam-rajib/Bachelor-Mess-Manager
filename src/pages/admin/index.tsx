@@ -32,6 +32,7 @@ import {
 import { api, errorMessage } from '@/lib/api-client';
 import { paginationConfig } from '@/config';
 import {
+  GROUP_STATUS,
   GROUP_STATUS_VALUES,
   USER_ROLES,
   USER_ROLE_VALUES,
@@ -738,6 +739,31 @@ function GroupsPanel() {
     load();
   }, [load]);
 
+  async function toggleGroupStatus(group: AdminGroup) {
+    const deactivating = group.status === GROUP_STATUS.ACTIVE;
+    const accepted = await confirm({
+      title: deactivating
+        ? strings.groups.deactivateConfirm(group.name)
+        : strings.groups.activateConfirm(group.name),
+      message: deactivating ? strings.groups.deactivateMessage : strings.groups.activateMessage,
+      confirmLabel: deactivating ? strings.groups.deactivate : strings.groups.activate,
+      destructive: deactivating
+    });
+    if (!accepted) return;
+
+    try {
+      await api.patch(`/api/groups/${group.id}`, {
+        status: deactivating ? GROUP_STATUS.INACTIVE : GROUP_STATUS.ACTIVE
+      });
+      toast.success(
+        deactivating ? strings.groups.deactivated(group.name) : strings.groups.activated(group.name)
+      );
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error, strings.groups.statusUpdateFailed));
+    }
+  }
+
   async function createGroup() {
     setCreating(true);
     try {
@@ -783,9 +809,18 @@ function GroupsPanel() {
       header: strings.common.actions,
       align: 'right',
       render: (row) => (
-        <Button size="sm" variant="secondary" onClick={() => setManaging(row)}>
-          {strings.admin.groups.manageMembers}
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setManaging(row)}>
+            {strings.admin.groups.manageMembers}
+          </Button>
+          <Button
+            size="sm"
+            variant={row.status === GROUP_STATUS.ACTIVE ? 'danger' : 'secondary'}
+            onClick={() => toggleGroupStatus(row)}
+          >
+            {row.status === GROUP_STATUS.ACTIVE ? strings.groups.deactivate : strings.groups.activate}
+          </Button>
+        </div>
       )
     }
   ];

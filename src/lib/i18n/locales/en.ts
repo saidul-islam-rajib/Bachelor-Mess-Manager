@@ -317,7 +317,20 @@ const en = {
     noGroups: 'No groups yet.',
     memberCount: (count: number) => `${count} member${count === 1 ? '' : 's'}`,
     inactive: 'inactive',
-    orderSaveFailed: 'Could not save the new order.'
+    orderSaveFailed: 'Could not save the new order.',
+    statusTitle: 'Group status',
+    statusHint:
+      'Deactivating closes the mess. Everything stays on record and you can bring it back at any time.',
+    activate: 'Activate',
+    deactivate: 'Deactivate',
+    activateConfirm: (name: string) => `Activate "${name}" again?`,
+    deactivateConfirm: (name: string) => `Deactivate "${name}"?`,
+    activateMessage: 'The group goes back to normal for everyone in it.',
+    deactivateMessage: 'Members, meals, bazar and bills stay on record. You can activate the group again later.',
+    activated: (name: string) => `"${name}" is active again.`,
+    deactivated: (name: string) => `"${name}" is now inactive.`,
+    statusUpdateFailed: 'Could not update the group status.',
+    onlySupervisorOrAdmin: 'Only this group\'s supervisor or an admin can update it.'
   },
   members: {
     title: 'Members',

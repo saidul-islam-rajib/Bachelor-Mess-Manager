@@ -94,6 +94,8 @@ model User {
   roleRequests        RoleRequest[]    @relation("RoleRequestUser")
   roleDecisions       RoleRequest[]    @relation("RoleRequestDecider")
   passwordTokens      PasswordToken[]
+  notifications       Notification[]   @relation("NotificationRecipient")
+  notificationsSent   Notification[]   @relation("NotificationActor")
 
   @@index([role])
   @@index([status])
@@ -189,6 +191,7 @@ model Group {
   payments            PaymentStatus[]
   comments            Comment[]
   invitations         Invitation[]
+  notifications       Notification[]
 
   @@index([supervisorId])
   @@index([status])
@@ -258,6 +261,30 @@ model Invitation {
 
   @@index([inviteeId, status])
   @@index([groupId, status])
+}
+
+model Notification {
+  id            String    @id @default(uuid())
+  user          User      @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  actor         User?     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId       String?
+  type          String
+  group         Group?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String?
+  excerpt       String?
+  link          String
+  readAt        DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }
 
 model Membership {

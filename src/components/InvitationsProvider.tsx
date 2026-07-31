@@ -20,6 +20,8 @@ type InvitationsContextValue = {
   respond: (invitation: Invitation, status: InvitationStatus) => Promise<void>;
 };
 
+const POLL_MS = 60_000;
+
 const InvitationsContext = createContext<InvitationsContextValue | null>(null);
 
 export function useInvitations() {
@@ -58,6 +60,19 @@ export function InvitationsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const timer = setInterval(refresh, POLL_MS);
+    const onFocus = () => refresh();
+
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [user, refresh]);
 
   const respond = useCallback(
     async (invitation: Invitation, status: InvitationStatus) => {
