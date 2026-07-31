@@ -32,7 +32,6 @@ import {
 import { api, errorMessage } from '@/lib/api-client';
 import { paginationConfig } from '@/config';
 import {
-  ASSIGNABLE_ROLES,
   GROUP_STATUS_VALUES,
   USER_ROLES,
   USER_ROLE_VALUES,
@@ -40,6 +39,7 @@ import {
   USER_STATUS_VALUES
 } from '@/lib/constants';
 import { formatDate, formatDateTime, roleLabel, statusLabel } from '@/lib/format';
+import { ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
 
@@ -329,8 +329,10 @@ function RegistrationsPanel() {
 
 function UsersPanel() {
   const toast = useToast();
+  const confirm = useConfirm();
   const lookups = useLookups();
 
+  const [busy, setBusy] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const search = useDebouncedValue(searchInput);
   const [role, setRole] = useState(ALL_OPTION);
@@ -391,6 +393,24 @@ function UsersPanel() {
     setOnlyWithoutGroup(false);
   }
 
+  async function impersonate(user: AdminUser) {
+    const confirmed = await confirm({
+      title: strings.admin.impersonation.confirmTitle,
+      message: strings.admin.impersonation.confirmBody(user.name),
+      confirmLabel: strings.admin.impersonation.action
+    });
+    if (!confirmed) return;
+
+    setBusy(user.id);
+    try {
+      await api.post('/api/admin/impersonate', { userId: user.id });
+      window.location.href = ROUTES.dashboard;
+    } catch (error) {
+      toast.error(errorMessage(error));
+      setBusy('');
+    }
+  }
+
   const columns: Column<AdminUser>[] = [
     {
       key: 'name',
@@ -445,9 +465,16 @@ function UsersPanel() {
       header: strings.common.actions,
       align: 'right',
       render: (row) => (
-        <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
-          {strings.common.edit}
-        </Button>
+        <div className="flex justify-end gap-2">
+          {row.role !== USER_ROLES.ADMIN && row.status === USER_STATUS.APPROVED && (
+            <Button size="sm" variant="secondary" onClick={() => impersonate(row)} disabled={busy === row.id}>
+              {strings.admin.impersonation.action}
+            </Button>
+          )}
+          <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
+            {strings.common.edit}
+          </Button>
+        </div>
       )
     }
   ];
@@ -568,11 +595,13 @@ function EditUserModal({
   onSaved: () => Promise<void>;
 }) {
   const toast = useToast();
+  const currentUserId = useCurrentUser().user?.id;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState(USER_ROLES.MEMBER as string);
   const [status, setStatus] = useState(USER_STATUS.APPROVED as string);
+  const [password, setPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -582,6 +611,7 @@ function EditUserModal({
     setPhone(user.phone ?? '');
     setRole(user.role);
     setStatus(user.status);
+    setPassword('');
   }, [user]);
 
   if (!user) return null;
@@ -590,8 +620,15 @@ function EditUserModal({
     if (!user) return;
     setSaving(true);
     try {
-      await api.patch(`/api/users/${user.id}`, { name, email, phone, role, status });
-      toast.success(strings.admin.users.updated(name));
+      await api.patch(`/api/users/${user.id}`, {
+        name,
+        email,
+        phone,
+        role,
+        status,
+        ...(password ? { password } : {})
+      });
+      toast.success(password ? strings.admin.users.passwordChanged(name) : strings.admin.users.updated(name));
       await onSaved();
     } catch (error) {
       toast.error(errorMessage(error));
@@ -600,7 +637,7 @@ function EditUserModal({
     }
   }
 
-  const isAdminAccount = user.role === USER_ROLES.ADMIN;
+  const isSelf = user.id === currentUserId;
 
   return (
     <Modal
@@ -623,16 +660,26 @@ function EditUserModal({
         <Input label={strings.common.name} value={name} onChange={setName} />
         <Input label={strings.common.email} type="email" value={email} onChange={setEmail} />
         <Input label={strings.common.phone} type="tel" value={phone} onChange={setPhone} optional required={false} />
+        <Input
+          label={strings.admin.users.newPassword}
+          type="password"
+          value={password}
+          onChange={setPassword}
+          hint={strings.admin.users.newPasswordHint}
+          autoComplete="new-password"
+          optional
+          required={false}
+        />
 
-        {isAdminAccount ? (
-          <Alert tone="warning">{strings.admin.users.roleChangeBlocked}</Alert>
+        {isSelf ? (
+          <Alert tone="warning">{strings.admin.users.cannotChangeSelf}</Alert>
         ) : (
           <>
             <Select
               label={strings.common.role}
               value={role}
               onChange={setRole}
-              options={toOptions(ASSIGNABLE_ROLES, roleLabel)}
+              options={toOptions(USER_ROLE_VALUES, roleLabel)}
             />
             <Select
               label={strings.common.status}

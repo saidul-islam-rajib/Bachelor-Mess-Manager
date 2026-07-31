@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ROUTES } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
+import { strings } from '@/lib/i18n';
 import { USER_ROLES } from '@/lib/constants';
 import { useCurrentUser } from '@/components/UserProvider';
 import NotificationBell from '@/components/NotificationBell';
@@ -13,7 +14,7 @@ import Footer from '@/components/Footer';
 type NavLink = { href: string; label: string };
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { user, loading, logout } = useCurrentUser();
+  const { user, loading, logout, stopImpersonating } = useCurrentUser();
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -44,9 +45,29 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const showAuthLinks = !user && !loading && !isAuthPage;
 
+  const impersonating = user?.impersonatedBy;
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
+        {impersonating && (
+          <div className="bg-amber-500 text-amber-950">
+            <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-sm">
+              <p className="font-medium">
+                {strings.admin.impersonation.banner(user.name)}
+                <span className="ml-2 hidden font-normal text-amber-900 sm:inline">
+                  {strings.admin.impersonation.bannerBack(impersonating.name)}
+                </span>
+              </p>
+              <button
+                onClick={stopImpersonating}
+                className="rounded-full bg-amber-950 px-3 py-1 text-xs font-semibold text-amber-50 hover:bg-amber-900"
+              >
+                {strings.admin.impersonation.stop}
+              </button>
+            </div>
+          </div>
+        )}
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:h-20">
           <Link
             href={user ? ROUTES.dashboard : ROUTES.home}

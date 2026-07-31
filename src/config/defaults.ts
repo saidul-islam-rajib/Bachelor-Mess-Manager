@@ -20,6 +20,8 @@ export const AUTHOR = {
 export const SESSION_DEFAULTS = {
   cookieName: 'bachelor_point_session',
   legacyCookieName: 'bachelor_point_legacy_session',
+  impersonationCookieName: 'bachelor_point_impersonation',
+  impersonationMaxAgeSeconds: 60 * 60,
   maxAgeSeconds: 60 * 60 * 24 * 30,
   refreshAfterSeconds: 60 * 60 * 24,
   minSecretLength: 32

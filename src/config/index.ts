@@ -111,6 +111,8 @@ export const authorConfig = {
 export const sessionConfig = {
   cookieName: readString('SESSION_COOKIE_NAME', SESSION_DEFAULTS.cookieName),
   legacyCookieName: SESSION_DEFAULTS.legacyCookieName,
+  impersonationCookieName: SESSION_DEFAULTS.impersonationCookieName,
+  impersonationMaxAgeSeconds: readInt('IMPERSONATION_MAX_AGE_SECONDS', SESSION_DEFAULTS.impersonationMaxAgeSeconds),
   maxAgeSeconds: readInt('SESSION_MAX_AGE_SECONDS', SESSION_DEFAULTS.maxAgeSeconds),
   refreshAfterSeconds: readInt('SESSION_REFRESH_AFTER_SECONDS', SESSION_DEFAULTS.refreshAfterSeconds),
   minSecretLength: SESSION_DEFAULTS.minSecretLength,

@@ -197,6 +197,7 @@ const en = {
     payloadTooLarge: 'That request is too large.',
     emailTaken: 'That email is already registered. Try signing in instead.',
     emailInUse: 'That email is already in use.',
+    nothingToUpdate: 'Nothing to update.',
     adminOnly: 'Only admins can perform this action.',
     supervisorOnly: "Only this group's supervisor can perform this action.",
     notGroupMember: 'You are not a member of this group.',
@@ -573,11 +574,28 @@ const en = {
       noGroup: 'No group',
       updated: (name: string) => `${name} updated.`,
       roleChangeBlocked: 'The built-in admin account cannot be changed.',
-      invalidRole: 'Role must be SUPERVISOR or MEMBER.',
+      invalidRole: 'Role must be ADMIN, SUPERVISOR or MEMBER.',
       invalidStatus: 'Invalid status.',
       notFound: 'User not found.',
       idRequired: 'User ID is required.',
-      cannotChangeSelf: 'You cannot change your own role or status.'
+      cannotChangeSelf: 'You cannot change your own role or status.',
+      newPassword: 'New password',
+      newPasswordHint: 'Leave blank to keep the current password. Setting one signs the user out everywhere.',
+      passwordChanged: (name: string) => `Password updated for ${name}.`
+    },
+    impersonation: {
+      action: 'Sign in as',
+      confirmTitle: 'Sign in as this user',
+      confirmBody: (name: string) =>
+        `You will browse as ${name} until you stop. Anything you do is recorded as them.`,
+      started: (name: string) => `You are now signed in as ${name}.`,
+      stopped: 'Impersonation ended.',
+      banner: (name: string) => `Viewing as ${name}`,
+      bannerBack: (name: string) => `Signed in as ${name}`,
+      stop: 'Stop',
+      cannotImpersonateSelf: 'You are already signed in as yourself.',
+      cannotImpersonateAdmin: 'Administrators cannot be impersonated.',
+      targetNotApproved: 'Only approved accounts can be impersonated.'
     },
     groups: {
       title: 'Groups',
