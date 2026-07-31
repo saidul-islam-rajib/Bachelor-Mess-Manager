@@ -566,7 +566,11 @@ const en = {
       autoApproveHint:
         'When on, a new member can sign in as soon as they set their password, and nothing appears in this queue. Turn it off if you want to review every account yourself.',
       autoApproveOnNotice: 'Auto-approval is on, so new registrations do not wait here.',
-      autoApproveOffNotice: 'Auto-approval is off. Every new account waits for your decision.'
+      autoApproveOffNotice: 'Auto-approval is off. Every new account waits for your decision.',
+      recentTitle: 'Recent registrations',
+      recentHint: 'Everyone who signed up lately, newest first, whatever their status.',
+      recentEmpty: 'Nobody has registered yet.',
+      registeredAt: 'Registered'
     },
     users: {
       title: 'Users',

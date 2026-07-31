@@ -48,7 +48,10 @@ export function DataTable<T>({
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               {columns.map((column) => (
-                <th key={column.key} className={`px-3 py-2 ${ALIGN_CLASSES[column.align ?? 'left']}`}>
+                <th
+                  key={column.key}
+                  className={`whitespace-nowrap px-3 py-2 ${ALIGN_CLASSES[column.align ?? 'left']}`}
+                >
                   {column.header}
                 </th>
               ))}
