@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Avatar } from '@/components/ui';
 import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
@@ -64,15 +64,17 @@ function AppFrame({ path, label, children }: { path: string; label: string; chil
       aria-label={label}
       className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
     >
-      <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-100 px-4 py-3">
+      <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-100 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
         <div className="flex gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
           <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
           <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
         </div>
-        <div className="min-w-0 flex-1 truncate rounded-full bg-white px-3 py-1 text-[11px] text-slate-400">{path}</div>
+        <div className="min-w-0 flex-1 truncate rounded-full bg-white px-3 py-1 text-[10px] text-slate-400 sm:text-[11px]">
+          {path}
+        </div>
       </div>
-      <div className="p-4 sm:p-5">{children}</div>
+      <div className="p-3 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -89,9 +91,9 @@ function PreviewHeading({ title, meta }: { title: string; meta?: string }) {
 function Tile({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' }) {
   const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : 'text-slate-900';
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-      <div className="text-[10px] uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`mt-1 text-base font-semibold sm:text-lg ${color}`}>{value}</div>
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3">
+      <div className="text-[9px] uppercase leading-tight tracking-wide text-slate-500 sm:text-[10px]">{label}</div>
+      <div className={`mt-1 truncate text-sm font-semibold tabular-nums sm:text-lg ${color}`}>{value}</div>
     </div>
   );
 }
@@ -122,15 +124,17 @@ export function DashboardPreview() {
         <div className="text-[11px] font-medium text-slate-500">{strings.dashboard.whereMoneyWent}</div>
         <ul className="mt-3 space-y-2">
           {SPEND_BREAKDOWN.map((row) => (
-            <li key={row.label} className="flex items-center gap-3">
-              <span className="w-20 shrink-0 truncate text-[11px] text-slate-600">{row.label}</span>
-              <span className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+            <li key={row.label} className="flex items-center gap-2 sm:gap-3">
+              <span className="w-14 shrink-0 truncate text-[10px] text-slate-600 sm:w-20 sm:text-[11px]">
+                {row.label}
+              </span>
+              <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100">
                 <span
                   className="block h-full rounded-full bg-slate-900"
                   style={{ width: `${Math.round((row.amount / maxAmount) * 100)}%` }}
                 />
               </span>
-              <span className="w-20 shrink-0 text-right text-[11px] tabular-nums text-slate-500">
+              <span className="w-16 shrink-0 text-right text-[10px] tabular-nums text-slate-500 sm:w-20 sm:text-[11px]">
                 {formatCurrency(row.amount)}
               </span>
             </li>
@@ -166,12 +170,13 @@ export function MealsPreview() {
     <AppFrame path="bachelor-point.app/meals" label={strings.landing.screens.meals.title}>
       <PreviewHeading title={strings.meals.title} meta="12 Jul 2026" />
 
-      <div className="grid grid-cols-[1fr_auto] items-center gap-3 pb-2 text-[9px] uppercase tracking-wide text-slate-400">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-2 text-[9px] uppercase tracking-wide text-slate-400 sm:gap-3">
         <span>{strings.common.member}</span>
         <span className="grid grid-cols-3 gap-1.5 text-center">
           {columns.map((column) => (
-            <span key={column.key} className="w-16">
-              {column.label}
+            <span key={column.key} className="w-10 sm:w-16">
+              <span className="hidden sm:inline">{column.label}</span>
+              <span className="sm:hidden">{column.label.charAt(0)}</span>
             </span>
           ))}
         </span>
@@ -179,16 +184,19 @@ export function MealsPreview() {
 
       <ul className="divide-y divide-slate-100">
         {MEAL_ROWS.map((row) => (
-          <li key={row.name} className="grid grid-cols-[1fr_auto] items-center gap-3 py-2.5">
+          <li
+            key={row.name}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-2.5 sm:gap-3"
+          >
             <span className="flex min-w-0 items-center gap-2">
-              <Avatar name={row.name} size="sm" />
-              <span className="truncate text-xs text-slate-700">{row.name}</span>
+              <Avatar name={row.name} size="sm" className="hidden sm:flex" />
+              <span className="truncate text-[11px] text-slate-700 sm:text-xs">{row.name}</span>
             </span>
             <span className="grid grid-cols-3 gap-1.5">
               {columns.map((column) => (
                 <span
                   key={column.key}
-                  className={`flex h-7 w-16 items-center justify-center rounded-full text-[11px] font-medium ${
+                  className={`flex h-7 w-10 items-center justify-center rounded-full text-[11px] font-medium sm:w-16 ${
                     row[column.key]
                       ? 'bg-slate-900 text-white'
                       : 'border border-dashed border-slate-200 text-slate-300'
@@ -270,30 +278,36 @@ export function BalancesPreview() {
       </div>
 
       <div className="mt-4 overflow-x-auto">
-        <table className="w-full min-w-[34rem] border-collapse text-left">
+        <table className="w-full border-collapse text-left xl:min-w-[34rem]">
           <thead>
             <tr className="text-[10px] uppercase tracking-wide text-slate-400">
               <th className="pb-2 font-normal">{strings.common.member}</th>
-              <th className="pb-2 text-right font-normal">{strings.payments.mealShare}</th>
-              <th className="pb-2 text-right font-normal">{strings.payments.bills}</th>
-              <th className="pb-2 text-right font-normal">{strings.payments.boughtGroceries}</th>
-              <th className="pb-2 text-right font-normal">{strings.payments.cashPaid}</th>
+              <th className="hidden pb-2 text-right font-normal sm:table-cell">{strings.payments.mealShare}</th>
+              <th className="hidden pb-2 text-right font-normal sm:table-cell">{strings.payments.bills}</th>
+              <th className="hidden pb-2 text-right font-normal xl:table-cell">
+                {strings.payments.boughtGroceries}
+              </th>
+              <th className="hidden pb-2 text-right font-normal xl:table-cell">{strings.payments.cashPaid}</th>
               <th className="pb-2 text-right font-normal">{strings.payments.due}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {rows.map((row) => (
-              <tr key={row.name} className="text-xs text-slate-600">
+              <tr key={row.name} className="text-[11px] text-slate-600 sm:text-xs">
                 <td className="py-2.5 pr-3">
                   <span className="flex min-w-0 items-center gap-2">
-                    <Avatar name={row.name} size="sm" />
+                    <Avatar name={row.name} size="sm" className="hidden sm:flex" />
                     <span className="truncate text-slate-700">{row.name}</span>
                   </span>
                 </td>
-                <td className="py-2.5 text-right tabular-nums">{formatCurrency(row.mealShare)}</td>
-                <td className="py-2.5 text-right tabular-nums">{formatCurrency(BILLS_SHARE_PER_MEMBER)}</td>
-                <td className="py-2.5 text-right tabular-nums">{formatCurrency(row.bought)}</td>
-                <td className="py-2.5 text-right tabular-nums">{formatCurrency(row.paid)}</td>
+                <td className="hidden py-2.5 text-right tabular-nums sm:table-cell">
+                  {formatCurrency(row.mealShare)}
+                </td>
+                <td className="hidden py-2.5 text-right tabular-nums sm:table-cell">
+                  {formatCurrency(BILLS_SHARE_PER_MEMBER)}
+                </td>
+                <td className="hidden py-2.5 text-right tabular-nums xl:table-cell">{formatCurrency(row.bought)}</td>
+                <td className="hidden py-2.5 text-right tabular-nums xl:table-cell">{formatCurrency(row.paid)}</td>
                 <td
                   className={`py-2.5 text-right font-semibold tabular-nums ${
                     row.due > 0 ? 'text-red-600' : 'text-green-600'
@@ -322,12 +336,12 @@ export function MealRateDiagram() {
     <div
       role="img"
       aria-label={strings.landing.math.diagramLabel}
-      className="flex flex-wrap items-center justify-center gap-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:gap-4 sm:p-8"
+      className="flex flex-col items-center justify-center gap-2 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:flex-wrap sm:gap-4 sm:p-8"
     >
       {parts.map((part, index) => (
-        <div key={part.label} className="flex items-center gap-3 sm:gap-4">
+        <Fragment key={part.label}>
           <div
-            className={`min-w-[7.5rem] rounded-2xl px-4 py-3 text-center ${
+            className={`w-full rounded-2xl px-4 py-3 text-center sm:w-auto sm:min-w-[7.5rem] ${
               index === parts.length - 1 ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'
             }`}
           >
@@ -341,7 +355,7 @@ export function MealRateDiagram() {
             <div className="mt-1 text-lg font-semibold tabular-nums sm:text-xl">{part.value}</div>
           </div>
           {part.operator && <span className="text-xl font-light text-slate-400 sm:text-2xl">{part.operator}</span>}
-        </div>
+        </Fragment>
       ))}
     </div>
   );

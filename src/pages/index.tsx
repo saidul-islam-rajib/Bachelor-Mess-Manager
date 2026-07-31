@@ -42,14 +42,14 @@ function Hero() {
         className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-slate-300/30 blur-3xl"
       />
 
-      <div className="relative mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:py-24 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
+      <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:gap-12 sm:py-24 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
             {landing.hero.eyebrow}
           </span>
 
-          <h1 className="mt-6 text-4xl font-semibold leading-[1.08] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
+          <h1 className="mt-6 text-[2rem] font-semibold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
             {landing.hero.title} <span className="text-slate-400">{landing.hero.titleAccent}</span>
           </h1>
 
@@ -83,7 +83,7 @@ function Hero() {
             </div>
           )}
 
-          <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-slate-200 pt-6">
+          <ul className="mt-8 flex flex-wrap gap-x-5 gap-y-2.5 border-t border-slate-200 pt-6 sm:mt-10 sm:gap-x-6 sm:gap-y-3">
             {landing.hero.highlights.map((highlight) => (
               <li key={highlight} className="flex items-center gap-2 text-sm text-slate-600">
                 <LandingIcon name="check" className="h-4 w-4 text-slate-400" />
@@ -110,11 +110,11 @@ function Hero() {
 function Problem() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
         <SectionHeader title={landing.problem.title} subtitle={landing.problem.subtitle} />
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3">
           {landing.problem.items.map((item, index) => (
-            <div key={item.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div key={item.title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
                 {index + 1}
               </span>
@@ -131,13 +131,13 @@ function Problem() {
 function Features() {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
         <SectionHeader title={landing.features.title} subtitle={landing.features.subtitle} />
-        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {landing.features.items.map((item) => (
             <div
               key={item.title}
-              className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-300 hover:shadow-md"
+              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 transition hover:border-slate-300 hover:shadow-md"
             >
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white">
                 <LandingIcon name={item.icon as LandingIconName} />
@@ -166,7 +166,7 @@ function ScreenRow({
   reversed?: boolean;
 }) {
   return (
-    <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+    <div className="grid items-center gap-6 sm:gap-10 lg:grid-cols-2 lg:gap-16">
       <div className={reversed ? 'lg:order-2' : undefined}>
         <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">
           {tag}
@@ -182,9 +182,9 @@ function ScreenRow({
 function Screens() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
         <SectionHeader title={landing.screens.title} subtitle={landing.screens.subtitle} />
-        <div className="mt-12 space-y-16 sm:space-y-20">
+        <div className="mt-10 space-y-12 sm:mt-12 sm:space-y-20">
           <ScreenRow
             tag={landing.screens.meals.tag}
             title={landing.screens.meals.title}
@@ -213,13 +213,13 @@ function Screens() {
 function Maths() {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-4xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-4xl px-4 py-12 sm:py-20">
         <SectionHeader title={landing.math.title} subtitle={landing.math.subtitle} />
         <div className="mt-10">
           <MealRateDiagram />
           <p className="mt-4 text-center text-sm text-slate-500">{landing.math.rateCaption}</p>
         </div>
-        <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-6 text-center sm:p-8">
+        <div className="mt-8 rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:p-6 text-center sm:p-8">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500">{landing.math.balanceTitle}</h3>
           <p className="mt-3 text-base font-medium leading-relaxed text-slate-900 sm:text-lg">
             {strings.payments.balanceFormula}
@@ -233,11 +233,11 @@ function Maths() {
 function Steps() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
         <SectionHeader title={landing.steps.title} />
-        <ol className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {landing.steps.items.map((item, index) => (
-            <li key={item.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <li key={item.title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <span className="text-3xl font-semibold tabular-nums text-slate-200">{`0${index + 1}`}</span>
               <h3 className="mt-2 text-base font-semibold text-slate-900">{item.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.body}</p>
@@ -252,11 +252,11 @@ function Steps() {
 function Roles() {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
         <SectionHeader title={landing.roles.title} />
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3">
           {landing.roles.items.map((item) => (
-            <div key={item.role} className="rounded-3xl border border-slate-200 bg-slate-50 p-6">
+            <div key={item.role} className="rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
               <h3 className="text-base font-semibold text-slate-900">
                 {strings.roles[item.role as keyof typeof strings.roles]}
               </h3>
@@ -272,11 +272,11 @@ function Roles() {
 function Trust() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
         <SectionHeader title={landing.trust.title} />
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3">
           {landing.trust.items.map((item) => (
-            <div key={item.title} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div key={item.title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-slate-700">
                 <LandingIcon name={item.icon as LandingIconName} />
               </span>
@@ -304,7 +304,7 @@ function FinalCta() {
         className="pointer-events-none absolute -bottom-24 left-1/2 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-slate-500/20 blur-3xl"
       />
 
-      <div className="relative mx-auto max-w-3xl px-4 py-20 text-center sm:py-24">
+      <div className="relative mx-auto max-w-3xl px-4 py-14 text-center sm:py-24">
         <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">{landing.cta.title}</h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-slate-300 sm:text-lg">{landing.cta.subtitle}</p>
 
