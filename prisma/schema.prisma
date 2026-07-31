@@ -214,6 +214,7 @@ model SiteSettings {
   registrationWindowMinutes Int     @default(60)
   requireStrongPasswords    Boolean @default(false)
   autoApproveSupervisor     Boolean @default(false)
+  autoApproveRegistration   Boolean @default(true)
   allowSelfRoleSwitch       Boolean @default(true)
 
   createdAt     DateTime  @default(now())

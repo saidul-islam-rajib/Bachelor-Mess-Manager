@@ -6,7 +6,7 @@ import { USER_STATUS } from '@/lib/constants';
 import { badRequest, methodNotAllowed, ok, tooManyRequests } from '@/lib/http';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
 import { consumeToken, findValidToken } from '@/lib/password-tokens';
-import { getSecurityPolicy } from '@/lib/settings-service';
+import { getSecurityPolicy, getSiteSettings } from '@/lib/settings-service';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
@@ -53,12 +53,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     select: { status: true }
   });
 
+  const settings = await getSiteSettings();
+  const settledStatus = settings.autoApproveRegistration ? USER_STATUS.APPROVED : USER_STATUS.PENDING;
+
   const user = await prisma.user.update({
     where: { id: lookup.userId },
     data: {
       password: await hashPassword(password as string),
       tokenVersion: { increment: 1 },
-      ...(current?.status === USER_STATUS.UNVERIFIED ? { status: USER_STATUS.PENDING } : {})
+      ...(current?.status === USER_STATUS.UNVERIFIED ? { status: settledStatus } : {})
     },
     select: { id: true, name: true, email: true, role: true, status: true, tokenVersion: true }
   });

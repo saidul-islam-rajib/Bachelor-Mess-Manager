@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { invalidateSecurityPolicyCache } from '@/lib/settings-service';
 import { withAudit } from '@/lib/with-audit';
 
 const SETTINGS_ID = 'singleton';
@@ -61,6 +62,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (typeof body.autoApproveSupervisor === 'boolean') {
       data.autoApproveSupervisor = body.autoApproveSupervisor;
     }
+    if (typeof body.autoApproveRegistration === 'boolean') {
+      data.autoApproveRegistration = body.autoApproveRegistration;
+    }
     if (typeof body.allowSelfRoleSwitch === 'boolean') {
       data.allowSelfRoleSwitch = body.allowSelfRoleSwitch;
     }
@@ -70,6 +74,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       update: data,
       create: { id: SETTINGS_ID, ...data }
     });
+
+    invalidateSecurityPolicyCache();
 
     return ok(res, { settings });
   }

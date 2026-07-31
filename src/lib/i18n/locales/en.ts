@@ -78,7 +78,7 @@ const en = {
     },
     register: {
       title: 'Register',
-      subtitle: 'Create your account. An admin approves it before you can sign in.',
+      subtitle: 'Create your account. We will email you a link to choose your password.',
       name: 'Name',
       email: 'Email',
       phone: 'Phone',
@@ -546,7 +546,13 @@ const en = {
       approve: 'Approve',
       reject: 'Reject',
       approved: (name: string) => `${name} approved.`,
-      rejected: (name: string) => `${name} rejected.`
+      rejected: (name: string) => `${name} rejected.`,
+      policyTitle: 'Registration policy',
+      autoApproveLabel: 'Automatically approve new registrations',
+      autoApproveHint:
+        'When on, a new member can sign in as soon as they set their password, and nothing appears in this queue. Turn it off if you want to review every account yourself.',
+      autoApproveOnNotice: 'Auto-approval is on, so new registrations do not wait here.',
+      autoApproveOffNotice: 'Auto-approval is off. Every new account waits for your decision.'
     },
     users: {
       title: 'Users',
@@ -641,7 +647,7 @@ const en = {
       dashboard: 'Go to dashboard',
       groups: 'View your groups',
       signedInAs: (name: string) => `You are signed in as ${name}.`,
-      note: 'Free to use. A new account is reviewed by an administrator before the first sign-in.',
+      note: 'Free to use. Register with your email and set a password from the link we send you.',
       previewLabel: 'Preview of the member dashboard showing meals, meal rate and dues for the month',
       highlights: ['Fair, meal-based split', 'Bills divided automatically', 'Works on any phone']
     },
@@ -734,8 +740,8 @@ const en = {
       items: [
         { title: 'Create an account', body: 'Your name, email and a password. Nothing else.' },
         {
-          title: 'Wait for approval',
-          body: 'An administrator checks new registrations, which keeps strangers out of your kitchen accounts.'
+          title: 'Set your password',
+          body: 'We email you a secure link. Choose a password and your account is ready to use.'
         },
         {
           title: 'Join or start a mess',
@@ -769,8 +775,8 @@ const en = {
       items: [
         {
           icon: 'shield',
-          title: 'Accounts are reviewed',
-          body: 'Registrations wait for an administrator, and repeated failed sign-ins lock an account before anyone can guess their way in.'
+          title: 'Sign-ins are guarded',
+          body: 'Repeated failed sign-ins lock an account before anyone can guess their way in, and an administrator can require every new registration to be approved by hand.'
         },
         {
           icon: 'history',

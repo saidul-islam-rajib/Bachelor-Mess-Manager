@@ -185,6 +185,21 @@ function RegistrationsPanel() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState('');
+  const [autoApprove, setAutoApprove] = useState(true);
+  const [policyLoading, setPolicyLoading] = useState(true);
+  const [savingPolicy, setSavingPolicy] = useState(false);
+
+  const loadPolicy = useCallback(async () => {
+    setPolicyLoading(true);
+    try {
+      const data = await api.get<{ settings: { autoApproveRegistration: boolean } }>('/api/settings');
+      setAutoApprove(data.settings.autoApproveRegistration);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setPolicyLoading(false);
+    }
+  }, [toast]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -202,8 +217,28 @@ function RegistrationsPanel() {
   }, [page, toast]);
 
   useEffect(() => {
+    loadPolicy();
+  }, [loadPolicy]);
+
+  useEffect(() => {
     load();
   }, [load]);
+
+  async function saveAutoApprove(checked: boolean) {
+    setSavingPolicy(true);
+    const previous = autoApprove;
+    setAutoApprove(checked);
+    try {
+      await api.patch('/api/settings', { autoApproveRegistration: checked });
+      toast.success(strings.success.saved);
+      await load();
+    } catch (error) {
+      setAutoApprove(previous);
+      toast.error(errorMessage(error));
+    } finally {
+      setSavingPolicy(false);
+    }
+  }
 
   async function decide(target: AdminUser, status: string) {
     setBusy(target.id);
@@ -253,20 +288,42 @@ function RegistrationsPanel() {
   ];
 
   return (
-    <Card>
-      <CardHeader title={strings.admin.registrations.title} />
-      <div className="mt-4">
-        <DataTable
-          columns={columns}
-          rows={users}
-          rowKey={(row) => row.id}
-          loading={loading}
-          emptyTitle={strings.admin.registrations.empty}
-          emptyDescription=""
+    <div className="space-y-4">
+      <Card>
+        <CardHeader
+          title={strings.admin.registrations.policyTitle}
+          description={
+            autoApprove
+              ? strings.admin.registrations.autoApproveOnNotice
+              : strings.admin.registrations.autoApproveOffNotice
+          }
         />
-        {meta && <Pagination meta={meta} onPageChange={setPage} disabled={loading} />}
-      </div>
-    </Card>
+        <div className="mt-4">
+          <Checkbox
+            label={strings.admin.registrations.autoApproveLabel}
+            hint={strings.admin.registrations.autoApproveHint}
+            checked={autoApprove}
+            disabled={policyLoading || savingPolicy}
+            onChange={saveAutoApprove}
+          />
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title={strings.admin.registrations.title} />
+        <div className="mt-4">
+          <DataTable
+            columns={columns}
+            rows={users}
+            rowKey={(row) => row.id}
+            loading={loading}
+            emptyTitle={strings.admin.registrations.empty}
+            emptyDescription=""
+          />
+          {meta && <Pagination meta={meta} onPageChange={setPage} disabled={loading} />}
+        </div>
+      </Card>
+    </div>
   );
 }
 
