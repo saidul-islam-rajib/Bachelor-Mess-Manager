@@ -36,6 +36,16 @@ export const INVITATION_STATUS = {
 
 export const INVITATION_STATUS_VALUES = Object.values(INVITATION_STATUS) as string[];
 
+export const NOTIFICATION_TYPES = {
+  MENTION_COMMENT: 'MENTION_COMMENT',
+  MENTION_REPLY: 'MENTION_REPLY',
+  MENTION_EXPENSE_COMMENT: 'MENTION_EXPENSE_COMMENT'
+} as const;
+
+export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
+
+export const NOTIFICATION_TYPE_VALUES = Object.values(NOTIFICATION_TYPES) as string[];
+
 export const EXPENSE_TYPES = {
   BAZAR: 'BAZAR',
   RENT: 'RENT',

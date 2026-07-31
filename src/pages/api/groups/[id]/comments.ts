@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { mentionIdsIn } from '@/lib/mentions';
+import { NOTIFICATION_TYPES } from '@/lib/constants';
+import { notifyMentions } from '@/lib/notifications';
 import { withAudit } from '@/lib/with-audit';
 
 const MAX_LENGTH = 1000;
@@ -110,6 +112,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const comment = await prisma.comment.create({
       data: { userId: sessionUser.id, groupId, text: value }
+    });
+
+    await notifyMentions({
+      text: value,
+      actorId: sessionUser.id,
+      groupId,
+      type: NOTIFICATION_TYPES.MENTION_COMMENT
     });
 
     return created(res, {

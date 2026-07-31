@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { GROUP_STATUS_VALUES } from '@/lib/constants';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -40,7 +42,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === 'PATCH') {
     if (group.supervisorId !== sessionUser.id && !requireAdmin(sessionUser)) {
-      return forbidden(res, 'Only this group\'s supervisor can update it.');
+      return forbidden(res, strings.groups.onlySupervisorOrAdmin);
     }
 
     const { name, status, mealWeightBreakfast, mealWeightLunch, mealWeightDinner } = req.body as {
@@ -53,7 +55,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const data: Record<string, unknown> = {};
     if (typeof name === 'string' && name.trim()) data.name = name.trim();
-    if (status === 'ACTIVE' || status === 'INACTIVE') data.status = status;
+    if (typeof status === 'string' && GROUP_STATUS_VALUES.includes(status)) data.status = status;
     for (const [key, value] of [
       ['mealWeightBreakfast', mealWeightBreakfast],
       ['mealWeightLunch', mealWeightLunch],

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 export type GroupOption = {
@@ -8,10 +9,13 @@ export type GroupOption = {
 };
 
 export function useGroupMonth() {
+  const router = useRouter();
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [groupId, setGroupId] = useState('');
   const [month, setMonth] = useState(currentMonthKey());
   const [loadingGroups, setLoadingGroups] = useState(true);
+
+  const requestedGroupId = typeof router.query.group === 'string' ? router.query.group : '';
 
   useEffect(() => {
     fetch('/api/groups')
@@ -23,6 +27,12 @@ export function useGroupMonth() {
       })
       .finally(() => setLoadingGroups(false));
   }, []);
+
+  useEffect(() => {
+    if (!requestedGroupId) return;
+    if (!groups.some((group) => group.id === requestedGroupId)) return;
+    setGroupId(requestedGroupId);
+  }, [requestedGroupId, groups]);
 
   return { groups, groupId, setGroupId, month, setMonth, loadingGroups };
 }
