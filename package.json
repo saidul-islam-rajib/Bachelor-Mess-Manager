@@ -45,7 +45,10 @@
     "backup:db": "node scripts/backup-db.js",
     "restore:db": "node scripts/restore-db.js",
     "test:e2e": "node scripts/e2e-test.js",
-    "test:rate": "node scripts/check-meal-rate.js"
+    "test:rate": "node scripts/check-meal-rate.js",
+    "test": "node scripts/test-all.js",
+    "test:all": "node scripts/test-all.js",
+    "test:allocation": "node scripts/check-allocation.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

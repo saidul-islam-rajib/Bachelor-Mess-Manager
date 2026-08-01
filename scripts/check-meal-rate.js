@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { promisify } = require('util');
 const { PrismaClient } = require('@prisma/client');
 const { report, reportError, reportFailure } = require('./reporter');
+const { emitSummary } = require('./test-result');
 
 const prisma = new PrismaClient();
 const scrypt = promisify(crypto.scrypt);
@@ -14,7 +15,9 @@ const password = 'RateCheck!9xZ';
 const created = { userIds: [], groupIds: [] };
 
 let failures = 0;
+let total = 0;
 function check(name, passed, detail) {
+  total += 1;
   if (!passed) failures += 1;
   report(`  ${passed ? 'PASS' : 'FAIL'}  ${name}${passed || !detail ? '' : `  (${detail})`}`);
 }
@@ -271,8 +274,7 @@ run()
     reportFailure(error);
   })
   .finally(async () => {
-    report('');
-    report(failures === 0 ? 'ALL CHECKS PASSED' : `${failures} CHECK(S) FAILED`);
+    emitSummary('meal-rate', { total, passed: total - failures, failed: failures });
     if (failures > 0) process.exitCode = 1;
     await cleanup();
     await prisma.$disconnect();

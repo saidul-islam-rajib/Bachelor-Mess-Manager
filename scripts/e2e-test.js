@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const { promisify } = require('util');
 const { PrismaClient } = require('@prisma/client');
 const { report, reportError, reportFailure } = require('./reporter');
+const { emitSummary } = require('./test-result');
 
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 const prisma = new PrismaClient();
@@ -669,10 +670,6 @@ async function run() {
 
 function summarise() {
   const failed = results.filter((r) => !r.passed);
-  report('');
-  report('='.repeat(60));
-  report(`TOTAL ${results.length}   PASSED ${results.length - failed.length}   FAILED ${failed.length}`);
-  report('='.repeat(60));
 
   if (failed.length > 0) {
     report('');
@@ -680,6 +677,12 @@ function summarise() {
     for (const f of failed) report(`  [${f.section}] ${f.name}${f.detail ? `  -> ${f.detail}` : ''}`);
     process.exitCode = 1;
   }
+
+  emitSummary('e2e', {
+    total: results.length,
+    passed: results.length - failed.length,
+    failed: failed.length
+  });
 }
 
 async function cleanup() {

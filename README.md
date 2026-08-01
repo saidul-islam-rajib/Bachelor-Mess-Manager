@@ -51,8 +51,8 @@ engineering notes behind it:
 ```bash
 npm run backup:db     # take a backup now, rotate old ones
 npm run restore:db    # restore the newest backup
-npm run test:e2e      # 108 end-to-end checks against a running dev server
-npm run test:rate     # meal-rate and cost-split scenario check
+npm test              # every suite, one summary (159 checks)
+npm test --quiet      # summary table only
 ```
 
 ---
