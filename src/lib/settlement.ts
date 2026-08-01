@@ -17,6 +17,7 @@ export type SettlementMember = {
   carryIn: number;
   mealCost: number;
   billShare: number;
+  billShareByType: Record<string, number>;
   totalCost: number;
   bazarPaid: number;
   cashPaid: number;
@@ -33,11 +34,14 @@ export type SettlementDay = {
   meals: number;
   bazar: number;
   rate: number;
+  cost: number;
 };
 
 export type Settlement = {
   month: string;
   rateMode: string;
+  effectiveRateMode: string;
+  rateModeFallbackReason: string | null;
   through: string;
   carryForwardEnabled: boolean;
   weights: { breakfast: number; lunch: number; dinner: number };
@@ -57,6 +61,7 @@ export type Settlement = {
     outstanding: number;
     refunds: number;
     unallocatedBazar: number;
+    unpricedMeals: number;
     memberCount: number;
   };
   byType: Record<string, number>;
@@ -174,7 +179,7 @@ export async function buildSettlement(
         where: {
           expense: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: windowEnd } }
         },
-        select: { userId: true, amount: true }
+        select: { userId: true, amount: true, expense: { select: { type: true } } }
       }),
       prisma.expenseEntry.groupBy({
         by: ['type'],
@@ -278,7 +283,17 @@ export async function buildSettlement(
   const totalUnits = unitsByMember.reduce((a, b) => a + b, 0);
   let unallocatedPaisa = 0;
 
-  if (rateMode === MEAL_RATE_MODES.DAILY) {
+  let unpricedMealUnits = 0;
+  for (const [day, dayUnits] of unitsByDay) {
+    if ((bazarByDay.get(day) ?? 0) <= 0) {
+      unpricedMealUnits += [...dayUnits.values()].reduce((a, b) => a + b, 0);
+    }
+  }
+
+  const dayPricingStarvesMeals = rateMode === MEAL_RATE_MODES.DAILY && unpricedMealUnits > 0;
+  const effectiveMode = dayPricingStarvesMeals ? MEAL_RATE_MODES.MONTHLY : rateMode;
+
+  if (effectiveMode === MEAL_RATE_MODES.DAILY) {
     for (const [day, dayBazarPaisa] of bazarByDay) {
       const dayUnits = unitsByDay.get(day);
       const dayTotalUnits = dayUnits ? [...dayUnits.values()].reduce((a, b) => a + b, 0) : 0;
@@ -309,9 +324,18 @@ export async function buildSettlement(
   }
 
   const billShareByMember = new Int32Array(memberIds.length);
+  const billShareByMemberType = memberIds.map(() => new Map<string, number>());
+
   for (const row of billShareRows) {
     const index = indexOf.get(row.userId);
-    if (index !== undefined) billShareByMember[index] += toPaisa(row.amount);
+    if (index === undefined) continue;
+
+    const paisa = toPaisa(row.amount);
+    billShareByMember[index] += paisa;
+
+    const type = row.expense?.type ?? 'OTHER';
+    const bucket = billShareByMemberType[index];
+    bucket.set(type, (bucket.get(type) ?? 0) + paisa);
   }
 
   const cashByMember = new Int32Array(memberIds.length);
@@ -347,6 +371,9 @@ export async function buildSettlement(
       carryIn: fromPaisa(carryInPaisa),
       mealCost: fromPaisa(mealCostPaisa),
       billShare: fromPaisa(billSharePaisa),
+      billShareByType: Object.fromEntries(
+        [...billShareByMemberType[index].entries()].map(([type, paisa]) => [type, fromPaisa(paisa)])
+      ),
       totalCost: fromPaisa(totalCostPaisa),
       bazarPaid: fromPaisa(bazarPaidPaisa),
       cashPaid: fromPaisa(cashPaidPaisa),
@@ -361,15 +388,22 @@ export async function buildSettlement(
 
   members.sort((a, b) => a.name.localeCompare(b.name));
 
+  const monthRatePaisaPerUnit = totalUnits > 0 ? totalBazarPaisa / totalUnits : 0;
+
   const days: SettlementDay[] = [...new Set([...unitsByDay.keys(), ...bazarByDay.keys()])].sort().map((day) => {
     const dayUnits = unitsByDay.get(day);
     const meals = dayUnits ? [...dayUnits.values()].reduce((a, b) => a + b, 0) : 0;
     const bazarPaisa = bazarByDay.get(day) ?? 0;
+
+    const pricedOnOwnBazar = effectiveMode === MEAL_RATE_MODES.DAILY && bazarPaisa > 0 && meals > 0;
+    const ratePaisaPerUnit = pricedOnOwnBazar ? bazarPaisa / meals : monthRatePaisaPerUnit;
+
     return {
       date: day,
       meals: round2(meals / WEIGHT_SCALE),
       bazar: fromPaisa(bazarPaisa),
-      rate: meals > 0 ? round2(bazarPaisa / 100 / (meals / WEIGHT_SCALE)) : 0
+      rate: round2((ratePaisaPerUnit * WEIGHT_SCALE) / 100),
+      cost: fromPaisa(Math.round(ratePaisaPerUnit * meals))
     };
   });
 
@@ -380,6 +414,8 @@ export async function buildSettlement(
   return {
     month: key,
     rateMode,
+    effectiveRateMode: effectiveMode,
+    rateModeFallbackReason: dayPricingStarvesMeals ? 'MEALS_WITHOUT_BAZAR' : null,
     through: utcDateToDay(new Date(windowEnd.getTime() - 86_400_000)),
     carryForwardEnabled,
     weights: {
@@ -402,7 +438,8 @@ export async function buildSettlement(
       bazarPaid: fromPaisa(bazarPaidByMember.reduce((a, b) => a + b, 0)),
       outstanding: round2(members.reduce((a, m) => a + Math.max(0, m.due), 0)),
       refunds: round2(members.reduce((a, m) => a + Math.max(0, -m.due), 0)),
-      unallocatedBazar: rateMode === MEAL_RATE_MODES.DAILY ? fromPaisa(unallocatedPaisa) : 0,
+      unallocatedBazar: effectiveMode === MEAL_RATE_MODES.DAILY ? fromPaisa(unallocatedPaisa) : 0,
+      unpricedMeals: round2(unpricedMealUnits / WEIGHT_SCALE),
       memberCount: members.filter((m) => m.isActive).length
     },
     byType,

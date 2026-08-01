@@ -9,6 +9,7 @@ export type ReportMember = {
   carryIn: number;
   mealCost: number;
   billShare: number;
+  billShareByType: Record<string, number>;
   totalCost: number;
   bazarPaid: number;
   collected: number;
@@ -23,6 +24,8 @@ export type ReportMember = {
 export type GroupReport = {
   month: string;
   rateMode: string;
+  effectiveRateMode: string;
+  rateModeFallbackReason: string | null;
   weights: Settlement['weights'];
   days: Settlement['days'];
   members: ReportMember[];
@@ -38,6 +41,7 @@ export type GroupReport = {
     outstanding: number;
     refunds: number;
     unallocatedBazar: number;
+    unpricedMeals: number;
     memberCount: number;
   };
   byType: Record<string, number>;
@@ -60,6 +64,8 @@ export async function buildGroupReport(
   return {
     month: settlement.month,
     rateMode: settlement.rateMode,
+    effectiveRateMode: settlement.effectiveRateMode,
+    rateModeFallbackReason: settlement.rateModeFallbackReason,
     weights: settlement.weights,
     days: settlement.days,
     members: settlement.members.map((member) => ({
@@ -70,6 +76,7 @@ export async function buildGroupReport(
       carryIn: member.carryIn,
       mealCost: member.mealCost,
       billShare: member.billShare,
+      billShareByType: member.billShareByType,
       totalCost: member.totalCost,
       bazarPaid: member.bazarPaid,
       collected: member.cashPaid,
@@ -92,6 +99,7 @@ export async function buildGroupReport(
       outstanding: settlement.totals.outstanding,
       refunds: settlement.totals.refunds,
       unallocatedBazar: settlement.totals.unallocatedBazar,
+      unpricedMeals: settlement.totals.unpricedMeals,
       memberCount: settlement.totals.memberCount
     },
     byType: settlement.byType,

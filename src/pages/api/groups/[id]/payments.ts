@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport } from '@/lib/group-report';
+import { categoryLabels } from '@/lib/expense-categories';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
@@ -54,6 +55,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       canManage,
       currentUserId: sessionUser.id,
       rateMode: report.rateMode,
+      effectiveRateMode: report.effectiveRateMode,
+      rateModeFallbackReason: report.rateModeFallbackReason,
+      categoryLabels: await categoryLabels(groupId),
       closing: report.closing,
       members: report.members.map((m) => ({
         id: m.id,
@@ -63,6 +67,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         carryIn: m.carryIn,
         mealCost: m.mealCost,
         billShare: m.billShare,
+        billShareByType: m.billShareByType,
         cost: m.totalCost,
         bazarPaid: m.bazarPaid,
         collected: m.collected,
@@ -83,7 +88,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         collected: report.totals.collected,
         outstanding: report.totals.outstanding,
         refunds: report.totals.refunds,
-        unallocatedBazar: report.totals.unallocatedBazar
+        unallocatedBazar: report.totals.unallocatedBazar,
+        unpricedMeals: report.totals.unpricedMeals
       },
       byType: report.byType
     });

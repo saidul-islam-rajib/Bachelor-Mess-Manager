@@ -51,6 +51,63 @@ number and the rows were answering different questions.
 
 Both now come from the same pass, and `rateMode` is reported so the UI can say which one is in force.
 
+## Day-by-day pricing only works when bazar is recorded daily
+
+`DAILY` mode originally priced each day strictly on that day's own bazar. That is correct only if the mess shops
+every day. It is not what most messes do, and the failure was severe:
+
+```
+2026-08-01   5 meals   1040 bazar   rate 208.00
+2026-08-02   3 meals      0 bazar   rate   0.00
+2026-08-03   2 meals      0 bazar   rate   0.00
+```
+
+The whole month's ৳1040 landed on the five meals eaten on the shopping day, at ৳208 each, while the ten meals eaten on
+the other four days cost nothing. Total allocation still equalled total bazar, so the books balanced — but the
+distribution was badly unfair, and the fairness bug was invisible precisely because the totals tied out.
+
+The cause was structural: the allocation loop iterated over `bazarByDay`, so a day with meals but no bazar was never
+visited and its meals were never charged.
+
+### What happens now
+
+Before allocating, the engine counts meals that fall on days with no bazar. If there are any, day-by-day pricing
+cannot fund them without overcharging the people who happened to eat on a shopping day, so the month falls back to
+one rate across every meal:
+
+```
+totals.effectiveRateMode      MONTHLY
+totals.rateModeFallbackReason MEALS_WITHOUT_BAZAR
+totals.unpricedMeals          10
+```
+
+The UI explains the fallback rather than hiding it, so a supervisor who picked `DAILY` understands why the table
+shows one rate. `DAILY` is still honoured whenever bazar genuinely covers the meal days.
+
+There is no third option here. Conservation forces it: `Σ member cost` must equal total bazar, so meals on bazar-less
+days can only be funded by spreading the month's bazar across every meal. That is the monthly rate.
+
+Verified by `npm run test:rate`, which reproduces the exact scenario above and asserts every member is charged in
+proportion to what they ate, and that the day charges add back to ৳1040 to the paisa.
+
+## Member-wise breakdown
+
+`SettlementMember.billShareByType` carries each member's share of each cost type (`RENT`, `ELECTRICITY`, custom
+codes), alongside `bazarPaid` — what that person spent out of their own pocket.
+
+This drives the "Who is charged what" table on `/payments`: one row per member, one column per cost type actually
+used that month, plus meals, bazar bought and the total charged. The columns are derived from the group's own
+`byType` totals, so a group that added "Gas cylinder" gets a Gas cylinder column and a group that never records rent
+gets no rent column.
+
+Two invariants hold and are asserted in the suite:
+
+- each member's per-type shares sum to their `billShare`
+- all members' per-type shares sum to the group's bills total
+
+`bazarPaid` is a **credit**, not a charge. It appears in the breakdown so people can see who has been carrying the
+shopping, and it is subtracted in the balances table.
+
 ## The two rate modes
 
 Set per group on the group page (`Group.mealRateMode`).
@@ -58,8 +115,9 @@ Set per group on the group page (`Group.mealRateMode`).
 | Mode | Rate | Good for |
 | --- | --- | --- |
 | `MONTHLY` (default) | total bazar ÷ total weighted meals | Simple to explain; evens out cheap and expensive weeks |
-| `DAILY` | that day's bazar ÷ that day's weighted meals | Messes whose daily spend varies a lot |
+| `DAILY` | that day's bazar ÷ that day's weighted meals | Messes that shop most days |
 
+`DAILY` falls back to `MONTHLY` for any month where meals fall on days with no bazar — see the section above.
 Both modes guarantee `Σ member meal cost == total bazar` exactly. `totals.unallocatedBazar` reports how much was
 pooled in `DAILY` mode so the UI can be honest about it rather than hiding it.
 
@@ -107,6 +165,7 @@ implementation of the maths for the mid-month case.
 
 ## Where the numbers surface
 
-- `/payments` — member balances with the brought-forward column, a totals row, and the day-wise rate table.
+- `/payments` — member balances with the brought-forward column, the "Who is charged what" per-member cost-type
+  breakdown, the day-wise rate table, and bazar bought per member.
 - `/meals` — monthly summary.
 - `/dashboard` — supervisor and member roll-ups.

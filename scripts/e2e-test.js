@@ -488,6 +488,27 @@ async function run() {
     );
 
     check('no bazar left unallocated', near(payments.totals.unallocatedBazar ?? 0, 0), String(payments.totals.unallocatedBazar));
+
+    check('category labels returned for the breakdown', Boolean(payments.categoryLabels), 'missing categoryLabels');
+
+    for (const m of members) {
+      const typeSum = Object.values(m.billShareByType ?? {}).reduce((x, y) => x + y, 0);
+      check(`${m.name} per-type shares match their bill share`, near(typeSum, m.billShare), `${typeSum} vs ${m.billShare}`);
+    }
+
+    const perTypeTotal = members.reduce(
+      (acc, m) => acc + Object.values(m.billShareByType ?? {}).reduce((x, y) => x + y, 0),
+      0
+    );
+    check('per-type shares sum to the bills total', near(perTypeTotal, payments.totals.bills), `${perTypeTotal} vs ${payments.totals.bills}`);
+
+    const dayCostSum = (payments.days ?? []).reduce((acc, d) => acc + (d.cost ?? 0), 0);
+    check('day charges add back to total bazar', near(dayCostSum, payments.totals.bazar, 0.05), `${dayCostSum} vs ${payments.totals.bazar}`);
+    check(
+      'no day with meals is priced at zero',
+      (payments.days ?? []).every((d) => d.meals === 0 || d.rate > 0),
+      JSON.stringify((payments.days ?? []).filter((d) => d.meals > 0 && d.rate <= 0))
+    );
   }
 
   section('Payments');

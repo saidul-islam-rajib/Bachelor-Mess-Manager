@@ -51,7 +51,8 @@ engineering notes behind it:
 ```bash
 npm run backup:db     # take a backup now, rotate old ones
 npm run restore:db    # restore the newest backup
-npm run test:e2e      # 101 end-to-end checks against a running dev server
+npm run test:e2e      # 108 end-to-end checks against a running dev server
+npm run test:rate     # meal-rate and cost-split scenario check
 ```
 
 ---
@@ -134,14 +135,20 @@ are synced from `src/lib/permissions.ts` by `npm run db:sync-roles`. 3 roles, 35
 before joining another. Supervisors are exempt — they belong to each group they run so
 their own meals count.
 
-**Money.** Bazar is shared by meals eaten, priced at each day's own rate. Bills (rent,
-electricity, water, waste, chef, wifi, other) are split once when recorded, either equally
+**Money.** Bazar is shared by meals eaten. A group picks one rate for the month (total bazar
+÷ total meals) or a rate per day; day-by-day pricing falls back to the monthly rate for any
+month where meals fall on days with no bazar, because otherwise those meals would cost
+nothing and whoever ate on shopping days would pay for everybody. Cost types are per group —
+supervisors add and retire their own. Bills are split once when recorded, either equally
 across the active roster or assigned to selected members, and stored as `ExpenseShare` rows
 so a later membership change cannot rewrite last month's numbers.
 
 ```
-due = meal share + bills share − groceries they bought − cash they paid
+due = brought forward + meal share + bills share − groceries they bought − cash they paid
 ```
+
+Every allocation is done in integer paisa with largest-remainder rounding, so member shares
+always add back to what the mess actually spent. See [docs/settlement.md](docs/settlement.md).
 
 ---
 

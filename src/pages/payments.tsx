@@ -13,6 +13,7 @@ type MemberRow = {
   carryIn: number;
   mealCost: number;
   billShare: number;
+  billShareByType: Record<string, number>;
   cost: number;
   bazarPaid: number;
   collected: number;
@@ -23,7 +24,7 @@ type MemberRow = {
 
 type Payment = { id: string; userId: string; userName: string; amount: number; date: string };
 
-type DayRate = { date: string; meals: number; bazar: number; rate: number };
+type DayRate = { date: string; meals: number; bazar: number; rate: number; cost: number };
 
 type Totals = {
   bazar: number;
@@ -37,12 +38,16 @@ type Totals = {
   outstanding: number;
   refunds: number;
   unallocatedBazar: number;
+  unpricedMeals: number;
 };
 
 type PaymentsData = {
   canManage: boolean;
   currentUserId?: string;
   rateMode: string;
+  effectiveRateMode: string;
+  rateModeFallbackReason: string | null;
+  categoryLabels: Record<string, string>;
   closing: { closedAt: string; closedThrough: string; closedBy: string | null } | null;
   members: MemberRow[];
   days: DayRate[];
@@ -223,7 +228,22 @@ export default function PaymentsPage() {
               )}
 
               <MemberBalances members={data.members} currentUserId={user?.id} totals={data.totals} />
-              <MealRateBreakdown days={data.days} totals={data.totals} rateMode={data.rateMode} />
+              <MemberCostBreakdown
+                members={data.members}
+                labels={data.categoryLabels}
+                byType={data.byType}
+                totals={data.totals}
+                currentUserId={user?.id}
+              />
+              <MealRateBreakdown
+                days={data.days}
+                totals={data.totals}
+                rateMode={data.rateMode}
+                effectiveRateMode={data.effectiveRateMode}
+                fallbackReason={data.rateModeFallbackReason}
+                members={data.members}
+                currentUserId={user?.id}
+              />
               <PaymentLog payments={data.payments} canManage={canManage} onRemove={remove} />
             </>
           )}
@@ -643,9 +663,134 @@ function MemberBalances({
   );
 }
 
-function MealRateBreakdown({ days, totals, rateMode }: { days: DayRate[]; totals: Totals; rateMode: string }) {
-  const daily = rateMode === 'DAILY';
+function MemberCostBreakdown({
+  members,
+  labels,
+  byType,
+  totals,
+  currentUserId
+}: {
+  members: MemberRow[];
+  labels: Record<string, string>;
+  byType: Record<string, number>;
+  totals: Totals;
+  currentUserId?: string;
+}) {
+  const types = Object.keys(byType)
+    .filter((code) => Math.abs(byType[code]) > 0.005)
+    .sort((a, b) => byType[b] - byType[a]);
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold">Who is charged what</h2>
+      <p className="mt-1 text-sm text-slate-500">
+        Every member&apos;s share of the month, split by cost type. &quot;Bazar bought&quot; is what they spent out of
+        their own pocket, which is why it is credited back to them in the balances above.
+      </p>
+
+      {members.length === 0 ? (
+        <p className="mt-4 text-slate-500">No members in this month.</p>
+      ) : (
+        <>
+          <div className="mt-4 hidden overflow-x-auto lg:block">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <th className="px-3 py-2">Member</th>
+                  <th className="px-3 py-2 text-right">Meals</th>
+                  <th className="px-3 py-2 text-right">Bazar bought</th>
+                  <th className="px-3 py-2 text-right">Meal share</th>
+                  {types.map((code) => (
+                    <th key={code} className="px-3 py-2 text-right">
+                      {labels[code] ?? code}
+                    </th>
+                  ))}
+                  <th className="px-3 py-2 text-right">Total charged</th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((m) => (
+                  <tr key={m.id} className="border-b border-slate-100 last:border-0">
+                    <td className="px-3 py-3 font-medium">
+                      {m.name}
+                      {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                    </td>
+                    <td className="px-3 py-3 text-right text-slate-600">{m.meals}</td>
+                    <td className="px-3 py-3 text-right font-medium text-green-700">{taka(m.bazarPaid)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.mealCost)}</td>
+                    {types.map((code) => (
+                      <td key={code} className="px-3 py-3 text-right text-slate-600">
+                        {taka(m.billShareByType?.[code] ?? 0)}
+                      </td>
+                    ))}
+                    <td className="px-3 py-3 text-right font-semibold">{taka(m.mealCost + m.billShare)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t-2 border-slate-200 font-semibold">
+                  <td className="px-3 py-3">Group total</td>
+                  <td className="px-3 py-3 text-right">{totals.meals}</td>
+                  <td className="px-3 py-3 text-right text-green-700">{taka(sum(members, (m) => m.bazarPaid))}</td>
+                  <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.mealCost))}</td>
+                  {types.map((code) => (
+                    <td key={code} className="px-3 py-3 text-right">
+                      {taka(byType[code])}
+                    </td>
+                  ))}
+                  <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.mealCost + m.billShare))}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <ul className="mt-4 space-y-3 lg:hidden">
+            {members.map((m) => (
+              <li key={m.id} className="rounded-2xl border border-slate-200 p-4">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="font-medium">
+                    {m.name}
+                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                  </p>
+                  <span className="text-sm font-semibold">{taka(m.mealCost + m.billShare)}</span>
+                </div>
+                <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <Field label="Meals" value={String(m.meals)} />
+                  <Field label="Bazar bought" value={taka(m.bazarPaid)} />
+                  <Field label="Meal share" value={taka(m.mealCost)} />
+                  {types.map((code) => (
+                    <Field key={code} label={labels[code] ?? code} value={taka(m.billShareByType?.[code] ?? 0)} />
+                  ))}
+                </dl>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MealRateBreakdown({
+  days,
+  totals,
+  rateMode,
+  effectiveRateMode,
+  fallbackReason,
+  members,
+  currentUserId
+}: {
+  days: DayRate[];
+  totals: Totals;
+  rateMode: string;
+  effectiveRateMode: string;
+  fallbackReason: string | null;
+  members: MemberRow[];
+  currentUserId?: string;
+}) {
+  const daily = effectiveRateMode === 'DAILY';
   const priced = days.filter((day) => day.meals > 0 || day.bazar > 0);
+  const bazarBuyers = members.filter((m) => m.bazarPaid > 0.005);
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -655,16 +800,25 @@ function MealRateBreakdown({ days, totals, rateMode }: { days: DayRate[]; totals
           {daily ? 'Priced day by day' : 'One rate for the month'}
         </span>
       </div>
+
       <p className="mt-1 text-sm text-slate-500">
-        {daily
-          ? 'Each day is priced on that day’s own bazar. Bazar booked on a day nobody ate is spread across the month’s meals so nothing goes uncharged.'
-          : `Month rate = ${taka(totals.bazar)} bazar ÷ ${totals.meals} meals = ${taka(totals.mealRate)} per meal.`}
+        Month rate = {taka(totals.bazar)} bazar ÷ {totals.meals} meals ={' '}
+        <span className="font-semibold text-slate-900">{taka(totals.mealRate)}</span> per meal.
       </p>
+
+      {fallbackReason === 'MEALS_WITHOUT_BAZAR' && rateMode === 'DAILY' && (
+        <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
+          <span className="font-semibold">Day-by-day pricing was not used this month.</span> {totals.unpricedMeals} meals
+          fell on days with no bazar recorded. Pricing each day on its own shopping would have charged those meals
+          nothing and made whoever ate on shopping days pay for everybody. The month&apos;s total bazar has been shared
+          across every meal instead.
+        </p>
+      )}
 
       {totals.unallocatedBazar > 0.005 && (
         <p className="mt-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
-          {taka(totals.unallocatedBazar)} of bazar fell on days with no meals. It has been shared across the month’s
-          meals rather than dropped.
+          {taka(totals.unallocatedBazar)} of bazar fell on days with no meals. It has been shared across the
+          month&apos;s meals rather than dropped.
         </p>
       )}
 
@@ -677,8 +831,9 @@ function MealRateBreakdown({ days, totals, rateMode }: { days: DayRate[]; totals
               <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
                 <th className="px-3 py-2">Day</th>
                 <th className="px-3 py-2 text-right">Meals</th>
-                <th className="px-3 py-2 text-right">Bazar</th>
-                <th className="px-3 py-2 text-right">{daily ? 'Rate that day' : 'Rate if priced daily'}</th>
+                <th className="px-3 py-2 text-right">Bazar spent</th>
+                <th className="px-3 py-2 text-right">Rate used</th>
+                <th className="px-3 py-2 text-right">Charged that day</th>
               </tr>
             </thead>
             <tbody>
@@ -687,12 +842,67 @@ function MealRateBreakdown({ days, totals, rateMode }: { days: DayRate[]; totals
                   <td className="px-3 py-2 font-medium">{day.date}</td>
                   <td className="px-3 py-2 text-right text-slate-600">{day.meals}</td>
                   <td className="px-3 py-2 text-right text-slate-600">{taka(day.bazar)}</td>
-                  <td className={`px-3 py-2 text-right ${daily ? 'font-semibold' : 'text-slate-500'}`}>
-                    {day.meals > 0 ? taka(day.rate) : '—'}
+                  <td className="px-3 py-2 text-right text-slate-600">{day.meals > 0 ? taka(day.rate) : '—'}</td>
+                  <td className="px-3 py-2 text-right font-medium">{day.meals > 0 ? taka(day.cost) : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
+                <td className="px-3 py-2">Total</td>
+                <td className="px-3 py-2 text-right">{totals.meals}</td>
+                <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>
+                <td className="px-3 py-2 text-right">{taka(totals.mealRate)}</td>
+                <td className="px-3 py-2 text-right">{taka(days.reduce((a, d) => a + d.cost, 0))}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+
+      <h3 className="mt-6 text-sm font-semibold">Bazar bought by each member</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        What each person spent on groceries this month, and what that contributes per meal the mess ate.
+      </p>
+
+      {bazarBuyers.length === 0 ? (
+        <p className="mt-3 text-sm text-slate-500">Nobody has recorded bazar this month yet.</p>
+      ) : (
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-100">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+                <th className="px-3 py-2">Member</th>
+                <th className="px-3 py-2 text-right">Bazar bought</th>
+                <th className="px-3 py-2 text-right">Share of bazar</th>
+                <th className="px-3 py-2 text-right">Per meal eaten</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bazarBuyers.map((m) => (
+                <tr key={m.id} className="border-t border-slate-100">
+                  <td className="px-3 py-2 font-medium">
+                    {m.name}
+                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                  </td>
+                  <td className="px-3 py-2 text-right font-medium text-green-700">{taka(m.bazarPaid)}</td>
+                  <td className="px-3 py-2 text-right text-slate-600">
+                    {totals.bazar > 0 ? `${Math.round((m.bazarPaid / totals.bazar) * 100)}%` : '—'}
+                  </td>
+                  <td className="px-3 py-2 text-right text-slate-600">
+                    {totals.meals > 0 ? taka(m.bazarPaid / totals.meals) : '—'}
                   </td>
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
+                <td className="px-3 py-2">Total</td>
+                <td className="px-3 py-2 text-right">{taka(sum(bazarBuyers, (m) => m.bazarPaid))}</td>
+                <td className="px-3 py-2 text-right">100%</td>
+                <td className="px-3 py-2 text-right">{taka(totals.mealRate)}</td>
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}

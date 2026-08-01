@@ -8,7 +8,13 @@ npm run dev          # in one terminal
 npm run test:e2e     # in another
 ```
 
-Latest run: **101 checks, 101 passing.**
+Latest run: **108 checks, 108 passing.**
+
+There is a second, narrower suite for the money rules:
+
+```bash
+npm run test:rate    # reproduces a reported meal-rate scenario end to end
+```
 
 ## What it covers
 
@@ -22,7 +28,7 @@ Latest run: **101 checks, 101 passing.**
 | Past-meal approvals | 13 | edit window opens, edit becomes a *request*, table unchanged until approved, group notified, window closes |
 | Expense categories | 9 | seeding, code derivation, duplicates, reserved `BAZAR`, XSS rejected, rename, delete |
 | Bazar & bills | 8 | equal split sums exactly, custom split must balance, unknown type rejected |
-| Settlement maths | 9 | shares tie to totals, due formula holds per member, grocery buyer credited, nothing unallocated |
+| Settlement maths | 16 | shares tie to totals, due formula holds per member, grocery buyer credited, nothing unallocated, per-type shares tie to each member's bill share and to the bills total, day charges add back to total bazar, no day with meals priced at zero |
 | Payments | 5 | recording, permissions, negative rejected, due drops by exactly the amount paid |
 | Month closing | 9 | close, double-close refused, carry-forward appears next month, reopen cancels it |
 | Closed groups | 7 | writes blocked, history readable, hidden from lists, visible with `includeInactive` |

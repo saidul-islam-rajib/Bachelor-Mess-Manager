@@ -44,7 +44,8 @@
     "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init",
     "backup:db": "node scripts/backup-db.js",
     "restore:db": "node scripts/restore-db.js",
-    "test:e2e": "node scripts/e2e-test.js"
+    "test:e2e": "node scripts/e2e-test.js",
+    "test:rate": "node scripts/check-meal-rate.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
