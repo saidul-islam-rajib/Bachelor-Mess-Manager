@@ -197,6 +197,25 @@ programmatic install prompt.
 - A proper offline screen instead of the browser's dinosaur
 - An in-app **"A new version is ready — Reload now"** banner after a deploy
 
+### iOS status bar and safe areas
+
+The installed app uses `apple-mobile-web-app-status-bar-style: default`, **not** `black-translucent`.
+
+`black-translucent` renders the web view *underneath* the iOS status bar. On a notched iPhone that puts the sticky
+header — logo, notification bell, profile menu, hamburger — behind the clock and Dynamic Island, where it cannot be
+tapped. It also leaves white status-bar text on a white header. `default` reserves the status bar so content starts
+below it.
+
+`viewport-fit=cover` is kept, and three safe-area utilities in `globals.css` handle the remaining edges:
+
+| Class | Applied to | Protects against |
+| --- | --- | --- |
+| `safe-top` | sticky header | status bar / notch overlap |
+| `safe-bottom` | footer | the iPhone home indicator |
+| `safe-x` | page wrapper | notch intrusion in landscape |
+
+If you ever switch the status bar style back to `black-translucent`, `safe-top` is what keeps the header reachable.
+
 ### What is deliberately *not* cached
 
 Money is never served stale. The service worker **never caches `/api/` responses**, so meals, balances and dues are
@@ -272,6 +291,8 @@ Budget $25 once for Google Play and $99/year for Apple, plus a Mac or macOS CI f
 | Install banner never appears | Not HTTPS, already installed, or previously dismissed | Check the URL scheme; clear `bp-install-dismissed` from localStorage |
 | iOS shows no install option | Not using Safari | Open in Safari |
 | Old version keeps loading after deploy | Service worker still serving the previous shell | The update banner appears within a minute; or DevTools → Application → Service Workers → Unregister |
+| Header unreachable under the iOS clock | `apple-mobile-web-app-status-bar-style` set to `black-translucent` | Use `default`, or add `safe-top` to the sticky header |
+| Bounce mail for `@example.com` | A test suite sent to a reserved test domain | Nothing to fix — the suite now refuses to run when SMTP is configured |
 | Tests fail on email domain | `EMAIL_REQUIRE_MX` is on | Start dev with `EMAIL_REQUIRE_MX=false` |
 
 ---

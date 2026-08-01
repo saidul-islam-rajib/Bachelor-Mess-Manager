@@ -51,10 +51,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   const impersonating = user?.impersonatedBy;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+    <div className="safe-x flex min-h-screen flex-col bg-slate-50 text-slate-900">
       <UpdateBanner />
       <InstallAppBanner />
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
+      <header className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
         {impersonating && (
           <div className="bg-amber-500 text-amber-950">
             <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-sm">
