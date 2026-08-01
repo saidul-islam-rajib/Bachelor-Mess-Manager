@@ -162,7 +162,7 @@ export async function closeMonth(options: {
       title: partial
         ? `${actorName} closed ${key} for ${targets.length} member${targets.length === 1 ? '' : 's'}`
         : `${actorName} closed ${key} for ${group.name}`,
-      body: `Balances are final up to ${throughDay}. Anything unpaid now shows as brought forward in ${nextMonthKey(key)}.`,
+      excerpt: `Balances are final up to ${throughDay}. Anything unpaid now shows as brought forward in ${nextMonthKey(key)}.`,
       link: ROUTES.payments,
       actorId
     },
@@ -195,7 +195,7 @@ export async function reopenMonth(closingId: string, actor: { id: string; name: 
     {
       type: NOTIFICATION_TYPES.MONTH_REOPENED,
       title: `${actor.name} reopened ${closing.monthKey} for ${closing.group.name}`,
-      body: 'Balances for that month can change again, and nothing carries forward until it is closed once more.',
+      excerpt: 'Balances for that month can change again, and nothing carries forward until it is closed once more.',
       link: ROUTES.payments,
       actorId: actor.id
     },

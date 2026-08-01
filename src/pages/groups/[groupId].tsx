@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useRouter } from 'next/router';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
-import { USER_ROLES } from '@/lib/constants';
+import { useConfirm } from '@/components/ui';
+import { GROUP_STATUS, USER_ROLES } from '@/lib/constants';
+import { strings } from '@/lib/i18n';
 
 type Member = { id: string; name: string; email: string };
 type GroupDetail = {
@@ -26,6 +28,7 @@ type SentInvitation = {
 export default function GroupPage() {
   const router = useRouter();
   const toast = useToast();
+  const confirm = useConfirm();
   const { user } = useCurrentUser();
   const groupId = Array.isArray(router.query.groupId) ? router.query.groupId[0] : router.query.groupId;
 
@@ -122,6 +125,40 @@ export default function GroupPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? 'Could not remove member.');
       toast.success(`${member.name} removed.`);
+      await loadGroup();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function toggleStatus() {
+    if (!group) return;
+
+    const deactivating = group.status === GROUP_STATUS.ACTIVE;
+    const accepted = await confirm({
+      title: deactivating
+        ? strings.groups.deactivateConfirm(group.name)
+        : strings.groups.activateConfirm(group.name),
+      message: deactivating ? strings.groups.deactivateMessage : strings.groups.activateMessage,
+      confirmLabel: deactivating ? strings.groups.deactivate : strings.groups.activate,
+      destructive: deactivating
+    });
+    if (!accepted) return;
+
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/groups/${group.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: deactivating ? GROUP_STATUS.INACTIVE : GROUP_STATUS.ACTIVE })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? strings.groups.statusUpdateFailed);
+      toast.success(
+        deactivating ? strings.groups.deactivated(group.name) : strings.groups.activated(group.name)
+      );
       await loadGroup();
     } catch (err) {
       toast.error((err as Error).message);
@@ -234,6 +271,35 @@ export default function GroupPage() {
 
             {canManage && (
               <>
+              <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <h2 className="text-lg font-semibold sm:text-xl">{strings.groups.statusTitle}</h2>
+                <p className="mt-1 text-sm text-slate-500">{strings.groups.statusHint}</p>
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-sm ${
+                      group.status === GROUP_STATUS.ACTIVE
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}
+                  >
+                    {group.status}
+                  </span>
+                  <button
+                    onClick={toggleStatus}
+                    disabled={busy}
+                    className={`rounded-full px-5 py-2 text-sm transition-colors disabled:opacity-50 ${
+                      group.status === GROUP_STATUS.ACTIVE
+                        ? 'border border-red-200 text-red-600 hover:bg-red-50'
+                        : 'bg-slate-900 text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    {group.status === GROUP_STATUS.ACTIVE
+                      ? strings.groups.deactivate
+                      : strings.groups.activate}
+                  </button>
+                </div>
+              </div>
+
                 <MealWeightsCard
                   groupId={group.id}
                   initial={{

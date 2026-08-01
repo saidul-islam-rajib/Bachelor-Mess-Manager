@@ -30,26 +30,11 @@ CREATE TABLE [dbo].[ExpenseCategory] (
     CONSTRAINT [ExpenseCategory_groupId_code_key] UNIQUE NONCLUSTERED ([groupId],[code])
 );
 
--- CreateTable
-CREATE TABLE [dbo].[Notification] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [actorId] NVARCHAR(1000),
-    [groupId] NVARCHAR(1000),
-    [type] NVARCHAR(1000) NOT NULL,
-    [title] NVARCHAR(1000) NOT NULL,
-    [body] NVARCHAR(1000),
-    [link] NVARCHAR(1000),
-    [readAt] DATETIME2,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Notification_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Notification_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Notification_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Notification_pkey] PRIMARY KEY CLUSTERED ([id])
-);
+-- AlterTable
+ALTER TABLE [dbo].[Notification] ADD [title] NVARCHAR(1000);
+
+-- CreateIndex
+CREATE NONCLUSTERED INDEX [Notification_groupId_createdAt_idx] ON [dbo].[Notification]([groupId], [createdAt]);
 
 -- CreateTable
 CREATE TABLE [dbo].[MealEditWindow] (
@@ -144,12 +129,6 @@ CREATE TABLE [dbo].[ClosingLine] (
 CREATE NONCLUSTERED INDEX [ExpenseCategory_groupId_archivedAt_idx] ON [dbo].[ExpenseCategory]([groupId], [archivedAt]);
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Notification_userId_readAt_createdAt_idx] ON [dbo].[Notification]([userId], [readAt], [createdAt]);
-
--- CreateIndex
-CREATE NONCLUSTERED INDEX [Notification_groupId_createdAt_idx] ON [dbo].[Notification]([groupId], [createdAt]);
-
--- CreateIndex
 CREATE NONCLUSTERED INDEX [MealEditWindow_expiresAt_idx] ON [dbo].[MealEditWindow]([expiresAt]);
 
 -- CreateIndex
@@ -166,15 +145,6 @@ CREATE NONCLUSTERED INDEX [ClosingLine_userId_idx] ON [dbo].[ClosingLine]([userI
 
 -- AddForeignKey
 ALTER TABLE [dbo].[ExpenseCategory] ADD CONSTRAINT [ExpenseCategory_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE CASCADE ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE [dbo].[Notification] ADD CONSTRAINT [Notification_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE [dbo].[Notification] ADD CONSTRAINT [Notification_actorId_fkey] FOREIGN KEY ([actorId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
-
--- AddForeignKey
-ALTER TABLE [dbo].[Notification] ADD CONSTRAINT [Notification_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
 ALTER TABLE [dbo].[MealEditWindow] ADD CONSTRAINT [MealEditWindow_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;

@@ -317,7 +317,20 @@ const en = {
     noGroups: 'No groups yet.',
     memberCount: (count: number) => `${count} member${count === 1 ? '' : 's'}`,
     inactive: 'inactive',
-    orderSaveFailed: 'Could not save the new order.'
+    orderSaveFailed: 'Could not save the new order.',
+    statusTitle: 'Group status',
+    statusHint:
+      'Deactivating closes the mess. Everything stays on record and you can bring it back at any time.',
+    activate: 'Activate',
+    deactivate: 'Deactivate',
+    activateConfirm: (name: string) => `Activate "${name}" again?`,
+    deactivateConfirm: (name: string) => `Deactivate "${name}"?`,
+    activateMessage: 'The group goes back to normal for everyone in it.',
+    deactivateMessage: 'Members, meals, bazar and bills stay on record. You can activate the group again later.',
+    activated: (name: string) => `"${name}" is active again.`,
+    deactivated: (name: string) => `"${name}" is now inactive.`,
+    statusUpdateFailed: 'Could not update the group status.',
+    onlySupervisorOrAdmin: 'Only this group\'s supervisor or an admin can update it.'
   },
   members: {
     title: 'Members',
@@ -553,7 +566,11 @@ const en = {
       autoApproveHint:
         'When on, a new member can sign in as soon as they set their password, and nothing appears in this queue. Turn it off if you want to review every account yourself.',
       autoApproveOnNotice: 'Auto-approval is on, so new registrations do not wait here.',
-      autoApproveOffNotice: 'Auto-approval is off. Every new account waits for your decision.'
+      autoApproveOffNotice: 'Auto-approval is off. Every new account waits for your decision.',
+      recentTitle: 'Recent registrations',
+      recentHint: 'Everyone who signed up lately, newest first, whatever their status.',
+      recentEmpty: 'Nobody has registered yet.',
+      registeredAt: 'Registered'
     },
     users: {
       title: 'Users',

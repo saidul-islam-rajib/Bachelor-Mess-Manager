@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, unauthorized } from '@/lib/http';
+import { NOTIFICATION_TYPES } from '@/lib/constants';
+import { notifyMentions } from '@/lib/notifications';
 import { withAudit } from '@/lib/with-audit';
 
 const MAX_LENGTH = 500;
@@ -50,6 +52,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       userId: sessionUser.id,
       text: value
     }
+  });
+
+  await notifyMentions({
+    text: value,
+    actorId: sessionUser.id,
+    groupId: expense.groupId,
+    type: NOTIFICATION_TYPES.MENTION_EXPENSE_COMMENT
   });
 
   return created(res, {

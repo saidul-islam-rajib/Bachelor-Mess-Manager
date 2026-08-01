@@ -115,7 +115,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         status === REQUEST_STATUS.APPROVED
           ? `Your meal change for ${day} was approved`
           : `Your meal change for ${day} was declined`,
-      body: decisionNote ?? `${describeChange(from, to)} — decided by ${sessionUser.name}.`,
+      excerpt: decisionNote ?? `${describeChange(from, to)} — decided by ${sessionUser.name}.`,
       link: ROUTES.meals,
       groupId: request.groupId,
       actorId: sessionUser.id
@@ -127,7 +127,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         {
           type: NOTIFICATION_TYPES.MEAL_CHANGED_BY_SUPERVISOR,
           title: `${request.user.name}’s meals for ${day} were changed`,
-          body: `${describeChange(from, to)}, approved by ${sessionUser.name}. This changes the meal rate and everyone’s share for ${request.group.name}.`,
+          excerpt: `${describeChange(from, to)}, approved by ${sessionUser.name}. This changes the meal rate and everyone’s share for ${request.group.name}.`,
           link: ROUTES.meals,
           actorId: sessionUser.id
         },

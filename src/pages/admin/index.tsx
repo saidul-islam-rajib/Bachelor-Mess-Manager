@@ -32,6 +32,7 @@ import {
 import { api, errorMessage } from '@/lib/api-client';
 import { paginationConfig } from '@/config';
 import {
+  GROUP_STATUS,
   GROUP_STATUS_VALUES,
   USER_ROLES,
   USER_ROLE_VALUES,
@@ -105,6 +106,7 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key'];
 
 const ALL_OPTION = '';
+const RECENT_REGISTRATIONS = 10;
 
 function toOptions(values: string[], labeller: (value: string) => string): SelectOption[] {
   return values.map((value) => ({ value, label: labeller(value) }));
@@ -188,6 +190,8 @@ function RegistrationsPanel() {
   const [autoApprove, setAutoApprove] = useState(true);
   const [policyLoading, setPolicyLoading] = useState(true);
   const [savingPolicy, setSavingPolicy] = useState(false);
+  const [recent, setRecent] = useState<AdminUser[]>([]);
+  const [recentLoading, setRecentLoading] = useState(true);
 
   const loadPolicy = useCallback(async () => {
     setPolicyLoading(true);
@@ -216,6 +220,20 @@ function RegistrationsPanel() {
     }
   }, [page, toast]);
 
+  const loadRecent = useCallback(async () => {
+    setRecentLoading(true);
+    try {
+      const data = await api.get<UsersResponse>('/api/users', {
+        query: { page: 1, pageSize: RECENT_REGISTRATIONS, sortBy: 'createdAt', sortDir: 'desc' }
+      });
+      setRecent(data.users);
+    } catch (error) {
+      toast.error(errorMessage(error, strings.errors.loadFailed(strings.admin.registrations.recentTitle)));
+    } finally {
+      setRecentLoading(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
     loadPolicy();
   }, [loadPolicy]);
@@ -223,6 +241,10 @@ function RegistrationsPanel() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    loadRecent();
+  }, [loadRecent]);
 
   async function saveAutoApprove(checked: boolean) {
     setSavingPolicy(true);
@@ -249,7 +271,7 @@ function RegistrationsPanel() {
           ? strings.admin.registrations.approved(target.name)
           : strings.admin.registrations.rejected(target.name)
       );
-      await load();
+      await Promise.all([load(), loadRecent()]);
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {
@@ -287,6 +309,27 @@ function RegistrationsPanel() {
     }
   ];
 
+  const recentColumns: Column<AdminUser>[] = [
+    {
+      key: 'name',
+      header: strings.common.name,
+      render: (row) => (
+        <div>
+          <p className="font-medium">{row.name}</p>
+          <p className="text-xs text-slate-500">{row.email}</p>
+        </div>
+      )
+    },
+    { key: 'role', header: strings.common.role, render: (row) => roleLabel(row.role) },
+    { key: 'status', header: strings.common.status, render: (row) => <StatusBadge status={row.status} /> },
+    {
+      key: 'createdAt',
+      header: strings.admin.registrations.registeredAt,
+      align: 'right',
+      render: (row) => <span className="text-xs text-slate-600">{formatDateTime(row.createdAt)}</span>
+    }
+  ];
+
   return (
     <div className="space-y-4">
       <Card>
@@ -321,6 +364,23 @@ function RegistrationsPanel() {
             emptyDescription=""
           />
           {meta && <Pagination meta={meta} onPageChange={setPage} disabled={loading} />}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title={strings.admin.registrations.recentTitle}
+          description={strings.admin.registrations.recentHint}
+        />
+        <div className="mt-4">
+          <DataTable
+            columns={recentColumns}
+            rows={recent}
+            rowKey={(row) => row.id}
+            loading={recentLoading}
+            emptyTitle={strings.admin.registrations.recentEmpty}
+            emptyDescription=""
+          />
         </div>
       </Card>
     </div>
@@ -738,6 +798,31 @@ function GroupsPanel() {
     load();
   }, [load]);
 
+  async function toggleGroupStatus(group: AdminGroup) {
+    const deactivating = group.status === GROUP_STATUS.ACTIVE;
+    const accepted = await confirm({
+      title: deactivating
+        ? strings.groups.deactivateConfirm(group.name)
+        : strings.groups.activateConfirm(group.name),
+      message: deactivating ? strings.groups.deactivateMessage : strings.groups.activateMessage,
+      confirmLabel: deactivating ? strings.groups.deactivate : strings.groups.activate,
+      destructive: deactivating
+    });
+    if (!accepted) return;
+
+    try {
+      await api.patch(`/api/groups/${group.id}`, {
+        status: deactivating ? GROUP_STATUS.INACTIVE : GROUP_STATUS.ACTIVE
+      });
+      toast.success(
+        deactivating ? strings.groups.deactivated(group.name) : strings.groups.activated(group.name)
+      );
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error, strings.groups.statusUpdateFailed));
+    }
+  }
+
   async function createGroup() {
     setCreating(true);
     try {
@@ -783,9 +868,18 @@ function GroupsPanel() {
       header: strings.common.actions,
       align: 'right',
       render: (row) => (
-        <Button size="sm" variant="secondary" onClick={() => setManaging(row)}>
-          {strings.admin.groups.manageMembers}
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setManaging(row)}>
+            {strings.admin.groups.manageMembers}
+          </Button>
+          <Button
+            size="sm"
+            variant={row.status === GROUP_STATUS.ACTIVE ? 'danger' : 'secondary'}
+            onClick={() => toggleGroupStatus(row)}
+          >
+            {row.status === GROUP_STATUS.ACTIVE ? strings.groups.deactivate : strings.groups.activate}
+          </Button>
+        </div>
       )
     }
   ];

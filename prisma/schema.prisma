@@ -235,12 +235,12 @@ model Notification {
   userId        String
   actor         User?     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   actorId       String?
+  type          String
   group         Group?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String?
-  type          String
-  title         String
-  body          String?
-  link          String?
+  title         String?
+  excerpt       String?
+  link          String
   readAt        DateTime?
   createdAt     DateTime  @default(now())
   createdById   String?
@@ -250,7 +250,8 @@ model Notification {
   publishedAt   DateTime?
   unpublishedAt DateTime?
 
-  @@index([userId, readAt, createdAt])
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
   @@index([groupId, createdAt])
 }
 

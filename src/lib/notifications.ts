@@ -1,36 +1,158 @@
 import { prisma } from '@/lib/prisma';
 import { appConfig } from '@/config';
+import { flattenMentions, mentionIdsIn } from '@/lib/mentions';
 import { isMailConfigured, sendMail, type MailMessage } from '@/lib/mailer';
+import { ROUTES } from '@/lib/routes';
+import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/constants';
 import { escapeHtml } from '@/lib/xss';
+
+const MAX_RECIPIENTS = 10;
+const EXCERPT_LENGTH = 160;
+const FEED_SIZE = 20;
+
+export type NotificationFeedItem = {
+  id: string;
+  type: string;
+  actorId: string | null;
+  actorName: string;
+  groupId: string | null;
+  groupName: string | null;
+  title: string | null;
+  excerpt: string;
+  link: string;
+  read: boolean;
+  createdAt: string;
+};
 
 export type NotificationInput = {
   type: string;
   title: string;
-  body?: string | null;
-  link?: string | null;
+  excerpt?: string | null;
+  link: string;
   groupId?: string | null;
   actorId?: string | null;
 };
 
 export type NotificationRecipient = { id: string; name: string; email: string };
 
-const MAX_BODY_LENGTH = 900;
+function truncate(text: string) {
+  return text.length > EXCERPT_LENGTH ? `${text.slice(0, EXCERPT_LENGTH - 1)}…` : text;
+}
 
-function trimBody(body?: string | null): string | null {
-  if (!body) return null;
-  const clean = body.trim();
+export function mentionLink(type: NotificationType, groupId: string) {
+  const page = type === NOTIFICATION_TYPES.MENTION_EXPENSE_COMMENT ? ROUTES.expenses : ROUTES.comments;
+  return `${page}?group=${groupId}`;
+}
+
+async function eligibleRecipients(groupId: string, userIds: string[]) {
+  const [group, memberships] = await Promise.all([
+    prisma.group.findUnique({ where: { id: groupId }, select: { supervisorId: true } }),
+    prisma.membership.findMany({
+      where: { groupId, isActive: true, userId: { in: userIds } },
+      select: { userId: true }
+    })
+  ]);
+
+  const allowed = new Set(memberships.map((membership) => membership.userId));
+  if (group && userIds.includes(group.supervisorId)) allowed.add(group.supervisorId);
+
+  return userIds.filter((id) => allowed.has(id));
+}
+
+export async function notifyMentions({
+  text,
+  actorId,
+  groupId,
+  type
+}: {
+  text: string;
+  actorId: string;
+  groupId: string;
+  type: NotificationType;
+}) {
+  try {
+    const mentioned = [...new Set(mentionIdsIn(text))].filter((id) => id !== actorId).slice(0, MAX_RECIPIENTS);
+    if (mentioned.length === 0) return;
+
+    const recipients = await eligibleRecipients(groupId, mentioned);
+    if (recipients.length === 0) return;
+
+    await prisma.notification.createMany({
+      data: recipients.map((userId) => ({
+        userId,
+        actorId,
+        groupId,
+        type,
+        excerpt: text.replace(/\s+/g, ' ').trim(),
+        link: mentionLink(type, groupId)
+      }))
+    });
+  } catch {
+    return;
+  }
+}
+
+export async function notificationFeed(userId: string): Promise<{
+  notifications: NotificationFeedItem[];
+  unreadCount: number;
+}> {
+  const [rows, unreadCount] = await Promise.all([
+    prisma.notification.findMany({
+      where: { userId },
+      include: {
+        actor: { select: { id: true, name: true } },
+        group: { select: { id: true, name: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: FEED_SIZE
+    }),
+    prisma.notification.count({ where: { userId, readAt: null } })
+  ]);
+
+  const mentioned = new Set<string>();
+  for (const row of rows) {
+    for (const id of mentionIdsIn(row.excerpt ?? '')) mentioned.add(id);
+  }
+
+  const mentionedUsers = mentioned.size
+    ? await prisma.user.findMany({ where: { id: { in: [...mentioned] } }, select: { id: true, name: true } })
+    : [];
+  const names: Record<string, string> = {};
+  for (const user of mentionedUsers) names[user.id] = user.name;
+
+  return {
+    notifications: rows.map((row) => ({
+      id: row.id,
+      type: row.type,
+      actorId: row.actor?.id ?? null,
+      actorName: row.actor?.name ?? 'Someone',
+      groupId: row.group?.id ?? null,
+      groupName: row.group?.name ?? null,
+      title: row.title,
+      excerpt: truncate(flattenMentions(row.excerpt ?? '', names)),
+      link: row.link,
+      read: row.readAt !== null,
+      createdAt: row.createdAt.toISOString()
+    })),
+    unreadCount
+  };
+}
+
+function trimExcerpt(text?: string | null): string | null {
+  if (!text) return null;
+  const clean = text.replace(/\s+/g, ' ').trim();
   if (!clean) return null;
-  return clean.length > MAX_BODY_LENGTH ? `${clean.slice(0, MAX_BODY_LENGTH - 1)}…` : clean;
+  return clean.length > 900 ? `${clean.slice(0, 899)}…` : clean;
 }
 
 export function notificationEmail(recipientName: string, input: NotificationInput, url: string | null): MailMessage {
-  const body = trimBody(input.body);
+  const excerpt = trimExcerpt(input.excerpt);
 
   const text = [
     `Hello ${recipientName},`,
     '',
     input.title,
-    ...(body ? ['', body] : []),
+    ...(excerpt ? ['', excerpt] : []),
     ...(url ? ['', url] : []),
     '',
     appConfig.name
@@ -41,7 +163,7 @@ export function notificationEmail(recipientName: string, input: NotificationInpu
   <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:32px">
     <h1 style="margin:0 0 8px;font-size:18px">${escapeHtml(appConfig.name)}</h1>
     <p style="margin:0 0 16px;color:#0f172a;font-size:15px;font-weight:600">${escapeHtml(input.title)}</p>
-    ${body ? `<p style="margin:0 0 24px;color:#475569;font-size:14px;line-height:1.6">${escapeHtml(body)}</p>` : ''}
+    ${excerpt ? `<p style="margin:0 0 24px;color:#475569;font-size:14px;line-height:1.6">${escapeHtml(excerpt)}</p>` : ''}
     ${
       url
         ? `<a href="${escapeHtml(url)}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:10px 22px;border-radius:999px;font-size:14px">Open ${escapeHtml(appConfig.name)}</a>`
@@ -54,8 +176,7 @@ export function notificationEmail(recipientName: string, input: NotificationInpu
   return { to: '', subject: input.title, text, html };
 }
 
-function absoluteUrl(link?: string | null): string | null {
-  if (!link) return null;
+function absoluteUrl(link: string): string | null {
   if (/^https?:\/\//i.test(link)) return link;
   const base = (process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? '').replace(/\/$/, '');
   return base ? `${base}${link.startsWith('/') ? link : `/${link}`}` : null;
@@ -73,8 +194,8 @@ export async function createNotifications(recipientIds: string[], input: Notific
       groupId: input.groupId ?? null,
       type: input.type,
       title: input.title,
-      body: trimBody(input.body),
-      link: input.link ?? null,
+      excerpt: trimExcerpt(input.excerpt),
+      link: input.link,
       publishedAt: now
     }))
   });
@@ -98,7 +219,7 @@ export async function notifyUsers(
   options: { email?: boolean } = {}
 ): Promise<number> {
   const count = await createNotifications(
-    recipients.map((r) => r.id),
+    recipients.map((recipient) => recipient.id),
     input
   );
   if (options.email !== false) deliverEmails(recipients, input);
@@ -109,15 +230,16 @@ export async function groupAudience(
   groupId: string,
   options: { excludeUserId?: string } = {}
 ): Promise<NotificationRecipient[]> {
-  const memberships = await prisma.membership.findMany({
-    where: { groupId, isActive: true },
-    select: { user: { select: { id: true, name: true, email: true } } }
-  });
-
-  const group = await prisma.group.findUnique({
-    where: { id: groupId },
-    select: { supervisor: { select: { id: true, name: true, email: true } } }
-  });
+  const [memberships, group] = await Promise.all([
+    prisma.membership.findMany({
+      where: { groupId, isActive: true },
+      select: { user: { select: { id: true, name: true, email: true } } }
+    }),
+    prisma.group.findUnique({
+      where: { id: groupId },
+      select: { supervisor: { select: { id: true, name: true, email: true } } }
+    })
+  ]);
 
   const byId = new Map<string, NotificationRecipient>();
   for (const membership of memberships) byId.set(membership.user.id, membership.user);

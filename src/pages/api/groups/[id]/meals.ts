@@ -128,7 +128,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           {
             type: NOTIFICATION_TYPES.MEAL_CHANGED_BY_SUPERVISOR,
             title: `${sessionUser.name} changed ${whose} meals for ${body.date}`,
-            body: `${describeChange(previous, next)}. This changes the meal rate and everyone’s share for ${group.name}.`,
+            excerpt: `${describeChange(previous, next)}. This changes the meal rate and everyone’s share for ${group.name}.`,
             link: ROUTES.meals,
             actorId: sessionUser.id
           },
@@ -168,7 +168,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         {
           type: NOTIFICATION_TYPES.MEAL_CHANGED_BY_SUPERVISOR,
           title: `${sessionUser.name} changed their meals for ${body.date}`,
-          body: `${describeChange(previous, next)}. This changes the meal rate and everyone’s share for ${group.name}.`,
+          excerpt: `${describeChange(previous, next)}. This changes the meal rate and everyone’s share for ${group.name}.`,
           link: ROUTES.meals,
           actorId: sessionUser.id
         },
@@ -230,7 +230,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       await notifyUsers([supervisor], {
         type: NOTIFICATION_TYPES.MEAL_CHANGE_REQUESTED,
         title: `${sessionUser.name} asked to change meals for ${body.date}`,
-        body: `${describeChange(previous, next)}. Nothing changes in ${group.name} until you approve it on the meals page.`,
+        excerpt: `${describeChange(previous, next)}. Nothing changes in ${group.name} until you approve it on the meals page.`,
         link: ROUTES.meals,
         groupId,
         actorId: sessionUser.id
