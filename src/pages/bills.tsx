@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
-import { BILL_TYPES, EXPENSE_TYPE_LABELS, SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
+import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import { todayKey } from '@/lib/month';
 
 type Share = { userId: string; userName: string; amount: number };
@@ -20,9 +20,21 @@ type Bill = {
   shares: Share[];
 };
 
+type Category = {
+  id: string;
+  code: string;
+  label: string;
+  isSystem: boolean;
+  sortOrder: number;
+  archived: boolean;
+  inUse: number;
+};
+
 type BillsData = {
   canManage: boolean;
   currentUserId: string;
+  categories: Category[];
+  categoryLabels: Record<string, string>;
   bills: Bill[];
   members: Member[];
   totals: {
@@ -91,7 +103,8 @@ export default function BillsPage() {
   }
 
   async function remove(bill: Bill) {
-    if (!window.confirm(`Delete this ${EXPENSE_TYPE_LABELS[bill.type] ?? bill.type} bill of ${taka(bill.amount)}?`)) {
+    const label = data?.categoryLabels[bill.type] ?? bill.type;
+    if (!window.confirm(`Delete this ${label} bill of ${taka(bill.amount)}?`)) {
       return;
     }
     try {
@@ -138,9 +151,20 @@ export default function BillsPage() {
                 <Stat label="Your share" value={taka(myShare)} />
               </div>
 
-              <Breakdown byType={data.totals.byType} total={data.totals.total} />
+              <Breakdown byType={data.totals.byType} labels={data.categoryLabels} total={data.totals.total} />
 
-              {canManage && <AddBillForm groupId={groupId} members={data.members} month={month} onSaved={load} />}
+              {canManage && (
+                <>
+                  <CategoryManager groupId={groupId} categories={data.categories} onChanged={load} />
+                  <AddBillForm
+                    groupId={groupId}
+                    members={data.members}
+                    categories={data.categories}
+                    month={month}
+                    onSaved={load}
+                  />
+                </>
+              )}
 
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -160,6 +184,7 @@ export default function BillsPage() {
                           key={bill.id}
                           bill={bill}
                           members={data.members}
+                          categories={data.categories}
                           onCancel={() => setEditing(null)}
                           onSaved={async () => {
                             setEditing(null);
@@ -170,6 +195,7 @@ export default function BillsPage() {
                         <BillRow
                           key={bill.id}
                           bill={bill}
+                          label={data.categoryLabels[bill.type] ?? bill.type}
                           currentUserId={data.currentUserId}
                           canManage={canManage}
                           onEdit={() => setEditing(bill.id)}
@@ -189,8 +215,19 @@ export default function BillsPage() {
   );
 }
 
-function Breakdown({ byType, total }: { byType: Record<string, number>; total: number }) {
-  const rows = BILL_TYPES.map((t) => ({ ...t, amount: byType[t.value] ?? 0 })).filter((r) => r.amount > 0);
+function Breakdown({
+  byType,
+  labels,
+  total
+}: {
+  byType: Record<string, number>;
+  labels: Record<string, string>;
+  total: number;
+}) {
+  const rows = Object.entries(byType)
+    .map(([code, amount]) => ({ value: code, label: labels[code] ?? code, amount }))
+    .filter((r) => r.amount > 0)
+    .sort((a, b) => b.amount - a.amount);
 
   if (rows.length === 0) return null;
 
@@ -221,6 +258,7 @@ function Breakdown({ byType, total }: { byType: Record<string, number>; total: n
 
 function BillRow({
   bill,
+  label,
   currentUserId,
   canManage,
   onEdit,
@@ -228,6 +266,7 @@ function BillRow({
   onDelete
 }: {
   bill: Bill;
+  label: string;
   currentUserId: string;
   canManage: boolean;
   onEdit: () => void;
@@ -242,7 +281,7 @@ function BillRow({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold">{EXPENSE_TYPE_LABELS[bill.type] ?? bill.type}</h3>
+            <h3 className="font-semibold">{label}</h3>
             <span
               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                 bill.isReceived ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
@@ -319,8 +358,8 @@ function BillRow({
   );
 }
 
-function useBillForm(initial?: Bill, members: Member[] = []) {
-  const [type, setType] = useState(initial?.type ?? BILL_TYPES[0].value);
+function useBillForm(initial: Bill | undefined, members: Member[], categories: Category[]) {
+  const [type, setType] = useState(initial?.type ?? categories[0]?.code ?? '');
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
   const [date, setDate] = useState(initial?.date ?? todayKey());
   const [note, setNote] = useState(initial?.note ?? '');
@@ -386,9 +425,12 @@ function useBillForm(initial?: Bill, members: Member[] = []) {
         <label className="block">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Cost type</span>
           <select value={type} onChange={(e) => setType(e.target.value)} className="app-select mt-1">
-            {BILL_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
+            {initial && !categories.some((c) => c.code === initial.type) && (
+              <option value={initial.type}>{initial.type} (retired)</option>
+            )}
+            {categories.map((category) => (
+              <option key={category.code} value={category.code}>
+                {category.label}
               </option>
             ))}
           </select>
@@ -532,14 +574,175 @@ function useBillForm(initial?: Bill, members: Member[] = []) {
   return { fields, body };
 }
 
+function CategoryManager({
+  groupId,
+  categories,
+  onChanged
+}: {
+  groupId: string;
+  categories: Category[];
+  onChanged: () => Promise<void>;
+}) {
+  const toast = useToast();
+  const [open, setOpen] = useState(false);
+  const [label, setLabel] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  async function add(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!label.trim()) return;
+
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? 'Could not add that cost type.');
+      toast.success(`"${data.category.label}" added.`);
+      setLabel('');
+      await onChanged();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(category: Category) {
+    const message =
+      category.inUse > 0
+        ? `"${category.label}" is used by ${category.inUse} bill${category.inUse === 1 ? '' : 's'}. It will be hidden from the dropdown but those bills keep their label. Continue?`
+        : `Remove "${category.label}" from the cost type list?`;
+    if (!window.confirm(message)) return;
+
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/expense-categories/${category.id}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? 'Could not remove that cost type.');
+      toast.success(data.archived ? `"${category.label}" hidden from new bills.` : `"${category.label}" removed.`);
+      await onChanged();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function rename(category: Category) {
+    const next = window.prompt('Rename this cost type', category.label);
+    if (next === null || next.trim() === category.label) return;
+
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/expense-categories/${category.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: next })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? 'Could not rename that cost type.');
+      toast.success('Renamed.');
+      await onChanged();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="w-full rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50"
+      >
+        Manage cost types ({categories.length})
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-semibold">Cost types</h2>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-sm text-slate-500 hover:text-slate-900"
+        >
+          Done
+        </button>
+      </div>
+      <p className="mt-1 text-sm text-slate-500">
+        These are the options in the &quot;Record a bill&quot; dropdown for this mess. A type already used by a bill is
+        hidden rather than deleted, so past bills keep their label.
+      </p>
+
+      <ul className="mt-4 flex flex-wrap gap-2">
+        {categories.map((category) => (
+          <li
+            key={category.id}
+            className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 pl-3 pr-1.5 text-sm"
+          >
+            <span className="font-medium">{category.label}</span>
+            {category.inUse > 0 && <span className="text-xs text-slate-400">{category.inUse}</span>}
+            <button
+              type="button"
+              onClick={() => rename(category)}
+              disabled={busy}
+              aria-label={`Rename ${category.label}`}
+              className="rounded-full px-1.5 text-xs text-slate-500 hover:text-slate-900 disabled:opacity-50"
+            >
+              edit
+            </button>
+            <button
+              type="button"
+              onClick={() => remove(category)}
+              disabled={busy}
+              aria-label={`Remove ${category.label}`}
+              className="rounded-full bg-white px-1.5 text-slate-400 hover:text-red-600 disabled:opacity-50"
+            >
+              ×
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <form onSubmit={add} className="mt-4 flex flex-wrap gap-2">
+        <input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          maxLength={40}
+          placeholder="Add a cost type, e.g. Gas cylinder"
+          className="min-w-0 flex-1 rounded-full border border-slate-300 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-slate-900 focus:bg-white"
+        />
+        <button
+          type="submit"
+          disabled={busy || !label.trim()}
+          className="rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+        >
+          Add
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function AddBillForm({
   groupId,
   members,
+  categories,
   month,
   onSaved
 }: {
   groupId: string;
   members: Member[];
+  categories: Category[];
   month: string;
   onSaved: () => Promise<void>;
 }) {
@@ -547,7 +750,7 @@ function AddBillForm({
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const { fields, body } = useBillForm(undefined, members);
+  const { fields, body } = useBillForm(undefined, members, categories);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -613,17 +816,19 @@ function AddBillForm({
 function EditBill({
   bill,
   members,
+  categories,
   onCancel,
   onSaved
 }: {
   bill: Bill;
   members: Member[];
+  categories: Category[];
   onCancel: () => void;
   onSaved: () => Promise<void>;
 }) {
   const toast = useToast();
   const [saving, setSaving] = useState(false);
-  const { fields, body } = useBillForm(bill, members);
+  const { fields, body } = useBillForm(bill, members, categories);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

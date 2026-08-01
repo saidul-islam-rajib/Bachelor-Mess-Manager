@@ -30,6 +30,18 @@ export function containsXss(value: unknown): boolean {
   return XSS_PATTERNS.some((pattern) => pattern.test(value) || pattern.test(decoded));
 }
 
+const HTML_ESCAPES: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+};
+
+export function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, (char) => HTML_ESCAPES[char]);
+}
+
 export function findXssField(fields: Record<string, unknown>): string | null {
   for (const [key, value] of Object.entries(fields)) {
     if (containsXss(value)) return key;

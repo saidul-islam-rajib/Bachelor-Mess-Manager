@@ -14,6 +14,8 @@ type GroupDetail = {
   mealWeightBreakfast: number;
   mealWeightLunch: number;
   mealWeightDinner: number;
+  mealRateMode: string;
+  carryForwardEnabled: boolean;
 };
 type SentInvitation = {
   id: string;
@@ -231,15 +233,23 @@ export default function GroupPage() {
             )}
 
             {canManage && (
-              <MealWeightsCard
-                groupId={group.id}
-                initial={{
-                  breakfast: group.mealWeightBreakfast,
-                  lunch: group.mealWeightLunch,
-                  dinner: group.mealWeightDinner
-                }}
-                onSaved={loadGroup}
-              />
+              <>
+                <MealWeightsCard
+                  groupId={group.id}
+                  initial={{
+                    breakfast: group.mealWeightBreakfast,
+                    lunch: group.mealWeightLunch,
+                    dinner: group.mealWeightDinner
+                  }}
+                  onSaved={loadGroup}
+                />
+                <AccountingCard
+                  groupId={group.id}
+                  rateMode={group.mealRateMode}
+                  carryForwardEnabled={group.carryForwardEnabled}
+                  onSaved={loadGroup}
+                />
+              </>
             )}
           </>
         ) : (
@@ -247,6 +257,84 @@ export default function GroupPage() {
         )}
       </section>
     </main>
+  );
+}
+
+function AccountingCard({
+  groupId,
+  rateMode,
+  carryForwardEnabled,
+  onSaved
+}: {
+  groupId: string;
+  rateMode: string;
+  carryForwardEnabled: boolean;
+  onSaved: () => void;
+}) {
+  const toast = useToast();
+  const [saving, setSaving] = useState(false);
+
+  async function patch(body: Record<string, unknown>, message: string) {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error ?? 'Could not save that setting.');
+      toast.success(message);
+      onSaved();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold sm:text-xl">How costs are worked out</h2>
+      <p className="mt-1 text-sm text-slate-500">
+        These two settings decide how the meal rate is priced and what happens to unpaid balances at month end.
+      </p>
+
+      <label className="mt-4 block max-w-md">
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Meal rate</span>
+        <select
+          value={rateMode}
+          disabled={saving}
+          onChange={(e) => patch({ mealRateMode: e.target.value }, 'Meal rate updated.')}
+          className="app-select mt-1 disabled:opacity-50"
+        >
+          <option value="MONTHLY">One rate for the month (total bazar ÷ total meals)</option>
+          <option value="DAILY">A rate for each day (that day&apos;s bazar ÷ that day&apos;s meals)</option>
+        </select>
+      </label>
+      <p className="mt-2 max-w-xl text-xs text-slate-500">
+        {rateMode === 'DAILY'
+          ? 'Day-wise pricing charges people for what was actually bought on the days they ate. Bazar bought on a day nobody ate is shared across the month, so nothing goes uncharged.'
+          : 'One monthly rate is the simplest to explain and evens out days when bazar was unusually cheap or expensive.'}
+      </p>
+
+      <label className="mt-5 flex max-w-xl cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          checked={carryForwardEnabled}
+          disabled={saving}
+          onChange={(e) => patch({ carryForwardEnabled: e.target.checked }, 'Carry-forward updated.')}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-50"
+        />
+        <span>
+          <span className="text-sm font-medium">Carry unpaid balances into the next month</span>
+          <span className="mt-0.5 block text-xs text-slate-500">
+            When you close a month, whatever someone still owes (or is owed) opens the next month as their brought
+            forward balance instead of being written off.
+          </span>
+        </span>
+      </label>
+    </div>
   );
 }
 

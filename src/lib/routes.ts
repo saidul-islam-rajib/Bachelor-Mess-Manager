@@ -15,5 +15,6 @@ export const ROUTES = {
   profile: '/profile',
   comments: '/comments',
   admin: '/admin',
-  invitations: '/invitations'
+  invitations: '/invitations',
+  guide: '/guide'
 };

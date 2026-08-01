@@ -39,6 +39,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (user.role === USER_ROLES.ADMIN) {
       links.push({ href: ROUTES.admin, label: 'Admin' });
     }
+    links.push({ href: ROUTES.guide, label: 'Guide' });
   }
 
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(`${href}/`);

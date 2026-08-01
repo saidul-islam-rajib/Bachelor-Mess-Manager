@@ -4,6 +4,7 @@ import { readSessionClaims, SESSION_COOKIE_NAME } from '@/lib/session';
 import { ROUTES } from '@/lib/routes';
 
 const PUBLIC_PATHS = [
+  ROUTES.guide,
   '/auth/login',
   '/auth/register',
   '/auth/registration-submitted',

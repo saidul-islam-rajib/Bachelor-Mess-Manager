@@ -117,6 +117,7 @@ export default function ProfilePage() {
             </form>
           </div>
 
+          <PastMealEditingSection />
           <PasswordSection />
 
           <RoleRequestPanel />
@@ -124,6 +125,131 @@ export default function ProfilePage() {
         </div>
       )}
     </section>
+  );
+}
+
+type EditWindowState = {
+  open: boolean;
+  unlimited: boolean;
+  expiresAt: string | null;
+  secondsRemaining: number | null;
+  windowMinutes: number;
+  requiresApproval: boolean;
+};
+
+function PastMealEditingSection() {
+  const toast = useToast();
+  const { user } = useCurrentUser();
+  const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
+  const [state, setState] = useState<EditWindowState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const groupsRes = await fetch('/api/groups');
+        const groupsBody = await groupsRes.json().catch(() => ({}));
+        const first = (groupsBody.groups ?? []).find(
+          (candidate: { supervisor?: { id: string } }) => candidate.supervisor?.id !== user?.id
+        );
+        if (!first) {
+          if (!cancelled) setLoading(false);
+          return;
+        }
+
+        const windowRes = await fetch(`/api/groups/${first.id}/meal-edit-window`);
+        const windowBody = await windowRes.json().catch(() => ({}));
+        if (cancelled) return;
+
+        setGroup({ id: first.id, name: first.name });
+        if (windowRes.ok) setState(windowBody.window);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!state?.open || !state.expiresAt) return;
+
+    const expiry = new Date(state.expiresAt).getTime();
+    const timer = window.setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((expiry - Date.now()) / 1000));
+      setState((prev) => (prev ? { ...prev, secondsRemaining: remaining, open: remaining > 0 } : prev));
+      if (remaining <= 0) window.clearInterval(timer);
+    }, 1000);
+
+    return () => window.clearInterval(timer);
+  }, [state?.open, state?.expiresAt]);
+
+  async function toggle(next: boolean) {
+    if (!group) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/groups/${group.id}/meal-edit-window`, { method: next ? 'POST' : 'DELETE' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? 'Could not change the edit window.');
+      setState(body.window);
+      if (next) {
+        toast.success(
+          body.window?.unlimited
+            ? 'Past meals unlocked.'
+            : `Past meals unlocked for ${body.window?.windowMinutes ?? 5} minutes.`
+        );
+      }
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (loading || !group || !state) return null;
+
+  const remaining = state.secondsRemaining;
+  const countdown =
+    remaining === null ? null : `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
+
+  return (
+    <div className={`rounded-3xl border p-6 shadow-sm sm:p-8 ${state.open ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h2 className="text-lg font-semibold">Editing past meals</h2>
+        {state.open && (
+          <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold tabular-nums text-amber-700 ring-1 ring-amber-300">
+            {state.unlimited || !countdown ? 'No time limit' : `${countdown} left`}
+          </span>
+        )}
+      </div>
+
+      <label className="mt-4 flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          checked={state.open}
+          disabled={busy}
+          onChange={(e) => toggle(e.target.checked)}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-50"
+        />
+        <span>
+          <span className="text-sm font-medium">Let me edit my past meals in {group.name}</span>
+          <span className="mt-1 block text-sm text-slate-600">
+            {state.unlimited
+              ? 'Stays on until you turn it off.'
+              : `Unlocks days that have already passed for ${state.windowMinutes} minutes, then locks itself again.`}
+            {state.requiresApproval
+              ? ' Anything you change goes to your supervisor for approval before it counts.'
+              : ' Changes apply straight away and the whole mess is notified.'}
+          </span>
+        </span>
+      </label>
+    </div>
   );
 }
 

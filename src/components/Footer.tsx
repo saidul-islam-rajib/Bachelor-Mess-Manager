@@ -1,8 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useToast } from '@/components/ToastProvider';
 import { appConfig, authorConfig } from '@/config';
 import { strings } from '@/lib/i18n';
+import { ROUTES } from '@/lib/routes';
 
 type Settings = {
   companyName: string;
@@ -69,6 +71,12 @@ export default function Footer() {
               <span className="text-lg font-semibold">{companyName}</span>
             </a>
             {settings?.tagline && <p className="mt-3 max-w-xs text-sm text-slate-500">{settings.tagline}</p>}
+            <Link
+              href={ROUTES.guide}
+              className="mt-3 inline-block text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline"
+            >
+              How it works →
+            </Link>
           </div>
 
           <div className="text-sm text-slate-600">

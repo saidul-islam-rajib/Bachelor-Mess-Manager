@@ -42,9 +42,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           ]
         };
 
+    const includeInactive = isAdmin || queryString(req, 'includeInactive') === 'true';
+
     const conditions: Prisma.GroupWhereInput[] = [scope];
     if (search) conditions.push({ name: { contains: search } });
     if (status) conditions.push({ status });
+    else if (!includeInactive) conditions.push({ status: GROUP_STATUS.ACTIVE });
     if (supervisorId) conditions.push({ supervisorId });
 
     const where: Prisma.GroupWhereInput = { AND: conditions };
@@ -79,9 +82,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           return b.createdAt.getTime() - a.createdAt.getTime();
         });
 
-    const ownedCount = requireSupervisorOrAdmin(sessionUser)
-      ? await prisma.group.count({ where: { supervisorId: sessionUser.id } })
-      : 0;
+    const [ownedCount, hiddenInactive] = await Promise.all([
+      requireSupervisorOrAdmin(sessionUser)
+        ? prisma.group.count({ where: { supervisorId: sessionUser.id, status: GROUP_STATUS.ACTIVE } })
+        : Promise.resolve(0),
+      includeInactive || status
+        ? Promise.resolve(0)
+        : prisma.group.count({ where: { AND: [scope, { status: GROUP_STATUS.INACTIVE }] } })
+    ]);
 
     return ok(res, {
       groups: sorted.map((group) => ({
@@ -93,6 +101,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         createdAt: group.createdAt.toISOString()
       })),
       meta: buildPageMeta(page, pageSize, total),
+      hiddenInactive,
       limits: {
         maxGroups: groupConfig.maxGroupsPerSupervisor,
         ownedCount,

@@ -1,15 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ROUTES } from '@/lib/routes';
-import { useInvitations } from '@/components/InvitationsProvider';
+import { timeAgo, useInvitations } from '@/components/InvitationsProvider';
+import { useNotifications, type AppNotification } from '@/components/NotificationsProvider';
 import InvitationCard from '@/components/InvitationCard';
 
 export default function NotificationBell() {
-  const { invitations, count, loading } = useInvitations();
+  const { invitations, count: invitationCount, loading: invitationsLoading } = useInvitations();
+  const { notifications, unreadCount, loading: notificationsLoading, refresh, markRead, markAllRead } =
+    useNotifications();
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const count = invitationCount + unreadCount;
+  const loading = invitationsLoading || notificationsLoading;
+  const hasAnything = invitationCount > 0 || notifications.length > 0;
+
+  const visible = useMemo(() => notifications.slice(0, 12), [notifications]);
 
   useEffect(() => {
     if (!open) return;
@@ -30,6 +39,10 @@ export default function NotificationBell() {
   }, [open]);
 
   useEffect(() => {
+    if (open) refresh();
+  }, [open, refresh]);
+
+  useEffect(() => {
     const close = () => setOpen(false);
     router.events.on('routeChangeComplete', close);
     return () => router.events.off('routeChangeComplete', close);
@@ -40,7 +53,7 @@ export default function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={count > 0 ? `Notifications, ${count} pending` : 'Notifications'}
+        aria-label={count > 0 ? `Notifications, ${count} unread` : 'Notifications'}
         aria-expanded={open}
         className="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
       >
@@ -56,30 +69,53 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+        <div className="absolute right-0 z-50 mt-2 w-[24rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+          <div className="flex items-center justify-between gap-2 border-b border-slate-100 px-4 py-3">
             <p className="text-sm font-semibold">Notifications</p>
-            {count > 0 && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{count} new</span>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={markAllRead}
+                className="rounded-full px-2 py-0.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              >
+                Mark all read
+              </button>
             )}
           </div>
 
-          <div className="max-h-96 overflow-y-auto">
-            {loading ? (
+          <div className="max-h-[26rem] overflow-y-auto">
+            {loading && !hasAnything ? (
               <p className="px-4 py-6 text-center text-sm text-slate-400">Loading...</p>
-            ) : count === 0 ? (
+            ) : !hasAnything ? (
               <div className="px-4 py-8 text-center">
                 <p className="text-sm font-medium text-slate-600">You&apos;re all caught up</p>
-                <p className="mt-1 text-xs text-slate-400">Group invitations will show up here.</p>
+                <p className="mt-1 text-xs text-slate-400">Invitations and mess updates show up here.</p>
               </div>
             ) : (
-              <ul className="divide-y divide-slate-100">
-                {invitations.map((invitation) => (
-                  <li key={invitation.id}>
-                    <InvitationCard invitation={invitation} compact />
-                  </li>
-                ))}
-              </ul>
+              <>
+                {invitationCount > 0 && (
+                  <ul className="divide-y divide-slate-100 border-b border-slate-100">
+                    {invitations.map((invitation) => (
+                      <li key={invitation.id}>
+                        <InvitationCard invitation={invitation} compact />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <ul className="divide-y divide-slate-100">
+                  {visible.map((notification) => (
+                    <li key={notification.id}>
+                      <NotificationRow
+                        notification={notification}
+                        onOpen={() => {
+                          markRead([notification.id]);
+                          setOpen(false);
+                        }}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </div>
 
@@ -95,5 +131,40 @@ export default function NotificationBell() {
         </div>
       )}
     </div>
+  );
+}
+
+function NotificationRow({ notification, onOpen }: { notification: AppNotification; onOpen: () => void }) {
+  const unread = !notification.readAt;
+
+  const inner = (
+    <div className={`flex gap-3 px-4 py-3 ${unread ? 'bg-slate-50/80' : ''}`}>
+      <span
+        aria-hidden
+        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${unread ? 'bg-slate-900' : 'bg-transparent'}`}
+      />
+      <div className="min-w-0">
+        <p className="text-sm font-medium leading-snug text-slate-900">{notification.title}</p>
+        {notification.body && <p className="mt-0.5 text-xs leading-relaxed text-slate-500">{notification.body}</p>}
+        <p className="mt-1 text-[11px] text-slate-400">
+          {notification.group ? `${notification.group.name} · ` : ''}
+          {timeAgo(notification.createdAt)}
+        </p>
+      </div>
+    </div>
+  );
+
+  if (!notification.link) {
+    return (
+      <button type="button" onClick={onOpen} className="block w-full text-left transition-colors hover:bg-slate-50">
+        {inner}
+      </button>
+    );
+  }
+
+  return (
+    <Link href={notification.link} onClick={onOpen} className="block transition-colors hover:bg-slate-50">
+      {inner}
+    </Link>
   );
 }

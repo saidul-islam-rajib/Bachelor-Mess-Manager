@@ -37,8 +37,39 @@ export async function getSiteSettings() {
   });
 }
 
+export type MealEditPolicy = {
+  windowMinutes: number;
+  requiresApproval: boolean;
+};
+
+const MEAL_EDIT_FALLBACK: MealEditPolicy = { windowMinutes: 5, requiresApproval: true };
+
+const globalForMealEdit = globalThis as unknown as {
+  mealEditPolicyCache?: { value: MealEditPolicy; expiresAt: number } | null;
+};
+
 export function invalidateSecurityPolicyCache() {
   globalForSettings.securityPolicyCache = null;
+  globalForMealEdit.mealEditPolicyCache = null;
+}
+
+export async function getMealEditPolicy(): Promise<MealEditPolicy> {
+  const cached = globalForMealEdit.mealEditPolicyCache;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  try {
+    const settings = await getSiteSettings();
+    const value: MealEditPolicy = {
+      windowMinutes: Math.max(0, Math.trunc(settings.mealEditWindowMinutes)),
+      requiresApproval: settings.mealEditRequiresApproval
+    };
+    globalForMealEdit.mealEditPolicyCache = { value, expiresAt: Date.now() + CACHE_TTL_MS };
+    return value;
+  } catch {
+    return MEAL_EDIT_FALLBACK;
+  }
 }
 
 export async function getSecurityPolicy(): Promise<SecurityPolicy> {

@@ -29,6 +29,8 @@ export default function GroupsPage() {
   const [creating, setCreating] = useState(false);
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [limits, setLimits] = useState<{ maxGroups: number; ownedCount: number; canCreate: boolean } | null>(null);
+  const [showClosed, setShowClosed] = useState(false);
+  const [hiddenInactive, setHiddenInactive] = useState(0);
 
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const groupsRef = useRef<GroupSummary[]>([]);
@@ -73,19 +75,20 @@ export default function GroupsPage() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/groups');
+      const response = await fetch(`/api/groups${showClosed ? '?includeInactive=true' : ''}`);
       if (!response.ok) throw new Error('Failed to load groups.');
       const data = await response.json();
       const list: GroupSummary[] = data.groups || [];
       setGroups(list);
       setLimits(data.limits ?? null);
+      setHiddenInactive(data.hiddenInactive ?? 0);
       savedOrder.current = list.map((g) => g.id);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showClosed]);
 
   useEffect(() => {
     loadGroups();
@@ -180,12 +183,26 @@ export default function GroupsPage() {
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Groups</h1>
-        <p className="mt-1 text-slate-600">
-          The messes you supervise or belong to.
-          {canReorder && ' Drag a card to change the order.'}
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold sm:text-3xl">Groups</h1>
+          <p className="mt-1 text-slate-600">
+            The messes you supervise or belong to.
+            {canReorder && ' Drag a card to change the order.'}
+          </p>
+        </div>
+
+        {(showClosed || hiddenInactive > 0) && (
+          <label className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 shadow-sm">
+            <input
+              type="checkbox"
+              checked={showClosed}
+              onChange={(e) => setShowClosed(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+            />
+            Show closed{!showClosed && hiddenInactive > 0 ? ` (${hiddenInactive})` : ''}
+          </label>
+        )}
       </div>
 
       {canCreate && (

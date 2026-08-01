@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Link from 'next/link';
 import { LinkButton } from '@/components/ui';
 import { LandingIcon, type LandingIconName } from '@/components/landing/Icons';
 import {
@@ -67,6 +68,9 @@ function Hero() {
                 <LinkButton href={ROUTES.groups} size="lg" variant="secondary">
                   {landing.hero.groups}
                 </LinkButton>
+                <LinkButton href={ROUTES.guide} size="lg" variant="secondary">
+                  Read the guide
+                </LinkButton>
               </div>
             </div>
           ) : (
@@ -79,7 +83,13 @@ function Hero() {
                   {landing.hero.secondary}
                 </LinkButton>
               </div>
-              <p className="mt-4 text-xs text-slate-500">{landing.hero.note}</p>
+              <p className="mt-4 text-xs text-slate-500">
+                {landing.hero.note}{' '}
+                <Link href={ROUTES.guide} className="font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900">
+                  See how it works
+                </Link>
+                .
+              </p>
             </div>
           )}
 

@@ -863,6 +863,16 @@ const en = {
     EQUAL: 'Split equally',
     CUSTOM: 'Selected members'
   },
+  paymentStatuses: {
+    PAID: 'Settled',
+    PARTIAL: 'Partly paid',
+    PENDING: 'Unpaid',
+    REFUND: 'Refund due'
+  },
+  mealRateModes: {
+    MONTHLY: 'One rate for the month',
+    DAILY: 'A rate for each day'
+  },
   weekdays: {
     0: { label: 'Sunday', short: 'Sun' },
     1: { label: 'Monday', short: 'Mon' },

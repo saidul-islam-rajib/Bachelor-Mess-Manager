@@ -1186,7 +1186,19 @@ type SiteSettings = {
   facebookUrl: string | null;
   twitterUrl: string | null;
   newsletterEnabled: boolean;
+  mealEditWindowMinutes: number;
+  mealEditRequiresApproval: boolean;
 };
+
+const MEAL_EDIT_WINDOW_OPTIONS = [
+  { value: 5, label: '5 minutes' },
+  { value: 10, label: '10 minutes' },
+  { value: 15, label: '15 minutes' },
+  { value: 30, label: '30 minutes' },
+  { value: 60, label: '1 hour' },
+  { value: 1440, label: '1 day' },
+  { value: 0, label: 'No time limit' }
+];
 
 function SettingsPanel() {
   const toast = useToast();
@@ -1215,7 +1227,7 @@ function SettingsPanel() {
     }
   }
 
-  function update(key: keyof SiteSettings, value: string | boolean) {
+  function update(key: keyof SiteSettings, value: string | boolean | number) {
     setSettings((current) => (current ? { ...current, [key]: value } : current));
   }
 
@@ -1254,6 +1266,36 @@ function SettingsPanel() {
         checked={settings.newsletterEnabled}
         onChange={(checked) => update('newsletterEnabled', checked)}
       />
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold">Editing past meals</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          A member unlocks past days from the meals page. This is how long that unlock lasts before it closes itself
+          again.
+        </p>
+
+        <label className="mt-4 block max-w-xs">
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Unlock lasts for</span>
+          <select
+            value={settings.mealEditWindowMinutes}
+            onChange={(e) => update('mealEditWindowMinutes', Number(e.target.value))}
+            className="app-select mt-1 w-full !rounded-xl !py-2"
+          >
+            {MEAL_EDIT_WINDOW_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <Checkbox
+          className="mt-4"
+          label="Supervisor must approve a member's past-meal change before it counts"
+          checked={settings.mealEditRequiresApproval}
+          onChange={(checked) => update('mealEditRequiresApproval', checked)}
+        />
+      </div>
 
       <div className="mt-5">
         <Button onClick={save} loading={saving}>

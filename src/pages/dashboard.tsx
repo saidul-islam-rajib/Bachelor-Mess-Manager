@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { ROUTES } from '@/lib/routes';
-import { EXPENSE_TYPE_LABELS, USER_ROLES } from '@/lib/constants';
+import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 const taka = (n: number) => `৳${n.toFixed(2)}`;
@@ -458,7 +458,7 @@ function CostBreakdown({ byType, total }: { byType: Record<string, number>; tota
           return (
             <li key={type}>
               <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">{EXPENSE_TYPE_LABELS[type] ?? type}</span>
+                <span className="font-medium">{expenseTypeLabel(type)}</span>
                 <span className="text-slate-600">
                   {taka(amount)} <span className="text-xs text-slate-400">({percent}%)</span>
                 </span>

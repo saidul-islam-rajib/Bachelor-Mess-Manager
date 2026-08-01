@@ -27,6 +27,20 @@ npm run dev
 > **[docs/ACCOUNTS.md](docs/ACCOUNTS.md)** — administrator commands, and how supervisors and
 > members sign in. Start there for day-to-day account management.
 
+### How the app works
+
+`/guide` is the in-app explainer for members and supervisors — public, no sign-in needed. These are the
+engineering notes behind it:
+
+| Doc | Covers |
+| --- | --- |
+| [settlement.md](docs/settlement.md) | How a month's money is worked out, and the balance bugs it fixes |
+| [month-closing.md](docs/month-closing.md) | Freezing a month, carrying balances forward, mid-month departures |
+| [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |
+| [expense-categories.md](docs/expense-categories.md) | Per-group cost types for the bills dropdown |
+| [notifications.md](docs/notifications.md) | The notification model, bell, and email delivery |
+| [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
+
 ---
 
 ## Creating the administrator

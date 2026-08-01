@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { GROUP_STATUS, MEAL_RATE_MODE_VALUES } from '@/lib/constants';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -43,17 +44,27 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return forbidden(res, 'Only this group\'s supervisor can update it.');
     }
 
-    const { name, status, mealWeightBreakfast, mealWeightLunch, mealWeightDinner } = req.body as {
-      name?: string;
-      status?: string;
-      mealWeightBreakfast?: number;
-      mealWeightLunch?: number;
-      mealWeightDinner?: number;
-    };
+    const { name, status, mealWeightBreakfast, mealWeightLunch, mealWeightDinner, mealRateMode, carryForwardEnabled } =
+      req.body as {
+        name?: string;
+        status?: string;
+        mealWeightBreakfast?: number;
+        mealWeightLunch?: number;
+        mealWeightDinner?: number;
+        mealRateMode?: string;
+        carryForwardEnabled?: boolean;
+      };
 
     const data: Record<string, unknown> = {};
     if (typeof name === 'string' && name.trim()) data.name = name.trim();
-    if (status === 'ACTIVE' || status === 'INACTIVE') data.status = status;
+    if (status === GROUP_STATUS.ACTIVE || status === GROUP_STATUS.INACTIVE) data.status = status;
+    if (mealRateMode !== undefined) {
+      if (!MEAL_RATE_MODE_VALUES.includes(mealRateMode)) {
+        return badRequest(res, 'The meal rate must be worked out monthly or daily.');
+      }
+      data.mealRateMode = mealRateMode;
+    }
+    if (typeof carryForwardEnabled === 'boolean') data.carryForwardEnabled = carryForwardEnabled;
     for (const [key, value] of [
       ['mealWeightBreakfast', mealWeightBreakfast],
       ['mealWeightLunch', mealWeightLunch],

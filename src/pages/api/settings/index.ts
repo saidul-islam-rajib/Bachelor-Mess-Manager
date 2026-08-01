@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
-import { forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { invalidateSecurityPolicyCache } from '@/lib/settings-service';
 import { withAudit } from '@/lib/with-audit';
 
@@ -67,6 +67,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
     if (typeof body.allowSelfRoleSwitch === 'boolean') {
       data.allowSelfRoleSwitch = body.allowSelfRoleSwitch;
+    }
+    if (typeof body.mealEditRequiresApproval === 'boolean') {
+      data.mealEditRequiresApproval = body.mealEditRequiresApproval;
+    }
+    if (body.mealEditWindowMinutes !== undefined) {
+      const minutes = Number(body.mealEditWindowMinutes);
+      if (!Number.isInteger(minutes) || minutes < 0 || minutes > 10080) {
+        return badRequest(res, 'The meal edit window must be between 0 minutes (no limit) and 7 days.');
+      }
+      data.mealEditWindowMinutes = minutes;
     }
 
     const settings = await prisma.siteSettings.upsert({
