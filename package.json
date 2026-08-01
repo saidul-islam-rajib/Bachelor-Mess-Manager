@@ -49,7 +49,9 @@
     "test": "node scripts/test-all.js",
     "test:all": "node scripts/test-all.js",
     "test:allocation": "node scripts/check-allocation.js",
-    "icons:generate": "node scripts/generate-icons.js"
+    "icons:generate": "node scripts/generate-icons.js",
+    "test:signup": "node scripts/check-signup-flow.js",
+    "test:mail": "node scripts/check-mail.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

@@ -10,6 +10,8 @@ const QUIET = process.argv.includes('--quiet');
 
 const SUITES = [
   { name: 'allocation', script: 'check-allocation.js', needsServer: false, describe: 'money allocation invariants' },
+  { name: 'mail', script: 'check-mail.js', needsServer: false, describe: 'SMTP connectivity and credentials' },
+  { name: 'signup-flow', script: 'check-signup-flow.js', needsServer: true, describe: 'register, set password, log in' },
   { name: 'meal-rate', script: 'check-meal-rate.js', needsServer: true, describe: 'meal rate and cost split scenario' },
   { name: 'e2e', script: 'e2e-test.js', needsServer: true, describe: 'end-to-end API behaviour' }
 ];
@@ -64,7 +66,7 @@ async function run() {
 
   for (const suite of SUITES) {
     if (suite.needsServer && !up) {
-      rows.push({ suite: suite.name, describe: suite.describe, skipped: true, total: 0, passed: 0, failed: 0 });
+      rows.push({ suite: suite.name, describe: suite.describe, noServer: true, total: 0, passed: 0, failed: 0 });
       continue;
     }
 
@@ -97,6 +99,7 @@ async function run() {
   const total = rows.reduce((a, r) => a + r.total, 0);
   const passed = rows.reduce((a, r) => a + r.passed, 0);
   const failed = rows.reduce((a, r) => a + r.failed, 0);
+  const noServer = rows.filter((r) => r.noServer);
   const skipped = rows.filter((r) => r.skipped);
 
   const pad = (value, width) => String(value).padStart(width);
@@ -110,7 +113,15 @@ async function run() {
   report('  ' + '-'.repeat(60));
 
   for (const row of rows) {
-    const result = row.skipped ? 'SKIPPED (no server)' : row.crashed ? `CRASHED (exit ${row.exitCode})` : row.failed === 0 ? 'PASS' : 'FAIL';
+    const result = row.noServer
+      ? 'SKIPPED (no server)'
+      : row.skipped
+        ? `SKIPPED (${row.reason || 'not applicable'})`
+        : row.crashed
+          ? `CRASHED (exit ${row.exitCode})`
+          : row.failed === 0
+            ? 'PASS'
+            : 'FAIL';
     report(`  ${name(row.suite, 14)}${pad(row.total, 7)}${pad(row.passed, 8)}${pad(row.failed, 8)}   ${result}`);
   }
 
@@ -121,8 +132,11 @@ async function run() {
   const rate = total > 0 ? ((passed / total) * 100).toFixed(1) : '0.0';
   report(`  ${passed} of ${total} checks passed (${rate}%) in ${((Date.now() - started) / 1000).toFixed(1)}s`);
 
-  if (skipped.length > 0) {
-    report(`  ${skipped.length} suite(s) skipped because the app was not running.`);
+  if (noServer.length > 0) {
+    report(`  ${noServer.length} suite(s) skipped because the app was not running.`);
+  }
+  for (const row of skipped) {
+    report(`  ${row.suite} skipped: ${row.reason}`);
   }
 
   report('');
@@ -130,9 +144,11 @@ async function run() {
   if (failed > 0) {
     reportError(`FAILED — ${failed} check(s) did not pass.`);
     process.exitCode = 1;
-  } else if (skipped.length > 0) {
-    reportError('INCOMPLETE — some suites could not run.');
+  } else if (noServer.length > 0) {
+    reportError('INCOMPLETE - the app was not running, so some suites never executed.');
     process.exitCode = 1;
+  } else if (skipped.length > 0) {
+    report('ALL TESTS PASSED (with configuration-driven skips noted above)');
   } else {
     report('ALL TESTS PASSED');
   }

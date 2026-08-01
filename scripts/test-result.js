@@ -2,12 +2,16 @@ const { report } = require('./reporter');
 
 const MARKER = 'TEST_SUMMARY';
 
-function emitSummary(suite, { total, passed, failed }) {
+function emitSummary(suite, { total, passed, failed, skipped, reason }) {
   report('');
   report('='.repeat(60));
-  report(`${suite}:  TOTAL ${total}   PASSED ${passed}   FAILED ${failed}`);
+  if (skipped) {
+    report(`${suite}:  SKIPPED - ${reason || 'not applicable in this configuration'}`);
+  } else {
+    report(`${suite}:  TOTAL ${total}   PASSED ${passed}   FAILED ${failed}`);
+  }
   report('='.repeat(60));
-  report(`${MARKER} ${JSON.stringify({ suite, total, passed, failed })}`);
+  report(`${MARKER} ${JSON.stringify({ suite, total, passed, failed, skipped: Boolean(skipped), reason: reason || null })}`);
 }
 
 function parseSummaries(output) {
