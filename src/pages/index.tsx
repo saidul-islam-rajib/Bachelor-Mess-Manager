@@ -352,8 +352,11 @@ export default function Home() {
         <meta property="og:type" content="website" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={landing.meta.description} />
-        <meta property="og:image" content="/logo.png" />
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:image" content="/og-image.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content="/og-image.png" />
       </Head>
 
       <Hero />

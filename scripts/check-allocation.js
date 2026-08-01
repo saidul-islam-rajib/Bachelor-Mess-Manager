@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const { allocate } = require('./allocate');
 const { report, reportError, reportFailure } = require('./reporter');
 const { emitSummary } = require('./test-result');
@@ -59,7 +61,43 @@ function run() {
     fuzzFailure ? JSON.stringify(fuzzFailure) : ''
   );
 
+  report('');
+  report('--- Brand assets stay in sync ---');
+
+  const svg = fs.readFileSync(path.join(__dirname, '..', 'public', 'logo.svg'), 'utf8');
+  const component = fs.readFileSync(path.join(__dirname, '..', 'src', 'components', 'Logo.tsx'), 'utf8');
+
+  const ringPath = /LOGO_RING_PATH = '([^']+)'/.exec(component)?.[1];
+  const portionPath = /LOGO_PORTION_PATH = '([^']+)'/.exec(component)?.[1];
+
+  check('Logo component exposes its ring path', Boolean(ringPath));
+  check('Logo component exposes its portion path', Boolean(portionPath));
+  check(
+    'nav logo matches public/logo.svg (ring)',
+    Boolean(ringPath) && svg.includes(ringPath),
+    'Logo.tsx and logo.svg have drifted - regenerate icons and sync the component'
+  );
+  check(
+    'nav logo matches public/logo.svg (portion)',
+    Boolean(portionPath) && svg.includes(portionPath),
+    'Logo.tsx and logo.svg have drifted - regenerate icons and sync the component'
+  );
+
+  for (const icon of [
+    'icon-192.png',
+    'icon-512.png',
+    'icon-192-maskable.png',
+    'icon-512-maskable.png',
+    'apple-touch-icon.png',
+    'favicon-32.png',
+    'icon-monochrome-512.png'
+  ]) {
+    const file = path.join(__dirname, '..', 'public', 'icons', icon);
+    check(`icon ${icon} exists`, fs.existsSync(file));
+  }
+
   const passed = results.filter((r) => r.passed).length;
+  report('');
   report(`  ${passed} of ${results.length} invariants held`);
 
   emitSummary('allocation', {

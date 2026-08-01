@@ -11,13 +11,13 @@ npm test        # in another - runs everything, prints one summary
 ================================================================
   SUITE           TOTAL  PASSED  FAILED   RESULT
   ------------------------------------------------------------
-  allocation         28      28       0   PASS
+  allocation         39      39       0   PASS
   meal-rate          23      23       0   PASS
-  e2e               108     108       0   PASS
+  e2e               138     138       0   PASS
   ------------------------------------------------------------
-  TOTAL             159     159       0
+  TOTAL             200     200       0
 ================================================================
-  159 of 159 checks passed (100.0%) in 34.2s
+  200 of 200 checks passed (100.0%) in 37.5s
 
 ALL TESTS PASSED
 ```
@@ -29,10 +29,10 @@ listening is reported as `SKIPPED` and exits `1` — an incomplete run must neve
 
 | Command | Suite | Needs the app running | Checks |
 | --- | --- | --- | --- |
-| `npm test` | everything | partly | 159 |
-| `npm run test:allocation` | money allocation invariants | no | 28 |
+| `npm test` | everything | partly | 200 |
+| `npm run test:allocation` | money allocation invariants and brand-asset sync | no | 39 |
 | `npm run test:rate` | meal rate and cost split scenario | yes | 23 |
-| `npm run test:e2e` | end-to-end API behaviour | yes | 108 |
+| `npm run test:e2e` | end-to-end API behaviour and PWA assets | yes | 138 |
 
 `npm test --quiet` (or `node scripts/test-all.js --quiet`) prints only the summary table.
 

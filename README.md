@@ -54,7 +54,7 @@ engineering notes behind it:
 ```bash
 npm run backup:db     # take a backup now, rotate old ones
 npm run restore:db    # restore the newest backup
-npm test              # every suite, one summary (159 checks)
+npm test              # every suite, one summary (200 checks)
 npm test --quiet      # summary table only
 ```
 

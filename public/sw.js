@@ -50,6 +50,8 @@ function isImmutableAsset(url) {
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/icons/') ||
     url.pathname === '/logo.png' ||
+    url.pathname === '/logo.svg' ||
+    url.pathname === '/og-image.png' ||
     url.pathname === '/manifest.json'
   );
 }

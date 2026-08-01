@@ -100,11 +100,11 @@ npm test
 ================================================================
   SUITE           TOTAL  PASSED  FAILED   RESULT
   ------------------------------------------------------------
-  allocation         28      28       0   PASS
+  allocation         39      39       0   PASS
   meal-rate          23      23       0   PASS
   e2e               138     138       0   PASS
   ------------------------------------------------------------
-  TOTAL             189     189       0
+  TOTAL             200     200       0
 ================================================================
 ```
 
@@ -205,16 +205,24 @@ rather than yesterday's numbers — the wrong figure is worse than no figure in 
 
 Logging out clears every cache, so the next person to use the phone cannot see the previous user's screens.
 
-### Regenerating the icons
+### The logo and icons
 
-Icons are generated from `public/logo.png` and committed. If the logo changes:
+`public/logo.svg` is the **single source of truth** for the brand mark. Everything else is generated from it:
 
 ```bash
 npm run icons:generate
 ```
 
-Writes 7 sizes to `public/icons/` — regular, maskable (Android adaptive), monochrome, and the iOS
-`apple-touch-icon.png`.
+That writes the app icons (regular, Android maskable with safe-zone padding, monochrome, and the iOS
+`apple-touch-icon.png`), plus `logo.png` as a raster fallback and `og-image.png` for link previews.
+
+The mark is also inlined in `src/components/Logo.tsx` so the nav and footer render it without a network request.
+That means two copies of the path data, so the test suite asserts they match — if you edit `logo.svg` without
+syncing the component (or vice versa), `npm test` fails with
+*"Logo.tsx and logo.svg have drifted"*.
+
+**To change the logo:** edit `public/logo.svg`, copy the two path strings into `LOGO_RING_PATH` and
+`LOGO_PORTION_PATH` in `Logo.tsx`, then run `npm run icons:generate`.
 
 ### Files involved
 
