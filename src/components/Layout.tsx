@@ -10,6 +10,8 @@ import NotificationBell from '@/components/NotificationBell';
 import ProfileMenu from '@/components/ProfileMenu';
 import Logo from '@/components/Logo';
 import Footer from '@/components/Footer';
+import InstallAppBanner from '@/components/InstallAppBanner';
+import UpdateBanner from '@/components/UpdateBanner';
 
 type NavLink = { href: string; label: string };
 
@@ -50,6 +52,8 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50 text-slate-900">
+      <UpdateBanner />
+      <InstallAppBanner />
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
         {impersonating && (
           <div className="bg-amber-500 text-amber-950">

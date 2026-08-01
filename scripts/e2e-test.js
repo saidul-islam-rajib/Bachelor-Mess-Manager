@@ -171,6 +171,65 @@ async function run() {
     check('unauthenticated API is rejected (401)', protectedApi.status === 401, `got ${protectedApi.status}`);
   }
 
+  section('PWA assets');
+  {
+    const manifestRes = await fetch(`${BASE}/manifest.json`);
+    check('manifest.json is public (200)', manifestRes.status === 200, `got ${manifestRes.status}`);
+
+    let manifest = null;
+    try {
+      manifest = await manifestRes.json();
+    } catch {
+      manifest = null;
+    }
+
+    check('manifest is valid JSON', manifest !== null);
+    check('manifest has a name', Boolean(manifest && manifest.name), String(manifest && manifest.name));
+    check('manifest is standalone', manifest?.display === 'standalone', String(manifest?.display));
+    check('manifest has a start_url', Boolean(manifest?.start_url), String(manifest?.start_url));
+    check('manifest has a theme colour', Boolean(manifest?.theme_color), String(manifest?.theme_color));
+
+    const icons = manifest?.icons ?? [];
+    check('manifest declares a 192px icon', icons.some((i) => i.sizes === '192x192'), JSON.stringify(icons.map((i) => i.sizes)));
+    check('manifest declares a 512px icon', icons.some((i) => i.sizes === '512x512'));
+    check('manifest declares a maskable icon', icons.some((i) => String(i.purpose).includes('maskable')));
+
+    for (const icon of icons) {
+      const iconRes = await fetch(`${BASE}${icon.src}`);
+      check(`icon ${icon.src} is served`, iconRes.status === 200, `got ${iconRes.status}`);
+      check(
+        `icon ${icon.src} is a PNG`,
+        (iconRes.headers.get('content-type') || '').includes('image/png'),
+        iconRes.headers.get('content-type') || 'no content-type'
+      );
+    }
+
+    const swRes = await fetch(`${BASE}/sw.js`);
+    const swBody = await swRes.text();
+    check('service worker is served (200)', swRes.status === 200, `got ${swRes.status}`);
+    check(
+      'service worker is javascript',
+      (swRes.headers.get('content-type') || '').includes('javascript'),
+      swRes.headers.get('content-type') || 'none'
+    );
+    check('service worker is not cached', (swRes.headers.get('cache-control') || '').includes('no-cache'), swRes.headers.get('cache-control') || 'none');
+    check('service worker never caches API responses', swBody.includes("url.pathname.startsWith('/api/')"));
+    check('service worker handles push events', swBody.includes("addEventListener('push'"));
+
+    const offlineRes = await fetch(`${BASE}/offline.html`);
+    check('offline fallback page is served', offlineRes.status === 200, `got ${offlineRes.status}`);
+
+    const appleIcon = await fetch(`${BASE}/icons/apple-touch-icon.png`);
+    check('apple touch icon is served (iOS)', appleIcon.status === 200, `got ${appleIcon.status}`);
+
+    const home = await fetch(`${BASE}/`);
+    const html = await home.text();
+    check('pages link the manifest', html.includes('rel="manifest"'));
+    check('pages set apple-mobile-web-app-capable (iOS)', html.includes('apple-mobile-web-app-capable'));
+    check('pages set a theme colour', html.includes('name="theme-color"'));
+    check('pages link the apple touch icon', html.includes('apple-touch-icon'));
+  }
+
   section('Registration, approval and login');
   const supervisor = await registerAndLogin('sup', 'E2E Supervisor', password);
   await makeSupervisor(supervisor.userEmail);

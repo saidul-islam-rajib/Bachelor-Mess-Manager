@@ -1,4 +1,4 @@
-require('dotenv').config();
+lirequire('dotenv').config();
 
 const { spawn } = require('child_process');
 const path = require('path');

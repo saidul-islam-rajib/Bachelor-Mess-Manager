@@ -48,7 +48,8 @@
     "test:rate": "node scripts/check-meal-rate.js",
     "test": "node scripts/test-all.js",
     "test:all": "node scripts/test-all.js",
-    "test:allocation": "node scripts/check-allocation.js"
+    "test:allocation": "node scripts/check-allocation.js",
+    "icons:generate": "node scripts/generate-icons.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -69,6 +70,7 @@
     "eslint-config-next": "^14.2.5",
     "postcss": "^8.4.35",
     "prisma": "^5.0.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.6.2"
   }

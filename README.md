@@ -24,8 +24,11 @@ npm run dev
 
 `npm run setup` chains the three database steps (`migrate deploy`, `db:sync-roles`, `admin:init`).
 
+> **[SETUP.md](SETUP.md)** — running it locally, deploying to the live site, and installing it
+> as an app on Android and iOS. Start here.
+>
 > **[docs/ACCOUNTS.md](docs/ACCOUNTS.md)** — administrator commands, and how supervisors and
-> members sign in. Start there for day-to-day account management.
+> members sign in.
 
 ### How the app works
 
