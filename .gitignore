@@ -21,6 +21,9 @@ next-env.d.ts
 # outside /public on purpose — Next snapshots that directory at build time
 /uploads/
 
+# database backups contain live personal data - never commit them
+/backups/
+
 # testing
 /coverage
 

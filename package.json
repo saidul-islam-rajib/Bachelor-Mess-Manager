@@ -41,7 +41,10 @@
     "user:password": "node scripts/reset-password.js",
     "cleanup:unverified": "node scripts/cleanup-unverified.js",
     "seed:db": "node prisma/seed.js",
-    "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init"
+    "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init",
+    "backup:db": "node scripts/backup-db.js",
+    "restore:db": "node scripts/restore-db.js",
+    "test:e2e": "node scripts/e2e-test.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

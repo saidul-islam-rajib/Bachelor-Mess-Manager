@@ -41,6 +41,19 @@ engineering notes behind it:
 | [notifications.md](docs/notifications.md) | The notification model, bell, and email delivery |
 | [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
 
+### Operations
+
+| Doc | Covers |
+| --- | --- |
+| [BACKUPS.md](docs/BACKUPS.md) | Daily backups, rotation, restore, and proving a restore works |
+| [TESTING.md](docs/TESTING.md) | The end-to-end suite and what it asserts |
+
+```bash
+npm run backup:db     # take a backup now, rotate old ones
+npm run restore:db    # restore the newest backup
+npm run test:e2e      # 101 end-to-end checks against a running dev server
+```
+
 ---
 
 ## Creating the administrator
