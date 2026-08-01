@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useToast } from '@/components/ToastProvider';
+import { useCurrentUser } from '@/components/UserProvider';
 import { appConfig, authorConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import { ROUTES } from '@/lib/routes';
@@ -32,6 +33,7 @@ export default function Footer() {
   }, []);
 
   const year = new Date().getFullYear();
+  const { user } = useCurrentUser();
   const companyName = settings?.companyName ?? appConfig.name;
   const copyrightOwner = settings?.copyrightOwner ?? appConfig.name;
   const showNewsletter = settings?.newsletterEnabled !== false;
@@ -59,8 +61,8 @@ export default function Footer() {
   return (
     <footer className="border-t border-slate-200 bg-white">
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="grid gap-8 md:grid-cols-3">
-          <div>
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          <div className="lg:col-span-4">
             <a
               href={authorConfig.url}
               target="_blank"
@@ -70,18 +72,50 @@ export default function Footer() {
               <Logo className="h-10 w-auto" />
               <span className="text-lg font-semibold">{companyName}</span>
             </a>
-            {settings?.tagline && <p className="mt-3 max-w-xs text-sm text-slate-500">{settings.tagline}</p>}
-            <Link
-              href={ROUTES.guide}
-              className="mt-3 inline-block text-sm font-medium text-slate-600 hover:text-slate-900 hover:underline"
-            >
-              How it works →
-            </Link>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
+              {settings?.tagline || appConfig.tagline}
+            </p>
           </div>
 
-          <div className="text-sm text-slate-600">
+          <nav aria-label="Footer" className="text-sm text-slate-600 lg:col-span-2">
+            <h3 className="font-semibold text-slate-900">Explore</h3>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link href={ROUTES.guide} className="transition-colors hover:text-slate-900 hover:underline">
+                  How it works
+                </Link>
+              </li>
+              <li>
+                <Link href={ROUTES.home} className="transition-colors hover:text-slate-900 hover:underline">
+                  Home
+                </Link>
+              </li>
+              {user ? (
+                <li>
+                  <Link href={ROUTES.dashboard} className="transition-colors hover:text-slate-900 hover:underline">
+                    Dashboard
+                  </Link>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <Link href={ROUTES.auth.login} className="transition-colors hover:text-slate-900 hover:underline">
+                      Sign in
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={ROUTES.auth.register} className="transition-colors hover:text-slate-900 hover:underline">
+                      Create an account
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </nav>
+
+          <div className="text-sm text-slate-600 lg:col-span-3">
             <h3 className="font-semibold text-slate-900">Contact</h3>
-            <ul className="mt-3 space-y-1">
+            <ul className="mt-3 space-y-2">
               {settings?.address && <li>{settings.address}</li>}
               {settings?.contactEmail && (
                 <li>
@@ -96,14 +130,14 @@ export default function Footer() {
               )}
             </ul>
             {(settings?.facebookUrl || settings?.twitterUrl) && (
-              <div className="mt-3 flex gap-4">
+              <div className="mt-4 flex gap-4">
                 {settings?.facebookUrl && (
-                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="hover:text-slate-900 hover:underline">
                     Facebook
                   </a>
                 )}
                 {settings?.twitterUrl && (
-                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="hover:text-slate-900 hover:underline">
                     Twitter / X
                   </a>
                 )}
@@ -112,10 +146,10 @@ export default function Footer() {
           </div>
 
           {showNewsletter && (
-            <div>
+            <div className="lg:col-span-3">
               <h3 className="font-semibold text-slate-900">Newsletter</h3>
               <p className="mt-3 text-sm text-slate-500">Get updates from {companyName}.</p>
-              <form className="mt-3 flex flex-col gap-2 sm:flex-row" onSubmit={subscribe}>
+              <form className="mt-3 flex flex-col gap-2" onSubmit={subscribe}>
                 <input
                   id="newsletter-email"
                   name="newsletterEmail"
@@ -126,12 +160,12 @@ export default function Footer() {
                   aria-label="Email for newsletter"
                   required
                   placeholder="you@example.com"
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm"
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:bg-white"
                 />
                 <button
                   type="submit"
                   disabled={subscribing}
-                  className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+                  className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-50"
                 >
                   {subscribing ? '...' : 'Subscribe'}
                 </button>
