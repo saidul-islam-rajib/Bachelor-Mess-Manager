@@ -599,7 +599,15 @@ const en = {
       cannotChangeSelf: 'You cannot change your own role or status.',
       newPassword: 'New password',
       newPasswordHint: 'Leave blank to keep the current password. Setting one signs the user out everywhere.',
-      passwordChanged: (name: string) => `Password updated for ${name}.`
+      passwordChanged: (name: string) => `Password updated for ${name}.`,
+      deletePermanently: 'Delete',
+      deleteConfirmTitle: (name: string) => `Permanently delete ${name}?`,
+      deleteConfirmBody:
+        'This wipes the account and everything it owns in every mess: meals, meal plans, expense shares, payments, comments, invitations and notifications. Expenses they paid for stay, with the payer left blank. This cannot be undone.',
+      deleted: (name: string) => `${name} deleted permanently.`,
+      cannotDeleteSelf: 'You cannot delete your own account.',
+      supervisesGroups: (names: string[]) =>
+        `This user supervises ${names.join(', ')}. Hand those groups to another supervisor or delete them first.`
     },
     impersonation: {
       action: 'Sign in as',
@@ -626,7 +634,13 @@ const en = {
       addMember: 'Add member',
       memberEmail: "Member's registered email",
       removed: (name: string) => `${name} removed from the group.`,
-      added: (name: string) => `${name} added to the group.`
+      added: (name: string) => `${name} added to the group.`,
+      deletePermanently: 'Delete',
+      deleteConfirmTitle: (name: string) => `Permanently delete ${name}?`,
+      deleteConfirmBody:
+        'This wipes the mess and everything in it: meals, bazar, bills, payments, comments, closings and memberships. Member accounts stay. This cannot be undone.',
+      deleted: (name: string) => `${name} deleted permanently.`,
+      deleteMemberAccount: 'Delete account'
     },
     security: {
       title: 'Security policy',

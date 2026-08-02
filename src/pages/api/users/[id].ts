@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { USER_ROLE_VALUES, USER_STATUS_VALUES } from '@/lib/constants';
+import { deleteUserPermanently } from '@/lib/hard-delete';
 import { hashPassword, validatePasswordWithPolicy } from '@/lib/password';
 import { getSecurityPolicy } from '@/lib/settings-service';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
@@ -10,8 +11,8 @@ import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'PATCH') {
-    return methodNotAllowed(res, ['PATCH']);
+  if (req.method !== 'PATCH' && req.method !== 'DELETE') {
+    return methodNotAllowed(res, ['PATCH', 'DELETE']);
   }
 
   const sessionUser = await getSessionUser(req);
@@ -30,6 +31,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const target = await prisma.user.findUnique({ where: { id: userId } });
   if (!target) {
     return notFound(res, strings.admin.users.notFound);
+  }
+
+  if (req.method === 'DELETE') {
+    if (target.id === sessionUser.id) {
+      return forbidden(res, strings.admin.users.cannotDeleteSelf);
+    }
+
+    const supervised = await prisma.group.findMany({ where: { supervisorId: target.id }, select: { name: true } });
+    if (supervised.length > 0) {
+      return conflict(res, strings.admin.users.supervisesGroups(supervised.map((group) => group.name)));
+    }
+
+    await deleteUserPermanently(target.id, target.email);
+    return ok(res, { deleted: true, name: target.name });
   }
 
   const { name, email, phone, role, status, password } = req.body as {

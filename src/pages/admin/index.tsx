@@ -91,7 +91,11 @@ type SecurityPolicy = {
 type SecurityResponse = {
   policy: SecurityPolicy;
   lockedAccounts: { email: string; failedAttempts: number; lastAttemptAt: string | null }[];
-  recentFailures: { id: string; email: string; ipAddress: string; reason: string | null; createdAt: string }[];
+};
+
+type LoginFailuresResponse = {
+  failures: { id: string; email: string; ipAddress: string; reason: string | null; createdAt: string }[];
+  meta: PageMeta;
 };
 
 const TABS = [
@@ -391,6 +395,7 @@ function UsersPanel() {
   const toast = useToast();
   const confirm = useConfirm();
   const lookups = useLookups();
+  const currentUserId = useCurrentUser().user?.id;
 
   const [busy, setBusy] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -471,6 +476,28 @@ function UsersPanel() {
     }
   }
 
+  async function deleteUser(user: AdminUser) {
+    const accepted = await confirm({
+      title: strings.admin.users.deleteConfirmTitle(user.name),
+      message: strings.admin.users.deleteConfirmBody,
+      confirmLabel: strings.admin.users.deletePermanently,
+      destructive: true
+    });
+    if (!accepted) return;
+
+    setBusy(user.id);
+    try {
+      await api.delete(`/api/users/${user.id}`);
+      toast.success(strings.admin.users.deleted(user.name));
+      setPage(1);
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusy('');
+    }
+  }
+
   const columns: Column<AdminUser>[] = [
     {
       key: 'name',
@@ -534,6 +561,11 @@ function UsersPanel() {
           <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
             {strings.common.edit}
           </Button>
+          {row.id !== currentUserId && (
+            <Button size="sm" variant="danger" onClick={() => deleteUser(row)} disabled={busy === row.id}>
+              {strings.admin.users.deletePermanently}
+            </Button>
+          )}
         </div>
       )
     }
@@ -823,6 +855,25 @@ function GroupsPanel() {
     }
   }
 
+  async function deleteGroup(group: AdminGroup) {
+    const accepted = await confirm({
+      title: strings.admin.groups.deleteConfirmTitle(group.name),
+      message: strings.admin.groups.deleteConfirmBody,
+      confirmLabel: strings.admin.groups.deletePermanently,
+      destructive: true
+    });
+    if (!accepted) return;
+
+    try {
+      await api.delete(`/api/groups/${group.id}`);
+      toast.success(strings.admin.groups.deleted(group.name));
+      setPage(1);
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error));
+    }
+  }
+
   async function createGroup() {
     setCreating(true);
     try {
@@ -878,6 +929,9 @@ function GroupsPanel() {
             onClick={() => toggleGroupStatus(row)}
           >
             {row.status === GROUP_STATUS.ACTIVE ? strings.groups.deactivate : strings.groups.activate}
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => deleteGroup(row)}>
+            {strings.admin.groups.deletePermanently}
           </Button>
         </div>
       )
@@ -1047,6 +1101,28 @@ function GroupMembersModal({
     }
   }
 
+  async function deleteAccount(member: { id: string; name: string }) {
+    const confirmed = await confirm({
+      title: strings.admin.users.deleteConfirmTitle(member.name),
+      message: strings.admin.users.deleteConfirmBody,
+      destructive: true,
+      confirmLabel: strings.admin.users.deletePermanently
+    });
+    if (!confirmed) return;
+
+    setBusy(member.id);
+    try {
+      await api.delete(`/api/users/${member.id}`);
+      toast.success(strings.admin.users.deleted(member.name));
+      await load();
+      await onChanged();
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusy('');
+    }
+  }
+
   const active = members.filter((member) => member.isActive);
 
   return (
@@ -1085,9 +1161,14 @@ function GroupMembersModal({
                   <p className="truncate text-xs text-slate-500">{member.email}</p>
                 </div>
                 {!member.isSupervisor && (
-                  <Button size="sm" variant="danger" loading={busy === member.id} onClick={() => remove(member)}>
-                    {strings.common.remove}
-                  </Button>
+                  <div className="flex shrink-0 gap-2">
+                    <Button size="sm" variant="secondary" loading={busy === member.id} onClick={() => remove(member)}>
+                      {strings.common.remove}
+                    </Button>
+                    <Button size="sm" variant="danger" disabled={busy === member.id} onClick={() => deleteAccount(member)}>
+                      {strings.admin.groups.deleteMemberAccount}
+                    </Button>
+                  </div>
                 )}
               </li>
             ))}
@@ -1106,6 +1187,11 @@ function SecurityPanel() {
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState('');
 
+  const [failures, setFailures] = useState<LoginFailuresResponse | null>(null);
+  const [failuresPage, setFailuresPage] = useState(1);
+  const [failuresPageSize, setFailuresPageSize] = useState(paginationConfig.pageSize);
+  const [failuresLoading, setFailuresLoading] = useState(true);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -1119,9 +1205,27 @@ function SecurityPanel() {
     }
   }, [toast]);
 
+  const loadFailures = useCallback(async () => {
+    setFailuresLoading(true);
+    try {
+      const response = await api.get<LoginFailuresResponse>('/api/admin/login-attempts', {
+        query: { page: failuresPage, pageSize: failuresPageSize }
+      });
+      setFailures(response);
+    } catch (error) {
+      toast.error(errorMessage(error, strings.errors.loadFailed(strings.admin.security.recentFailures)));
+    } finally {
+      setFailuresLoading(false);
+    }
+  }, [failuresPage, failuresPageSize, toast]);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    loadFailures();
+  }, [loadFailures]);
 
   async function save() {
     if (!form) return;
@@ -1142,7 +1246,8 @@ function SecurityPanel() {
     try {
       await api.delete('/api/admin/security', { email });
       toast.success(strings.admin.security.unlocked(email));
-      await load();
+      setFailuresPage(1);
+      await Promise.all([load(), loadFailures()]);
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {
@@ -1250,11 +1355,13 @@ function SecurityPanel() {
       <Card>
         <CardHeader title={strings.admin.security.recentFailures} />
         <div className="mt-4">
-          {data.recentFailures.length === 0 ? (
+          {failuresLoading && !failures ? (
+            <LoadingCard />
+          ) : !failures || failures.failures.length === 0 ? (
             <EmptyState title={strings.admin.security.noRecentFailures} description="" />
           ) : (
             <ul className="divide-y divide-slate-100 text-sm">
-              {data.recentFailures.map((failure) => (
+              {failures.failures.map((failure) => (
                 <li key={failure.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
                   <span className="truncate">{failure.email}</span>
                   <span className="text-xs text-slate-500">
@@ -1263,6 +1370,17 @@ function SecurityPanel() {
                 </li>
               ))}
             </ul>
+          )}
+          {failures && (
+            <Pagination
+              meta={failures.meta}
+              onPageChange={setFailuresPage}
+              onPageSizeChange={(size) => {
+                setFailuresPageSize(size);
+                setFailuresPage(1);
+              }}
+              disabled={failuresLoading}
+            />
           )}
         </div>
       </Card>

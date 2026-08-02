@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { USER_ROLES } from '@/lib/constants';
@@ -12,11 +12,18 @@ type GroupSummary = {
   supervisor: { id: string; name: string; email: string };
 };
 
+const PAGE_SIZE = 8;
+
 function move<T>(list: T[], from: number, to: number): T[] {
   const next = [...list];
   const [item] = next.splice(from, 1);
   next.splice(to, 0, item);
   return next;
+}
+
+function matchesSearch(group: GroupSummary, term: string): boolean {
+  const haystack = `${group.name} ${group.supervisor.name} ${group.supervisor.email}`.toLowerCase();
+  return haystack.includes(term);
 }
 
 export default function GroupsPage() {
@@ -31,6 +38,8 @@ export default function GroupsPage() {
   const [limits, setLimits] = useState<{ maxGroups: number; ownedCount: number; canCreate: boolean } | null>(null);
   const [showClosed, setShowClosed] = useState(false);
   const [hiddenInactive, setHiddenInactive] = useState(0);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const groupsRef = useRef<GroupSummary[]>([]);
@@ -40,10 +49,25 @@ export default function GroupsPage() {
 
   groupsRef.current = groups;
 
+  const term = search.trim().toLowerCase();
+  const filtered = useMemo(
+    () => (term ? groups.filter((group) => matchesSearch(group, term)) : groups),
+    [groups, term]
+  );
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const offset = (currentPage - 1) * PAGE_SIZE;
+  const visible = useMemo(() => filtered.slice(offset, offset + PAGE_SIZE), [filtered, offset]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [term, showClosed]);
+
   useLayoutEffect(() => {
     const measured = new Map<string, number>();
+    itemRefs.current.length = visible.length;
 
-    groups.forEach((group, index) => {
+    visible.forEach((group, index) => {
       const el = itemRefs.current[index];
       if (!el) return;
 
@@ -66,10 +90,10 @@ export default function GroupsPage() {
     });
 
     prevRects.current = measured;
-  }, [groups]);
+  }, [visible]);
 
   const canCreate = user?.role === USER_ROLES.SUPERVISOR;
-  const canReorder = groups.length > 1;
+  const canReorder = groups.length > 1 && !term;
 
   const loadGroups = useCallback(async () => {
     setLoading(true);
@@ -127,7 +151,7 @@ export default function GroupsPage() {
 
       if (Date.now() - lastSwap.current < 200) return;
 
-      let target = current;
+      let target = current - offset;
       for (let i = 0; i < itemRefs.current.length; i += 1) {
         const rect = itemRefs.current[i]?.getBoundingClientRect();
         if (!rect) continue;
@@ -138,10 +162,11 @@ export default function GroupsPage() {
         target = i;
       }
 
-      if (target !== current) {
+      const absolute = offset + target;
+      if (absolute !== current) {
         lastSwap.current = Date.now();
-        setGroups((prev) => move(prev, current, target));
-        setDragIndex(target);
+        setGroups((prev) => move(prev, current, absolute));
+        setDragIndex(absolute);
       }
     }
 
@@ -158,7 +183,7 @@ export default function GroupsPage() {
       window.removeEventListener('pointerup', onEnd);
       window.removeEventListener('pointercancel', onEnd);
     };
-  }, [dragIndex, persistOrder]);
+  }, [dragIndex, offset, persistOrder]);
 
   async function createGroup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -243,16 +268,43 @@ export default function GroupsPage() {
         </div>
       )}
 
+      {groups.length > PAGE_SIZE / 2 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by group or supervisor"
+            className="min-w-[16rem] flex-1 rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+          />
+          {term && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            >
+              Clear
+            </button>
+          )}
+          <span className="text-sm text-slate-500">
+            {filtered.length} {filtered.length === 1 ? 'group' : 'groups'}
+          </span>
+        </div>
+      )}
+
       {loading ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">Loading groups...</div>
       ) : error ? (
         <div className="rounded-3xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm">{error}</div>
       ) : groups.length === 0 ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">No groups yet.</div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
+          No group matches &ldquo;{search.trim()}&rdquo;.
+        </div>
       ) : (
         <ul className="space-y-4">
-          {groups.map((group, index) => {
-            const dragging = dragIndex === index;
+          {visible.map((group, index) => {
+            const dragging = dragIndex === offset + index;
 
             return (
               <li
@@ -266,7 +318,7 @@ export default function GroupsPage() {
                   const target = event.target as HTMLElement;
                   if (target.closest('a, button, input, textarea, select')) return;
                   event.preventDefault();
-                  setDragIndex(index);
+                  setDragIndex(offset + index);
                 }}
                 style={dragging ? { zIndex: 10, position: 'relative' } : undefined}
                 className={`rounded-3xl border bg-white p-5 shadow-sm sm:p-6 ${
@@ -284,7 +336,7 @@ export default function GroupsPage() {
                       onPointerDown={(event) => {
                         event.preventDefault();
                         event.currentTarget.setPointerCapture(event.pointerId);
-                        setDragIndex(index);
+                        setDragIndex(offset + index);
                       }}
                       aria-label={`Reorder ${group.name}`}
                       title="Drag to reorder"
@@ -332,6 +384,35 @@ export default function GroupsPage() {
             );
           })}
         </ul>
+      )}
+
+      {!loading && !error && filtered.length > PAGE_SIZE && (
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-500">
+            Showing {offset + 1}-{offset + visible.length} of {filtered.length}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setPage(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+            >
+              Previous
+            </button>
+            <span className="px-1 text-sm text-slate-600">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { GROUP_STATUS_VALUES, MEAL_RATE_MODE_VALUES } from '@/lib/constants';
+import { deleteGroupPermanently } from '@/lib/hard-delete';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
@@ -88,7 +89,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, { group: updated });
   }
 
-  return methodNotAllowed(res, ['GET', 'PATCH']);
+  if (req.method === 'DELETE') {
+    if (!requireAdmin(sessionUser)) {
+      return forbidden(res, strings.errors.adminOnly);
+    }
+
+    await deleteGroupPermanently(groupId);
+    return ok(res, { deleted: true, name: group.name });
+  }
+
+  return methodNotAllowed(res, ['GET', 'PATCH', 'DELETE']);
 }
 
 export default withAudit(handler);
