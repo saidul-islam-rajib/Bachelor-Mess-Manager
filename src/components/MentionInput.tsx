@@ -19,6 +19,8 @@ type MentionInputProps = {
   onSubmit?: () => void;
   variant?: 'textarea' | 'inline';
   showHint?: boolean;
+  hint?: string;
+  allowEveryone?: boolean;
   maxLength?: number;
   className?: string;
 };
@@ -32,6 +34,8 @@ export function MentionInput({
   onSubmit,
   variant = 'textarea',
   showHint = variant === 'textarea',
+  hint = strings.comments.mentionHint,
+  allowEveryone = true,
   maxLength = validationConfig.commentMaxLength,
   className = ''
 }: MentionInputProps) {
@@ -44,7 +48,9 @@ export function MentionInput({
     query === null
       ? []
       : [
-          ...(members.length > 1 && EVERYONE_ALIASES.some((alias) => alias.startsWith(needle)) ? [EVERYONE_OPTION] : []),
+          ...(allowEveryone && members.length > 1 && EVERYONE_ALIASES.some((alias) => alias.startsWith(needle))
+            ? [EVERYONE_OPTION]
+            : []),
           ...members.filter((member) => member.name.toLowerCase().includes(needle))
         ].slice(0, MAX_SUGGESTIONS);
 
@@ -180,7 +186,7 @@ export function MentionInput({
         </ul>
       )}
 
-      {showHint && <p className="mt-1 text-xs text-slate-400">{strings.comments.mentionHint}</p>}
+      {showHint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
     </div>
   );
 }

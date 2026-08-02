@@ -6,6 +6,7 @@ import { STRINGS } from '@/lib/strings';
 import { strings } from '@/lib/i18n';
 import { USER_ROLES } from '@/lib/constants';
 import { useCurrentUser } from '@/components/UserProvider';
+import { useCommunity } from '@/components/CommunityProvider';
 import NotificationBell from '@/components/NotificationBell';
 import ProfileMenu from '@/components/ProfileMenu';
 import Logo from '@/components/Logo';
@@ -13,10 +14,21 @@ import Footer from '@/components/Footer';
 import InstallAppBanner from '@/components/InstallAppBanner';
 import UpdateBanner from '@/components/UpdateBanner';
 
-type NavLink = { href: string; label: string };
+type NavLink = { href: string; label: string; badge?: number };
+
+function NavBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+
+  return (
+    <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
 
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, loading, logout, stopImpersonating } = useCurrentUser();
+  const { unreadCount: communityUnread } = useCommunity();
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -30,18 +42,19 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const links: NavLink[] = [];
   if (user) {
-    links.push({ href: ROUTES.dashboard, label: 'Dashboard' });
-    links.push({ href: ROUTES.groups, label: 'Groups' });
-    links.push({ href: ROUTES.meals, label: 'Meals' });
-    links.push({ href: ROUTES.expenses, label: 'Bazar' });
-    links.push({ href: ROUTES.bills, label: 'Bills' });
-    links.push({ href: ROUTES.payments, label: 'Payments' });
-    links.push({ href: ROUTES.members, label: 'Members' });
-    links.push({ href: ROUTES.comments, label: 'Comments' });
+    links.push({ href: ROUTES.dashboard, label: strings.nav.dashboard });
+    links.push({ href: ROUTES.groups, label: strings.nav.groups });
+    links.push({ href: ROUTES.meals, label: strings.nav.meals });
+    links.push({ href: ROUTES.expenses, label: strings.nav.bazar });
+    links.push({ href: ROUTES.bills, label: strings.nav.bills });
+    links.push({ href: ROUTES.payments, label: strings.nav.payments });
+    links.push({ href: ROUTES.members, label: strings.nav.members });
+    links.push({ href: ROUTES.comments, label: strings.nav.comments });
+    links.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
     if (user.role === USER_ROLES.ADMIN) {
-      links.push({ href: ROUTES.admin, label: 'Admin' });
+      links.push({ href: ROUTES.admin, label: strings.nav.admin });
     }
-    links.push({ href: ROUTES.guide, label: 'Guide' });
+    links.push({ href: ROUTES.guide, label: strings.nav.guide });
   }
 
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(`${href}/`);
@@ -91,13 +104,14 @@ export default function Layout({ children }: { children: ReactNode }) {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`rounded-full px-3 py-2 transition-colors ${
+                  className={`inline-flex items-center rounded-full px-3 py-2 transition-colors ${
                     active
                       ? 'bg-slate-900 font-semibold text-white'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   {link.label}
+                  <NavBadge count={link.badge ?? 0} />
                 </Link>
               );
             })}
@@ -110,13 +124,13 @@ export default function Layout({ children }: { children: ReactNode }) {
             ) : showAuthLinks ? (
               <>
                 <Link href={ROUTES.auth.login} className="rounded-full px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                  Login
+                  {strings.nav.login}
                 </Link>
                 <Link
                   href={ROUTES.auth.register}
                   className="ml-1 rounded-full bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
                 >
-                  Register
+                  {strings.nav.register}
                 </Link>
               </>
             ) : null}
@@ -128,7 +142,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               {user && <ProfileMenu />}
               <button
                 onClick={() => setOpen((prev) => !prev)}
-                aria-label="Toggle menu"
+                aria-label={strings.nav.toggleMenu}
                 aria-expanded={open}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100"
               >
@@ -151,11 +165,12 @@ export default function Layout({ children }: { children: ReactNode }) {
                     href={link.href}
                     onClick={() => setOpen(false)}
                     aria-current={active ? 'page' : undefined}
-                    className={`rounded-xl px-3 py-2.5 transition-colors ${
+                    className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${
                       active ? 'bg-slate-900 font-semibold text-white' : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
                     {link.label}
+                    <NavBadge count={link.badge ?? 0} />
                   </Link>
                 );
               })}
@@ -169,7 +184,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                       isActive(ROUTES.profile) ? 'bg-slate-900 font-semibold text-white' : 'text-slate-700 hover:bg-slate-100'
                     }`}
                   >
-                    Profile
+                    {strings.nav.profile}
                   </Link>
                   <button
                     onClick={() => {
@@ -178,20 +193,20 @@ export default function Layout({ children }: { children: ReactNode }) {
                     }}
                     className="mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100"
                   >
-                    Log out
+                    {strings.nav.logout}
                   </button>
                 </>
               ) : showAuthLinks ? (
                 <>
                   <Link href={ROUTES.auth.login} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-100">
-                    Login
+                    {strings.nav.login}
                   </Link>
                   <Link
                     href={ROUTES.auth.register}
                     onClick={() => setOpen(false)}
                     className="mt-1 rounded-xl bg-slate-900 px-3 py-2.5 text-white"
                   >
-                    Register
+                    {strings.nav.register}
                   </Link>
                 </>
               ) : null}

@@ -1,13 +1,9 @@
 import Link from 'next/link';
 import { timeAgo } from '@/components/InvitationsProvider';
 import { useNotifications, type AppNotification } from '@/components/NotificationsProvider';
-import { NOTIFICATION_TYPES } from '@/lib/constants';
+import { strings } from '@/lib/i18n';
 
-const ACTIONS: Record<string, string> = {
-  [NOTIFICATION_TYPES.MENTION_COMMENT]: 'mentioned you in a comment',
-  [NOTIFICATION_TYPES.MENTION_REPLY]: 'mentioned you in a reply',
-  [NOTIFICATION_TYPES.MENTION_EXPENSE_COMMENT]: 'mentioned you in a bazar note'
-};
+const ACTIONS: Record<string, string> = strings.notifications.actions;
 
 export default function NotificationCard({
   notification,
@@ -38,10 +34,10 @@ export default function NotificationCard({
         ) : (
           <p className="text-sm text-slate-700">
             <span className="font-semibold text-slate-900">{notification.actorName}</span>{' '}
-            {ACTIONS[notification.type] ?? 'mentioned you'}
+            {ACTIONS[notification.type] ?? strings.notifications.defaultAction}
             {notification.groupName && (
               <>
-                {' in '}
+                {` ${strings.notifications.inGroup} `}
                 <span className="font-semibold text-slate-900">{notification.groupName}</span>
               </>
             )}
