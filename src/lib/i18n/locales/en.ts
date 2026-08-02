@@ -156,6 +156,8 @@ const en = {
   },
   validation: {
     required: (field: string) => `${field} is required.`,
+    invalidDate: 'A valid date (YYYY-MM-DD) is required.',
+    groupIdRequired: 'Group ID is required.',
     nameRequired: 'Name is required.',
     nameTooShort: (min: number) => `Name must be at least ${min} characters.`,
     nameTooLong: (max: number) => `Name must be at most ${max} characters.`,
