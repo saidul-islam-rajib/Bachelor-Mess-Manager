@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
+import MealPromptsPanel from '@/components/MealPromptsPanel';
 import { ROUTES } from '@/lib/routes';
 import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
@@ -137,6 +138,12 @@ export default function DashboardPage() {
           </label>
         )}
       </div>
+
+      {user && (
+        <div className="mb-6">
+          <MealPromptsPanel />
+        </div>
+      )}
 
       {userLoading || loading ? (
         <Panel>Loading...</Panel>
