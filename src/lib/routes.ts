@@ -14,7 +14,14 @@ export const ROUTES = {
   members: '/members',
   profile: '/profile',
   comments: '/comments',
+  community: '/community',
+  mealReply: '/meal-reply',
   admin: '/admin',
   invitations: '/invitations',
   guide: '/guide'
 };
+
+export function mealReplyPath(token: string, answer?: string): string {
+  const query = answer ? `?answer=${encodeURIComponent(answer)}` : '';
+  return `${ROUTES.mealReply}/${encodeURIComponent(token)}${query}`;
+}

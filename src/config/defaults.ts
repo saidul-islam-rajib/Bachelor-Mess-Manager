@@ -90,6 +90,26 @@ export const UI_DEFAULTS = {
   monthsForward: 1
 } as const;
 
+export const COMMUNITY_DEFAULTS = {
+  pageSize: 30,
+  maxMessageLength: 1000,
+  pollIntervalMs: 45_000,
+  directorySize: 200,
+  mentionRecipientCap: 25,
+  everyoneRecipientCap: 500
+} as const;
+
+export const MEAL_PROMPT_DEFAULTS = {
+  tokenBytes: 32,
+  validHours: 36,
+  leadDays: 1,
+  breakfast: 0,
+  lunch: 1,
+  dinner: 1,
+  batchSize: 200,
+  maxCountPerMeal: 9
+} as const;
+
 export const MAIL_DEFAULTS = {
   port: 587,
   helo: 'bachelor-point',

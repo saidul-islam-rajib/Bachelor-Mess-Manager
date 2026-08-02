@@ -45,12 +45,48 @@ export const NOTIFICATION_TYPES = {
   MEAL_CHANGE_APPROVED: 'MEAL_CHANGE_APPROVED',
   MEAL_CHANGE_REJECTED: 'MEAL_CHANGE_REJECTED',
   MONTH_CLOSED: 'MONTH_CLOSED',
-  MONTH_REOPENED: 'MONTH_REOPENED'
+  MONTH_REOPENED: 'MONTH_REOPENED',
+  MENTION_COMMUNITY: 'MENTION_COMMUNITY',
+  COMMUNITY_ANNOUNCEMENT: 'COMMUNITY_ANNOUNCEMENT',
+  COMMUNITY_WELCOME: 'COMMUNITY_WELCOME',
+  MEAL_PROMPT: 'MEAL_PROMPT'
 } as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[keyof typeof NOTIFICATION_TYPES];
 
 export const NOTIFICATION_TYPE_VALUES = Object.values(NOTIFICATION_TYPES) as string[];
+
+export const COMMUNITY_MESSAGE_TYPES = {
+  MEMBER: 'MEMBER',
+  WELCOME: 'WELCOME',
+  ANNOUNCEMENT: 'ANNOUNCEMENT',
+  SYSTEM: 'SYSTEM'
+} as const;
+
+export type CommunityMessageType = (typeof COMMUNITY_MESSAGE_TYPES)[keyof typeof COMMUNITY_MESSAGE_TYPES];
+
+export const COMMUNITY_MESSAGE_TYPE_VALUES = Object.values(COMMUNITY_MESSAGE_TYPES) as string[];
+
+export const COMMUNITY_SYSTEM_TYPES: string[] = COMMUNITY_MESSAGE_TYPE_VALUES.filter(
+  (type) => type !== COMMUNITY_MESSAGE_TYPES.MEMBER
+);
+
+export const MEAL_PROMPT_ANSWERS = {
+  YES: 'YES',
+  NO: 'NO',
+  CUSTOM: 'CUSTOM'
+} as const;
+
+export type MealPromptAnswer = (typeof MEAL_PROMPT_ANSWERS)[keyof typeof MEAL_PROMPT_ANSWERS];
+
+export const MEAL_PROMPT_ANSWER_VALUES = Object.values(MEAL_PROMPT_ANSWERS) as string[];
+
+export const MEAL_PROMPT_CHANNELS = {
+  EMAIL: 'EMAIL',
+  IN_APP: 'IN_APP'
+} as const;
+
+export type MealPromptChannel = (typeof MEAL_PROMPT_CHANNELS)[keyof typeof MEAL_PROMPT_CHANNELS];
 
 export const EXPENSE_TYPES = {
   BAZAR: 'BAZAR',
