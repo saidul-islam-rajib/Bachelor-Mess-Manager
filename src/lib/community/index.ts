@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { appConfig, communityConfig } from '@/config';
@@ -9,6 +10,7 @@ import { createNotifications } from '@/lib/notifications';
 import { ROUTES } from '@/lib/routes';
 
 const WELCOME_KEY_PREFIX = 'welcome:';
+const MEMBER_KEY_PREFIX = 'message:';
 const UNIQUE_VIOLATION = 'P2002';
 
 export type CommunityMessageView = {
@@ -145,6 +147,7 @@ export async function readFeed(options: { before?: string; after?: string; limit
 export async function postMessage(params: { authorId: string; text: string }): Promise<CommunityMessageView> {
   const row = await prisma.communityMessage.create({
     data: {
+      key: `${MEMBER_KEY_PREFIX}${randomUUID()}`,
       type: COMMUNITY_MESSAGE_TYPES.MEMBER,
       authorId: params.authorId,
       text: params.text,
@@ -268,7 +271,7 @@ export async function unreadCount(userId: string): Promise<number> {
   return prisma.communityMessage.count({
     where: {
       ...VISIBLE,
-      authorId: { not: userId },
+      OR: [{ authorId: null }, { authorId: { not: userId } }],
       ...(marker ? { createdAt: { gt: marker.lastReadAt } } : {})
     }
   });

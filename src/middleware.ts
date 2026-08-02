@@ -5,6 +5,9 @@ import { ROUTES } from '@/lib/routes';
 
 const PUBLIC_PATHS = [
   ROUTES.guide,
+  ROUTES.mealReply,
+  '/api/meal-reply',
+  '/api/meal-prompts/dispatch',
   '/auth/login',
   '/auth/register',
   '/auth/registration-submitted',

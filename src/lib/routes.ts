@@ -25,3 +25,7 @@ export function mealReplyPath(token: string, answer?: string): string {
   const query = answer ? `?answer=${encodeURIComponent(answer)}` : '';
   return `${ROUTES.mealReply}/${encodeURIComponent(token)}${query}`;
 }
+
+export function mealReplyApiPath(token: string): string {
+  return `/api${ROUTES.mealReply}/${encodeURIComponent(token)}`;
+}

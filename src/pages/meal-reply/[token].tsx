@@ -6,7 +6,7 @@ import { Alert, Card, LoadingCard, PageContainer, PageHeader } from '@/component
 import { api, errorMessage } from '@/lib/api-client';
 import { MEAL_PROMPT_ANSWER_VALUES, type MealPromptAnswer } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
-import { ROUTES } from '@/lib/routes';
+import { mealReplyApiPath, ROUTES } from '@/lib/routes';
 
 type PromptResponse = { prompt: MealPromptState & { expired: boolean } };
 
@@ -26,7 +26,7 @@ export default function MealReplyPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const data = await api.get<PromptResponse>(`/api/meal-prompts/${encodeURIComponent(token)}`);
+      const data = await api.get<PromptResponse>(mealReplyApiPath(token));
       setPrompt(data.prompt);
       setError('');
     } catch (caught) {
@@ -46,7 +46,7 @@ export default function MealReplyPage() {
       setBusy(true);
       try {
         const data = await api.post<{ summary: string; prompt: MealPromptState & { expired: boolean } }>(
-          `/api/meal-prompts/${encodeURIComponent(token)}`,
+          mealReplyApiPath(token),
           { answer: choice, counts }
         );
         setPrompt(data.prompt);
