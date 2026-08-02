@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { USER_ROLE_VALUES, USER_STATUS_VALUES } from '@/lib/constants';
+import { USER_ROLE_VALUES, USER_STATUS, USER_STATUS_VALUES } from '@/lib/constants';
+import { ensureWelcomeMessage } from '@/lib/community';
 import { deleteUserPermanently } from '@/lib/hard-delete';
 import { hashPassword, validatePasswordWithPolicy } from '@/lib/password';
 import { getSecurityPolicy } from '@/lib/settings-service';
@@ -127,6 +128,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (passwordChanged) {
       await prisma.passwordToken.deleteMany({ where: { userId } });
+    }
+
+    if (user.status === USER_STATUS.APPROVED) {
+      await ensureWelcomeMessage(user);
     }
 
     return ok(res, { user });

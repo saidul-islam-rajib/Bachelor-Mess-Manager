@@ -59,6 +59,8 @@ const en = {
     members: 'Members',
     comments: 'Comments',
     admin: 'Admin',
+    community: 'Community',
+    guide: 'Guide',
     profile: 'Profile',
     login: 'Login',
     register: 'Register',
@@ -154,6 +156,8 @@ const en = {
   },
   validation: {
     required: (field: string) => `${field} is required.`,
+    invalidDate: 'A valid date (YYYY-MM-DD) is required.',
+    groupIdRequired: 'Group ID is required.',
     nameRequired: 'Name is required.',
     nameTooShort: (min: number) => `Name must be at least ${min} characters.`,
     nameTooLong: (max: number) => `Name must be at most ${max} characters.`,
@@ -518,6 +522,107 @@ const en = {
     onlySupervisorCanDelete: 'Only the group supervisor can delete comments.',
     ownOrSupervisor: 'You can only delete your own messages.',
     label: 'message'
+  },
+  notifications: {
+    fallbackActor: 'Someone',
+    defaultAction: 'mentioned you',
+    actions: {
+      MENTION_COMMENT: 'mentioned you in a comment',
+      MENTION_REPLY: 'mentioned you in a reply',
+      MENTION_EXPENSE_COMMENT: 'mentioned you in a bazar note',
+      MENTION_COMMUNITY: 'mentioned you in the community'
+    },
+    inGroup: 'in'
+  },
+  community: {
+    title: 'Community',
+    subtitle: (app: string) => `One room for everyone on ${app}. Ask a question, share news, welcome new faces.`,
+    placeholder: 'Write something for everyone...',
+    send: 'Send',
+    sending: 'Sending...',
+    empty: 'No messages yet. Be the first to say hello.',
+    loadOlder: 'Load older messages',
+    loadingOlder: 'Loading...',
+    newMessages: (count: number) => `${count} new message${count === 1 ? '' : 's'}`,
+    jumpToLatest: 'Jump to latest',
+    markAllRead: 'Mark all as read',
+    unreadBadge: (count: number) => `${count} unread`,
+    pinned: 'Pinned',
+    formerMember: 'Former member',
+    mentionHint: 'Type @ to mention someone.',
+    everyoneAdminsOnly: 'Only admins can notify everyone here.',
+    textRequired: 'Write something first.',
+    tooLong: (max: number) => `Keep it under ${max} characters.`,
+    posted: 'Posted to the community.',
+    deleteAction: 'Delete message',
+    deleteConfirmTitle: 'Delete this message?',
+    deleteConfirmBody: 'It disappears for everyone in the community room.',
+    deleted: 'Message deleted.',
+    deleteNotAllowed: 'You can only delete your own messages.',
+    notFound: 'Message not found.',
+    idRequired: 'Message ID is required.',
+    systemNotDeletable: 'System messages cannot be deleted.',
+    signedOut: 'Sign in to join the community.',
+    types: {
+      MEMBER: 'Member',
+      WELCOME: 'Welcome',
+      ANNOUNCEMENT: "What's new",
+      SYSTEM: 'System'
+    },
+    welcome: {
+      title: 'New member',
+      body: (name: string, app: string) => `${name} just joined ${app}. Say hello and help them settle in.`,
+      selfTitle: (app: string) => `Welcome to ${app}`,
+      selfBody: 'Everyone here shares meals, bazar and bills. Open the community room to meet the others.'
+    },
+    announcements: {
+      communityRoom: {
+        title: 'The community room is open',
+        body: 'Everyone on the app shares this room. Ask a question, mention someone with @, and never miss an announcement.'
+      },
+      mealQuickReply: {
+        title: 'Answer your meals in one tap',
+        body: 'You now get a daily "are you eating?" ask. Tap Yes or No from your phone and your meals are recorded, no sign-in needed.'
+      }
+    }
+  },
+  mealPrompt: {
+    title: 'Quick meal reply',
+    cardTitle: 'Are you eating?',
+    question: (group: string, date: string) => `${group} · ${date}`,
+    yes: 'Yes, count me in',
+    no: 'No meals',
+    choose: 'Choose meals',
+    yesShort: 'Yes',
+    noShort: 'No',
+    usualHint: 'Counts your usual meals for that day.',
+    noHint: 'Records zero meals for that day.',
+    saved: 'Saved. Thank you!',
+    savedDetail: (summary: string) => `Your meals are set: ${summary}.`,
+    noneSummary: 'no meals',
+    answeredYes: 'You said yes.',
+    answeredNo: 'You said no.',
+    answeredCustom: 'You picked your own counts.',
+    changeAnswer: 'Change my answer',
+    openApp: 'Open the app',
+    invalidLink: 'This link is not valid.',
+    expiredLink: 'This link has expired. Open the app to set your meals.',
+    inactiveGroup: 'This mess is closed, so meals can no longer be changed.',
+    notAMember: 'You are no longer a member of this mess.',
+    invalidAnswer: 'Choose yes, no, or your own counts.',
+    dateLocked: 'That day is already locked. Open the app to request a change.',
+    dispatchForbidden: 'You cannot send meal reminders for this group.',
+    dispatched: (count: number) => `Sent ${count} meal reminder${count === 1 ? '' : 's'}.`,
+    nothingToSend: 'Everyone has already been asked.',
+    sendNow: 'Ask everyone about meals',
+    notificationTitle: (group: string, date: string) => `Are you eating in ${group} on ${date}?`,
+    notificationBody: 'Tap yes or no to set your meals for that day.',
+    emailSubject: (group: string, date: string) => `${group}: are you eating on ${date}?`,
+    emailIntro: (name: string, group: string, date: string) =>
+      `Hello ${name}, are you eating with ${group} on ${date}?`,
+    emailFooter: 'One tap is all it takes. You can change your answer any time before the day starts.',
+    counts: (breakfast: number, lunch: number, dinner: number) =>
+      `breakfast ${breakfast}, lunch ${lunch}, dinner ${dinner}`
   },
   profile: {
     title: 'Profile',

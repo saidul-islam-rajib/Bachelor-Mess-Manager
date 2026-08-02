@@ -1,7 +1,9 @@
 import {
   APP_DEFAULTS,
   AUTHOR,
+  COMMUNITY_DEFAULTS,
   GROUP_DEFAULTS,
+  MEAL_PROMPT_DEFAULTS,
   PAGINATION_DEFAULTS,
   PASSWORD_DEFAULTS,
   SECURITY_DEFAULTS,
@@ -48,7 +50,14 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   UI_TOAST_DEDUPE_WINDOW_MS: process.env.UI_TOAST_DEDUPE_WINDOW_MS,
   UI_SEARCH_DEBOUNCE_MS: process.env.UI_SEARCH_DEBOUNCE_MS,
   UI_MONTHS_BACK: process.env.UI_MONTHS_BACK,
-  UI_MONTHS_FORWARD: process.env.UI_MONTHS_FORWARD
+  UI_MONTHS_FORWARD: process.env.UI_MONTHS_FORWARD,
+  COMMUNITY_PAGE_SIZE: process.env.COMMUNITY_PAGE_SIZE,
+  COMMUNITY_MESSAGE_MAX_LENGTH: process.env.COMMUNITY_MESSAGE_MAX_LENGTH,
+  COMMUNITY_POLL_INTERVAL_MS: process.env.COMMUNITY_POLL_INTERVAL_MS,
+  MEAL_PROMPT_DEFAULT_BREAKFAST: process.env.MEAL_PROMPT_DEFAULT_BREAKFAST,
+  MEAL_PROMPT_DEFAULT_LUNCH: process.env.MEAL_PROMPT_DEFAULT_LUNCH,
+  MEAL_PROMPT_DEFAULT_DINNER: process.env.MEAL_PROMPT_DEFAULT_DINNER,
+  MEAL_PROMPT_MAX_COUNT: process.env.MEAL_PROMPT_MAX_COUNT
 };
 
 function readRaw(key: string): string | undefined {
@@ -195,6 +204,29 @@ export const uiConfig = {
   searchDebounceMs: readInt('UI_SEARCH_DEBOUNCE_MS', UI_DEFAULTS.searchDebounceMs),
   monthsBack: readInt('UI_MONTHS_BACK', UI_DEFAULTS.monthsBack),
   monthsForward: readInt('UI_MONTHS_FORWARD', UI_DEFAULTS.monthsForward, 0)
+} as const;
+
+export const communityConfig = {
+  pageSize: readInt('COMMUNITY_PAGE_SIZE', COMMUNITY_DEFAULTS.pageSize),
+  maxMessageLength: readInt('COMMUNITY_MESSAGE_MAX_LENGTH', COMMUNITY_DEFAULTS.maxMessageLength),
+  pollIntervalMs: readInt('COMMUNITY_POLL_INTERVAL_MS', COMMUNITY_DEFAULTS.pollIntervalMs),
+  directorySize: readInt('COMMUNITY_DIRECTORY_SIZE', COMMUNITY_DEFAULTS.directorySize),
+  mentionRecipientCap: readInt('COMMUNITY_MENTION_CAP', COMMUNITY_DEFAULTS.mentionRecipientCap),
+  everyoneRecipientCap: readInt('COMMUNITY_EVERYONE_CAP', COMMUNITY_DEFAULTS.everyoneRecipientCap)
+} as const;
+
+export const mealPromptConfig = {
+  tokenBytes: readInt('MEAL_PROMPT_TOKEN_BYTES', MEAL_PROMPT_DEFAULTS.tokenBytes, 16),
+  validHours: readInt('MEAL_PROMPT_VALID_HOURS', MEAL_PROMPT_DEFAULTS.validHours),
+  leadDays: readInt('MEAL_PROMPT_LEAD_DAYS', MEAL_PROMPT_DEFAULTS.leadDays, 0),
+  defaultCounts: {
+    breakfast: readInt('MEAL_PROMPT_DEFAULT_BREAKFAST', MEAL_PROMPT_DEFAULTS.breakfast, 0),
+    lunch: readInt('MEAL_PROMPT_DEFAULT_LUNCH', MEAL_PROMPT_DEFAULTS.lunch, 0),
+    dinner: readInt('MEAL_PROMPT_DEFAULT_DINNER', MEAL_PROMPT_DEFAULTS.dinner, 0)
+  },
+  batchSize: readInt('MEAL_PROMPT_BATCH_SIZE', MEAL_PROMPT_DEFAULTS.batchSize),
+  maxCountPerMeal: readInt('MEAL_PROMPT_MAX_COUNT', MEAL_PROMPT_DEFAULTS.maxCountPerMeal),
+  dispatchSecret: readOptionalString('MEAL_PROMPT_DISPATCH_SECRET')
 } as const;
 
 export const seedConfig = {

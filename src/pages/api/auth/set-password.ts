@@ -7,6 +7,7 @@ import { badRequest, methodNotAllowed, ok, tooManyRequests } from '@/lib/http';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
 import { consumeToken, findValidToken } from '@/lib/password-tokens';
 import { getSecurityPolicy, getSiteSettings } from '@/lib/settings-service';
+import { ensureWelcomeMessage } from '@/lib/community';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
@@ -69,6 +70,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   await consumeToken(lookup.tokenId);
 
   if (user.status === USER_STATUS.APPROVED) {
+    await ensureWelcomeMessage(user);
     await setSessionCookie(res, user.id, user.tokenVersion);
     return ok(res, {
       signedIn: true,

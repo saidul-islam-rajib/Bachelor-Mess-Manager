@@ -3,6 +3,7 @@ import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import MealPlanCard from '@/components/MealPlanCard';
+import MealPromptDispatch from '@/components/MealPromptDispatch';
 import { daysInMonth, todayKey } from '@/lib/month';
 
 type Member = { id: string; name: string; email: string };
@@ -259,6 +260,8 @@ export default function MealsPage() {
           {belongsToGroup && !canManage && editWindow && (
             <EditWindowCard window={editWindow} busy={windowBusy} onToggle={toggleEditWindow} />
           )}
+
+          {canManage && groupId && <MealPromptDispatch groupId={groupId} />}
 
           {canManage && pendingChanges.length > 0 && (
             <PendingApprovals changes={pendingChanges} onDecide={decideChange} />
