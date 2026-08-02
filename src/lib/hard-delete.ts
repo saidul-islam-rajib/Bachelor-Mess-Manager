@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function deleteGroupPermanently(groupId: string): Promise<void> {
   await prisma.$transaction([
+    prisma.mealPrompt.deleteMany({ where: { groupId } }),
     prisma.paymentStatus.deleteMany({ where: { groupId } }),
     prisma.expenseComment.deleteMany({ where: { groupId } }),
     prisma.expenseEntry.deleteMany({ where: { groupId } }),
@@ -29,6 +30,9 @@ export async function deleteUserPermanently(userId: string, email: string): Prom
     prisma.mealChangeRequest.updateMany({ where: { decidedById: userId }, data: { decidedById: null } }),
     prisma.roleRequest.updateMany({ where: { decidedById: userId }, data: { decidedById: null } }),
     prisma.notification.updateMany({ where: { actorId: userId }, data: { actorId: null } }),
+    prisma.mealPrompt.deleteMany({ where: { userId } }),
+    prisma.communityMessage.deleteMany({ where: { authorId: userId } }),
+    prisma.communityRead.deleteMany({ where: { userId } }),
     prisma.expenseShare.deleteMany({ where: { userId } }),
     prisma.expenseComment.deleteMany({ where: { userId } }),
     prisma.commentReply.deleteMany({ where: { userId } }),
