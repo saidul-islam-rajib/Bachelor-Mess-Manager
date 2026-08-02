@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { parseMentions } from '@/lib/mentions';
+import { EVERYONE_ALIASES, EVERYONE_ID, EVERYONE_NAME, parseMentions } from '@/lib/mentions';
 import { validationConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 
@@ -8,6 +8,7 @@ export type Member = { id: string; name: string };
 const TRIGGER = /(?:^|\s)@([^@]*)$/;
 const MAX_QUERY_LENGTH = 30;
 const MAX_SUGGESTIONS = 6;
+const EVERYONE_OPTION: Member = { id: EVERYONE_ID, name: EVERYONE_NAME };
 
 type MentionInputProps = {
   value: string;
@@ -38,12 +39,14 @@ export function MentionInput({
   const [query, setQuery] = useState<string | null>(null);
   const [highlight, setHighlight] = useState(0);
 
+  const needle = (query ?? '').trim().toLowerCase();
   const matches =
     query === null
       ? []
-      : members
-          .filter((member) => member.name.toLowerCase().includes(query.trim().toLowerCase()))
-          .slice(0, MAX_SUGGESTIONS);
+      : [
+          ...(members.length > 1 && EVERYONE_ALIASES.some((alias) => alias.startsWith(needle)) ? [EVERYONE_OPTION] : []),
+          ...members.filter((member) => member.name.toLowerCase().includes(needle))
+        ].slice(0, MAX_SUGGESTIONS);
 
   useEffect(() => {
     setHighlight(0);
@@ -160,10 +163,17 @@ export function MentionInput({
                   index === highlight ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
                 }`}
               >
-                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-900 text-[10px] font-semibold text-white">
-                  {member.name.slice(0, 1).toUpperCase()}
+                <span
+                  className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${
+                    member.id === EVERYONE_ID ? 'bg-amber-500' : 'bg-slate-900'
+                  }`}
+                >
+                  {member.id === EVERYONE_ID ? '@' : member.name.slice(0, 1).toUpperCase()}
                 </span>
                 <span className="truncate">{member.name}</span>
+                {member.id === EVERYONE_ID && (
+                  <span className="ml-auto shrink-0 text-xs text-slate-400">{strings.comments.mentionEveryone}</span>
+                )}
               </button>
             </li>
           ))}
@@ -194,7 +204,12 @@ export function MentionText({
         typeof part === 'string' ? (
           <span key={index}>{part}</span>
         ) : (
-          <span key={index} className="rounded bg-slate-900/5 px-1 font-medium text-slate-900">
+          <span
+            key={index}
+            className={`rounded px-1 font-medium ${
+              part.userId === null ? 'bg-amber-100 text-amber-800' : 'bg-slate-900/5 text-slate-900'
+            }`}
+          >
             @{part.name}
           </span>
         )

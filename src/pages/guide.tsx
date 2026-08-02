@@ -239,9 +239,10 @@ export default function GuidePage() {
             </P>
             <P>
               Anyone in the mess can comment on a bazar entry to query a price or add context, and can mention someone
-              with <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@name</code> to pull them into it. The
-              mentioned person gets a notification. Every edit to an entry is kept in its history, so a changed amount
-              is never silent.
+              with <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@name</code> to pull them into it, or{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@everyone</code> to notify the whole mess. The
+              mentioned people get a notification. Every edit to an entry is kept in its history, so a changed amount is
+              never silent.
             </P>
           </Section>
 

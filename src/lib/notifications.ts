@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { appConfig } from '@/config';
-import { flattenMentions, mentionIdsIn } from '@/lib/mentions';
+import { flattenMentions, mentionIdsIn, mentionsEveryone } from '@/lib/mentions';
 import { isMailConfigured, sendMail, type MailMessage } from '@/lib/mailer';
 import { ROUTES } from '@/lib/routes';
 import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/constants';
@@ -71,10 +71,13 @@ export async function notifyMentions({
   type: NotificationType;
 }) {
   try {
+    const everyone = mentionsEveryone(text);
     const mentioned = [...new Set(mentionIdsIn(text))].filter((id) => id !== actorId).slice(0, MAX_RECIPIENTS);
-    if (mentioned.length === 0) return;
+    if (!everyone && mentioned.length === 0) return;
 
-    const recipients = await eligibleRecipients(groupId, mentioned);
+    const recipients = everyone
+      ? (await groupAudience(groupId, { excludeUserId: actorId })).map((recipient) => recipient.id)
+      : await eligibleRecipients(groupId, mentioned);
     if (recipients.length === 0) return;
 
     await prisma.notification.createMany({
