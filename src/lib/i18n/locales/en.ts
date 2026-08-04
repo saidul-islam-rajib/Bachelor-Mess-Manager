@@ -1023,6 +1023,7 @@ const en = {
     alreadySubscribed: 'That email is already subscribed.',
     emailPlaceholder: 'you@example.com',
     builtBy: (author: string) => `Built by ${author}`,
+    builtByLabel: 'Built by',
     rights: 'All rights reserved.',
     licensed: (license: string) => `Released under the ${license} License.`
   },

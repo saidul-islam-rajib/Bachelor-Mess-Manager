@@ -183,9 +183,14 @@ export default function Footer() {
             . {strings.footer.rights}
           </p>
           <p className="text-xs text-slate-400">
-            {strings.footer.builtBy(authorConfig.name)} ·{' '}
-            <a href={`mailto:${authorConfig.email}`} className="hover:underline">
-              {authorConfig.email}
+            {strings.footer.builtByLabel}{' '}
+            <a
+              href={authorConfig.profileUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-slate-500 hover:text-brand-700 hover:underline"
+            >
+              {authorConfig.name}
             </a>{' '}
             · {strings.footer.licensed(authorConfig.license)}
           </p>

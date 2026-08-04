@@ -14,7 +14,8 @@ export const AUTHOR = {
   role: 'Author & Lead Developer',
   license: 'MIT',
   copyrightStartYear: 2026,
-  url: 'https://team-sober.com/'
+  url: 'https://team-sober.com/',
+  profileUrl: 'https://www.facebook.com/saidul.is.rajib/'
 } as const;
 
 export const SESSION_DEFAULTS = {
