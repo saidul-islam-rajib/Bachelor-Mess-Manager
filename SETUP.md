@@ -138,6 +138,7 @@ APP_URL="https://bachelor-point.team-sober.com"
 DATABASE_URL="sqlserver://<host>;database=bachelor_point;user=<user>;password=<pw>;encrypt=true"
 AUTH_SECRET="<32+ random characters, different from local>"
 SESSION_COOKIE_SECURE=true
+MEAL_PROMPT_DISPATCH_SECRET="<32 random bytes, for the daily meal ask>"
 ```
 
 ### HTTPS is mandatory
@@ -160,6 +161,17 @@ powershell -ExecutionPolicy Bypass -File scripts\schedule-backup.ps1
 
 Keeps the newest 2 by default (`BACKUP_KEEP_COUNT`). Restore and verification steps are in
 [docs/BACKUPS.md](docs/BACKUPS.md).
+
+### The daily meal ask
+
+```bash
+npm run meals:prompt
+```
+
+Schedule it once a day, whenever suits the mess — members get a message with **Yes** and **No** buttons for
+tomorrow, and answering takes no sign-in. It needs `MEAL_PROMPT_DISPATCH_SECRET` and `APP_URL`, and running it
+twice sends nothing twice. On Kubernetes, apply `k8s/base/meal-prompt-cronjob.yaml` instead. Details in
+[docs/meal-prompts.md](docs/meal-prompts.md).
 
 ---
 

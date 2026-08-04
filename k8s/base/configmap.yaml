@@ -17,14 +17,10 @@ data:
   APP_AUTHOR_NAME: "Saidul Islam Rajib"
   APP_AUTHOR_EMAIL: "saidul.is.rajib@gmail.com"
   APP_LICENSE: "MIT"
-
+  APP_URL: "https://bachelor-point.team-sober.com"
   UPLOAD_DIR: "/data/uploads"
-
   SECURITY_TRUST_PROXY_HEADERS: "true"
-
   SESSION_COOKIE_SECURE: "true"
-
   SEED_ENABLED: "false"
-
   GROUP_MAX_PER_SUPERVISOR: "10"
   PAGINATION_PAGE_SIZE: "20"

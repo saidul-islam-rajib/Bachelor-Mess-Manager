@@ -2,7 +2,7 @@
 
 Mess management for bachelor messes and shared flats: registration and approval,
 supervisor-run groups, a monthly meal table, bazar and bill tracking, per-member dues,
-payments, and comments.
+payments, comments, a one-tap daily meal ask, and an app-wide community room.
 
 Next.js (pages router) · TypeScript · Tailwind CSS · Prisma · Microsoft SQL Server
 
@@ -42,6 +42,8 @@ engineering notes behind it:
 | [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |
 | [expense-categories.md](docs/expense-categories.md) | Per-group cost types for the bills dropdown |
 | [notifications.md](docs/notifications.md) | The notification model, bell, and email delivery |
+| [meal-prompts.md](docs/meal-prompts.md) | The daily one-tap meal ask and the sign-in-free reply link |
+| [community.md](docs/community.md) | The app-wide room, welcome posts, and release announcements |
 | [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
 
 ### Operations
@@ -290,6 +292,7 @@ src/
 | `npm run db:sync-roles` | Sync roles and permissions |
 | `npm run admin:init` | Create or promote the administrator |
 | `npm run seed:db` | Sample data (development only) |
+| `npm run meals:prompt` | Send the daily one-tap meal ask (needs `MEAL_PROMPT_DISPATCH_SECRET`) |
 
 ---
 

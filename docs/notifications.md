@@ -60,3 +60,7 @@ the thousands, this is the seam to replace with SSE.
 | `MEAL_CHANGE_APPROVED` / `MEAL_CHANGE_REJECTED` | the requester | a decision was made |
 | `MONTH_CLOSED` / `MONTH_REOPENED` | whole group | a month was frozen or unfrozen |
 | `MENTIONED` | the mentioned member | reserved for the existing mention flow |
+| `MENTION_COMMENT` / `MENTION_REPLY` / `MENTION_EXPENSE_COMMENT` | the mentioned member | someone wrote `@name` in a group thread |
+| `MENTION_COMMUNITY` | the mentioned member | someone wrote `@name` in the [community room](community.md) |
+| `COMMUNITY_WELCOME` | the new member | their account was approved |
+| `MEAL_PROMPT` | one member | the daily [one-tap meal ask](meal-prompts.md); the link answers it without signing in |

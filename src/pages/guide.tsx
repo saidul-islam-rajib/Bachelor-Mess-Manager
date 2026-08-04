@@ -23,6 +23,8 @@ const SECTIONS: Section[] = [
   { id: 'month', title: 'A month in the mess' },
   { id: 'joining', title: 'Getting in' },
   { id: 'meals', title: 'Meals and meal plans' },
+  { id: 'quick-reply', title: 'Answering meals in one tap' },
+  { id: 'community', title: 'The community room' },
   { id: 'rate', title: 'How the meal rate works' },
   { id: 'bazar', title: 'Bazar and comments' },
   { id: 'bills', title: 'Bills and fixed costs' },
@@ -197,6 +199,40 @@ export default function GuidePage() {
               Not every meal costs the same to make. A supervisor can set <strong>meal weights</strong> — commonly
               breakfast 0.5, lunch 1, dinner 1 — so a light breakfast counts as half a meal when the cost is divided.
             </Callout>
+          </Section>
+
+          <Section id="quick-reply" title="Answering meals in one tap">
+            <P>
+              Nobody wants to open an app to say &quot;yes, I am eating tomorrow&quot;. So the mess asks you instead.
+              Once a day you get a message with two buttons — <strong>Yes, count me in</strong> and{' '}
+              <strong>No meals</strong>. Tap one from your phone and your meals for that day are recorded. There is no
+              sign-in, no typing, and no app to open.
+            </P>
+            <P>
+              Yes fills in <em>your</em> usual meals for that weekday, taken from your meal plan, so someone who never
+              eats breakfast is never charged for one. Tap <strong>Choose meals</strong> instead if today is different
+              from usual. Changed your mind? Tap again — the link keeps working until the day starts.
+            </P>
+            <Callout>
+              The same question waits for you on the <Route href={ROUTES.dashboard}>Dashboard</Route> and in your
+              notifications, so you can answer wherever you happen to be. Supervisors can send the ask to everyone from
+              the <Route href={ROUTES.meals}>Meals</Route> page.
+            </Callout>
+          </Section>
+
+          <Section id="community" title="The community room">
+            <P>
+              Your mess has its own <Route href={ROUTES.comments}>Comments</Route> thread. The{' '}
+              <Route href={ROUTES.community}>Community</Route> room is the other one: everybody on {appConfig.name},
+              in a single place. You are in it automatically from the moment your account is approved — there is
+              nothing to join.
+            </P>
+            <P>
+              Use it to ask a question no one mess can answer, to welcome the people who just signed up, and to catch
+              the pinned <strong>What&apos;s new</strong> cards whenever a feature lands. Type{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code> to pull someone into a message —
+              they get a notification, exactly like in a mess thread.
+            </P>
           </Section>
 
           <Section id="rate" title="How the meal rate works">
