@@ -68,10 +68,10 @@ export default function GuidePage() {
       </Head>
 
       <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Guide</p>
           <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">How {appConfig.name} works</h1>
-          <p className="mt-3 max-w-2xl text-lg text-slate-600">
+          <p className="mt-3 hyphens-auto text-justify text-lg text-slate-600">
             Everything a mess needs to agree on — who ate what, who bought the groceries, who paid the rent, and who
             owes whom at the end of the month. This page explains all of it, in order.
           </p>
@@ -464,7 +464,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p className="text-base leading-relaxed text-slate-600">{children}</p>;
+  return <p className="hyphens-auto text-justify text-base leading-relaxed text-slate-600">{children}</p>;
 }
 
 function A({ href, children }: { href: string; children: ReactNode }) {
@@ -485,7 +485,7 @@ function Route({ href, children }: { href: string; children: ReactNode }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm leading-relaxed text-slate-700">
+    <div className="hyphens-auto rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-justify text-sm leading-relaxed text-slate-700">
       {children}
     </div>
   );
@@ -497,7 +497,7 @@ function Definitions({ items }: { items: { term: string; detail: string }[] }) {
       {items.map((item) => (
         <div key={item.term} className="border-l-2 border-slate-200 pl-4">
           <dt className="font-semibold text-slate-900">{item.term}</dt>
-          <dd className="mt-1 leading-relaxed text-slate-600">{item.detail}</dd>
+          <dd className="mt-1 hyphens-auto text-justify leading-relaxed text-slate-600">{item.detail}</dd>
         </div>
       ))}
     </dl>
@@ -512,7 +512,7 @@ function Steps({ items }: { items: string[] }) {
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
             {index + 1}
           </span>
-          <span className="pt-0.5 leading-relaxed text-slate-600">{item}</span>
+          <span className="hyphens-auto pt-0.5 text-justify leading-relaxed text-slate-600">{item}</span>
         </li>
       ))}
     </ol>
