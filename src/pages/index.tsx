@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { Collapsible, LinkButton } from '@/components/ui';
 import { LandingIcon, type LandingIconName } from '@/components/landing/Icons';
 import Reveal from '@/components/landing/Reveal';
+import FaqIllustration from '@/components/landing/FaqIllustration';
 import {
   BalancesPreview,
   BazarPreview,
@@ -385,28 +386,43 @@ function RoleGuide() {
 function Faq() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:py-20">
-        <Reveal>
-          <SectionHeader title={landing.faq.title} subtitle={landing.faq.subtitle} />
-        </Reveal>
-
-        <div className="mt-8 space-y-3 sm:mt-10">
-          {landing.faq.items.map((item, index) => (
-            <Reveal key={item.question} delayMs={index * 60}>
-              <Collapsible title={item.question}>
-                <p className="text-sm leading-relaxed text-slate-600">{item.answer}</p>
-              </Collapsible>
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-start lg:gap-16">
+          <div>
+            <Reveal>
+              <div className="max-w-xl">
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                  {landing.faq.title}
+                </h2>
+                <p className="mt-3 text-slate-600">{landing.faq.subtitle}</p>
+              </div>
             </Reveal>
-          ))}
-        </div>
 
-        <Reveal>
-          <div className="mt-8 text-center">
-            <LinkButton href={ROUTES.guide} variant="secondary" size="lg">
-              {landing.faq.more}
-            </LinkButton>
+            <div className="mt-8 space-y-3">
+              {landing.faq.items.map((item, index) => (
+                <Reveal key={item.question} delayMs={index * 60}>
+                  <Collapsible icon="plus" title={item.question}>
+                    <p className="text-sm leading-relaxed text-slate-600">{item.answer}</p>
+                  </Collapsible>
+                </Reveal>
+              ))}
+            </div>
+
+            <Reveal>
+              <div className="mt-8">
+                <LinkButton href={ROUTES.guide} variant="secondary" size="lg">
+                  {landing.faq.more}
+                </LinkButton>
+              </div>
+            </Reveal>
           </div>
-        </Reveal>
+
+          <Reveal delayMs={120} className="lg:sticky lg:top-28">
+            <div className="flex justify-center">
+              <FaqIllustration label={landing.faq.illustrationLabel} />
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );

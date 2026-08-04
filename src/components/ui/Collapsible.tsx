@@ -8,9 +8,28 @@ export type CollapsibleProps = {
   defaultOpen?: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  icon?: 'chevron' | 'plus';
   id?: string;
   className?: string;
 };
+
+function PlusMinus({ expanded }: { expanded: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
+        expanded ? 'border-brand-200 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-500'
+      }`}
+    >
+      <span className="absolute h-0.5 w-3.5 rounded-full bg-current" />
+      <span
+        className={`absolute h-3.5 w-0.5 rounded-full bg-current transition-transform duration-300 ease-out ${
+          expanded ? 'scale-y-0' : 'scale-y-100'
+        }`}
+      />
+    </span>
+  );
+}
 
 export function Collapsible({
   title,
@@ -20,6 +39,7 @@ export function Collapsible({
   defaultOpen = false,
   open,
   onOpenChange,
+  icon = 'chevron',
   id,
   className = ''
 }: CollapsibleProps) {
@@ -56,20 +76,24 @@ export function Collapsible({
             {description && <span className="mt-0.5 block text-sm text-slate-500">{description}</span>}
           </span>
           {badge}
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-            className={`shrink-0 text-slate-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
+          {icon === 'plus' ? (
+            <PlusMinus expanded={expanded} />
+          ) : (
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+              className={`shrink-0 text-slate-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          )}
         </button>
       </h2>
 
@@ -77,7 +101,11 @@ export function Collapsible({
         id={panelId}
         role="region"
         aria-labelledby={headingId}
-        className={expanded ? 'border-t border-slate-100 px-5 pb-5 pt-5 sm:px-6' : 'hidden'}
+        className={
+          expanded
+            ? 'border-t border-slate-100 px-5 pb-5 pt-5 motion-safe:animate-fade-up sm:px-6'
+            : 'hidden'
+        }
       >
         {everOpened && children}
       </div>

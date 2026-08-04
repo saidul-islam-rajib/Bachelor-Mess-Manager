@@ -1103,6 +1103,8 @@ const en = {
       title: 'The questions everyone asks first',
       subtitle: 'The short answers. The guide has the long ones.',
       more: 'Read the full guide',
+      illustrationLabel:
+        'Three housemates sharing a pot of food at a table, beside a phone showing the meal sheet and a settled receipt',
       items: [
         {
           question: 'Does it cost anything?',
