@@ -658,6 +658,7 @@ const en = {
     empty: 'No messages yet. Be the first to say hello.',
     loadOlder: 'Load older messages',
     loadingOlder: 'Loading...',
+    readMore: 'Read more',
     newMessages: (count: number) => `${count} new message${count === 1 ? '' : 's'}`,
     jumpToLatest: 'Jump to latest',
     markAllRead: 'Mark all as read',
