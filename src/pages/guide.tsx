@@ -24,13 +24,16 @@ const SECTIONS: Section[] = [
   { id: 'joining', title: 'Getting in' },
   { id: 'meals', title: 'Meals and meal plans' },
   { id: 'quick-reply', title: 'Answering meals in one tap' },
+  { id: 'talking', title: 'Talking to your mess' },
   { id: 'community', title: 'The community room' },
+  { id: 'notifications', title: 'Notifications and the bell' },
   { id: 'rate', title: 'How the meal rate works' },
   { id: 'bazar', title: 'Bazar and comments' },
   { id: 'bills', title: 'Bills and fixed costs' },
   { id: 'balances', title: 'Balances and payments' },
   { id: 'past-meals', title: 'Changing a past meal' },
   { id: 'closing', title: 'Closing a month' },
+  { id: 'phone', title: 'Putting it on your phone' },
   { id: 'faq', title: 'Common questions' }
 ];
 
@@ -179,7 +182,7 @@ export default function GuidePage() {
                 'Register with your name and email. Depending on how the site is set up, your account is either usable straight away or waits for an admin to approve it.',
                 'A supervisor invites you to their mess. The invitation shows up in your notification bell and in your email.',
                 'Accept it, and you are a member from that moment. Your joining date matters — it is what the app uses to work out how much of the month you were actually there for.',
-                'Want to run your own mess instead? Ask for the supervisor role from your profile, then create a group.'
+                'Want to run your own mess instead? Open Your role on your profile, ask for supervisor access, then create a group once it is granted.'
               ]}
             />
           </Section>
@@ -220,6 +223,24 @@ export default function GuidePage() {
             </Callout>
           </Section>
 
+          <Section id="talking" title="Talking to your mess">
+            <P>
+              Every mess has its own thread, and it lives on the <Route href={ROUTES.members}>Members</Route> page as a
+              collapsible <strong>Mess comments</strong> section — open it, and the whole conversation is there. It sits
+              with the roster on purpose: the people and the talk about them belong on the same page.
+            </P>
+            <P>
+              Anyone in the mess can post, and anyone can reply to a post. Type{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code> and a name to pull one person in, or{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@everyone</code> to reach the whole house —
+              either way they get a notification linking straight back to what you wrote.
+            </P>
+            <Callout>
+              A posted comment cannot be edited, by anyone. If something needs to go, the supervisor removes it. That
+              rule exists so nobody can quietly reword what they agreed to last week.
+            </Callout>
+          </Section>
+
           <Section id="community" title="The community room">
             <P>
               There are two places to talk, and they differ by who can read you.{' '}
@@ -235,6 +256,43 @@ export default function GuidePage() {
               <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code> to pull someone into a message —
               they get a notification, exactly like in a mess thread.
             </P>
+          </Section>
+
+          <Section id="notifications" title="Notifications and the bell">
+            <P>
+              The bell in the header is the app tapping you on the shoulder. It carries a count of everything unread and
+              opens a short list; <Route href={ROUTES.notifications}>Notifications</Route> has the full history, with an
+              All / Unread filter and a <strong>Mark all read</strong> button.
+            </P>
+            <P>You get one when something genuinely needs you, and not otherwise:</P>
+            <Definitions
+              items={[
+                {
+                  term: 'Someone mentioned you',
+                  detail:
+                    'In a mess comment, a reply, a bazar note or the community room. The notification links straight to the message.'
+                },
+                {
+                  term: 'A past meal changed',
+                  detail:
+                    'When a supervisor edits a day that has already passed, every member is told what changed and on which day — in the app and by email.'
+                },
+                {
+                  term: 'A decision on your request',
+                  detail:
+                    'Your past-meal change was approved or declined, or your request for supervisor access was answered.'
+                },
+                {
+                  term: 'An invitation to a mess',
+                  detail:
+                    'Invitations sit in the bell too, with Accept and Decline right there — you never have to go looking for them.'
+                }
+              ]}
+            />
+            <Callout>
+              Announcements about new features are deliberately <em>not</em> notifications. They are pinned in the
+              community room and raise the badge there instead, so a release never fills seven hundred bells at once.
+            </Callout>
           </Section>
 
           <Section id="rate" title="How the meal rate works">
@@ -392,9 +450,48 @@ export default function GuidePage() {
             </Figure>
           </Section>
 
+          <Section id="phone" title="Putting it on your phone">
+            <P>
+              There is nothing to download and no app store to visit. {appConfig.name} runs in the browser, but it can
+              also be installed to your home screen, where it opens full-screen with its own icon and no address bar —
+              the same thing a normal app does.
+            </P>
+            <P>
+              When your phone supports it, a bar appears at the top offering to install. Dismiss it and it stays
+              dismissed. If you want it later, use your browser instead:
+            </P>
+            <Definitions
+              items={[
+                {
+                  term: 'Android — Chrome',
+                  detail: 'Menu (⋮) → Install app, or Add to Home screen. Accept the prompt and the icon appears.'
+                },
+                {
+                  term: 'iPhone — Safari',
+                  detail:
+                    'The Share button → Add to Home Screen. Safari is the only browser on iOS that can do this, so use Safari rather than Chrome for the install.'
+                },
+                {
+                  term: 'Desktop — Chrome or Edge',
+                  detail: 'The install icon at the right-hand end of the address bar opens it in its own window.'
+                }
+              ]}
+            />
+            <Callout>
+              Installed or not, you are looking at the same live data — it is the same site either way. Installing only
+              changes how it opens, and the app tells you when a new version is ready so you are never stuck on an old
+              one.
+            </Callout>
+          </Section>
+
           <Section id="faq" title="Common questions">
             <Definitions
               items={[
+                {
+                  term: 'Where did the Comments tab go?',
+                  detail:
+                    'It is now a Mess comments section on the Members page — open it and the thread is there, unchanged. Old links and mention notifications still work; they take you straight to it. The Community room, which everyone on the site shares, is separate and still has its own tab.'
+                },
                 {
                   term: 'I bought the groceries. Do I get that money back?',
                   detail:

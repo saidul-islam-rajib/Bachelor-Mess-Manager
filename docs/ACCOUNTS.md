@@ -164,7 +164,7 @@ current group first (`/members` → **Leave this group**), then accept the new i
 - Set a repeating weekly meal plan
 - Log bazar they bought, and edit their own entries (`/expenses`)
 - See bills, their share, and what they owe (`/bills`, `/payments`)
-- Post comments and replies, delete their own (`/comments`)
+- Post comments and replies in **Mess comments** on `/members` (a collapsible section; deep link `/members#mess-comments`)
 - Edit their profile, photo and password (`/profile`)
 - Leave their group
 
@@ -217,13 +217,16 @@ the database, so they apply immediately without a restart.
 
 ## 6. Mentioning someone in a comment
 
-Type `@` in any comment box — on **Comments** (`/comments`) or on a bazar entry in
-**Bazar** (`/expenses`). A dropdown of group members appears and filters as you keep typing.
+Type `@` in any comment box — in **Mess comments** on `/members`, on a bazar entry in
+**Bazar** (`/expenses`), or in the **Community** room (`/community`). A dropdown of members
+appears and filters as you keep typing.
 
 - **↑ / ↓** move, **Enter** or **Tab** picks, **Esc** dismisses, or click a name
 - **Ctrl/Cmd + Enter** posts
 - The `@` must be at the start or after a space
-- Only active members of that group can be mentioned; there is no `@everyone`
+- Only active members of that group can be mentioned individually
+- `@everyone` notifies the whole group. In the community room it is admin-only and capped by
+  `COMMUNITY_EVERYONE_CAP`; inside a mess any member may use it
 
 Mentions are stored by **user ID**, not by name, so if that person later renames themselves
 every past mention updates automatically.

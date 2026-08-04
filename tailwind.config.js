@@ -9,6 +9,15 @@ module.exports = {
       maxWidth: {
         content: '72rem'
       },
+      keyframes: {
+        'fade-up': {
+          '0%': { opacity: '0', transform: 'translateY(8px)' },
+          '100%': { opacity: '1', transform: 'none' }
+        }
+      },
+      animation: {
+        'fade-up': 'fade-up 0.35s ease-out both'
+      },
       colors: {
         brand: {
           50: '#eef2ff',

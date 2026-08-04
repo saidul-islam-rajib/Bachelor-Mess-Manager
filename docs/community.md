@@ -16,7 +16,8 @@ Page: `/community`. API: `/api/community/*`. Service: `src/lib/community/`.
 | `ANNOUNCEMENT` | the app, from the release catalogue | pinned "What's new" card        |
 | `SYSTEM`       | reserved for future notices       | neutral card                      |
 
-Member messages support the same `@mention` tokens as group comments, so
+Member messages support the same `@mention` tokens as mess comments (the collapsible
+section on `/members`), so
 `src/lib/mentions.ts` is shared rather than duplicated. Mentioned members get an
 in-app notification (`MENTION_COMMUNITY`) linking back to the room.
 

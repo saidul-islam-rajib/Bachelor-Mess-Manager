@@ -1043,20 +1043,92 @@ const en = {
         }
       ]
     },
-    roles: {
-      title: 'Three kinds of people use it',
+    roleGuide: {
+      title: 'What you will actually be doing',
+      subtitle:
+        'Every mess has one supervisor and everyone else is a member. Pick the hat you will wear and see the job in full.',
+      dailyLabel: 'Your day to day',
+      limitLabel: 'What you cannot do',
       items: [
         {
           role: 'MEMBER',
-          body: 'Records their own meals, sees what the month is costing them, and knows exactly what is still due.'
+          tagline: 'You eat, you log it, you pay your share. That is the whole job.',
+          minutes: 'About 10 seconds a day',
+          does: [
+            'Tick the meals you ate — or set a meal plan once and let it fill your week in for you.',
+            'Answer the daily "are you eating tomorrow?" message with one tap from your phone. No sign-in needed.',
+            'Record the bazar when it is your turn to shop. What you spend is credited against what you owe, straight away.',
+            'Watch your due update live as the month goes on. No waiting until the 30th to find out.',
+            'Ask a question in mess comments and pull someone in with @.'
+          ],
+          cannot:
+            'You cannot record bills, take payments, or close a month — those belong to your supervisor. Editing a day that has already passed sends a request for them to approve.'
         },
         {
           role: 'SUPERVISOR',
-          body: 'Runs one or more messes: invites members, records bills, confirms payments and publishes the monthly report.'
+          tagline: 'You run the mess. The app does the arithmetic and the chasing.',
+          minutes: 'A few minutes a week',
+          does: [
+            'Create the mess and invite members by email. People can join, leave and rejoin — the history is kept.',
+            'Record rent, electricity, water, Wi-Fi and the cook. Split them evenly or name exact amounts per person.',
+            'Choose how the meal rate is worked out and what a breakfast is worth against a dinner.',
+            'Mark cash as it comes in. Everyone sees their balance move the moment you do.',
+            'Approve or decline a member’s past-meal change, and log meals for anyone who forgot.',
+            'Close the month. Anything unpaid carries forward into the next one instead of quietly vanishing.'
+          ],
+          cannot:
+            'You cannot see another mess, approve new sign-ups to the site, or change anyone’s account role. That is the admin’s job.'
         },
         {
           role: 'ADMIN',
-          body: 'Approves new registrations, manages users and groups, and looks after site settings and security.'
+          tagline: 'You look after the site, not the cooking.',
+          minutes: 'Only when something needs a decision',
+          does: [
+            'Approve new registrations before anyone can sign in.',
+            'Grant or withdraw supervisor access when someone asks for it.',
+            'Set how long a past-meal unlock stays open before it re-locks itself.',
+            'Watch failed sign-ins and released lock-outs.',
+            'Look after site-wide settings and keep an eye on every mess.'
+          ],
+          cannot:
+            'Nothing is off limits, but the day-to-day of a mess is deliberately left to the people living in it.'
+        }
+      ]
+    },
+    faq: {
+      title: 'The questions everyone asks first',
+      subtitle: 'The short answers. The guide has the long ones.',
+      more: 'Read the full guide',
+      items: [
+        {
+          question: 'Does it cost anything?',
+          answer:
+            'No. Register with your email, set a password from the link we send you, and start using it. There is no paid tier and no card to enter.'
+        },
+        {
+          question: 'I was away for two weeks. Am I still charged for food?',
+          answer:
+            'No. You only pay for meals you actually logged. Bills like rent and Wi-Fi are a separate matter — those are usually split across everyone, because the flat is still yours while you are away.'
+        },
+        {
+          question: 'I bought the groceries. Do I get that money back?',
+          answer:
+            'It is credited against what you owe the moment it is recorded. Spend more than your share and your due goes negative, which shows as a refund the mess owes you.'
+        },
+        {
+          question: 'Can the supervisor change my meals without telling me?',
+          answer:
+            'No. Any change to a day that has already passed notifies every member of the mess, in the app and by email, naming the day and exactly what changed.'
+        },
+        {
+          question: 'Do I need to install anything?',
+          answer:
+            'No. It runs in the browser on any phone or laptop. If you want it to feel like a real app, you can add it to your home screen in two taps and it opens without the address bar.'
+        },
+        {
+          question: 'Who can see my mess’s numbers?',
+          answer:
+            'Only the people in it. Meals, bazar, bills and balances are visible to that mess and nobody else — not other messes, and not other users of the site.'
         }
       ]
     },
