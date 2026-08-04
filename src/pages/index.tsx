@@ -254,7 +254,7 @@ function Screens() {
 function Maths() {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:py-20">
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
         <Reveal>
           <SectionHeader title={landing.math.title} subtitle={landing.math.subtitle} />
         </Reveal>
@@ -346,7 +346,7 @@ function RoleGuide() {
             role="tabpanel"
             id={`role-panel-${current.role}`}
             aria-labelledby={`role-tab-${current.role}`}
-            className="mx-auto mt-8 max-w-3xl motion-safe:animate-fade-up"
+            className="mt-8 motion-safe:animate-fade-up"
           >
             <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:p-8">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -357,23 +357,27 @@ function RoleGuide() {
                 </span>
               </div>
 
-              <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {landing.roleGuide.dailyLabel}
-              </h3>
-              <ul className="mt-3 space-y-2.5">
-                {current.does.map((task) => (
-                  <li key={task} className="flex gap-3 text-sm leading-relaxed text-slate-700">
-                    <LandingIcon name="check" className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
-                    <span>{task}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-6 grid gap-6 lg:grid-cols-[1.55fr_1fr] lg:gap-10">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {landing.roleGuide.dailyLabel}
+                  </h3>
+                  <ul className="mt-3 space-y-2.5">
+                    {current.does.map((task) => (
+                      <li key={task} className="flex gap-3 text-sm leading-relaxed text-slate-700">
+                        <LandingIcon name="check" className="mt-0.5 h-4 w-4 shrink-0 text-brand-600" />
+                        <span>{task}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4">
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  {landing.roleGuide.limitLabel}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{current.cannot}</p>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 lg:h-fit sm:p-5">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {landing.roleGuide.limitLabel}
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-600">{current.cannot}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -384,6 +388,8 @@ function RoleGuide() {
 }
 
 function Faq() {
+  const [openQuestion, setOpenQuestion] = useState<string | null>(null);
+
   return (
     <section className="border-b border-slate-200 bg-slate-50">
       <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
@@ -401,7 +407,12 @@ function Faq() {
             <div className="mt-8 space-y-3">
               {landing.faq.items.map((item, index) => (
                 <Reveal key={item.question} delayMs={index * 60}>
-                  <Collapsible icon="plus" title={item.question}>
+                  <Collapsible
+                    icon="plus"
+                    title={item.question}
+                    open={openQuestion === item.question}
+                    onOpenChange={(next) => setOpenQuestion(next ? item.question : null)}
+                  >
                     <p className="text-sm leading-relaxed text-slate-600">{item.answer}</p>
                   </Collapsible>
                 </Reveal>
@@ -469,8 +480,10 @@ function FinalCta() {
         className="pointer-events-none absolute -bottom-24 left-1/2 h-64 w-[42rem] -translate-x-1/2 rounded-full bg-slate-500/20 blur-3xl"
       />
 
-      <div className="relative mx-auto max-w-3xl px-4 py-14 text-center sm:py-24">
-        <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">{landing.cta.title}</h2>
+      <div className="relative mx-auto max-w-content px-4 py-14 text-center sm:py-24">
+        <h2 className="mx-auto max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+          {landing.cta.title}
+        </h2>
         <p className="mx-auto mt-4 max-w-xl text-base text-slate-300 sm:text-lg">{landing.cta.subtitle}</p>
 
         <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
