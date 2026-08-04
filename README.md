@@ -38,6 +38,8 @@ engineering notes behind it:
 | Doc | Covers |
 | --- | --- |
 | [settlement.md](docs/settlement.md) | How a month's money is worked out, and the balance bugs it fixes |
+| [bills.md](docs/bills.md) | Rent, gas and wifi: how a bill is split and why shares are stored |
+| [payments.md](docs/payments.md) | Recording cash from members, and who still owes what |
 | [month-closing.md](docs/month-closing.md) | Freezing a month, carrying balances forward, mid-month departures |
 | [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |
 | [expense-categories.md](docs/expense-categories.md) | Per-group cost types for the bills dropdown |
