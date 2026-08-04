@@ -35,7 +35,7 @@ export function PageContainer({
   width?: 'narrow' | 'medium' | 'wide';
   className?: string;
 }) {
-  const widthClass = width === 'narrow' ? 'max-w-2xl' : width === 'medium' ? 'max-w-4xl' : 'max-w-6xl';
+  const widthClass = width === 'narrow' ? 'max-w-2xl' : width === 'medium' ? 'max-w-4xl' : 'max-w-content';
   return <section className={`mx-auto ${widthClass} px-4 py-8 sm:py-10 ${className}`}>{children}</section>;
 }
 

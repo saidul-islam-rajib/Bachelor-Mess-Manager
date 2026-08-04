@@ -43,7 +43,7 @@ function Hero() {
         className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[46rem] -translate-x-1/2 rounded-full bg-slate-300/30 blur-3xl"
       />
 
-      <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:gap-12 sm:py-24 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
+      <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:gap-12 sm:py-24 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 shadow-sm backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
@@ -120,7 +120,7 @@ function Hero() {
 function Problem() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
         <SectionHeader title={landing.problem.title} subtitle={landing.problem.subtitle} />
         <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3">
           {landing.problem.items.map((item, index) => (
@@ -141,7 +141,7 @@ function Problem() {
 function Features() {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
         <SectionHeader title={landing.features.title} subtitle={landing.features.subtitle} />
         <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {landing.features.items.map((item) => (
@@ -192,7 +192,7 @@ function ScreenRow({
 function Screens() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
         <SectionHeader title={landing.screens.title} subtitle={landing.screens.subtitle} />
         <div className="mt-10 space-y-12 sm:mt-12 sm:space-y-20">
           <ScreenRow
@@ -243,7 +243,7 @@ function Maths() {
 function Steps() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
         <SectionHeader title={landing.steps.title} />
         <ol className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {landing.steps.items.map((item, index) => (
@@ -262,7 +262,7 @@ function Steps() {
 function Roles() {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
         <SectionHeader title={landing.roles.title} />
         <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3">
           {landing.roles.items.map((item) => (
@@ -282,7 +282,7 @@ function Roles() {
 function Trust() {
   return (
     <section className="border-b border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:py-20">
+      <div className="mx-auto max-w-content px-4 py-12 sm:py-20">
         <SectionHeader title={landing.trust.title} />
         <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3">
           {landing.trust.items.map((item) => (

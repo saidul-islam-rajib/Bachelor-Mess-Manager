@@ -68,7 +68,7 @@ export default function GuidePage() {
       </Head>
 
       <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:py-16">
+        <div className="mx-auto max-w-content px-4 py-12 sm:py-16">
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Guide</p>
           <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">How {appConfig.name} works</h1>
           <p className="mt-3 hyphens-auto text-justify text-lg text-slate-600">
@@ -95,7 +95,7 @@ export default function GuidePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl gap-10 px-4 py-10 lg:flex lg:py-14">
+      <div className="mx-auto max-w-content gap-10 px-4 py-10 lg:flex lg:py-14">
         <nav aria-label="On this page" className="mb-8 lg:sticky lg:top-24 lg:mb-0 lg:h-fit lg:w-60 lg:shrink-0">
           <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">On this page</p>
           <ul className="mt-2 space-y-0.5">

@@ -161,7 +161,7 @@ export default function MembersPage() {
   ];
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{strings.members.title}</h1>
         <p className="mt-1 text-slate-600">{strings.members.subtitle}</p>

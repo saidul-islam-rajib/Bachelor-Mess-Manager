@@ -74,7 +74,7 @@ export default function NotificationsPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      <PageContainer width="medium">
+      <PageContainer>
         <PageHeader
           title={strings.notifications.title}
           description={strings.notifications.subtitle}

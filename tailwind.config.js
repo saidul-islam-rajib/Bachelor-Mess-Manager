@@ -6,6 +6,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      maxWidth: {
+        content: '72rem'
+      },
       colors: {
         brand: {
           50: '#eef2ff',

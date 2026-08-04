@@ -69,7 +69,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <header className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
         {impersonating && (
           <div className="bg-amber-500 text-amber-950">
-            <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-sm">
+            <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-sm">
               <p className="font-medium">
                 {strings.admin.impersonation.banner(user.name)}
                 <span className="ml-2 hidden font-normal text-amber-900 sm:inline">
@@ -85,7 +85,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             </div>
           </div>
         )}
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:h-20">
+        <div className="mx-auto flex h-16 max-w-content items-center justify-between gap-4 px-4 lg:h-20">
           <Link
             href={user ? ROUTES.dashboard : ROUTES.home}
             className="flex shrink-0 items-center gap-2 text-lg font-semibold text-slate-900"
@@ -155,7 +155,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         {open && (
           <nav className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-slate-100 bg-white px-4 pb-4 pt-3 text-sm lg:hidden">
-            <div className="mx-auto flex max-w-7xl flex-col gap-1">
+            <div className="mx-auto flex max-w-content flex-col gap-1">
               {links.map((link) => {
                 const active = isActive(link.href);
                 return (

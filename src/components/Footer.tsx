@@ -74,7 +74,7 @@ export default function Footer() {
 
   return (
     <footer className="safe-bottom border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="mx-auto max-w-content px-4 py-10">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4">
             <a
