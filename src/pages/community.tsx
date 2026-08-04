@@ -5,6 +5,7 @@ import { timeAgo } from '@/components/InvitationsProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import {
+  ActionLink,
   Alert,
   Avatar,
   Badge,
@@ -21,6 +22,7 @@ import { appConfig, communityConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { encodeMentions } from '@/lib/mentions';
+import { ROUTES } from '@/lib/routes';
 
 type CommunityMessage = {
   id: string;
@@ -362,7 +364,11 @@ export default function CommunityPage() {
 
   return (
     <PageContainer>
-      <PageHeader title={strings.community.title} description={strings.community.subtitle(appConfig.name)} />
+      <PageHeader
+        title={strings.community.title}
+        description={strings.community.subtitle(appConfig.name)}
+        action={<ActionLink href={ROUTES.comments}>{strings.community.elsewhereLink}</ActionLink>}
+      />
 
       <Card>
         {loading ? (

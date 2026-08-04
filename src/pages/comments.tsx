@@ -3,6 +3,7 @@ import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
 import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
 import {
+  ActionLink,
   Badge,
   Button,
   Card,
@@ -18,6 +19,7 @@ import {
 import { api, errorMessage } from '@/lib/api-client';
 import { formatDateTime } from '@/lib/format';
 import { strings } from '@/lib/i18n';
+import { ROUTES } from '@/lib/routes';
 import { encodeMentions } from '@/lib/mentions';
 
 type Reply = {
@@ -150,7 +152,11 @@ export default function CommentsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title={strings.comments.title} description={strings.comments.subtitle} />
+      <PageHeader
+        title={strings.comments.title}
+        description={strings.comments.subtitle}
+        action={<ActionLink href={ROUTES.community}>{strings.comments.elsewhereLink}</ActionLink>}
+      />
 
       {loadingGroups ? (
         <LoadingCard />

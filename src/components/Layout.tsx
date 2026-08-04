@@ -29,6 +29,51 @@ function NavBadge({ count }: { count: number }) {
   );
 }
 
+function MobileNavHeading({ children }: { children: ReactNode }) {
+  return (
+    <p className="mt-3 px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400 first:mt-0">{children}</p>
+  );
+}
+
+function MobileNavLink({
+  link,
+  active,
+  onNavigate
+}: {
+  link: NavLink;
+  active: boolean;
+  onNavigate: () => void;
+}) {
+  return (
+    <Link
+      href={link.href}
+      onClick={onNavigate}
+      aria-current={active ? 'page' : undefined}
+      className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${FOCUS_RING} ${
+        active ? 'bg-brand-600 font-semibold text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
+      }`}
+    >
+      {link.label}
+      <NavBadge count={link.badge ?? 0} />
+    </Link>
+  );
+}
+
+function DesktopNavLink({ link, active }: { link: NavLink; active: boolean }) {
+  return (
+    <Link
+      href={link.href}
+      aria-current={active ? 'page' : undefined}
+      className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-2 transition-colors xl:px-3 ${FOCUS_RING} ${
+        active ? 'bg-brand-600 font-semibold text-white' : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700'
+      }`}
+    >
+      {link.label}
+      <NavBadge count={link.badge ?? 0} />
+    </Link>
+  );
+}
+
 export default function Layout({ children }: { children: ReactNode }) {
   const { user, loading, logout, stopImpersonating } = useCurrentUser();
   const { unreadCount: communityUnread } = useCommunity();
@@ -54,20 +99,23 @@ export default function Layout({ children }: { children: ReactNode }) {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open]);
 
-  const links: NavLink[] = [];
+  const messLinks: NavLink[] = [];
+  const appLinks: NavLink[] = [];
+
   if (user) {
-    links.push({ href: ROUTES.dashboard, label: strings.nav.dashboard });
-    links.push({ href: ROUTES.meals, label: strings.nav.meals });
-    links.push({ href: ROUTES.expenses, label: strings.nav.bazar });
-    links.push({ href: ROUTES.bills, label: strings.nav.bills });
-    links.push({ href: ROUTES.payments, label: strings.nav.payments });
-    links.push({ href: ROUTES.members, label: strings.nav.members });
-    links.push({ href: ROUTES.comments, label: strings.nav.comments });
-    links.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
+    messLinks.push({ href: ROUTES.dashboard, label: strings.nav.dashboard });
+    messLinks.push({ href: ROUTES.meals, label: strings.nav.meals });
+    messLinks.push({ href: ROUTES.expenses, label: strings.nav.bazar });
+    messLinks.push({ href: ROUTES.bills, label: strings.nav.bills });
+    messLinks.push({ href: ROUTES.payments, label: strings.nav.payments });
+    messLinks.push({ href: ROUTES.members, label: strings.nav.members });
+    messLinks.push({ href: ROUTES.comments, label: strings.nav.comments });
+
+    appLinks.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
     if (user.role === USER_ROLES.ADMIN) {
-      links.push({ href: ROUTES.admin, label: strings.nav.admin });
+      appLinks.push({ href: ROUTES.admin, label: strings.nav.admin });
     }
-    links.push({ href: ROUTES.guide, label: strings.nav.guide });
+    appLinks.push({ href: ROUTES.guide, label: strings.nav.guide });
   }
 
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(`${href}/`);
@@ -116,24 +164,13 @@ export default function Layout({ children }: { children: ReactNode }) {
           </Link>
 
           <nav className="hidden items-center gap-1 text-sm lg:flex">
-            {links.map((link) => {
-              const active = isActive(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={`inline-flex items-center rounded-full px-3 py-2 transition-colors ${FOCUS_RING} ${
-                    active
-                      ? 'bg-brand-600 font-semibold text-white'
-                      : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700'
-                  }`}
-                >
-                  {link.label}
-                  <NavBadge count={link.badge ?? 0} />
-                </Link>
-              );
-            })}
+            {messLinks.map((link) => (
+              <DesktopNavLink key={link.href} link={link} active={isActive(link.href)} />
+            ))}
+            {messLinks.length > 0 && appLinks.length > 0 && <span className="mx-1 h-6 w-px bg-slate-200" />}
+            {appLinks.map((link) => (
+              <DesktopNavLink key={link.href} link={link} active={isActive(link.href)} />
+            ))}
             {user ? (
               <>
                 <span className="mx-1 h-6 w-px bg-slate-200" />
@@ -183,23 +220,26 @@ export default function Layout({ children }: { children: ReactNode }) {
             className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-slate-100 bg-white px-4 pb-4 pt-3 text-sm lg:hidden"
           >
             <div className="mx-auto flex max-w-content flex-col gap-1">
-              {links.map((link) => {
-                const active = isActive(link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    aria-current={active ? 'page' : undefined}
-                    className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${FOCUS_RING} ${
-                      active ? 'bg-brand-600 font-semibold text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
-                    }`}
-                  >
-                    {link.label}
-                    <NavBadge count={link.badge ?? 0} />
-                  </Link>
-                );
-              })}
+              {messLinks.length > 0 && <MobileNavHeading>{strings.nav.sectionMess}</MobileNavHeading>}
+              {messLinks.map((link) => (
+                <MobileNavLink
+                  key={link.href}
+                  link={link}
+                  active={isActive(link.href)}
+                  onNavigate={() => setOpen(false)}
+                />
+              ))}
+
+              {appLinks.length > 0 && <MobileNavHeading>{STRINGS.appName}</MobileNavHeading>}
+              {appLinks.map((link) => (
+                <MobileNavLink
+                  key={link.href}
+                  link={link}
+                  active={isActive(link.href)}
+                  onNavigate={() => setOpen(false)}
+                />
+              ))}
+
               {user ? (
                 <>
                   <Link

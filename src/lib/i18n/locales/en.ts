@@ -58,7 +58,7 @@ const en = {
     bills: 'Bills',
     payments: 'Payments',
     members: 'Members',
-    comments: 'Comments',
+    comments: 'Mess comments',
     admin: 'Admin',
     community: 'Community',
     guide: 'Guide',
@@ -66,7 +66,8 @@ const en = {
     login: 'Login',
     register: 'Register',
     logout: 'Log out',
-    toggleMenu: 'Toggle menu'
+    toggleMenu: 'Toggle menu',
+    sectionMess: 'Your mess'
   },
   auth: {
     login: {
@@ -587,9 +588,11 @@ const en = {
     countSummary: (count: number, total: string) => `${count} payments · ${total}`
   },
   comments: {
-    title: 'Comments',
+    title: 'Mess comments',
     subtitle:
-      "Anyone in the group can post and reply. Mention someone with @. Once posted, a comment can't be edited — only the supervisor can remove it.",
+      "Only your mess can read this. Anyone in it can post and reply, and mention someone with @. Once posted, a comment can't be edited — only the supervisor can remove it.",
+    elsewhere: 'Looking for the room everyone on the app shares?',
+    elsewhereLink: 'Open Community',
     composeHeading: 'Say something',
     threadHeading: 'Thread',
     noGroup: "You're not part of any group yet.",
@@ -651,7 +654,10 @@ const en = {
   },
   community: {
     title: 'Community',
-    subtitle: (app: string) => `One room for everyone on ${app}. Ask a question, share news, welcome new faces.`,
+    subtitle: (app: string) =>
+      `Everyone on ${app} can read this, not just your mess. Ask a question, share news, welcome new faces.`,
+    elsewhere: 'Looking for the thread only your mess can read?',
+    elsewhereLink: 'Open mess comments',
     placeholder: 'Write something for everyone...',
     send: 'Send',
     sending: 'Sending...',

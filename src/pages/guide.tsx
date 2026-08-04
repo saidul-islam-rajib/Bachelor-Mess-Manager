@@ -222,7 +222,8 @@ export default function GuidePage() {
 
           <Section id="community" title="The community room">
             <P>
-              Your mess has its own <Route href={ROUTES.comments}>Comments</Route> thread. The{' '}
+              There are two places to talk, and they differ by who can read you.{' '}
+              <Route href={ROUTES.comments}>Mess comments</Route> is private to your mess. The{' '}
               <Route href={ROUTES.community}>Community</Route> room is the other one: everybody on {appConfig.name},
               in a single place. You are in it automatically from the moment your account is approved — there is
               nothing to join.
