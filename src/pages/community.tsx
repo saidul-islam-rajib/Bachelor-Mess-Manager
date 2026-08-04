@@ -28,6 +28,7 @@ type CommunityMessage = {
   system: boolean;
   authorId: string | null;
   authorName: string;
+  authorImage: string | null;
   title: string | null;
   text: string;
   pinned: boolean;
@@ -86,7 +87,12 @@ function MessageBubble({
       }`}
     >
       <div className="flex items-start gap-3">
-        <Avatar name={message.system ? appConfig.name : message.authorName} size="sm" muted={message.system} />
+        <Avatar
+          name={message.system ? appConfig.name : message.authorName}
+          image={message.system ? null : message.authorImage}
+          size="sm"
+          muted={message.system}
+        />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -119,7 +125,7 @@ function MessageBubble({
             text={message.text}
             members={members}
             mentionNames={mentionNames}
-            className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700"
+            className="mt-1 hyphens-auto whitespace-pre-wrap break-words text-justify text-sm text-slate-700"
           />
         </div>
       </div>
@@ -306,7 +312,7 @@ export default function CommunityPage() {
                   text={message.text}
                   members={members}
                   mentionNames={mentionNames}
-                  className="mt-0.5 whitespace-pre-wrap break-words text-sm text-slate-700"
+                  className="mt-0.5 hyphens-auto whitespace-pre-wrap break-words text-justify text-sm text-slate-700"
                 />
               </li>
             ))}

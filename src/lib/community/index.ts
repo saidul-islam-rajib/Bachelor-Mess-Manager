@@ -19,6 +19,7 @@ export type CommunityMessageView = {
   system: boolean;
   authorId: string | null;
   authorName: string;
+  authorImage: string | null;
   title: string | null;
   text: string;
   pinned: boolean;
@@ -43,7 +44,7 @@ type MessageRow = Prisma.CommunityMessageGetPayload<{
     text: true;
     pinned: true;
     createdAt: true;
-    author: { select: { id: true; name: true } };
+    author: { select: { id: true; name: true; profileImage: true } };
   };
 }>;
 
@@ -55,7 +56,7 @@ const MESSAGE_SELECT = {
   text: true,
   pinned: true,
   createdAt: true,
-  author: { select: { id: true, name: true } }
+  author: { select: { id: true, name: true, profileImage: true } }
 } satisfies Prisma.CommunityMessageSelect;
 
 const VISIBLE: Prisma.CommunityMessageWhereInput = { deletedAt: null, isPublished: true };
@@ -73,6 +74,7 @@ function serialize(row: MessageRow): CommunityMessageView {
     system,
     authorId: row.author?.id ?? null,
     authorName: row.author?.name ?? (system ? appConfig.name : strings.community.formerMember),
+    authorImage: row.author?.profileImage ?? null,
     title: row.title,
     text: row.text,
     pinned: row.pinned,
