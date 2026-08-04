@@ -4,6 +4,7 @@ import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import MealPlanCard from '@/components/MealPlanCard';
 import MealPromptDispatch from '@/components/MealPromptDispatch';
+import { strings } from '@/lib/i18n';
 import { daysInMonth, todayKey } from '@/lib/month';
 
 type Member = { id: string; name: string; email: string };
@@ -74,6 +75,7 @@ export default function MealsPage() {
   const [editWindow, setEditWindow] = useState<EditWindow | null>(null);
   const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
   const [windowBusy, setWindowBusy] = useState(false);
+  const [openDay, setOpenDay] = useState('');
 
   const days = useMemo(() => daysInMonth(month), [month]);
   const today = todayKey();
@@ -306,19 +308,25 @@ export default function MealsPage() {
                         <div>
                           <p className="font-semibold">
                             {dayLabel(date)}
-                            {date === today && <span className="ml-2 text-xs font-medium text-green-600">Today</span>}
+                            {date === today && (
+                              <span className="ml-2 text-xs font-medium text-green-600">{strings.meals.today}</span>
+                            )}
                           </p>
                           <p className="mt-0.5 text-xs text-slate-500">
-                            {info ? `${info.meals} meals` : '0 meals'}
-                            {info && info.perMealPrice ? ` · ${taka(info.perMealPrice)}/meal` : ''}
+                            {strings.meals.mealCount(info?.meals ?? 0)}
+                            {info && info.perMealPrice
+                              ? ` · ${strings.meals.perMealShort(taka(info.perMealPrice))}`
+                              : ''}
                           </p>
                         </div>
                         {awaiting ? (
                           <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs text-amber-700">
-                            Awaiting approval
+                            {strings.meals.awaitingApproval}
                           </span>
                         ) : !canEdit ? (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-500">Locked</span>
+                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-500">
+                            {strings.meals.locked}
+                          </span>
                         ) : null}
                       </div>
 
@@ -346,12 +354,66 @@ export default function MealsPage() {
                       </div>
 
                       {canEdit && needsApproval(user?.id ?? '', date) && (
-                        <p className="mt-2 text-xs text-amber-700">
-                          Changes to this day go to your supervisor for approval before they count.
-                        </p>
+                        <p className="mt-2 text-xs text-amber-700">{strings.meals.approvalNotice}</p>
                       )}
 
-                      {others.length > 0 && (
+                      {others.length > 0 && canManage && (
+                        <div className="mt-3 border-t border-slate-100 pt-3">
+                          <button
+                            type="button"
+                            onClick={() => setOpenDay((current) => (current === date ? '' : date))}
+                            aria-expanded={openDay === date}
+                            className="flex w-full items-center justify-between gap-2 rounded-xl px-1 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50"
+                          >
+                            {openDay === date ? strings.meals.hideEveryone : strings.meals.everyoneOnDay(others.length)}
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={`transition-transform ${openDay === date ? 'rotate-180' : ''}`}
+                            >
+                              <path d="m6 9 6 6 6-6" />
+                            </svg>
+                          </button>
+
+                          {openDay === date && (
+                            <ul className="mt-2 space-y-3">
+                              {others.map((m) => {
+                                const memberCell = cell(m.id, date);
+                                return (
+                                  <li key={m.id} className="rounded-xl bg-slate-50 p-3">
+                                    <p className="text-xs font-medium text-slate-700">{m.name}</p>
+                                    <div className="mt-2 grid grid-cols-3 gap-2">
+                                      {FIELDS.map((f) => (
+                                        <label key={f} className="block">
+                                          <span className="text-[11px] text-slate-500">{FIELD_LABELS[f]}</span>
+                                          <input
+                                            type="number"
+                                            min={0}
+                                            inputMode="numeric"
+                                            aria-label={`${m.name} ${FIELD_LABELS[f]}`}
+                                            value={memberCell[f] || 0}
+                                            onChange={(e) => setLocal(m.id, date, f, parseInt(e.target.value, 10))}
+                                            onBlur={() => saveDay(m.id, date)}
+                                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-center text-sm"
+                                          />
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+
+                      {others.length > 0 && !canManage && (
                         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3 text-xs text-slate-500">
                           {others.map((m) => {
                             const c = cell(m.id, date);

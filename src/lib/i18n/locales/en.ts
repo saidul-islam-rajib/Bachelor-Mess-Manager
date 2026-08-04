@@ -456,7 +456,16 @@ const en = {
     ownOnly: 'You can only edit your own meals.',
     notAMember: 'That user is not a member of this group.',
     perMealPrice: 'Per meal price',
-    totalMeals: 'Total meals'
+    totalMeals: 'Total meals',
+    today: 'Today',
+    locked: 'Locked',
+    awaitingApproval: 'Awaiting approval',
+    mealCount: (count: number) => `${count} meal${count === 1 ? '' : 's'}`,
+    perMealShort: (price: string) => `${price}/meal`,
+    approvalNotice: 'Changes to this day go to your supervisor for approval before they count.',
+    everyoneOnDay: (count: number) => `Everyone else (${count})`,
+    hideEveryone: 'Hide everyone else',
+    editingFor: (name: string) => `Editing ${name}`
   },
   expenses: {
     title: 'Groceries (Bazar)',
