@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Badge, Button, Card, CardHeader, Textarea, useConfirm } from '@/components/ui';
+import { Alert, Badge, Button, Collapsible, Textarea, useConfirm } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { api, errorMessage } from '@/lib/api-client';
@@ -93,14 +93,17 @@ export function RoleRequestPanel() {
   }
 
   return (
-    <Card>
-      <CardHeader
-        title={strings.roleRequests.yourRole}
-        description={strings.roleRequests.switchNote}
-        action={<Badge tone="info">{roleLabel(user.role)}</Badge>}
-      />
-
-      <div className="mt-4">
+    <Collapsible
+      title={strings.roleRequests.yourRole}
+      description={strings.roleRequests.switchNote}
+      badge={
+        <span className="flex shrink-0 items-center gap-2">
+          {pending && <Badge tone="warning">{strings.roleRequests.pendingBadge}</Badge>}
+          <Badge tone="info">{roleLabel(user.role)}</Badge>
+        </span>
+      }
+    >
+      <div>
         {loading ? (
           <p className="text-sm text-slate-500">{strings.common.loading}</p>
         ) : pending ? (
@@ -152,7 +155,7 @@ export function RoleRequestPanel() {
           </ul>
         )}
       </div>
-    </Card>
+    </Collapsible>
   );
 }
 

@@ -32,6 +32,9 @@ export { PageTitle } from '@/components/ui/PageTitle';
 export { Collapsible } from '@/components/ui/Collapsible';
 export type { CollapsibleProps } from '@/components/ui/Collapsible';
 
+export { ImageViewer } from '@/components/ui/ImageViewer';
+export type { ImageViewerProps } from '@/components/ui/ImageViewer';
+
 export {
   Alert,
   Badge,

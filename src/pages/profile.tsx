@@ -6,7 +6,8 @@ import InvitationCard from '@/components/InvitationCard';
 import RoleRequestPanel from '@/components/RoleRequestPanel';
 import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
-import { PageTitle } from '@/components/ui';
+import { Badge, Collapsible, EmptyState, ImageViewer, PageTitle } from '@/components/ui';
+import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 import { validateName, validatePhone } from '@/lib/validation';
 
@@ -329,8 +330,36 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
   return (
     <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6">
       {image ? (
-
-        <img src={image} alt="" className="h-20 w-20 rounded-full object-cover" />
+        <ImageViewer src={image} alt={name} title="Profile photo">
+          {(open) => (
+            <button
+              type="button"
+              onClick={open}
+              aria-label={strings.common.viewImage}
+              title={strings.common.viewImage}
+              className="group relative h-20 w-20 shrink-0 cursor-zoom-in overflow-hidden rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+            >
+              <img src={image} alt="" className="h-full w-full rounded-full object-cover" />
+              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-900/45 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="m20 20-3.5-3.5" />
+                  <path d="M11 8v6M8 11h6" />
+                </svg>
+              </span>
+            </button>
+          )}
+        </ImageViewer>
       ) : (
         <span className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-xl font-medium text-slate-600">
           {initials || '?'}
@@ -415,13 +444,11 @@ function PasswordSection() {
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <h2 className="text-lg font-semibold">Change password</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Changing your password signs you out everywhere else. This browser stays signed in.
-      </p>
-
-      <form className="mt-6 space-y-5" onSubmit={submit} noValidate>
+    <Collapsible
+      title="Change password"
+      description="Changing your password signs you out everywhere else. This browser stays signed in."
+    >
+      <form className="space-y-5" onSubmit={submit} noValidate>
         <PasswordField
           label="Current password"
           name="current-password"
@@ -464,7 +491,7 @@ function PasswordSection() {
           {saving ? 'Changing...' : 'Change password'}
         </button>
       </form>
-    </div>
+    </Collapsible>
   );
 }
 
@@ -477,64 +504,32 @@ function InvitationsSection() {
     if (!touched && count > 0) setOpen(true);
   }, [count, touched]);
 
-  function toggle() {
+  function toggle(next: boolean) {
     setTouched(true);
-    setOpen((v) => !v);
+    setOpen(next);
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-      <h2>
-        <button
-          type="button"
-          onClick={toggle}
-          aria-expanded={open}
-          className="flex w-full items-start justify-between gap-3 text-left"
-        >
-          <span>
-            <span className="flex flex-wrap items-center gap-2">
-              <span className="text-lg font-semibold">Invitations</span>
-              {count > 0 && (
-                <span className="rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-semibold text-red-600 ring-1 ring-inset ring-red-600/20">
-                  {count} pending
-                </span>
-              )}
-            </span>
-            <span className="mt-1 block text-sm font-normal text-slate-500">
-              Messes that have invited you to join.
-            </span>
-          </span>
-          <span
-            aria-hidden
-            className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 text-lg leading-none text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
-          >
-            {open ? '−' : '+'}
-          </span>
-        </button>
-      </h2>
-
-      {open && (
-        <div className="mt-5 border-t border-slate-100 pt-5">
-          {loading ? (
-            <p className="text-sm text-slate-400">Loading...</p>
-          ) : count === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-8 text-center">
-              <p className="text-sm font-medium text-slate-600">No pending invitations</p>
-              <p className="mt-1 text-xs text-slate-400">
-                When a supervisor invites you to a mess, it shows up here and in the bell at the top.
-              </p>
-            </div>
-          ) : (
-            <ul className="space-y-3">
-              {invitations.map((invitation) => (
-                <li key={invitation.id}>
-                  <InvitationCard invitation={invitation} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+    <Collapsible
+      title={strings.invitations.title}
+      description={strings.invitations.subtitle}
+      open={open}
+      onOpenChange={toggle}
+      badge={count > 0 ? <Badge tone="danger">{strings.invitations.pendingBadge(count)}</Badge> : null}
+    >
+      {loading ? (
+        <p className="text-sm text-slate-400">{strings.common.loading}</p>
+      ) : count === 0 ? (
+        <EmptyState title={strings.invitations.none} description={strings.invitations.noneHint} />
+      ) : (
+        <ul className="space-y-3">
+          {invitations.map((invitation) => (
+            <li key={invitation.id}>
+              <InvitationCard invitation={invitation} />
+            </li>
+          ))}
+        </ul>
       )}
-    </div>
+    </Collapsible>
   );
 }

@@ -49,7 +49,9 @@ const en = {
     of: 'of',
     perPage: 'Per page',
     selected: 'Selected',
-    skipToContent: 'Skip to main content'
+    skipToContent: 'Skip to main content',
+    viewImage: 'View full image',
+    viewImageHint: 'Press Esc or click outside to close.'
   },
   nav: {
     dashboard: 'Dashboard',
@@ -135,6 +137,7 @@ const en = {
     submitted: 'Request sent. An administrator will review it.',
     autoApproved: (role: string) => `You are now a ${role.toLowerCase()}. Sign in again to use the new permissions.`,
     pending: 'Your request is waiting for a decision.',
+    pendingBadge: 'Pending',
     cancel: 'Cancel request',
     cancelled: 'Request cancelled.',
     approve: 'Approve',
@@ -208,7 +211,19 @@ const en = {
     notGroupMember: 'You are not a member of this group.',
     loadFailed: (what: string) => `Could not load ${what}.`,
     saveFailed: (what: string) => `Could not save ${what}.`,
-    deleteFailed: (what: string) => `Could not delete ${what}.`
+    deleteFailed: (what: string) => `Could not delete ${what}.`,
+    page: {
+      notFoundTitle: 'This page does not exist',
+      notFoundBody:
+        'The link may be out of date, or the page may have been moved. Nothing is broken — pick a place to go from here.',
+      serverTitle: 'Something went wrong on our side',
+      serverBody:
+        'The page could not be loaded. This one is on us, not you. Try again in a moment, and if it keeps happening let your admin know.',
+      goDashboard: 'Go to dashboard',
+      goHome: 'Back to home',
+      goGuide: 'Read the guide',
+      tryAgain: 'Try again'
+    }
   },
   success: {
     saved: 'Saved.',
