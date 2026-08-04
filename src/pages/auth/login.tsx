@@ -8,16 +8,10 @@ import { useCurrentUser } from '@/components/UserProvider';
 import { XssWarningModal } from '@/components/XssWarningModal';
 import { Button, PageTitle } from '@/components/ui';
 import { strings as i18n } from '@/lib/i18n';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES, safeNextPath } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
 import { isValidEmail } from '@/lib/validation';
 import { findXssField } from '@/lib/xss';
-
-function safeNext(next: unknown): string | null {
-  if (typeof next !== 'string') return null;
-  if (!next.startsWith('/') || next.startsWith('//')) return null;
-  return next;
-}
 
 export default function LoginPage() {
   const strings = STRINGS.auth.login;
@@ -69,7 +63,7 @@ export default function LoginPage() {
 
       await refresh();
       toast.success(`Welcome back, ${data.user?.name ?? ''}`.trim() + '.');
-      await router.push(safeNext(router.query.next) ?? ROUTES.dashboard);
+      await router.push(safeNextPath(router.query.next) ?? ROUTES.dashboard);
     } catch {
       setFormError('Could not reach the server. Check your connection and try again.');
     } finally {

@@ -938,6 +938,10 @@ const en = {
       groups: 'Your mess',
       signedInAs: (name: string) => `You are signed in as ${name}.`,
       note: 'Free to use. Register with your email and set a password from the link we send you.',
+      gatedTitle: 'That page is inside a mess',
+      gatedBody:
+        'The link you followed belongs to a private mess, so it needs a sign-in. Sign in and we will take you straight there.',
+      gatedAction: 'Sign in and continue',
       previewLabel: 'Preview of the member dashboard showing meals, meal rate and dues for the month',
       highlights: ['Fair, meal-based split', 'Bills divided automatically', 'Works on any phone']
     },

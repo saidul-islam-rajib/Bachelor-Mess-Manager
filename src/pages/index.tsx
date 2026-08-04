@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { Collapsible, LinkButton } from '@/components/ui';
 import { LandingIcon, type LandingIconName } from '@/components/landing/Icons';
 import Reveal from '@/components/landing/Reveal';
@@ -14,7 +15,7 @@ import {
 import { useCurrentUser } from '@/components/UserProvider';
 import { appConfig } from '@/config';
 import { strings } from '@/lib/i18n';
-import { ROUTES } from '@/lib/routes';
+import { ROUTES, safeNextPath, withNextParam } from '@/lib/routes';
 
 const landing = strings.landing;
 
@@ -29,6 +30,9 @@ function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }
 
 function Hero() {
   const { user } = useCurrentUser();
+  const router = useRouter();
+  const next = safeNextPath(router.query.next);
+  const loginHref = withNextParam(ROUTES.auth.login, next);
 
   return (
     <section className="relative overflow-hidden border-b border-slate-200 bg-white">
@@ -75,13 +79,28 @@ function Hero() {
                 </LinkButton>
               </div>
             </div>
+          ) : next ? (
+            <div className="mt-9">
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:p-5">
+                <p className="text-sm font-semibold text-amber-900">{landing.hero.gatedTitle}</p>
+                <p className="mt-1 text-sm leading-relaxed text-amber-800">{landing.hero.gatedBody}</p>
+                <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <LinkButton href={loginHref} size="lg">
+                    {landing.hero.gatedAction}
+                  </LinkButton>
+                  <LinkButton href={ROUTES.auth.register} size="lg" variant="secondary" className="bg-white">
+                    {landing.hero.primary}
+                  </LinkButton>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="mt-9">
               <div className="flex flex-col gap-3 sm:flex-row">
                 <LinkButton href={ROUTES.auth.register} size="lg" className="shadow-lg shadow-slate-900/15">
                   {landing.hero.primary}
                 </LinkButton>
-                <LinkButton href={ROUTES.auth.login} size="lg" variant="secondary" className="bg-white">
+                <LinkButton href={loginHref} size="lg" variant="secondary" className="bg-white">
                   {landing.hero.secondary}
                 </LinkButton>
               </div>
@@ -420,6 +439,8 @@ function Trust() {
 
 function FinalCta() {
   const { user } = useCurrentUser();
+  const router = useRouter();
+  const loginHref = withNextParam(ROUTES.auth.login, safeNextPath(router.query.next));
 
   return (
     <section className="relative overflow-hidden bg-slate-900">
@@ -446,7 +467,7 @@ function FinalCta() {
               <LinkButton href={ROUTES.auth.register} size="lg" variant="inverse">
                 {landing.cta.primary}
               </LinkButton>
-              <LinkButton href={ROUTES.auth.login} size="lg" variant="inverseSecondary">
+              <LinkButton href={loginHref} size="lg" variant="inverseSecondary">
                 {landing.cta.secondary}
               </LinkButton>
             </>

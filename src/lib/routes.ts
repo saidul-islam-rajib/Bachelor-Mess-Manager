@@ -23,6 +23,17 @@ export const ROUTES = {
 
 export const MESS_COMMENTS_ANCHOR = 'mess-comments';
 
+export function safeNextPath(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length === 0) return null;
+  if (!value.startsWith('/')) return null;
+  if (value.startsWith('//') || value.startsWith('/\\')) return null;
+  return value;
+}
+
+export function withNextParam(path: string, next: string | null): string {
+  return next ? `${path}?next=${encodeURIComponent(next)}` : path;
+}
+
 export function groupPath(groupId: string): string {
   return `${ROUTES.members}?group=${encodeURIComponent(groupId)}`;
 }
