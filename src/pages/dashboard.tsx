@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
 import { ActionLink, LinkButton } from '@/components/ui';
-import { groupPath, ROUTES } from '@/lib/routes';
+import { commentsAnchorPath, groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
@@ -401,7 +401,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
               icon: 'cash'
             },
             {
-              href: ROUTES.comments,
+              href: commentsAnchorPath(),
               label: dashboardStrings.actions.messComments,
               hint: dashboardStrings.actions.messCommentsHint,
               icon: 'chat'

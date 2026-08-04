@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
-import { PageTitle, useConfirm } from '@/components/ui';
+import { Collapsible, PageTitle, useConfirm } from '@/components/ui';
 import InviteMembers from '@/components/members/InviteMembers';
 import GroupSettings from '@/components/members/GroupSettings';
+import MessComments from '@/components/members/MessComments';
 import YourGroups from '@/components/members/YourGroups';
 import { GROUP_STATUS, USER_ROLES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
+import { MESS_COMMENTS_ANCHOR } from '@/lib/routes';
 
 type Member = {
   membershipId: string;
@@ -26,6 +28,8 @@ type Member = {
 type RosterData = { canManage: boolean; members: Member[] };
 
 type Tab = 'roster' | 'invites' | 'settings' | 'groups';
+
+const COMMENTS_ANCHOR = MESS_COMMENTS_ANCHOR;
 
 function formatStay(days: number) {
   if (days < 31) return `${days} day${days === 1 ? '' : 's'}`;
@@ -54,6 +58,8 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState('');
   const [tab, setTab] = useState<Tab>('roster');
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const commentsSection = useRef<HTMLDivElement>(null);
 
   const selectedGroup = useMemo(() => groups.find((group) => group.id === groupId), [groups, groupId]);
 
@@ -99,6 +105,17 @@ export default function MembersPage() {
     if (tab === 'invites' && !canManage) setTab('roster');
     if (tab === 'groups' && !showGroupsTab) setTab('roster');
   }, [tab, canManage, showGroupsTab]);
+
+  useEffect(() => {
+    if (window.location.hash !== `#${COMMENTS_ANCHOR}`) return;
+    setCommentsOpen(true);
+  }, []);
+
+  useEffect(() => {
+    if (!commentsOpen || !groupId) return;
+    if (window.location.hash !== `#${COMMENTS_ANCHOR}`) return;
+    commentsSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [commentsOpen, groupId]);
 
   async function setActive(member: Member, isActive: boolean) {
     setBusy(member.id);
@@ -387,6 +404,21 @@ export default function MembersPage() {
               onSelect={setGroupId}
               onChanged={refreshGroups}
             />
+          )}
+
+          {groupId && (
+            <div ref={commentsSection}>
+              <Collapsible
+                id={COMMENTS_ANCHOR}
+                className="scroll-mt-24"
+                title={strings.comments.title}
+                description={strings.comments.sectionDescription}
+                open={commentsOpen}
+                onOpenChange={setCommentsOpen}
+              >
+                <MessComments key={groupId} groupId={groupId} />
+              </Collapsible>
+            </div>
           )}
         </div>
       )}

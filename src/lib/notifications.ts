@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { appConfig } from '@/config';
 import { flattenMentions, mentionIdsIn, mentionsEveryone } from '@/lib/mentions';
 import { isMailConfigured, sendMail, type MailMessage } from '@/lib/mailer';
-import { ROUTES } from '@/lib/routes';
+import { commentsAnchorPath, ROUTES } from '@/lib/routes';
 import { buildPageMeta, type PageMeta } from '@/lib/query';
 import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/constants';
 import { escapeHtml } from '@/lib/xss';
@@ -41,8 +41,10 @@ function truncate(text: string) {
 }
 
 export function mentionLink(type: NotificationType, groupId: string) {
-  const page = type === NOTIFICATION_TYPES.MENTION_EXPENSE_COMMENT ? ROUTES.expenses : ROUTES.comments;
-  return `${page}?group=${groupId}`;
+  if (type === NOTIFICATION_TYPES.MENTION_EXPENSE_COMMENT) {
+    return `${ROUTES.expenses}?group=${groupId}`;
+  }
+  return commentsAnchorPath(groupId);
 }
 
 async function eligibleRecipients(groupId: string, userIds: string[]) {

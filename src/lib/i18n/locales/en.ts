@@ -58,7 +58,6 @@ const en = {
     bills: 'Bills',
     payments: 'Payments',
     members: 'Members',
-    comments: 'Mess comments',
     admin: 'Admin',
     community: 'Community',
     guide: 'Guide',
@@ -591,8 +590,7 @@ const en = {
     title: 'Mess comments',
     subtitle:
       "Only your mess can read this. Anyone in it can post and reply, and mention someone with @. Once posted, a comment can't be edited — only the supervisor can remove it.",
-    elsewhere: 'Looking for the room everyone on the app shares?',
-    elsewhereLink: 'Open Community',
+    sectionDescription: "Private to this mess. Post, reply, and mention someone with @.",
     composeHeading: 'Say something',
     threadHeading: 'Thread',
     noGroup: "You're not part of any group yet.",

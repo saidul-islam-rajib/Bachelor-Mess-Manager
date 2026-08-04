@@ -29,6 +29,9 @@ export {
 
 export { PageTitle } from '@/components/ui/PageTitle';
 
+export { Collapsible } from '@/components/ui/Collapsible';
+export type { CollapsibleProps } from '@/components/ui/Collapsible';
+
 export {
   Alert,
   Badge,

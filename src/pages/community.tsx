@@ -22,7 +22,7 @@ import { appConfig, communityConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { encodeMentions } from '@/lib/mentions';
-import { ROUTES } from '@/lib/routes';
+import { commentsAnchorPath } from '@/lib/routes';
 
 type CommunityMessage = {
   id: string;
@@ -367,7 +367,7 @@ export default function CommunityPage() {
       <PageHeader
         title={strings.community.title}
         description={strings.community.subtitle(appConfig.name)}
-        action={<ActionLink href={ROUTES.comments}>{strings.community.elsewhereLink}</ActionLink>}
+        action={<ActionLink href={commentsAnchorPath()}>{strings.community.elsewhereLink}</ActionLink>}
       />
 
       <Card>

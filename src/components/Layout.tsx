@@ -109,7 +109,6 @@ export default function Layout({ children }: { children: ReactNode }) {
     messLinks.push({ href: ROUTES.bills, label: strings.nav.bills });
     messLinks.push({ href: ROUTES.payments, label: strings.nav.payments });
     messLinks.push({ href: ROUTES.members, label: strings.nav.members });
-    messLinks.push({ href: ROUTES.comments, label: strings.nav.comments });
 
     appLinks.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
     if (user.role === USER_ROLES.ADMIN) {

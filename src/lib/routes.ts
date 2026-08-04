@@ -21,8 +21,15 @@ export const ROUTES = {
   guide: '/guide'
 };
 
+export const MESS_COMMENTS_ANCHOR = 'mess-comments';
+
 export function groupPath(groupId: string): string {
   return `${ROUTES.members}?group=${encodeURIComponent(groupId)}`;
+}
+
+export function commentsAnchorPath(groupId?: string): string {
+  const base = groupId ? groupPath(groupId) : ROUTES.members;
+  return `${base}#${MESS_COMMENTS_ANCHOR}`;
 }
 
 export function mealReplyPath(token: string, answer?: string): string {

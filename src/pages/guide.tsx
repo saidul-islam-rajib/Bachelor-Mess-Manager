@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useCurrentUser } from '@/components/UserProvider';
-import { ROUTES } from '@/lib/routes';
+import { commentsAnchorPath, ROUTES } from '@/lib/routes';
 import { appConfig } from '@/config';
 import {
   BalanceFigure,
@@ -223,7 +223,8 @@ export default function GuidePage() {
           <Section id="community" title="The community room">
             <P>
               There are two places to talk, and they differ by who can read you.{' '}
-              <Route href={ROUTES.comments}>Mess comments</Route> is private to your mess. The{' '}
+              <Route href={commentsAnchorPath()}>Mess comments</Route>, a section on the{' '}
+              <Route href={ROUTES.members}>Members</Route> page, is private to your mess. The{' '}
               <Route href={ROUTES.community}>Community</Route> room is the other one: everybody on {appConfig.name},
               in a single place. You are in it automatically from the moment your account is approved — there is
               nothing to join.
