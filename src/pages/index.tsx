@@ -65,7 +65,7 @@ function Hero() {
                 <LinkButton href={ROUTES.dashboard} size="lg">
                   {landing.hero.dashboard}
                 </LinkButton>
-                <LinkButton href={ROUTES.groups} size="lg" variant="secondary">
+                <LinkButton href={ROUTES.members} size="lg" variant="secondary">
                   {landing.hero.groups}
                 </LinkButton>
                 <LinkButton href={ROUTES.guide} size="lg" variant="secondary">

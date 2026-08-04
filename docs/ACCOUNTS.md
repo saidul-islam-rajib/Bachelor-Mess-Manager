@@ -117,7 +117,7 @@ they need to sign in again to pick up the new role.
 
 ### What a supervisor can do
 
-- Run up to **10 groups** (`/groups` → Create a group)
+- Run up to **10 groups** (`/members` → Your groups → Create a group)
 - Invite members by email, remove members (`/members`)
 - Record rent, electricity, water, waste, chef, wifi and other bills (`/bills`)
 - Record payments received from members (`/payments`)

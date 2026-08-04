@@ -43,7 +43,6 @@ export default function Layout({ children }: { children: ReactNode }) {
   const links: NavLink[] = [];
   if (user) {
     links.push({ href: ROUTES.dashboard, label: strings.nav.dashboard });
-    links.push({ href: ROUTES.groups, label: strings.nav.groups });
     links.push({ href: ROUTES.meals, label: strings.nav.meals });
     links.push({ href: ROUTES.expenses, label: strings.nav.bazar });
     links.push({ href: ROUTES.bills, label: strings.nav.bills });

@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
+import { useConfirm } from '@/components/ui';
+import InviteMembers from '@/components/members/InviteMembers';
+import GroupSettings from '@/components/members/GroupSettings';
+import YourGroups from '@/components/members/YourGroups';
+import { GROUP_STATUS, USER_ROLES } from '@/lib/constants';
+import { strings } from '@/lib/i18n';
 
 type Member = {
   membershipId: string;
@@ -19,6 +25,8 @@ type Member = {
 
 type RosterData = { canManage: boolean; members: Member[] };
 
+type Tab = 'roster' | 'invites' | 'settings' | 'groups';
+
 function formatStay(days: number) {
   if (days < 31) return `${days} day${days === 1 ? '' : 's'}`;
   const months = Math.floor(days / 30);
@@ -35,19 +43,30 @@ function shortDate(iso: string) {
 export default function MembersPage() {
   const { user } = useCurrentUser();
   const toast = useToast();
-  const { groups, groupId, setGroupId, loadingGroups } = useGroupMonth();
+  const confirm = useConfirm();
+
+  const [showClosed, setShowClosed] = useState(false);
+  const { groups, groupId, setGroupId, loadingGroups, limits, hiddenInactive, reloadGroups } = useGroupMonth({
+    includeInactive: showClosed
+  });
 
   const [data, setData] = useState<RosterData | null>(null);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState('');
+  const [tab, setTab] = useState<Tab>('roster');
+
+  const selectedGroup = useMemo(() => groups.find((group) => group.id === groupId), [groups, groupId]);
 
   const load = useCallback(async () => {
-    if (!groupId) return;
+    if (!groupId) {
+      setData(null);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/groups/${groupId}/members`);
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not load members.');
+      if (!res.ok) throw new Error(body?.error ?? strings.members.loadFailed);
       setData(body);
     } catch (err) {
       toast.error((err as Error).message);
@@ -61,6 +80,24 @@ export default function MembersPage() {
     load();
   }, [load]);
 
+  const canManage = data?.canManage ?? false;
+  const canCreateGroup = user?.role === USER_ROLES.SUPERVISOR;
+  const showGroupsTab = canCreateGroup || groups.length > 1;
+
+  const handleGroupChanged = useCallback(async () => {
+    if (showClosed) {
+      await reloadGroups();
+      return;
+    }
+    setShowClosed(true);
+  }, [showClosed, reloadGroups]);
+
+  useEffect(() => {
+    if (tab === 'settings' && !canManage) setTab('roster');
+    if (tab === 'invites' && !canManage) setTab('roster');
+    if (tab === 'groups' && !showGroupsTab) setTab('roster');
+  }, [tab, canManage, showGroupsTab]);
+
   async function setActive(member: Member, isActive: boolean) {
     setBusy(member.id);
     try {
@@ -70,9 +107,12 @@ export default function MembersPage() {
         body: JSON.stringify({ userId: member.id, isActive })
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not update the member.');
-      toast.success(isActive ? `${member.name} is active again.` : `${member.name} marked as left.`);
+      if (!res.ok) throw new Error(body?.error ?? strings.members.updateFailed);
+      toast.success(
+        isActive ? strings.members.reactivated(member.name) : strings.members.deactivated(member.name)
+      );
       await load();
+      await reloadGroups();
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -81,10 +121,13 @@ export default function MembersPage() {
   }
 
   async function leave() {
-    const group = groups.find((g) => g.id === groupId);
-    if (!window.confirm(`Leave "${group?.name ?? 'this group'}"? Your past meals and costs stay on record.`)) {
-      return;
-    }
+    const accepted = await confirm({
+      title: strings.members.leaveConfirm(selectedGroup?.name ?? ''),
+      confirmLabel: strings.members.leaveGroup,
+      destructive: true
+    });
+    if (!accepted) return;
+
     setBusy(user?.id ?? '');
     try {
       const res = await fetch(`/api/groups/${groupId}/members`, {
@@ -93,8 +136,8 @@ export default function MembersPage() {
         body: JSON.stringify({})
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not leave the group.');
-      toast.success('You have left the group.');
+      if (!res.ok) throw new Error(body?.error ?? strings.members.leaveFailed);
+      toast.success(strings.members.leftGroup);
 
       window.location.reload();
     } catch (err) {
@@ -103,144 +146,244 @@ export default function MembersPage() {
     }
   }
 
-  const canManage = data?.canManage ?? false;
-  const active = data?.members.filter((m) => m.isActive) ?? [];
-  const past = data?.members.filter((m) => !m.isActive) ?? [];
-  const me = data?.members.find((m) => m.id === user?.id && m.isActive);
+  const active = data?.members.filter((member) => member.isActive) ?? [];
+  const past = data?.members.filter((member) => !member.isActive) ?? [];
+  const me = data?.members.find((member) => member.id === user?.id && member.isActive);
   const canLeave = Boolean(me && !me.isSupervisor);
+
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'roster', label: strings.members.tabs.roster },
+    ...(canManage ? [{ id: 'invites' as Tab, label: strings.members.tabs.invites }] : []),
+    ...(canManage ? [{ id: 'settings' as Tab, label: strings.members.tabs.settings }] : []),
+    ...(showGroupsTab ? [{ id: 'groups' as Tab, label: strings.members.tabs.groups }] : [])
+  ];
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Members</h1>
-        <p className="mt-1 text-slate-600">Who is in the mess now, who has left, and how long everyone has stayed.</p>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{strings.members.title}</h1>
+        <p className="mt-1 text-slate-600">{strings.members.subtitle}</p>
       </div>
 
-      {loadingGroups ? (
-        <Card>Loading...</Card>
+      {loadingGroups && groups.length === 0 ? (
+        <Card>{strings.common.loading}</Card>
       ) : groups.length === 0 ? (
-        <Card>You&apos;re not part of any group yet.</Card>
+        <div className="space-y-6">
+          <Card>{strings.members.noGroups}</Card>
+          {canCreateGroup && (
+            <YourGroups
+              groups={groups}
+              limits={limits}
+              canCreate={canCreateGroup}
+              selectedId={groupId}
+              onSelect={setGroupId}
+              onChanged={reloadGroups}
+            />
+          )}
+        </div>
       ) : (
         <div className="space-y-6">
           <Card>
-            <label className="block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Group</span>
-              <select value={groupId} onChange={(e) => setGroupId(e.target.value)} className="app-select mt-1">
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <label className="block min-w-0 flex-1">
+                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+                  {strings.members.groupLabel}
+                </span>
+                <select
+                  value={groupId}
+                  onChange={(event) => setGroupId(event.target.value)}
+                  className="app-select mt-1"
+                >
+                  {groups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.status === GROUP_STATUS.ACTIVE
+                        ? group.name
+                        : `${group.name} (${strings.groups.inactive})`}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {(showClosed || hiddenInactive > 0) && (
+                <label className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={showClosed}
+                    onChange={(event) => setShowClosed(event.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                  />
+                  {strings.members.showClosed}
+                  {!showClosed && hiddenInactive > 0 ? ` (${hiddenInactive})` : ''}
+                </label>
+              )}
+            </div>
+
+            {selectedGroup && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 text-sm text-slate-500">
+                <span
+                  className={`rounded-full px-3 py-1 text-xs ${
+                    selectedGroup.status === GROUP_STATUS.ACTIVE
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-slate-100 text-slate-600'
+                  }`}
+                >
+                  {selectedGroup.status}
+                </span>
+                <span className="min-w-0 truncate">
+                  {strings.members.supervisedBy(selectedGroup.supervisor.name, selectedGroup.supervisor.email)}
+                </span>
+              </div>
+            )}
           </Card>
 
-          {loading || !data ? (
-            <Card>Loading members...</Card>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
-                <Stat label="Active members" value={String(active.length)} />
-                <Stat label="Past members" value={String(past.length)} />
-                <Stat
-                  label="Longest stay"
-                  value={active.length > 0 ? formatStay(Math.max(...active.map((m) => m.stayDays))) : '—'}
-                />
-              </div>
+          {tabs.length > 1 && (
+            <div className="flex flex-wrap gap-1 rounded-full border border-slate-200 bg-white p-1 text-sm shadow-sm sm:w-fit">
+              {tabs.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setTab(item.id)}
+                  aria-pressed={tab === item.id}
+                  className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
+                    tab === item.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-lg font-semibold">Current members</h2>
-                  {canLeave && (
-                    <button
-                      type="button"
-                      onClick={leave}
-                      disabled={busy === user?.id}
-                      className="rounded-full border border-red-200 px-4 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-                    >
-                      Leave this group
-                    </button>
-                  )}
+          {tab === 'roster' &&
+            (loading || !data ? (
+              <Card>{strings.common.loading}</Card>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+                  <Stat label={strings.members.activeCount} value={String(active.length)} />
+                  <Stat label={strings.members.pastCount} value={String(past.length)} />
+                  <Stat
+                    label={strings.members.longestStay}
+                    value={active.length > 0 ? formatStay(Math.max(...active.map((m) => m.stayDays))) : '—'}
+                  />
                 </div>
 
-                <ul className="mt-4 divide-y divide-slate-100">
-                  {active.map((member) => (
-                    <li key={member.membershipId} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <Avatar member={member} />
-                        <div className="min-w-0">
-                          <p className="truncate font-medium">
-                            {member.name}
-                            {member.id === user?.id && <span className="ml-1 text-xs text-green-600">(you)</span>}
-                            {member.isSupervisor && (
-                              <span className="ml-2 rounded-full bg-slate-900 px-2 py-0.5 text-xs font-normal text-white">
-                                supervisor
-                              </span>
-                            )}
-                          </p>
-                          <p className="truncate text-xs text-slate-500">
-                            {member.email}
-                            {member.phone && ` · ${member.phone}`}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{formatStay(member.stayDays)}</p>
-                          <p className="text-xs text-slate-500">since {shortDate(member.joinedAt)}</p>
-                        </div>
-                        {canManage && !member.isSupervisor && (
-                          <button
-                            type="button"
-                            onClick={() => setActive(member, false)}
-                            disabled={busy === member.id}
-                            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                          >
-                            Remove
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {past.length > 0 && (
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-                  <h2 className="text-lg font-semibold">Past members</h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Their meals and costs stay on record for the months they were here.
-                  </p>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <h2 className="text-lg font-semibold">{strings.members.current}</h2>
+                    {canLeave && (
+                      <button
+                        type="button"
+                        onClick={leave}
+                        disabled={busy === user?.id}
+                        className="rounded-full border border-red-200 px-4 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                      >
+                        {strings.members.leaveGroup}
+                      </button>
+                    )}
+                  </div>
+
                   <ul className="mt-4 divide-y divide-slate-100">
-                    {past.map((member) => (
-                      <li key={member.membershipId} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                    {active.map((member) => (
+                      <li
+                        key={member.membershipId}
+                        className="flex flex-wrap items-center justify-between gap-3 py-3"
+                      >
                         <div className="flex min-w-0 items-center gap-3">
-                          <Avatar member={member} muted />
+                          <Avatar member={member} />
                           <div className="min-w-0">
-                            <p className="truncate font-medium text-slate-600">{member.name}</p>
+                            <p className="truncate font-medium">
+                              {member.name}
+                              {member.id === user?.id && <span className="ml-1 text-xs text-green-600">(you)</span>}
+                              {member.isSupervisor && (
+                                <span className="ml-2 rounded-full bg-slate-900 px-2 py-0.5 text-xs font-normal text-white">
+                                  supervisor
+                                </span>
+                              )}
+                            </p>
                             <p className="truncate text-xs text-slate-500">
-                              {member.leftAt ? `left ${shortDate(member.leftAt)}` : 'no longer active'} ·{' '}
-                              {formatStay(member.stayDays)} stay
+                              {member.email}
+                              {member.phone && ` · ${member.phone}`}
                             </p>
                           </div>
                         </div>
-                        {canManage && (
-                          <button
-                            type="button"
-                            onClick={() => setActive(member, true)}
-                            disabled={busy === member.id}
-                            className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                          >
-                            Add back
-                          </button>
-                        )}
+
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <p className="text-sm font-medium">{formatStay(member.stayDays)}</p>
+                            <p className="text-xs text-slate-500">
+                              {strings.members.since(shortDate(member.joinedAt))}
+                            </p>
+                          </div>
+                          {canManage && !member.isSupervisor && (
+                            <button
+                              type="button"
+                              onClick={() => setActive(member, false)}
+                              disabled={busy === member.id}
+                              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                              {strings.common.remove}
+                            </button>
+                          )}
+                        </div>
                       </li>
                     ))}
                   </ul>
                 </div>
-              )}
-            </>
+
+                {past.length > 0 && (
+                  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                    <h2 className="text-lg font-semibold">{strings.members.past}</h2>
+                    <p className="mt-1 text-sm text-slate-500">{strings.members.pastHint}</p>
+                    <ul className="mt-4 divide-y divide-slate-100">
+                      {past.map((member) => (
+                        <li
+                          key={member.membershipId}
+                          className="flex flex-wrap items-center justify-between gap-3 py-3"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <Avatar member={member} muted />
+                            <div className="min-w-0">
+                              <p className="truncate font-medium text-slate-600">{member.name}</p>
+                              <p className="truncate text-xs text-slate-500">
+                                {member.leftAt
+                                  ? strings.members.left(shortDate(member.leftAt))
+                                  : strings.members.noLongerActive}{' '}
+                                · {strings.members.stay(formatStay(member.stayDays))}
+                              </p>
+                            </div>
+                          </div>
+                          {canManage && (
+                            <button
+                              type="button"
+                              onClick={() => setActive(member, true)}
+                              disabled={busy === member.id}
+                              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                              {strings.members.addBack}
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
+
+          {tab === 'invites' && canManage && <InviteMembers groupId={groupId} />}
+
+          {tab === 'settings' && canManage && <GroupSettings groupId={groupId} onChanged={handleGroupChanged} />}
+
+          {tab === 'groups' && showGroupsTab && (
+            <YourGroups
+              groups={groups}
+              limits={limits}
+              canCreate={canCreateGroup}
+              selectedId={groupId}
+              onSelect={setGroupId}
+              onChanged={reloadGroups}
+            />
           )}
         </div>
       )}
@@ -251,7 +394,13 @@ export default function MembersPage() {
 function Avatar({ member, muted = false }: { member: Member; muted?: boolean }) {
   if (member.profileImage) {
 
-    return <img src={member.profileImage} alt="" className={`h-10 w-10 rounded-full object-cover ${muted ? 'opacity-60' : ''}`} />;
+    return (
+      <img
+        src={member.profileImage}
+        alt=""
+        className={`h-10 w-10 rounded-full object-cover ${muted ? 'opacity-60' : ''}`}
+      />
+    );
   }
   const initials = member.name
     .split(' ')

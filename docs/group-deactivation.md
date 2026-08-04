@@ -2,8 +2,8 @@
 
 A group moves between `ACTIVE` and `INACTIVE` from two places:
 
-- **Group page** (`/groups/[groupId]`) — the "Group status" card, shown only to whoever can manage the group: its own
-  supervisor, or an admin.
+- **Members → Group settings** (`/members`) — the "Group status" card, shown only to whoever can manage the group: its
+  own supervisor, or an admin.
 - **Admin → Groups** — an Activate/Deactivate button on every row.
 
 Both call `PATCH /api/groups/[id]` with `{ status }`, validated against `GROUP_STATUS_VALUES`. The endpoint is scoped

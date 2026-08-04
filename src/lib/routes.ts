@@ -6,7 +6,6 @@ export const ROUTES = {
     setPassword: '/auth/set-password'
   },
   dashboard: '/dashboard',
-  groups: '/groups',
   meals: '/meals',
   expenses: '/expenses',
   bills: '/bills',
@@ -21,6 +20,10 @@ export const ROUTES = {
   invitations: '/invitations',
   guide: '/guide'
 };
+
+export function groupPath(groupId: string): string {
+  return `${ROUTES.members}?group=${encodeURIComponent(groupId)}`;
+}
 
 export function mealReplyPath(token: string, answer?: string): string {
   const query = answer ? `?answer=${encodeURIComponent(answer)}` : '';

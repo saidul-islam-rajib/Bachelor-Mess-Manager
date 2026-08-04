@@ -84,6 +84,12 @@ const nextConfig = {
     styledComponents: false,
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false
   },
+  async redirects() {
+    return [
+      { source: '/groups', destination: '/members', permanent: true },
+      { source: '/groups/:groupId', destination: '/members?group=:groupId', permanent: true }
+    ];
+  },
   async headers() {
     const headers = [...securityHeaders];
 

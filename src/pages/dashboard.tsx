@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
-import { ROUTES } from '@/lib/routes';
+import { groupPath, ROUTES } from '@/lib/routes';
 import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
@@ -186,7 +186,7 @@ function AdminDashboard({ report }: { report: AdminReport }) {
             Open admin dashboard
           </Link>
           <Link
-            href={ROUTES.groups}
+            href={ROUTES.members}
             className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
           >
             All groups
@@ -223,14 +223,14 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">Your groups</h2>
-          <Link href={ROUTES.groups} className="text-sm font-medium text-slate-900 hover:underline">
+          <Link href={ROUTES.members} className="text-sm font-medium text-slate-900 hover:underline">
             Manage
           </Link>
         </div>
 
         {report.groups.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
-            You haven&apos;t created a group yet. Head to Groups to create your first mess.
+            You haven&apos;t created a group yet. Head to Members to create your first mess.
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto">
@@ -249,7 +249,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
                 {report.groups.map((group) => (
                   <tr key={group.id} className="border-b border-slate-100 last:border-0">
                     <td className="px-3 py-3 font-medium">
-                      <Link href={`/groups/${group.id}`} className="hover:underline">
+                      <Link href={groupPath(group.id)} className="hover:underline">
                         {group.name}
                       </Link>
                       {group.status === 'INACTIVE' && (
@@ -398,7 +398,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">{group.name}</h2>
-          <Link href={`/groups/${group.id}`} className="text-sm font-medium text-slate-900 hover:underline">
+          <Link href={groupPath(group.id)} className="text-sm font-medium text-slate-900 hover:underline">
             Group page
           </Link>
         </div>

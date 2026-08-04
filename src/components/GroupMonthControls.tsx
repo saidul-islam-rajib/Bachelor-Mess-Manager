@@ -1,32 +1,47 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 export type GroupOption = {
   id: string;
   name: string;
+  status: string;
+  memberCount: number;
   supervisor: { id: string; name: string; email: string };
 };
 
-export function useGroupMonth() {
+export type GroupLimits = { maxGroups: number; ownedCount: number; canCreate: boolean };
+
+export function useGroupMonth(options: { includeInactive?: boolean } = {}) {
+  const includeInactive = options.includeInactive ?? false;
   const router = useRouter();
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [groupId, setGroupId] = useState('');
   const [month, setMonth] = useState(currentMonthKey());
   const [loadingGroups, setLoadingGroups] = useState(true);
+  const [limits, setLimits] = useState<GroupLimits | null>(null);
+  const [hiddenInactive, setHiddenInactive] = useState(0);
 
   const requestedGroupId = typeof router.query.group === 'string' ? router.query.group : '';
 
+  const reloadGroups = useCallback(async () => {
+    setLoadingGroups(true);
+    try {
+      const res = await fetch(`/api/groups${includeInactive ? '?includeInactive=true' : ''}`);
+      const data = await res.json().catch(() => ({}));
+      const list: GroupOption[] = data.groups || [];
+      setGroups(list);
+      setLimits(data.limits ?? null);
+      setHiddenInactive(data.hiddenInactive ?? 0);
+      setGroupId((prev) => (prev && list.some((group) => group.id === prev) ? prev : list[0]?.id ?? ''));
+    } finally {
+      setLoadingGroups(false);
+    }
+  }, [includeInactive]);
+
   useEffect(() => {
-    fetch('/api/groups')
-      .then((r) => r.json())
-      .then((d) => {
-        const gs: GroupOption[] = d.groups || [];
-        setGroups(gs);
-        setGroupId((prev) => prev || (gs[0]?.id ?? ''));
-      })
-      .finally(() => setLoadingGroups(false));
-  }, []);
+    reloadGroups();
+  }, [reloadGroups]);
 
   useEffect(() => {
     if (!requestedGroupId) return;
@@ -34,7 +49,7 @@ export function useGroupMonth() {
     setGroupId(requestedGroupId);
   }, [requestedGroupId, groups]);
 
-  return { groups, groupId, setGroupId, month, setMonth, loadingGroups };
+  return { groups, groupId, setGroupId, month, setMonth, loadingGroups, limits, hiddenInactive, reloadGroups };
 }
 
 export function GroupMonthControls({

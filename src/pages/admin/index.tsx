@@ -40,7 +40,7 @@ import {
   USER_STATUS_VALUES
 } from '@/lib/constants';
 import { formatDate, formatDateTime, roleLabel, statusLabel } from '@/lib/format';
-import { ROUTES } from '@/lib/routes';
+import { groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
 
@@ -896,7 +896,7 @@ function GroupsPanel() {
       key: 'name',
       header: strings.common.group,
       render: (row) => (
-        <Link href={`/groups/${row.id}`} className="font-medium hover:underline">
+        <Link href={groupPath(row.id)} className="font-medium hover:underline">
           {row.name}
         </Link>
       )
