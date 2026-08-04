@@ -3,6 +3,7 @@ import { appConfig } from '@/config';
 import { flattenMentions, mentionIdsIn, mentionsEveryone } from '@/lib/mentions';
 import { isMailConfigured, sendMail, type MailMessage } from '@/lib/mailer';
 import { ROUTES } from '@/lib/routes';
+import { buildPageMeta, type PageMeta } from '@/lib/query';
 import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/constants';
 import { escapeHtml } from '@/lib/xss';
 
@@ -95,20 +96,30 @@ export async function notifyMentions({
   }
 }
 
-export async function notificationFeed(userId: string): Promise<{
+export async function notificationFeed(
+  userId: string,
+  options: { page?: number; pageSize?: number; unreadOnly?: boolean } = {}
+): Promise<{
   notifications: NotificationFeedItem[];
   unreadCount: number;
+  meta: PageMeta;
 }> {
-  const [rows, unreadCount] = await Promise.all([
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.max(1, options.pageSize ?? FEED_SIZE);
+  const where = options.unreadOnly ? { userId, readAt: null } : { userId };
+
+  const [rows, total, unreadCount] = await Promise.all([
     prisma.notification.findMany({
-      where: { userId },
+      where,
       include: {
         actor: { select: { id: true, name: true } },
         group: { select: { id: true, name: true } }
       },
       orderBy: { createdAt: 'desc' },
-      take: FEED_SIZE
+      skip: (page - 1) * pageSize,
+      take: pageSize
     }),
+    prisma.notification.count({ where }),
     prisma.notification.count({ where: { userId, readAt: null } })
   ]);
 
@@ -137,7 +148,8 @@ export async function notificationFeed(userId: string): Promise<{
       read: row.readAt !== null,
       createdAt: row.createdAt.toISOString()
     })),
-    unreadCount
+    unreadCount,
+    meta: buildPageMeta(page, pageSize, total)
   };
 }
 

@@ -532,7 +532,22 @@ const en = {
       MENTION_EXPENSE_COMMENT: 'mentioned you in a bazar note',
       MENTION_COMMUNITY: 'mentioned you in the community'
     },
-    inGroup: 'in'
+    inGroup: 'in',
+    title: 'Notifications',
+    subtitle: 'Everything the mess has told you, newest first.',
+    panelTitle: 'Notifications',
+    newCount: (count: number) => `${count} new`,
+    markAllRead: 'Mark all read',
+    allRead: 'Everything is read.',
+    caughtUp: "You're all caught up",
+    caughtUpHint: 'Invitations and mentions will show up here.',
+    seeAll: 'See all notifications',
+    filterAll: 'All',
+    filterUnread: 'Unread',
+    emptyAll: 'Nothing here yet. Mentions, meal asks and decisions land here.',
+    emptyUnread: 'Nothing unread. Switch to All to see the older ones.',
+    pendingInvitations: (count: number) =>
+      `${count} pending invitation${count === 1 ? '' : 's'} — open the bell or your profile to respond.`
   },
   community: {
     title: 'Community',

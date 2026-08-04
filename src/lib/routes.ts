@@ -15,6 +15,7 @@ export const ROUTES = {
   profile: '/profile',
   comments: '/comments',
   community: '/community',
+  notifications: '/notifications',
   mealReply: '/meal-reply',
   admin: '/admin',
   invitations: '/invitations',
