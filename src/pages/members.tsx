@@ -84,13 +84,15 @@ export default function MembersPage() {
   const canCreateGroup = user?.role === USER_ROLES.SUPERVISOR;
   const showGroupsTab = canCreateGroup || groups.length > 1;
 
+  const refreshGroups = useCallback(() => reloadGroups({ fresh: true }), [reloadGroups]);
+
   const handleGroupChanged = useCallback(async () => {
     if (showClosed) {
-      await reloadGroups();
+      await refreshGroups();
       return;
     }
     setShowClosed(true);
-  }, [showClosed, reloadGroups]);
+  }, [showClosed, refreshGroups]);
 
   useEffect(() => {
     if (tab === 'settings' && !canManage) setTab('roster');
@@ -112,7 +114,7 @@ export default function MembersPage() {
         isActive ? strings.members.reactivated(member.name) : strings.members.deactivated(member.name)
       );
       await load();
-      await reloadGroups();
+      await refreshGroups();
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -177,7 +179,7 @@ export default function MembersPage() {
               canCreate={canCreateGroup}
               selectedId={groupId}
               onSelect={setGroupId}
-              onChanged={reloadGroups}
+              onChanged={refreshGroups}
             />
           )}
         </div>
@@ -382,7 +384,7 @@ export default function MembersPage() {
               canCreate={canCreateGroup}
               selectedId={groupId}
               onSelect={setGroupId}
-              onChanged={reloadGroups}
+              onChanged={refreshGroups}
             />
           )}
         </div>

@@ -3,7 +3,8 @@ import Link from 'next/link';
 import Logo from '@/components/Logo';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
-import { appConfig, authorConfig } from '@/config';
+import { appConfig, authorConfig, cacheConfig } from '@/config';
+import { cached } from '@/lib/cache';
 import { strings } from '@/lib/i18n';
 import { ROUTES } from '@/lib/routes';
 
@@ -26,10 +27,23 @@ export default function Footer() {
   const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((res) => res.json())
-      .then((data) => setSettings(data.settings))
-      .catch(() => setSettings(null));
+    let active = true;
+
+    cached('site-settings', cacheConfig.siteSettingsMs, () =>
+      fetch('/api/settings')
+        .then((res) => res.json())
+        .then((data) => data.settings as Settings)
+    )
+      .then((value) => {
+        if (active) setSettings(value);
+      })
+      .catch(() => {
+        if (active) setSettings(null);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const year = new Date().getFullYear();

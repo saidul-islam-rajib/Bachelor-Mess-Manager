@@ -91,6 +91,11 @@ export const UI_DEFAULTS = {
   monthsForward: 1
 } as const;
 
+export const CACHE_DEFAULTS = {
+  siteSettingsMs: 300_000,
+  groupListMs: 60_000
+} as const;
+
 export const COMMUNITY_DEFAULTS = {
   pageSize: 30,
   maxMessageLength: 1000,

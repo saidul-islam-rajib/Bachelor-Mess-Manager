@@ -1,6 +1,7 @@
 import {
   APP_DEFAULTS,
   AUTHOR,
+  CACHE_DEFAULTS,
   COMMUNITY_DEFAULTS,
   GROUP_DEFAULTS,
   MEAL_PROMPT_DEFAULTS,
@@ -206,6 +207,11 @@ export const uiConfig = {
   searchDebounceMs: readInt('UI_SEARCH_DEBOUNCE_MS', UI_DEFAULTS.searchDebounceMs),
   monthsBack: readInt('UI_MONTHS_BACK', UI_DEFAULTS.monthsBack),
   monthsForward: readInt('UI_MONTHS_FORWARD', UI_DEFAULTS.monthsForward, 0)
+} as const;
+
+export const cacheConfig = {
+  siteSettingsMs: readInt('CACHE_SITE_SETTINGS_MS', CACHE_DEFAULTS.siteSettingsMs, 0),
+  groupListMs: readInt('CACHE_GROUP_LIST_MS', CACHE_DEFAULTS.groupListMs, 0)
 } as const;
 
 export const communityConfig = {

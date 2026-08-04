@@ -46,6 +46,7 @@ engineering notes behind it:
 | [community.md](docs/community.md) | The app-wide room, welcome posts, and release announcements |
 | [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
 | [colors.md](docs/colors.md) | The brand colour, what each colour means, and where it is defined |
+| [caching.md](docs/caching.md) | What is cached, for how long, and what invalidates it |
 
 ### Operations
 

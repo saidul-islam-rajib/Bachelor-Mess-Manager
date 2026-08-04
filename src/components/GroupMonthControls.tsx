@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { cacheConfig } from '@/config';
+import { cached, invalidate } from '@/lib/cache';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 export type GroupOption = {
@@ -24,11 +26,16 @@ export function useGroupMonth(options: { includeInactive?: boolean } = {}) {
 
   const requestedGroupId = typeof router.query.group === 'string' ? router.query.group : '';
 
-  const reloadGroups = useCallback(async () => {
+  const reloadGroups = useCallback(async (options: { fresh?: boolean } = {}) => {
     setLoadingGroups(true);
+    const path = `/api/groups${includeInactive ? '?includeInactive=true' : ''}`;
+
     try {
-      const res = await fetch(`/api/groups${includeInactive ? '?includeInactive=true' : ''}`);
-      const data = await res.json().catch(() => ({}));
+      if (options.fresh) invalidate(path);
+
+      const data = await cached(path, cacheConfig.groupListMs, () =>
+        fetch(path).then((res) => res.json().catch(() => ({})))
+      );
       const list: GroupOption[] = data.groups || [];
       setGroups(list);
       setLimits(data.limits ?? null);
