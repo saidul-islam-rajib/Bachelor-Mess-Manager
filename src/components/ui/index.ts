@@ -1,8 +1,8 @@
 export { Avatar } from '@/components/ui/Avatar';
 export type { AvatarProps, AvatarSize } from '@/components/ui/Avatar';
 
-export { Button, LinkButton, buttonClasses } from '@/components/ui/Button';
-export type { ButtonProps, ButtonSize, ButtonVariant, LinkButtonProps } from '@/components/ui/Button';
+export { Button, LinkButton, ActionLink, buttonClasses } from '@/components/ui/Button';
+export type { ActionLinkProps, ButtonProps, ButtonSize, ButtonVariant, LinkButtonProps } from '@/components/ui/Button';
 
 export { Spinner } from '@/components/ui/Spinner';
 export type { SpinnerSize } from '@/components/ui/Spinner';

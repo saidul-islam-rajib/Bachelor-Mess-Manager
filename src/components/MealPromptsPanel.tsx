@@ -57,7 +57,7 @@ export function MealPromptsPanel() {
   if (!loaded || prompts.length === 0) return null;
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className={`grid gap-3 ${prompts.length > 1 ? 'xl:grid-cols-2' : ''}`}>
       {prompts.map((prompt) => (
         <MealPromptCard
           key={`${prompt.groupId}-${prompt.date}`}

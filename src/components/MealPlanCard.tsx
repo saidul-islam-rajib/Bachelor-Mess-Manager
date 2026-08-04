@@ -243,7 +243,7 @@ export default function MealPlanCard({ groupId, onApplied }: { groupId: string; 
               type="button"
               onClick={save}
               disabled={saving}
-              className="rounded-full bg-brand-600 px-6 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
+              className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save plan'}
             </button>

@@ -127,7 +127,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 </Link>
                 <Link
                   href={ROUTES.auth.register}
-                  className="ml-1 rounded-full bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
+                  className="ml-1 rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-2 text-white hover:bg-brand-700 transition-all active:translate-y-px"
                 >
                   {strings.nav.register}
                 </Link>

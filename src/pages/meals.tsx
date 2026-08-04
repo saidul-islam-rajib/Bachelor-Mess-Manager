@@ -591,7 +591,7 @@ function PendingApprovals({
               <button
                 type="button"
                 onClick={() => onDecide(change.id, 'APPROVED')}
-                className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+                className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
               >
                 Approve
               </button>

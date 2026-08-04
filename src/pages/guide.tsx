@@ -80,7 +80,7 @@ export default function GuidePage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={ROUTES.auth.register}
-                className="rounded-full bg-brand-600 px-6 py-3 text-sm font-medium text-white hover:bg-brand-700"
+                className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
               >
                 Create an account
               </Link>
@@ -436,7 +436,7 @@ export default function GuidePage() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={user ? ROUTES.dashboard : ROUTES.auth.register}
-                className="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+                className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
               >
                 {user ? 'Back to dashboard' : 'Get started'}
               </Link>

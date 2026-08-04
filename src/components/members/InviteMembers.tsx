@@ -83,7 +83,7 @@ export default function InviteMembers({ groupId, onInvited }: { groupId: string;
         <button
           type="submit"
           disabled={inviting}
-          className="rounded-full bg-brand-600 px-6 py-3 text-white hover:bg-brand-700 disabled:opacity-50"
+          className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
           {inviting ? strings.members.inviting : strings.members.invite}
         </button>

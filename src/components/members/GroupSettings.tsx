@@ -110,7 +110,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
             className={`rounded-full px-5 py-2 text-sm transition-colors disabled:opacity-50 ${
               group.status === GROUP_STATUS.ACTIVE
                 ? 'border border-red-200 text-red-600 hover:bg-red-50'
-                : 'bg-brand-600 text-white hover:bg-brand-700'
+                : 'bg-brand-600 shadow-sm shadow-brand-600/20 text-white hover:bg-brand-700 transition-all active:translate-y-px'
             }`}
           >
             {group.status === GROUP_STATUS.ACTIVE ? strings.groups.deactivate : strings.groups.activate}
@@ -234,7 +234,7 @@ function MealWeights({
         <button
           type="submit"
           disabled={busy}
-          className="self-end rounded-full bg-brand-600 px-6 py-2.5 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
+          className="self-end rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
           {busy ? strings.common.saving : strings.common.save}
         </button>

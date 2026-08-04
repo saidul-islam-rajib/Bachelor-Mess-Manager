@@ -17,7 +17,7 @@ export default function RegistrationSubmittedPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link
               href={ROUTES.auth.login}
-              className="rounded-full bg-brand-600 px-6 py-3 text-white hover:bg-brand-700"
+              className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-white hover:bg-brand-700 transition-all active:translate-y-px"
             >
               Go to login
             </Link>

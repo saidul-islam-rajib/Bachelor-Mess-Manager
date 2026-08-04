@@ -208,7 +208,7 @@ export default function PaymentsPage() {
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-full bg-brand-600 px-6 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
+                      className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
                     >
                       {saving ? '...' : 'Record'}
                     </button>
@@ -379,7 +379,7 @@ function CloseMonth({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-4 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
+          className="mt-4 rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
         >
           Close {month}
         </button>
@@ -520,7 +520,7 @@ function CloseForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-full bg-brand-600 px-5 py-2.5 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
+          className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
           {saving ? 'Closing...' : 'Confirm close'}
         </button>
