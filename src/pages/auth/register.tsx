@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
-import { Alert, Button, Input } from '@/components/ui';
+import { Alert, Button, Input, PageTitle } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
 import { XssWarningModal } from '@/components/XssWarningModal';
 import { ROUTES } from '@/lib/routes';
@@ -77,8 +77,9 @@ export default function RegisterPage() {
 
   if (done) {
     return (
-      <main className="min-h-screen bg-slate-50 text-slate-900">
-        <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
+      <div className="bg-slate-50 text-slate-900">
+        <PageTitle title={strings.auth.register.title} description={strings.auth.register.subtitle} />
+      <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
             <h1 className="text-2xl font-semibold">{strings.auth.register.title}</h1>
             <Alert tone={done.emailSent ? 'success' : 'warning'} className="mt-6">
@@ -101,13 +102,14 @@ export default function RegisterPage() {
             </p>
           </div>
         </section>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 text-slate-900">
       <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
+      <PageTitle title={strings.auth.register.title} description={strings.auth.register.subtitle} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
           <h1 className="text-2xl font-semibold">{strings.auth.register.title}</h1>
@@ -175,6 +177,6 @@ export default function RegisterPage() {
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

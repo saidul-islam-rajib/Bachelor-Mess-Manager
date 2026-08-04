@@ -6,6 +6,8 @@ import { TextField } from '@/components/TextField';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { XssWarningModal } from '@/components/XssWarningModal';
+import { Button, PageTitle } from '@/components/ui';
+import { strings as i18n } from '@/lib/i18n';
 import { ROUTES } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
 import { isValidEmail } from '@/lib/validation';
@@ -76,7 +78,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 text-slate-900">
+      <PageTitle title={strings.title} />
       <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
@@ -115,13 +118,9 @@ export default function LoginPage() {
               error={errors.password}
             />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-white transition hover:bg-brand-700 transition-all active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? 'Signing in...' : strings.submit}
-            </button>
+            <Button type="submit" size="lg" fullWidth loading={loading}>
+              {loading ? i18n.auth.login.submitting : strings.submit}
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-600">
@@ -132,6 +131,6 @@ export default function LoginPage() {
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

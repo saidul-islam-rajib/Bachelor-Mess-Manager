@@ -3,6 +3,7 @@ import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
+import { PageTitle } from '@/components/ui';
 import { encodeMentions } from '@/lib/mentions';
 import { todayKey } from '@/lib/month';
 
@@ -223,6 +224,7 @@ export default function ExpensesPage() {
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title="Groceries (Bazar)" />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Groceries (Bazar)</h1>
         <p className="mt-1 text-slate-600">

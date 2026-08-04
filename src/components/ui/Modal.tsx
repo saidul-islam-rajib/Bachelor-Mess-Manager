@@ -1,6 +1,12 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { strings } from '@/lib/i18n';
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+let openModalCount = 0;
+let restoreOverflow = '';
 
 export type ModalProps = {
   open: boolean;
@@ -26,22 +32,67 @@ export function Modal({
   closeOnBackdrop = true
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return undefined;
 
+    const panel = panelRef.current;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+
+    function focusable() {
+      if (!panel) return [] as HTMLElement[];
+      return Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+        (element) => element.offsetParent !== null || element === document.activeElement
+      );
+    }
+
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !panel) return;
+
+      const items = focusable();
+      if (items.length === 0) {
+        event.preventDefault();
+        panel.focus();
+        return;
+      }
+
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || active === panel)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
 
     document.addEventListener('keydown', onKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    panelRef.current?.focus();
+
+    if (openModalCount === 0) {
+      restoreOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
+    openModalCount += 1;
+
+    const initial = focusable()[0];
+    (initial ?? panel)?.focus();
 
     return () => {
       document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = previousOverflow;
+      openModalCount = Math.max(0, openModalCount - 1);
+      if (openModalCount === 0) {
+        document.body.style.overflow = restoreOverflow;
+      }
+      previouslyFocused?.focus?.();
     };
   }, [open, onClose]);
 
@@ -60,19 +111,22 @@ export function Modal({
         ref={panelRef}
         role="dialog"
         aria-modal="true"
+        aria-labelledby={titleId}
         tabIndex={-1}
         className={`relative flex max-h-full w-full ${SIZE_CLASSES[size]} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl outline-none`}
       >
         <div className="flex shrink-0 items-start justify-between gap-4 p-5 pb-4 sm:p-6 sm:pb-4">
           <div className="min-w-0">
-            <h2 className="text-lg font-semibold">{title}</h2>
+            <h2 id={titleId} className="text-lg font-semibold">
+              {title}
+            </h2>
             {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={strings.common.close}
-            className="-mr-1 -mt-1 rounded-full p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="-mr-1 -mt-1 rounded-full p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
           >
             &times;
           </button>

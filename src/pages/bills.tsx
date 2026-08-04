@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
+import { PageTitle } from '@/components/ui';
 import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import { todayKey } from '@/lib/month';
 
@@ -123,6 +124,7 @@ export default function BillsPage() {
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title="Bills & fixed costs" />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Bills &amp; fixed costs</h1>
         <p className="mt-1 text-slate-600">

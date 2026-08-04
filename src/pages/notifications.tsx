@@ -73,77 +73,73 @@ export default function NotificationsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
-      <PageContainer>
-        <PageHeader
-          title={strings.notifications.title}
-          description={strings.notifications.subtitle}
-          action={
-            unreadCount > 0 ? (
-              <Button variant="secondary" size="sm" onClick={markEverythingRead}>
-                {strings.notifications.markAllRead}
-              </Button>
-            ) : (
-              <span className="text-sm text-slate-500">{strings.notifications.allRead}</span>
-            )
-          }
-        />
-
-        {invitationCount > 0 && (
-          <Link
-            href={ROUTES.invitations}
-            className="mb-4 block rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 transition-colors hover:bg-amber-100"
-          >
-            {strings.notifications.pendingInvitations(invitationCount)}
-          </Link>
-        )}
-
-        <div className="mb-4 inline-flex rounded-full border border-slate-200 bg-white p-1 text-sm shadow-sm">
-          {([
-            ['all', strings.notifications.filterAll],
-            ['unread', `${strings.notifications.filterUnread}${unreadCount > 0 ? ` (${unreadCount})` : ''}`]
-          ] as const).map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => changeFilter(value)}
-              aria-pressed={filter === value}
-              className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
-                filter === value ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-          {loading && items.length === 0 ? (
-            <div className="p-6">
-              <Loader />
-            </div>
-          ) : items.length === 0 ? (
-            <div className="p-6">
-              <EmptyState
-                title={strings.notifications.caughtUp}
-                description={
-                  filter === 'unread' ? strings.notifications.emptyUnread : strings.notifications.emptyAll
-                }
-              />
-            </div>
+    <PageContainer>
+      <PageHeader
+        title={strings.notifications.title}
+        description={strings.notifications.subtitle}
+        action={
+          unreadCount > 0 ? (
+            <Button variant="secondary" size="sm" onClick={markEverythingRead}>
+              {strings.notifications.markAllRead}
+            </Button>
           ) : (
-            <ul className="divide-y divide-slate-100">
-              {items.map((item) => (
-                <li key={item.id}>
-                  <NotificationCard notification={item} onNavigate={() => markOneRead(item.id)} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+            <span className="text-sm text-slate-500">{strings.notifications.allRead}</span>
+          )
+        }
+      />
 
-        <Pagination meta={meta} onPageChange={setPage} onPageSizeChange={changePageSize} disabled={loading} />
-      </PageContainer>
-    </main>
+      {invitationCount > 0 && (
+        <Link
+          href={ROUTES.invitations}
+          className="mb-4 block rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 transition-colors hover:bg-amber-100"
+        >
+          {strings.notifications.pendingInvitations(invitationCount)}
+        </Link>
+      )}
+
+      <div className="mb-4 inline-flex rounded-full border border-slate-200 bg-white p-1 text-sm shadow-sm">
+        {([
+          ['all', strings.notifications.filterAll],
+          ['unread', `${strings.notifications.filterUnread}${unreadCount > 0 ? ` (${unreadCount})` : ''}`]
+        ] as const).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => changeFilter(value)}
+            aria-pressed={filter === value}
+            className={`rounded-full px-4 py-1.5 font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${
+              filter === value ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        {loading && items.length === 0 ? (
+          <div className="p-6">
+            <Loader />
+          </div>
+        ) : items.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              title={strings.notifications.caughtUp}
+              description={filter === 'unread' ? strings.notifications.emptyUnread : strings.notifications.emptyAll}
+            />
+          </div>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {items.map((item) => (
+              <li key={item.id}>
+                <NotificationCard notification={item} onNavigate={() => markOneRead(item.id)} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <Pagination meta={meta} onPageChange={setPage} onPageSizeChange={changePageSize} disabled={loading} />
+    </PageContainer>
   );
 }

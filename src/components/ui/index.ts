@@ -27,6 +27,8 @@ export {
   DescriptionGrid
 } from '@/components/ui/Card';
 
+export { PageTitle } from '@/components/ui/PageTitle';
+
 export {
   Alert,
   Badge,

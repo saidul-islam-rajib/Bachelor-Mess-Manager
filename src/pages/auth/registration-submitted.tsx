@@ -1,35 +1,35 @@
-import Link from 'next/link';
+import { LinkButton, PageTitle } from '@/components/ui';
 import { ROUTES } from '@/lib/routes';
+
+const TITLE = 'Registration submitted';
 
 export default function RegistrationSubmittedPage() {
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 text-slate-900">
+      <PageTitle title={TITLE} />
       <section className="mx-auto max-w-lg px-4 py-16 sm:py-24">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm sm:p-12">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl">
+          <div
+            aria-hidden="true"
+            className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-3xl text-green-700"
+          >
             ✓
           </div>
-          <h1 className="mt-6 text-2xl font-semibold">Registration submitted</h1>
+          <h1 className="mt-6 text-2xl font-semibold">{TITLE}</h1>
           <p className="mt-3 text-slate-600">
             Your account has been created and is <span className="font-medium">awaiting admin approval</span>. You&apos;ll
             be able to sign in as soon as an admin reviews and approves it.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href={ROUTES.auth.login}
-              className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-white hover:bg-brand-700 transition-all active:translate-y-px"
-            >
+            <LinkButton href={ROUTES.auth.login} size="lg">
               Go to login
-            </Link>
-            <Link
-              href={ROUTES.home}
-              className="rounded-full border border-slate-300 px-6 py-3 text-slate-900 hover:bg-slate-50"
-            >
+            </LinkButton>
+            <LinkButton href={ROUTES.home} variant="secondary" size="lg">
               Back to home
-            </Link>
+            </LinkButton>
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
-import { useConfirm } from '@/components/ui';
+import { PageTitle, useConfirm } from '@/components/ui';
 import InviteMembers from '@/components/members/InviteMembers';
 import GroupSettings from '@/components/members/GroupSettings';
 import YourGroups from '@/components/members/YourGroups';
@@ -162,6 +162,7 @@ export default function MembersPage() {
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title={strings.members.title} description={strings.members.subtitle} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{strings.members.title}</h1>
         <p className="mt-1 text-slate-600">{strings.members.subtitle}</p>

@@ -16,6 +16,9 @@ import UpdateBanner from '@/components/UpdateBanner';
 
 type NavLink = { href: string; label: string; badge?: number };
 
+const FOCUS_RING =
+  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600';
+
 function NavBadge({ count }: { count: number }) {
   if (count <= 0) return null;
 
@@ -39,6 +42,17 @@ export default function Layout({ children }: { children: ReactNode }) {
     router.events.on('routeChangeComplete', close);
     return () => router.events.off('routeChangeComplete', close);
   }, [router.events]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setOpen(false);
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open]);
 
   const links: NavLink[] = [];
   if (user) {
@@ -64,6 +78,12 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <div className="safe-x flex min-h-screen flex-col bg-slate-50 text-slate-900">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
+      >
+        {strings.common.skipToContent}
+      </a>
       <UpdateBanner />
       <InstallAppBanner />
       <header className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
@@ -88,7 +108,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-16 max-w-content items-center justify-between gap-4 px-4 lg:h-20">
           <Link
             href={user ? ROUTES.dashboard : ROUTES.home}
-            className="flex shrink-0 items-center gap-2 text-lg font-semibold text-slate-900"
+            className={`flex shrink-0 items-center gap-2 rounded-xl text-lg font-semibold text-slate-900 ${FOCUS_RING}`}
             onClick={() => setOpen(false)}
           >
             <Logo className="h-9 w-auto lg:h-10" />
@@ -103,7 +123,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   key={link.href}
                   href={link.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`inline-flex items-center rounded-full px-3 py-2 transition-colors ${
+                  className={`inline-flex items-center rounded-full px-3 py-2 transition-colors ${FOCUS_RING} ${
                     active
                       ? 'bg-brand-600 font-semibold text-white'
                       : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700'
@@ -122,12 +142,15 @@ export default function Layout({ children }: { children: ReactNode }) {
               </>
             ) : showAuthLinks ? (
               <>
-                <Link href={ROUTES.auth.login} className="rounded-full px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
+                <Link
+                  href={ROUTES.auth.login}
+                  className={`rounded-full px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${FOCUS_RING}`}
+                >
                   {strings.nav.login}
                 </Link>
                 <Link
                   href={ROUTES.auth.register}
-                  className="ml-1 rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-2 text-white hover:bg-brand-700 transition-all active:translate-y-px"
+                  className={`ml-1 rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-2 text-white transition-all hover:bg-brand-700 active:translate-y-px ${FOCUS_RING}`}
                 >
                   {strings.nav.register}
                 </Link>
@@ -143,7 +166,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                 onClick={() => setOpen((prev) => !prev)}
                 aria-label={strings.nav.toggleMenu}
                 aria-expanded={open}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100"
+                aria-controls="mobile-nav"
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -154,7 +178,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         </div>
 
         {open && (
-          <nav className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-slate-100 bg-white px-4 pb-4 pt-3 text-sm lg:hidden">
+          <nav
+            id="mobile-nav"
+            className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-slate-100 bg-white px-4 pb-4 pt-3 text-sm lg:hidden"
+          >
             <div className="mx-auto flex max-w-content flex-col gap-1">
               {links.map((link) => {
                 const active = isActive(link.href);
@@ -164,7 +191,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     href={link.href}
                     onClick={() => setOpen(false)}
                     aria-current={active ? 'page' : undefined}
-                    className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${
+                    className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${FOCUS_RING} ${
                       active ? 'bg-brand-600 font-semibold text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
                     }`}
                   >
@@ -179,7 +206,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     href={ROUTES.profile}
                     onClick={() => setOpen(false)}
                     aria-current={isActive(ROUTES.profile) ? 'page' : undefined}
-                    className={`rounded-xl px-3 py-2.5 transition-colors ${
+                    className={`rounded-xl px-3 py-2.5 transition-colors ${FOCUS_RING} ${
                       isActive(ROUTES.profile) ? 'bg-brand-600 font-semibold text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
                     }`}
                   >
@@ -190,20 +217,24 @@ export default function Layout({ children }: { children: ReactNode }) {
                       setOpen(false);
                       logout();
                     }}
-                    className="mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100"
+                    className={`mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}
                   >
                     {strings.nav.logout}
                   </button>
                 </>
               ) : showAuthLinks ? (
                 <>
-                  <Link href={ROUTES.auth.login} onClick={() => setOpen(false)} className="rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-100">
+                  <Link
+                    href={ROUTES.auth.login}
+                    onClick={() => setOpen(false)}
+                    className={`rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}
+                  >
                     {strings.nav.login}
                   </Link>
                   <Link
                     href={ROUTES.auth.register}
                     onClick={() => setOpen(false)}
-                    className="mt-1 rounded-xl bg-brand-600 px-3 py-2.5 text-white"
+                    className={`mt-1 rounded-xl bg-brand-600 px-3 py-2.5 text-white ${FOCUS_RING}`}
                   >
                     {strings.nav.register}
                   </Link>
@@ -213,7 +244,9 @@ export default function Layout({ children }: { children: ReactNode }) {
           </nav>
         )}
       </header>
-      <main className="flex-1">{children}</main>
+      <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
+        {children}
+      </main>
       <Footer />
     </div>
   );

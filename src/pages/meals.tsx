@@ -4,6 +4,7 @@ import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import MealPlanCard from '@/components/MealPlanCard';
 import MealPromptDispatch from '@/components/MealPromptDispatch';
+import { PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
 import { daysInMonth, todayKey } from '@/lib/month';
 
@@ -235,6 +236,7 @@ export default function MealsPage() {
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title={strings.meals.title} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Meals</h1>
         <p className="mt-1 text-slate-600">

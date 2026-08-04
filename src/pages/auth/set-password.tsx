@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Alert, Button, LoadingCard, PasswordInput } from '@/components/ui';
+import { Alert, Button, LoadingCard, PageTitle, PasswordInput } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { ROUTES } from '@/lib/routes';
@@ -79,7 +79,8 @@ export default function SetPasswordPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 text-slate-900">
+      <PageTitle title={strings.auth.setPassword.title} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
           {!router.isReady || (token && !check) ? (
@@ -143,6 +144,6 @@ export default function SetPasswordPage() {
           ) : null}
         </div>
       </section>
-    </main>
+    </div>
   );
 }

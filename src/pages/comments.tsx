@@ -2,6 +2,22 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
 import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  LoadingCard,
+  PageContainer,
+  PageHeader,
+  Select,
+  SkeletonRows,
+  useConfirm
+} from '@/components/ui';
+import { api, errorMessage } from '@/lib/api-client';
+import { formatDateTime } from '@/lib/format';
+import { strings } from '@/lib/i18n';
 import { encodeMentions } from '@/lib/mentions';
 
 type Reply = {
@@ -22,17 +38,17 @@ type Comment = {
   replies: Reply[];
 };
 
-function when(iso: string) {
-  return new Date(iso).toLocaleString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    hour: 'numeric',
-    minute: '2-digit'
-  });
-}
+type CommentsResponse = {
+  comments?: Comment[];
+  members?: Member[];
+  mentionNames?: Record<string, string>;
+  isSupervisor?: boolean;
+  currentUserId?: string;
+};
 
 export default function CommentsPage() {
   const toast = useToast();
+  const confirm = useConfirm();
   const { groups, groupId, setGroupId, loadingGroups } = useGroupMonth();
 
   const [comments, setComments] = useState<Comment[]>([]);
@@ -51,16 +67,14 @@ export default function CommentsPage() {
     if (!groupId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/groups/${groupId}/comments`);
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not load comments.');
-      setComments(body.comments || []);
-      setMembers(body.members || []);
-      setMentionNames(body.mentionNames || {});
+      const body = await api.get<CommentsResponse>(`/api/groups/${groupId}/comments`);
+      setComments(body.comments ?? []);
+      setMembers(body.members ?? []);
+      setMentionNames(body.mentionNames ?? {});
       setIsSupervisor(Boolean(body.isSupervisor));
-      setCurrentUserId(body.currentUserId || '');
+      setCurrentUserId(body.currentUserId ?? '');
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(errorMessage(err, strings.comments.loadFailed));
       setComments([]);
     } finally {
       setLoading(false);
@@ -76,18 +90,12 @@ export default function CommentsPage() {
     if (!text.trim()) return;
     setPosting(true);
     try {
-      const res = await fetch(`/api/groups/${groupId}/comments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: encodeMentions(text, members) })
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not post.');
-      toast.success('Comment posted.');
+      await api.post(`/api/groups/${groupId}/comments`, { text: encodeMentions(text, members) });
+      toast.success(strings.comments.posted);
       setText('');
       await load();
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(errorMessage(err, strings.comments.postFailed));
     } finally {
       setPosting(false);
     }
@@ -97,45 +105,41 @@ export default function CommentsPage() {
     if (!replyText.trim()) return;
     setReplying(true);
     try {
-      const res = await fetch(`/api/comments/${commentId}/replies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: encodeMentions(replyText, members) })
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not reply.');
-      toast.success('Reply posted.');
+      await api.post(`/api/comments/${commentId}/replies`, { text: encodeMentions(replyText, members) });
+      toast.success(strings.comments.replyPosted);
       setReplyFor(null);
       setReplyText('');
       await load();
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(errorMessage(err, strings.comments.replyFailed));
     } finally {
       setReplying(false);
     }
   }
 
   async function removeComment(id: string) {
+    const ok = await confirm({ title: strings.comments.deleteComment, destructive: true });
+    if (!ok) return;
+
     try {
-      const res = await fetch(`/api/comments/${id}`, { method: 'DELETE' });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not delete.');
-      toast.success('Comment deleted.');
+      await api.delete(`/api/comments/${id}`);
+      toast.success(strings.comments.commentDeleted);
       await load();
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(errorMessage(err, strings.comments.deleteFailed));
     }
   }
 
   async function removeReply(id: string) {
+    const ok = await confirm({ title: strings.comments.deleteReply, destructive: true });
+    if (!ok) return;
+
     try {
-      const res = await fetch(`/api/comment-replies/${id}`, { method: 'DELETE' });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not delete.');
-      toast.success('Reply deleted.');
+      await api.delete(`/api/comment-replies/${id}`);
+      toast.success(strings.comments.replyDeleted);
       await load();
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.error(errorMessage(err, strings.comments.deleteFailed));
     }
   }
 
@@ -145,64 +149,58 @@ export default function CommentsPage() {
   }
 
   return (
-    <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Comments</h1>
-        <p className="mt-1 text-slate-600">
-          Anyone in the group can post and reply. Mention someone with @. Once posted, a comment can&apos;t be edited —
-          only the supervisor can remove it.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader title={strings.comments.title} description={strings.comments.subtitle} />
 
       {loadingGroups ? (
-        <Card>Loading...</Card>
+        <LoadingCard />
       ) : groups.length === 0 ? (
-        <Card>You&apos;re not part of any group yet.</Card>
+        <EmptyState title={strings.comments.noGroup} />
       ) : (
         <div className="space-y-6">
           <Card>
-            <label className="block">
-              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Group</span>
-              <select value={groupId} onChange={(e) => setGroupId(e.target.value)} className="app-select mt-1">
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              compact
+              label={strings.common.group}
+              value={groupId}
+              onChange={setGroupId}
+              options={groups.map((group) => ({ value: group.id, label: group.name }))}
+            />
           </Card>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-lg font-semibold">Say something</h2>
+          <Card>
+            <CardHeader title={strings.comments.composeHeading} />
             <form className="mt-3" onSubmit={post}>
               <MentionInput
                 value={text}
                 onChange={setText}
                 members={members}
-                placeholder="Anything the group should know?"
+                placeholder={strings.comments.placeholder}
               />
               <div className="mt-3 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={posting || !text.trim()}
-                  className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-40"
-                >
-                  {posting ? 'Posting...' : 'Post comment'}
-                </button>
+                <Button type="submit" disabled={!text.trim()} loading={posting}>
+                  {posting ? strings.comments.posting : strings.comments.postComment}
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="text-lg font-semibold">
-              Thread <span className="text-sm font-normal text-slate-500">({comments.length})</span>
-            </h2>
+          <Card>
+            <CardHeader
+              title={
+                <span className="flex items-center gap-2">
+                  {strings.comments.threadHeading}
+                  <span className="text-sm font-normal text-slate-500">({comments.length})</span>
+                </span>
+              }
+            />
 
             {loading ? (
-              <p className="mt-4 text-slate-500">Loading...</p>
+              <div className="mt-4" role="status" aria-busy="true" aria-label={strings.common.loading}>
+                <SkeletonRows rows={3} />
+              </div>
             ) : comments.length === 0 ? (
-              <p className="mt-4 text-slate-500">No comments yet. Be the first.</p>
+              <EmptyState className="mt-4" title={strings.comments.empty} />
             ) : (
               <ul className="mt-4 space-y-4">
                 {comments.map((comment) => (
@@ -212,13 +210,16 @@ export default function CommentsPage() {
                         <p className="font-medium">
                           {comment.authorName}
                           {comment.authorId === currentUserId && (
-                            <span className="ml-1 text-xs font-normal text-green-600">(you)</span>
+                            <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>
                           )}
                         </p>
-                        <p className="text-xs text-slate-400">{when(comment.createdAt)}</p>
+                        <p className="text-xs text-slate-400">{formatDateTime(comment.createdAt)}</p>
                       </div>
                       {isSupervisor && (
-                        <DeleteButton onClick={() => removeComment(comment.id)} label="Delete comment" />
+                        <DeleteButton
+                          onClick={() => removeComment(comment.id)}
+                          label={strings.comments.deleteComment}
+                        />
                       )}
                     </div>
 
@@ -232,24 +233,25 @@ export default function CommentsPage() {
                           <li key={reply.id} className="rounded-xl bg-slate-50 px-3 py-2">
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0">
-                                <p className="text-xs font-medium text-slate-600">
-                                  {reply.authorName}
-                                  {reply.authorId === currentUserId && (
-                                    <span className="ml-1 text-green-600">(you)</span>
-                                  )}
-                                  {reply.isSupervisor && (
-                                    <span className="ml-1.5 rounded bg-slate-900 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
-                                      Supervisor
-                                    </span>
-                                  )}
-                                  <span className="ml-2 font-normal text-slate-400">{when(reply.createdAt)}</span>
+                                <p className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-600">
+                                  <span>
+                                    {reply.authorName}
+                                    {reply.authorId === currentUserId && (
+                                      <span className="ml-1 text-green-600">{strings.common.you}</span>
+                                    )}
+                                  </span>
+                                  {reply.isSupervisor && <Badge tone="info">{strings.common.supervisor}</Badge>}
+                                  <span className="font-normal text-slate-400">{formatDateTime(reply.createdAt)}</span>
                                 </p>
                                 <div className="mt-0.5 text-sm">
                                   <MentionText text={reply.text} members={members} mentionNames={mentionNames} />
                                 </div>
                               </div>
                               {isSupervisor && (
-                                <DeleteButton onClick={() => removeReply(reply.id)} label="Delete reply" />
+                                <DeleteButton
+                                  onClick={() => removeReply(reply.id)}
+                                  label={strings.comments.deleteReply}
+                                />
                               )}
                             </div>
                           </li>
@@ -264,68 +266,79 @@ export default function CommentsPage() {
                           onChange={setReplyText}
                           members={members}
                           rows={2}
-                          placeholder="Write a reply"
+                          placeholder={strings.comments.replyPlaceholder}
                           onSubmit={() => sendReply(comment.id)}
                         />
                         <div className="mt-2 flex gap-2">
-                          <button
-                            onClick={() => sendReply(comment.id)}
-                            disabled={replying || !replyText.trim()}
-                            className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-1.5 text-xs text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-40"
-                          >
-                            {replying ? 'Sending...' : 'Send reply'}
-                          </button>
-                          <button
+                          <Button size="sm" disabled={!replyText.trim()} loading={replying} onClick={() => sendReply(comment.id)}>
+                            {replying ? strings.comments.sending : strings.comments.sendReply}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
                             onClick={() => {
                               setReplyFor(null);
                               setReplyText('');
                             }}
-                            className="rounded-full border border-slate-300 px-4 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
                           >
-                            Cancel
-                          </button>
+                            {strings.common.cancel}
+                          </Button>
                         </div>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => openReply(comment)}
-                        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
-                      >
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <Button size="sm" variant="secondary" className="mt-3" onClick={() => openReply(comment)}>
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
                           <path d="M9 17l-5-5 5-5" />
                           <path d="M4 12h11a5 5 0 0 1 5 5v2" />
                         </svg>
-                        Reply
-                      </button>
+                        {strings.comments.reply}
+                      </Button>
                     )}
                   </li>
                 ))}
               </ul>
             )}
-          </div>
+          </Card>
         </div>
       )}
-    </section>
+    </PageContainer>
   );
 }
 
 function DeleteButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="shrink-0 rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+      className="shrink-0 rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
     >
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <path d="M3 6h18" />
         <path d="M8 6V4h8v2" />
         <path d="M19 6l-1 14H6L5 6" />
       </svg>
     </button>
   );
-}
-
-function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 text-slate-600 shadow-sm sm:p-6">{children}</div>;
 }

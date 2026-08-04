@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
+import { strings } from '@/lib/i18n';
 
 export type Invitation = {
   id: string;
@@ -84,13 +85,13 @@ export function InvitationsProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ status })
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.error ?? 'Could not update invitation.');
+        if (!res.ok) throw new Error(data?.error ?? strings.invitations.updateFailed);
 
         setInvitations((prev) => prev.filter((i) => i.id !== invitation.id));
         toast.success(
           status === 'ACCEPTED'
-            ? `You joined "${invitation.group.name}".`
-            : `Invitation to "${invitation.group.name}" declined.`
+            ? strings.invitations.joinedGroup(invitation.group.name)
+            : strings.invitations.declinedGroup(invitation.group.name)
         );
         refreshUser();
       } catch (err) {
