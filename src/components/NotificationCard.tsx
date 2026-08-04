@@ -25,7 +25,7 @@ export default function NotificationCard({
         notification.read ? '' : 'bg-slate-50/70'
       }`}
     >
-      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
         {notification.actorName.slice(0, 1).toUpperCase()}
       </span>
       <div className="min-w-0 flex-1">

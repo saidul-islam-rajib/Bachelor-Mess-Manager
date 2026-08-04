@@ -43,6 +43,6 @@ body {
   }
 
   .app-select:focus {
-    @apply border-slate-900 outline-none ring-1 ring-slate-900;
+    @apply border-brand-500 outline-none ring-1 ring-brand-500;
   }
 }

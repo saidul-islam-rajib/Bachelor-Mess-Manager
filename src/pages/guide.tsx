@@ -80,7 +80,7 @@ export default function GuidePage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={ROUTES.auth.register}
-                className="rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-700"
+                className="rounded-full bg-brand-600 px-6 py-3 text-sm font-medium text-white hover:bg-brand-700"
               >
                 Create an account
               </Link>
@@ -106,7 +106,7 @@ export default function GuidePage() {
                   aria-current={active === section.id ? 'true' : undefined}
                   className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
                     active === section.id
-                      ? 'bg-slate-900 font-medium text-white'
+                      ? 'bg-brand-600 font-medium text-white'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
@@ -436,7 +436,7 @@ export default function GuidePage() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={user ? ROUTES.dashboard : ROUTES.auth.register}
-                className="rounded-full bg-slate-900 px-6 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
+                className="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
               >
                 {user ? 'Back to dashboard' : 'Get started'}
               </Link>
@@ -509,7 +509,7 @@ function Steps({ items }: { items: string[] }) {
     <ol className="space-y-4">
       {items.map((item, index) => (
         <li key={item} className="flex gap-4">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
             {index + 1}
           </span>
           <span className="pt-0.5 leading-relaxed text-slate-600">{item}</span>

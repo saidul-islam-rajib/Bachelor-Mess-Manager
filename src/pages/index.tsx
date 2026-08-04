@@ -125,7 +125,7 @@ function Problem() {
         <div className="mt-8 grid gap-4 sm:mt-10 sm:gap-5 md:grid-cols-3">
           {landing.problem.items.map((item, index) => (
             <div key={item.title} className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
                 {index + 1}
               </span>
               <h3 className="mt-4 text-base font-semibold text-slate-900">{item.title}</h3>
@@ -149,7 +149,7 @@ function Features() {
               key={item.title}
               className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 transition hover:border-slate-300 hover:shadow-md"
             >
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-900 text-white">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-600 text-white">
                 <LandingIcon name={item.icon as LandingIconName} />
               </span>
               <h3 className="mt-4 text-base font-semibold text-slate-900">{item.title}</h3>

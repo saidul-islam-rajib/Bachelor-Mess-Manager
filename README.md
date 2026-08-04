@@ -45,6 +45,7 @@ engineering notes behind it:
 | [meal-prompts.md](docs/meal-prompts.md) | The daily one-tap meal ask and the sign-in-free reply link |
 | [community.md](docs/community.md) | The app-wide room, welcome posts, and release announcements |
 | [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
+| [colors.md](docs/colors.md) | The brand colour, what each colour means, and where it is defined |
 
 ### Operations
 
@@ -251,6 +252,8 @@ src/
   and `node scripts/strip-comments.js` keep it that way.
 - **No hardcoded values.** Everything configurable comes from `src/config`, the string
   catalogue, `src/lib/constants.ts`, or the database.
+- **One brand colour**, the `brand` scale in `tailwind.config.js`. Brand means interactive,
+  slate means furniture — see [docs/colors.md](docs/colors.md).
 - **All user-facing text** lives in `src/lib/i18n/locales/en.ts`. Add a locale by adding a
   file next to it and registering it in `src/lib/i18n/index.ts`.
 - **No `console.*` anywhere.** The application runtime is silent: API failures return a

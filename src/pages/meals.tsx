@@ -299,7 +299,7 @@ export default function MealsPage() {
                     <li
                       key={date}
                       className={`rounded-2xl border bg-white p-4 shadow-sm ${
-                        date === today ? 'border-slate-900 ring-1 ring-slate-900' : 'border-slate-200'
+                        date === today ? 'border-brand-600 ring-1 ring-brand-500' : 'border-slate-200'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -443,7 +443,7 @@ export default function MealsPage() {
                                           ? 'Past day'
                                           : undefined
                                     }
-                                    className={`w-14 rounded-lg border bg-white px-1 py-1.5 text-center focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 ${
+                                    className={`w-14 rounded-lg border bg-white px-1 py-1.5 text-center focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
                                       awaiting ? 'border-amber-400 bg-amber-50' : 'border-slate-300'
                                     }`}
                                   />
@@ -523,7 +523,7 @@ function EditWindowCard({
               checked={editWindow.open}
               disabled={busy}
               onChange={(e) => onToggle(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-50"
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
             />
             <span className="text-base font-semibold">Edit my past meals</span>
           </label>
@@ -591,7 +591,7 @@ function PendingApprovals({
               <button
                 type="button"
                 onClick={() => onDecide(change.id, 'APPROVED')}
-                className="rounded-full bg-slate-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+                className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
               >
                 Approve
               </button>

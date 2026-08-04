@@ -291,7 +291,7 @@ export default function ExpensesPage() {
                 <button
                   type="submit"
                   disabled={adding}
-                  className="rounded-full bg-slate-900 px-6 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+                  className="rounded-full bg-brand-600 px-6 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
                 >
                   {adding ? 'Adding...' : 'Add purchase'}
                 </button>
@@ -621,7 +621,7 @@ function EditPanel({
         <button
           type="button"
           onClick={onSave}
-          className="rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700"
+          className="rounded-full bg-brand-600 px-5 py-2 text-sm text-white hover:bg-brand-700"
         >
           Save changes
         </button>
@@ -731,7 +731,7 @@ function CommentBox({
           disabled={busy || !text.trim()}
           aria-label="Post comment"
           title="Post comment"
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white transition-colors hover:bg-slate-700 disabled:bg-slate-200 disabled:text-slate-400"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white transition-colors hover:bg-brand-700 disabled:bg-slate-200 disabled:text-slate-400"
         >
           {busy ? (
             <span className="text-xs">···</span>

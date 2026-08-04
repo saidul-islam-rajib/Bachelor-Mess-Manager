@@ -208,7 +208,7 @@ export default function PaymentsPage() {
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-full bg-slate-900 px-6 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+                      className="rounded-full bg-brand-600 px-6 py-2 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
                     >
                       {saving ? '...' : 'Record'}
                     </button>
@@ -379,7 +379,7 @@ function CloseMonth({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-4 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
+          className="mt-4 rounded-full bg-brand-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700"
         >
           Close {month}
         </button>
@@ -482,7 +482,7 @@ function CloseForm({
                   onClick={() => toggle(member.id)}
                   className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
                     selected.includes(member.id)
-                      ? 'border-slate-900 bg-slate-900 text-white'
+                      ? 'border-brand-600 bg-brand-600 text-white'
                       : 'border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
@@ -498,7 +498,7 @@ function CloseForm({
               type="checkbox"
               checked={endMembership}
               onChange={(e) => setEndMembership(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
             />
             They are leaving the mess on this date
           </label>
@@ -520,7 +520,7 @@ function CloseForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-full bg-brand-600 px-5 py-2.5 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {saving ? 'Closing...' : 'Confirm close'}
         </button>

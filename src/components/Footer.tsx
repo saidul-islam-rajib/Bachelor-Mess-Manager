@@ -67,7 +67,7 @@ export default function Footer() {
               href={authorConfig.url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-2 rounded-2xl transition hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+              className="inline-flex items-center gap-2 rounded-2xl transition hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             >
               <Logo className="h-10 w-auto" />
               <span className="text-lg font-semibold">{companyName}</span>
@@ -160,12 +160,12 @@ export default function Footer() {
                   aria-label="Email for newsletter"
                   required
                   placeholder="you@example.com"
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-slate-900 focus:bg-white"
+                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
                 />
                 <button
                   type="submit"
                   disabled={subscribing}
-                  className="rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700 disabled:opacity-50"
+                  className="rounded-full bg-brand-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700 disabled:opacity-50"
                 >
                   {subscribing ? '...' : 'Subscribe'}
                 </button>

@@ -49,7 +49,7 @@ export function TextField({
         required={required}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`mt-2 w-full rounded-2xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-slate-900 focus:bg-white ${
+        className={`mt-2 w-full rounded-2xl border bg-slate-50 px-4 py-3 outline-none transition focus:border-brand-500 focus:bg-white ${
           error ? 'border-red-400' : 'border-slate-300'
         }`}
       />

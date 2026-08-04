@@ -109,7 +109,7 @@ export default function NotificationsPage() {
               onClick={() => changeFilter(value)}
               aria-pressed={filter === value}
               className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
-                filter === value ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+                filter === value ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
               {label}

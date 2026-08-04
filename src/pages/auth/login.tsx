@@ -118,7 +118,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-full bg-slate-900 px-6 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-full bg-brand-600 px-6 py-3 text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Signing in...' : strings.submit}
             </button>
@@ -126,7 +126,7 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-slate-600">
             {strings.registerLink}{' '}
-            <Link href={ROUTES.auth.register} className="font-medium text-slate-900 hover:underline">
+            <Link href={ROUTES.auth.register} className="font-medium text-brand-700 hover:underline">
               {strings.register}
             </Link>
           </p>

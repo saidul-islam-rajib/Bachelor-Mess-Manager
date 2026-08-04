@@ -91,7 +91,7 @@ export default function SetPasswordPage() {
                 {check && !check.valid ? check.error : strings.validation.required('Token')}
               </Alert>
               <p className="mt-6 text-center text-sm">
-                <Link href={ROUTES.auth.login} className="font-medium text-slate-900 hover:underline">
+                <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
                   {strings.auth.setPassword.requestNew}
                 </Link>
               </p>

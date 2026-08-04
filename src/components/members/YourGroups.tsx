@@ -114,7 +114,7 @@ export default function YourGroups({
               <button
                 type="submit"
                 disabled={creating}
-                className="rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-700 disabled:opacity-50"
+                className="rounded-full bg-brand-600 px-6 py-3 text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 {creating ? strings.common.creating : strings.common.create}
               </button>
@@ -148,7 +148,7 @@ export default function YourGroups({
                       </span>
                     )}
                     {group.id === selectedId && (
-                      <span className="rounded-full bg-slate-900 px-2 py-0.5 text-xs text-white">
+                      <span className="rounded-full bg-brand-600 px-2 py-0.5 text-xs text-white">
                         {strings.common.selected}
                       </span>
                     )}

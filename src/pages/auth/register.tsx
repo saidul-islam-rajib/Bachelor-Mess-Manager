@@ -95,7 +95,7 @@ export default function RegisterPage() {
             )}
 
             <p className="mt-6 text-center text-sm text-slate-600">
-              <Link href={ROUTES.auth.login} className="font-medium text-slate-900 hover:underline">
+              <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
                 {strings.auth.register.loginLink}
               </Link>
             </p>
@@ -169,7 +169,7 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-slate-600">
             {strings.auth.register.loginPrompt}{' '}
-            <Link href={ROUTES.auth.login} className="font-medium text-slate-900 hover:underline">
+            <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
               {strings.auth.register.loginLink}
             </Link>
           </p>

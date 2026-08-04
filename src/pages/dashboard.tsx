@@ -182,7 +182,7 @@ function AdminDashboard({ report }: { report: AdminReport }) {
             : 'Approve registrations, manage users and groups, and edit site settings.'}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={ROUTES.admin} className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700">
+          <Link href={ROUTES.admin} className="rounded-full bg-brand-600 px-5 py-2.5 text-sm text-white hover:bg-brand-700">
             Open admin dashboard
           </Link>
           <Link
@@ -223,7 +223,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">Your groups</h2>
-          <Link href={ROUTES.members} className="text-sm font-medium text-slate-900 hover:underline">
+          <Link href={ROUTES.members} className="text-sm font-medium text-brand-700 hover:underline">
             Manage
           </Link>
         </div>
@@ -289,7 +289,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
               ))}
             </ul>
           )}
-          <Link href={ROUTES.payments} className="mt-4 inline-flex text-sm font-medium text-slate-900 hover:underline">
+          <Link href={ROUTES.payments} className="mt-4 inline-flex text-sm font-medium text-brand-700 hover:underline">
             Record a payment →
           </Link>
         </Card>
@@ -365,7 +365,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
           />
         </dl>
         <div className="mt-5 flex flex-wrap gap-2">
-          <Link href={ROUTES.meals} className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700">
+          <Link href={ROUTES.meals} className="rounded-full bg-brand-600 px-5 py-2.5 text-sm text-white hover:bg-brand-700">
             Enter meals
           </Link>
           <Link
@@ -398,7 +398,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">{group.name}</h2>
-          <Link href={groupPath(group.id)} className="text-sm font-medium text-slate-900 hover:underline">
+          <Link href={groupPath(group.id)} className="text-sm font-medium text-brand-700 hover:underline">
             Group page
           </Link>
         </div>
@@ -471,7 +471,7 @@ function CostBreakdown({ byType, total }: { byType: Record<string, number>; tota
                 </span>
               </div>
               <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-slate-900" style={{ width: `${percent}%` }} />
+                <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
               </div>
             </li>
           );
@@ -489,7 +489,7 @@ function InvitationBanner({ count }: { count: number }) {
       </p>
       <Link
         href={ROUTES.invitations}
-        className="mt-3 inline-flex rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700"
+        className="mt-3 inline-flex rounded-full bg-brand-600 px-5 py-2 text-sm text-white hover:bg-brand-700"
       >
         View invitations
       </Link>

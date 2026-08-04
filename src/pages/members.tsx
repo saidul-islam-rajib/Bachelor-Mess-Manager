@@ -210,7 +210,7 @@ export default function MembersPage() {
                     type="checkbox"
                     checked={showClosed}
                     onChange={(event) => setShowClosed(event.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                   />
                   {strings.members.showClosed}
                   {!showClosed && hiddenInactive > 0 ? ` (${hiddenInactive})` : ''}
@@ -245,7 +245,7 @@ export default function MembersPage() {
                   onClick={() => setTab(item.id)}
                   aria-pressed={tab === item.id}
                   className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
-                    tab === item.id ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100'
+                    tab === item.id ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   {item.label}

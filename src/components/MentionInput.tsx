@@ -141,13 +141,13 @@ export function MentionInput({
         <input
           {...shared}
           type="text"
-          className={`w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 ${className}`}
+          className={`w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${className}`}
         />
       ) : (
         <textarea
           {...shared}
           rows={rows}
-          className={`w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 ${className}`}
+          className={`w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${className}`}
         />
       )}
 
@@ -171,7 +171,7 @@ export function MentionInput({
               >
                 <span
                   className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${
-                    member.id === EVERYONE_ID ? 'bg-amber-500' : 'bg-slate-900'
+                    member.id === EVERYONE_ID ? 'bg-amber-500' : 'bg-brand-600'
                   }`}
                 >
                   {member.id === EVERYONE_ID ? '@' : member.name.slice(0, 1).toUpperCase()}

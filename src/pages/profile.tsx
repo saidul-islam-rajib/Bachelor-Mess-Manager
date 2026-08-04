@@ -110,7 +110,7 @@ export default function ProfilePage() {
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-700 disabled:opacity-50 sm:w-auto"
+                className="w-full rounded-full bg-brand-600 px-6 py-3 text-white hover:bg-brand-700 disabled:opacity-50 sm:w-auto"
               >
                 {saving ? 'Saving...' : 'Save changes'}
               </button>
@@ -235,7 +235,7 @@ function PastMealEditingSection() {
           checked={state.open}
           disabled={busy}
           onChange={(e) => toggle(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-50"
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
         />
         <span>
           <span className="text-sm font-medium">Let me edit my past meals in {group.name}</span>
@@ -457,7 +457,7 @@ function PasswordSection() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full rounded-full bg-slate-900 px-6 py-3 text-white hover:bg-slate-700 disabled:opacity-50 sm:w-auto"
+          className="w-full rounded-full bg-brand-600 px-6 py-3 text-white hover:bg-brand-700 disabled:opacity-50 sm:w-auto"
         >
           {saving ? 'Changing...' : 'Change password'}
         </button>

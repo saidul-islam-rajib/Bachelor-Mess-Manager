@@ -95,7 +95,7 @@ export function Checkbox({ label, checked, onChange, disabled = false, hint, cla
           checked={checked}
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
         />
         <span className="text-sm">{label}</span>
       </label>
@@ -142,7 +142,7 @@ export function RadioGroup({
               onClick={() => onChange(option.value)}
               className={`rounded-full px-4 py-2 text-sm transition disabled:opacity-50 ${
                 value === option.value
-                  ? 'bg-slate-900 font-medium text-white'
+                  ? 'bg-brand-600 font-medium text-white'
                   : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -161,7 +161,7 @@ export function RadioGroup({
                 checked={value === option.value}
                 disabled={option.disabled}
                 onChange={() => onChange(option.value)}
-                className="mt-0.5 h-4 w-4 border-slate-300 text-slate-900 focus:ring-slate-900"
+                className="mt-0.5 h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500"
               />
               <span>
                 <span className="block text-sm">{option.label}</span>

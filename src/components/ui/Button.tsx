@@ -13,14 +13,14 @@ export type ButtonVariant =
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-slate-900 text-white hover:bg-slate-700 disabled:hover:bg-slate-900 focus-visible:outline-slate-900',
+  primary: 'bg-brand-600 text-white hover:bg-brand-700 disabled:hover:bg-brand-600 focus-visible:outline-brand-600',
   secondary:
-    'border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:hover:bg-transparent focus-visible:outline-slate-900',
+    'border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:hover:bg-transparent focus-visible:outline-brand-600',
   danger:
     'border border-red-200 text-red-600 hover:bg-red-50 disabled:hover:bg-transparent focus-visible:outline-red-600',
-  ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-slate-900',
+  ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-brand-600',
   dashed:
-    'w-full border border-dashed border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-slate-900',
+    'w-full border border-dashed border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-brand-600',
   inverse: 'bg-white text-slate-900 hover:bg-slate-200 disabled:hover:bg-white focus-visible:outline-white',
   inverseSecondary:
     'border border-slate-500 text-white hover:border-slate-300 hover:bg-white/10 disabled:hover:bg-transparent focus-visible:outline-white'

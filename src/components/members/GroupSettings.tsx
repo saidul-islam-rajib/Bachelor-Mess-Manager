@@ -110,7 +110,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
             className={`rounded-full px-5 py-2 text-sm transition-colors disabled:opacity-50 ${
               group.status === GROUP_STATUS.ACTIVE
                 ? 'border border-red-200 text-red-600 hover:bg-red-50'
-                : 'bg-slate-900 text-white hover:bg-slate-700'
+                : 'bg-brand-600 text-white hover:bg-brand-700'
             }`}
           >
             {group.status === GROUP_STATUS.ACTIVE ? strings.groups.deactivate : strings.groups.activate}
@@ -177,7 +177,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
                 strings.groups.settingFailed
               )
             }
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-50"
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
           />
           <span>
             <span className="text-sm font-medium">{strings.groups.carryLabel}</span>
@@ -234,7 +234,7 @@ function MealWeights({
         <button
           type="submit"
           disabled={busy}
-          className="self-end rounded-full bg-slate-900 px-6 py-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+          className="self-end rounded-full bg-brand-600 px-6 py-2.5 text-sm text-white hover:bg-brand-700 disabled:opacity-50"
         >
           {busy ? strings.common.saving : strings.common.save}
         </button>

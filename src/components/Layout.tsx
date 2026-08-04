@@ -105,8 +105,8 @@ export default function Layout({ children }: { children: ReactNode }) {
                   aria-current={active ? 'page' : undefined}
                   className={`inline-flex items-center rounded-full px-3 py-2 transition-colors ${
                     active
-                      ? 'bg-slate-900 font-semibold text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      ? 'bg-brand-600 font-semibold text-white'
+                      : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700'
                   }`}
                 >
                   {link.label}
@@ -127,7 +127,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 </Link>
                 <Link
                   href={ROUTES.auth.register}
-                  className="ml-1 rounded-full bg-slate-900 px-4 py-2 text-white hover:bg-slate-700"
+                  className="ml-1 rounded-full bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
                 >
                   {strings.nav.register}
                 </Link>
@@ -165,7 +165,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     onClick={() => setOpen(false)}
                     aria-current={active ? 'page' : undefined}
                     className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${
-                      active ? 'bg-slate-900 font-semibold text-white' : 'text-slate-700 hover:bg-slate-100'
+                      active ? 'bg-brand-600 font-semibold text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
                     }`}
                   >
                     {link.label}
@@ -180,7 +180,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                     onClick={() => setOpen(false)}
                     aria-current={isActive(ROUTES.profile) ? 'page' : undefined}
                     className={`rounded-xl px-3 py-2.5 transition-colors ${
-                      isActive(ROUTES.profile) ? 'bg-slate-900 font-semibold text-white' : 'text-slate-700 hover:bg-slate-100'
+                      isActive(ROUTES.profile) ? 'bg-brand-600 font-semibold text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
                     }`}
                   >
                     {strings.nav.profile}
@@ -203,7 +203,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   <Link
                     href={ROUTES.auth.register}
                     onClick={() => setOpen(false)}
-                    className="mt-1 rounded-xl bg-slate-900 px-3 py-2.5 text-white"
+                    className="mt-1 rounded-xl bg-brand-600 px-3 py-2.5 text-white"
                   >
                     {strings.nav.register}
                   </Link>
