@@ -244,6 +244,25 @@ const en = {
     empty: 'No records'
   },
   dashboard: {
+    quickActions: 'Quick actions',
+    quickActionsHint: 'The things you do most, one tap away.',
+    actions: {
+      logBazar: 'Log bazar',
+      logBazarHint: 'Add what was bought today',
+      logBazarOwnHint: 'Groceries you bought',
+      enterMeals: 'Enter meals',
+      enterMealsHint: 'Tick who is eating',
+      enterOwnMeals: 'Enter my meals',
+      enterOwnMealsHint: 'Today and upcoming days',
+      recordPayment: 'Record a payment',
+      recordPaymentHint: 'Cash received from a member',
+      ownPayments: 'My payments',
+      ownPaymentsHint: 'What you have paid so far',
+      inviteMember: 'Invite a member',
+      inviteMemberHint: 'Add someone to the mess',
+      messComments: 'Mess comments',
+      messCommentsHint: 'Talk to your mess'
+    },
     title: 'Dashboard',
     signedInAs: (name: string, role: string) => `Signed in as ${name} (${role})`,
     subtitle: 'Your mess at a glance.',

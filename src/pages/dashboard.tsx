@@ -4,10 +4,13 @@ import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
 import { ActionLink, LinkButton } from '@/components/ui';
 import { groupPath, ROUTES } from '@/lib/routes';
+import { strings } from '@/lib/i18n';
 import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 const taka = (n: number) => `৳${n.toFixed(2)}`;
+
+const dashboardStrings = strings.dashboard;
 
 type AdminReport = {
   pendingApprovals: number;
@@ -221,10 +224,30 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
 
         <QuickActions
           items={[
-            { href: ROUTES.expenses, label: 'Log bazar', hint: 'Add what was bought today', icon: 'cart' },
-            { href: ROUTES.meals, label: 'Enter meals', hint: 'Tick who is eating', icon: 'bowl' },
-            { href: ROUTES.payments, label: 'Record a payment', hint: 'Cash received from a member', icon: 'cash' },
-            { href: ROUTES.members, label: 'Invite a member', hint: 'Add someone to the mess', icon: 'user' }
+            {
+              href: ROUTES.expenses,
+              label: dashboardStrings.actions.logBazar,
+              hint: dashboardStrings.actions.logBazarHint,
+              icon: 'cart'
+            },
+            {
+              href: ROUTES.meals,
+              label: dashboardStrings.actions.enterMeals,
+              hint: dashboardStrings.actions.enterMealsHint,
+              icon: 'bowl'
+            },
+            {
+              href: ROUTES.payments,
+              label: dashboardStrings.actions.recordPayment,
+              hint: dashboardStrings.actions.recordPaymentHint,
+              icon: 'cash'
+            },
+            {
+              href: ROUTES.members,
+              label: dashboardStrings.actions.inviteMember,
+              hint: dashboardStrings.actions.inviteMemberHint,
+              icon: 'user'
+            }
           ]}
         />
       </div>
@@ -359,10 +382,30 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
 
         <QuickActions
           items={[
-            { href: ROUTES.meals, label: 'Enter my meals', hint: 'Today and upcoming days', icon: 'bowl' },
-            { href: ROUTES.expenses, label: 'Log bazar', hint: 'Groceries you bought', icon: 'cart' },
-            { href: ROUTES.payments, label: 'My payments', hint: 'What you have paid so far', icon: 'cash' },
-            { href: ROUTES.comments, label: 'Mess comments', hint: 'Talk to your mess', icon: 'chat' }
+            {
+              href: ROUTES.meals,
+              label: dashboardStrings.actions.enterOwnMeals,
+              hint: dashboardStrings.actions.enterOwnMealsHint,
+              icon: 'bowl'
+            },
+            {
+              href: ROUTES.expenses,
+              label: dashboardStrings.actions.logBazar,
+              hint: dashboardStrings.actions.logBazarOwnHint,
+              icon: 'cart'
+            },
+            {
+              href: ROUTES.payments,
+              label: dashboardStrings.actions.ownPayments,
+              hint: dashboardStrings.actions.ownPaymentsHint,
+              icon: 'cash'
+            },
+            {
+              href: ROUTES.comments,
+              label: dashboardStrings.actions.messComments,
+              hint: dashboardStrings.actions.messCommentsHint,
+              icon: 'chat'
+            }
           ]}
         />
       </div>
@@ -505,8 +548,8 @@ function QuickActions({
 }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">Quick actions</h2>
-      <p className="mt-1 text-sm text-slate-500">The things you do most, one tap away.</p>
+      <h2 className="text-lg font-semibold">{dashboardStrings.quickActions}</h2>
+      <p className="mt-1 text-sm text-slate-500">{dashboardStrings.quickActionsHint}</p>
 
       <ul className="mt-4 space-y-1.5">
         {items.map((item) => (
