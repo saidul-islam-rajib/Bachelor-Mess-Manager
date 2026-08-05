@@ -296,7 +296,7 @@ export default function MembersPage() {
                         type="button"
                         onClick={leave}
                         disabled={busy === user?.id}
-                        className="rounded-full border border-red-200 px-4 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        className="inline-flex min-h-[2rem] items-center rounded-full border border-red-200 px-4 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
                       >
                         {strings.members.leaveGroup}
                       </button>

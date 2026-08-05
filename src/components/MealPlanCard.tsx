@@ -283,7 +283,7 @@ function Switch({
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
         checked ? 'bg-green-600' : 'bg-slate-300'
       }`}
     >

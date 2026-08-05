@@ -28,9 +28,9 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 };
 
 const SIZE_CLASSES: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-xs',
-  md: 'px-5 py-2.5 text-sm',
-  lg: 'px-6 py-3 text-base'
+  sm: 'min-h-[2rem] px-3 py-1.5 text-xs',
+  md: 'min-h-[2.5rem] px-5 py-2.5 text-sm',
+  lg: 'min-h-[3rem] px-6 py-3 text-base'
 };
 
 const BASE_CLASSES =
@@ -106,7 +106,7 @@ export function ActionLink({ href, children, onClick, className = '' }: ActionLi
     <Link
       href={href}
       onClick={onClick}
-      className={`group inline-flex items-center gap-1 rounded-md text-sm font-semibold text-brand-700 transition-colors hover:text-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${className}`}
+      className={`group inline-flex min-h-[2rem] items-center gap-1 rounded-md py-1.5 text-sm font-semibold text-brand-700 transition-colors hover:text-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${className}`}
     >
       {children}
       <svg

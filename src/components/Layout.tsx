@@ -216,7 +216,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         {open && (
           <nav
             id="mobile-nav"
-            className="max-h-[calc(100vh-4rem)] overflow-y-auto border-t border-slate-100 bg-white px-4 pb-4 pt-3 text-sm lg:hidden"
+            className="safe-bottom max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-slate-100 bg-white px-4 pb-4 pt-3 text-sm lg:hidden"
           >
             <div className="mx-auto flex max-w-content flex-col gap-1">
               {messLinks.length > 0 && <MobileNavHeading>{strings.nav.sectionMess}</MobileNavHeading>}

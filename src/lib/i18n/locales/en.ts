@@ -51,7 +51,7 @@ const en = {
     selected: 'Selected',
     skipToContent: 'Skip to main content',
     viewImage: 'View full image',
-    viewImageHint: 'Press Esc or click outside to close.'
+    viewImageHint: 'Tap outside the image to close it.'
   },
   nav: {
     dashboard: 'Dashboard',

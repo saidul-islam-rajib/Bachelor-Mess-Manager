@@ -113,7 +113,7 @@ function MessageBubble({
                 onClick={() => onDelete(message)}
                 aria-label={strings.community.deleteAction}
                 title={strings.community.deleteAction}
-                className="ml-auto rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                className="-my-1.5 ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18" />

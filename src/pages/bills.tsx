@@ -312,7 +312,7 @@ function BillRow({
         <button
           type="button"
           onClick={() => setShowShares((v) => !v)}
-          className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
         >
           {showShares ? 'Hide' : 'Show'} split ({bill.shares.length})
         </button>
@@ -518,7 +518,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
             <button
               type="button"
               onClick={spreadEvenly}
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
             >
               Split evenly between selected
             </button>

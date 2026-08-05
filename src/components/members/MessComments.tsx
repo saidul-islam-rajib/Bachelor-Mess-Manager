@@ -280,7 +280,7 @@ function DeleteButton({ onClick, label }: { onClick: () => void; label: string }
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="shrink-0 rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+      className="-my-1.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
     >
       <svg
         width="13"

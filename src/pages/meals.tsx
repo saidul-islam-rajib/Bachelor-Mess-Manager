@@ -365,7 +365,7 @@ export default function MealsPage() {
                             type="button"
                             onClick={() => setOpenDay((current) => (current === date ? '' : date))}
                             aria-expanded={openDay === date}
-                            className="flex w-full items-center justify-between gap-2 rounded-xl px-1 py-1 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50"
+                            className="flex min-h-[2rem] w-full items-center justify-between gap-2 rounded-xl px-1 py-1.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50"
                           >
                             {openDay === date ? strings.meals.hideEveryone : strings.meals.everyoneOnDay(others.length)}
                             <svg

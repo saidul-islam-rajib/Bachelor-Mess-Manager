@@ -95,30 +95,30 @@ export default function Footer() {
             <h3 className="font-semibold text-slate-900">Explore</h3>
             <ul className="mt-3 space-y-2">
               <li>
-                <Link href={ROUTES.guide} className="transition-colors hover:text-slate-900 hover:underline">
+                <Link href={ROUTES.guide} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
                   How it works
                 </Link>
               </li>
               <li>
-                <Link href={ROUTES.home} className="transition-colors hover:text-slate-900 hover:underline">
+                <Link href={ROUTES.home} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
                   Home
                 </Link>
               </li>
               {user ? (
                 <li>
-                  <Link href={ROUTES.dashboard} className="transition-colors hover:text-slate-900 hover:underline">
+                  <Link href={ROUTES.dashboard} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
                     Dashboard
                   </Link>
                 </li>
               ) : (
                 <>
                   <li>
-                    <Link href={ROUTES.auth.login} className="transition-colors hover:text-slate-900 hover:underline">
+                    <Link href={ROUTES.auth.login} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
                       Sign in
                     </Link>
                   </li>
                   <li>
-                    <Link href={ROUTES.auth.register} className="transition-colors hover:text-slate-900 hover:underline">
+                    <Link href={ROUTES.auth.register} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
                       Create an account
                     </Link>
                   </li>
@@ -133,7 +133,7 @@ export default function Footer() {
               {settings?.address && <li>{settings.address}</li>}
               {settings?.contactEmail && (
                 <li>
-                  <a href={`mailto:${settings.contactEmail}`} className="hover:underline">
+                  <a href={`mailto:${settings.contactEmail}`} className="inline-block py-1 hover:underline">
                     {settings.contactEmail}
                   </a>
                 </li>
@@ -146,12 +146,12 @@ export default function Footer() {
             {(settings?.facebookUrl || settings?.twitterUrl) && (
               <div className="mt-4 flex gap-4">
                 {settings?.facebookUrl && (
-                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="hover:text-slate-900 hover:underline">
+                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
                     Facebook
                   </a>
                 )}
                 {settings?.twitterUrl && (
-                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="hover:text-slate-900 hover:underline">
+                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
                     Twitter / X
                   </a>
                 )}
