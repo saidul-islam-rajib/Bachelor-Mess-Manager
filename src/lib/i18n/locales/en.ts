@@ -717,13 +717,13 @@ const en = {
       },
       mealQuickReply: {
         title: 'Answer your meals in one tap',
-        body: 'You now get a daily "are you eating?" ask. Tap Yes or No from your phone and your meals are recorded, no sign-in needed.'
+        body: 'You now get a daily "are you eating today?" ask. Tap Yes or No from your phone and your meals are recorded, no sign-in needed.'
       }
     }
   },
   mealPrompt: {
     title: 'Quick meal reply',
-    cardTitle: 'Are you eating?',
+    cardTitle: "We've got food for you! Are you eating?",
     question: (group: string, date: string) => `${group} · ${date}`,
     yes: 'Yes, count me in',
     no: 'No meals',

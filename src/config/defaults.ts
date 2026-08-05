@@ -108,7 +108,7 @@ export const COMMUNITY_DEFAULTS = {
 export const MEAL_PROMPT_DEFAULTS = {
   tokenBytes: 32,
   validHours: 36,
-  leadDays: 1,
+  leadDays: 0,
   breakfast: 0,
   lunch: 1,
   dinner: 1,

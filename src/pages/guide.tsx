@@ -206,7 +206,7 @@ export default function GuidePage() {
 
           <Section id="quick-reply" title="Answering meals in one tap">
             <P>
-              Nobody wants to open an app to say &quot;yes, I am eating tomorrow&quot;. So the mess asks you instead.
+              Nobody wants to open an app to say &quot;yes, I am eating today&quot;. So the mess asks you instead.
               Once a day you get a message with two buttons — <strong>Yes, count me in</strong> and{' '}
               <strong>No meals</strong>. Tap one from your phone and your meals for that day are recorded. There is no
               sign-in, no typing, and no app to open.
