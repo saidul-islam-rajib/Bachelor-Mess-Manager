@@ -13,6 +13,7 @@ import {
   EmptyState,
   FilterBar,
   Input,
+  Listbox,
   LoadingCard,
   Modal,
   NumberInput,
@@ -40,7 +41,7 @@ import {
   USER_STATUS_VALUES
 } from '@/lib/constants';
 import { formatDate, formatDateTime, roleLabel, statusLabel } from '@/lib/format';
-import { ROUTES } from '@/lib/routes';
+import { groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
 
@@ -896,7 +897,7 @@ function GroupsPanel() {
       key: 'name',
       header: strings.common.group,
       render: (row) => (
-        <Link href={`/groups/${row.id}`} className="font-medium hover:underline">
+        <Link href={groupPath(row.id)} className="font-medium hover:underline">
           {row.name}
         </Link>
       )
@@ -1486,20 +1487,16 @@ function SettingsPanel() {
           again.
         </p>
 
-        <label className="mt-4 block max-w-xs">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Unlock lasts for</span>
-          <select
-            value={settings.mealEditWindowMinutes}
-            onChange={(e) => update('mealEditWindowMinutes', Number(e.target.value))}
-            className="app-select mt-1 w-full !rounded-xl !py-2"
-          >
-            {MEAL_EDIT_WINDOW_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Listbox
+          className="mt-4 block max-w-xs"
+          label="Unlock lasts for"
+          value={String(settings.mealEditWindowMinutes)}
+          onChange={(next) => update('mealEditWindowMinutes', Number(next))}
+          options={MEAL_EDIT_WINDOW_OPTIONS.map((option) => ({
+            value: String(option.value),
+            label: option.label
+          }))}
+        />
 
         <Checkbox
           className="mt-4"

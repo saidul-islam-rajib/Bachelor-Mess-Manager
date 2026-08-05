@@ -1,32 +1,56 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
+import { cacheConfig } from '@/config';
+import { Listbox } from '@/components/ui';
+import { cached, invalidate } from '@/lib/cache';
+import { strings } from '@/lib/i18n';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 export type GroupOption = {
   id: string;
   name: string;
+  status: string;
+  memberCount: number;
   supervisor: { id: string; name: string; email: string };
 };
 
-export function useGroupMonth() {
+export type GroupLimits = { maxGroups: number; ownedCount: number; canCreate: boolean };
+
+export function useGroupMonth(options: { includeInactive?: boolean } = {}) {
+  const includeInactive = options.includeInactive ?? false;
   const router = useRouter();
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [groupId, setGroupId] = useState('');
   const [month, setMonth] = useState(currentMonthKey());
   const [loadingGroups, setLoadingGroups] = useState(true);
+  const [limits, setLimits] = useState<GroupLimits | null>(null);
+  const [hiddenInactive, setHiddenInactive] = useState(0);
 
   const requestedGroupId = typeof router.query.group === 'string' ? router.query.group : '';
 
+  const reloadGroups = useCallback(async (options: { fresh?: boolean } = {}) => {
+    setLoadingGroups(true);
+    const path = `/api/groups${includeInactive ? '?includeInactive=true' : ''}`;
+
+    try {
+      if (options.fresh) invalidate(path);
+
+      const data = await cached(path, cacheConfig.groupListMs, () =>
+        fetch(path).then((res) => res.json().catch(() => ({})))
+      );
+      const list: GroupOption[] = data.groups || [];
+      setGroups(list);
+      setLimits(data.limits ?? null);
+      setHiddenInactive(data.hiddenInactive ?? 0);
+      setGroupId((prev) => (prev && list.some((group) => group.id === prev) ? prev : list[0]?.id ?? ''));
+    } finally {
+      setLoadingGroups(false);
+    }
+  }, [includeInactive]);
+
   useEffect(() => {
-    fetch('/api/groups')
-      .then((r) => r.json())
-      .then((d) => {
-        const gs: GroupOption[] = d.groups || [];
-        setGroups(gs);
-        setGroupId((prev) => prev || (gs[0]?.id ?? ''));
-      })
-      .finally(() => setLoadingGroups(false));
-  }, []);
+    reloadGroups();
+  }, [reloadGroups]);
 
   useEffect(() => {
     if (!requestedGroupId) return;
@@ -34,7 +58,7 @@ export function useGroupMonth() {
     setGroupId(requestedGroupId);
   }, [requestedGroupId, groups]);
 
-  return { groups, groupId, setGroupId, month, setMonth, loadingGroups };
+  return { groups, groupId, setGroupId, month, setMonth, loadingGroups, limits, hiddenInactive, reloadGroups };
 }
 
 export function GroupMonthControls({
@@ -53,35 +77,21 @@ export function GroupMonthControls({
   const options = monthOptions();
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <label className="flex-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Group</span>
-        <select
-          value={groupId}
-          onChange={(e) => setGroupId(e.target.value)}
-          className="app-select mt-1"
-        >
-          {groups.length === 0 && <option value="">No groups</option>}
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="flex-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Month</span>
-        <select
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="app-select mt-1"
-        >
-          {options.map((o) => (
-            <option key={o.key} value={o.key}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Listbox
+        className="min-w-0 flex-1"
+        label={strings.common.group}
+        value={groupId}
+        onChange={setGroupId}
+        placeholder={strings.groups.noGroups}
+        options={groups.map((group) => ({ value: group.id, label: group.name }))}
+      />
+      <Listbox
+        className="min-w-0 flex-1"
+        label={strings.common.month}
+        value={month}
+        onChange={setMonth}
+        options={options.map((option) => ({ value: option.key, label: option.label }))}
+      />
     </div>
   );
 }

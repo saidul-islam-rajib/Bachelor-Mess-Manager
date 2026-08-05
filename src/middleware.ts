@@ -18,7 +18,8 @@ const PUBLIC_PATHS = [
   '/api/auth/me',
   '/api/auth/logout',
   '/api/health',
-  '/api/live'
+  '/api/live',
+  '/api/newsletter'
 ];
 
 const PUBLIC_FILE = /\.[^/]+$/;
@@ -53,8 +54,8 @@ export function middleware(req: NextRequest) {
   }
 
   const url = req.nextUrl.clone();
-  url.pathname = '/auth/login';
-  url.search = pathname === '/' ? '' : `?next=${encodeURIComponent(pathname + req.nextUrl.search)}`;
+  url.pathname = ROUTES.home;
+  url.search = `?next=${encodeURIComponent(pathname + req.nextUrl.search)}`;
 
   const response = NextResponse.redirect(url);
   if (token) response.cookies.delete(SESSION_COOKIE_NAME);

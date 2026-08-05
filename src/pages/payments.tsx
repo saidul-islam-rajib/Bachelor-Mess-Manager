@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
+import { Listbox, ListboxControl, PageTitle } from '@/components/ui';
+import { strings } from '@/lib/i18n';
 import { todayKey } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
 
@@ -94,6 +96,10 @@ export default function PaymentsPage() {
 
   async function record(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!payerId) {
+      toast.error(strings.payments.selectMember);
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/groups/${groupId}/payments`, {
@@ -129,7 +135,8 @@ export default function PaymentsPage() {
   const canManage = data?.canManage ?? false;
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title="Payments" />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Payments</h1>
         <p className="mt-1 text-slate-600">
@@ -174,20 +181,19 @@ export default function PaymentsPage() {
                   <h2 className="text-lg font-semibold">Record a payment</h2>
                   <p className="mt-1 text-sm text-slate-500">Log cash a member handed over for the mess.</p>
                   <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_auto_auto]" onSubmit={record}>
-                    <select
+                    <ListboxControl
                       value={payerId}
-                      onChange={(e) => setPayerId(e.target.value)}
-                      required
-                      className="app-select !rounded-xl !py-2"
-                    >
-                      <option value="">Select member</option>
-                      {data.members.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                          {m.id === user?.id ? ' (you)' : ''}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setPayerId}
+                      placeholder="Select member"
+                      buttonClassName="!rounded-xl !py-2"
+                      options={[
+                        { value: '', label: 'Select member' },
+                        ...data.members.map((m) => ({
+                          value: m.id,
+                          label: `${m.name}${m.id === user?.id ? ' (you)' : ''}`
+                        }))
+                      ]}
+                    />
                     <input
                       type="number"
                       min="0"
@@ -208,7 +214,7 @@ export default function PaymentsPage() {
                     <button
                       type="submit"
                       disabled={saving}
-                      className="rounded-full bg-slate-900 px-6 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+                      className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
                     >
                       {saving ? '...' : 'Record'}
                     </button>
@@ -379,7 +385,7 @@ function CloseMonth({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-4 rounded-full bg-slate-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
+          className="mt-4 rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
         >
           Close {month}
         </button>
@@ -457,17 +463,16 @@ function CloseForm({
         </label>
 
         {!lockScope && (
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Close for</span>
-            <select
-              value={scope}
-              onChange={(e) => setScope(e.target.value as 'GROUP' | 'MEMBERS')}
-              className="app-select mt-1"
-            >
-              <option value="GROUP">Everyone in the mess</option>
-              <option value="MEMBERS">Selected members only</option>
-            </select>
-          </label>
+          <Listbox
+            className="block"
+            label="Close for"
+            value={scope}
+            onChange={(next) => setScope(next as 'GROUP' | 'MEMBERS')}
+            options={[
+              { value: 'GROUP', label: 'Everyone in the mess' },
+              { value: 'MEMBERS', label: 'Selected members only' }
+            ]}
+          />
         )}
       </div>
 
@@ -482,7 +487,7 @@ function CloseForm({
                   onClick={() => toggle(member.id)}
                   className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
                     selected.includes(member.id)
-                      ? 'border-slate-900 bg-slate-900 text-white'
+                      ? 'border-brand-600 bg-brand-600 text-white'
                       : 'border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
@@ -498,7 +503,7 @@ function CloseForm({
               type="checkbox"
               checked={endMembership}
               onChange={(e) => setEndMembership(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
             />
             They are leaving the mess on this date
           </label>
@@ -520,7 +525,7 @@ function CloseForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
           {saving ? 'Closing...' : 'Confirm close'}
         </button>

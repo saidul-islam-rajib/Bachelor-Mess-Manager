@@ -50,7 +50,7 @@ export function PasswordField({
           required={required}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 pr-16 outline-none transition focus:border-slate-900 focus:bg-white ${
+          className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 pr-16 outline-none transition focus:border-brand-500 focus:bg-white ${
             error ? 'border-red-400' : 'border-slate-300'
           }`}
         />

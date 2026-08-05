@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
+import { Listbox, PageTitle } from '@/components/ui';
 import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import { todayKey } from '@/lib/month';
 
@@ -122,7 +123,8 @@ export default function BillsPage() {
   const myShare = data ? (data.totals.byMember[user?.id ?? ''] ?? 0) : 0;
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title="Bills & fixed costs" />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Bills &amp; fixed costs</h1>
         <p className="mt-1 text-slate-600">
@@ -246,7 +248,7 @@ function Breakdown({
                 </span>
               </div>
               <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-slate-900" style={{ width: `${percent}%` }} />
+                <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
               </div>
             </li>
           );
@@ -310,7 +312,7 @@ function BillRow({
         <button
           type="button"
           onClick={() => setShowShares((v) => !v)}
-          className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
         >
           {showShares ? 'Hide' : 'Show'} split ({bill.shares.length})
         </button>
@@ -422,19 +424,18 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
   const fields = (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Cost type</span>
-          <select value={type} onChange={(e) => setType(e.target.value)} className="app-select mt-1">
-            {initial && !categories.some((c) => c.code === initial.type) && (
-              <option value={initial.type}>{initial.type} (retired)</option>
-            )}
-            {categories.map((category) => (
-              <option key={category.code} value={category.code}>
-                {category.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Listbox
+          className="block"
+          label="Cost type"
+          value={type}
+          onChange={setType}
+          options={[
+            ...(initial && !categories.some((c) => c.code === initial.type)
+              ? [{ value: initial.type, label: `${initial.type} (retired)` }]
+              : []),
+            ...categories.map((category) => ({ value: category.code, label: category.label }))
+          ]}
+        />
 
         <label className="block">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Amount (৳)</span>
@@ -445,7 +446,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-slate-900 focus:bg-white"
+            className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
           />
         </label>
 
@@ -456,21 +457,18 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-slate-900 focus:bg-white"
+            className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
           />
         </label>
 
-        <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Paid by</span>
-          <select value={payerId} onChange={(e) => setPayerId(e.target.value)} className="app-select mt-1">
-            <option value="">Not recorded</option>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Listbox
+          className="block"
+          label="Paid by"
+          value={payerId}
+          onChange={setPayerId}
+          placeholder="Not recorded"
+          options={[{ value: '', label: 'Not recorded' }, ...members.map((m) => ({ value: m.id, label: m.name }))]}
+        />
       </div>
 
       <label className="mt-4 block">
@@ -480,7 +478,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="July electricity, meter reading 4821"
-          className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-slate-900 focus:bg-white"
+          className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
         />
       </label>
 
@@ -494,7 +492,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
               onClick={() => setSplitMethod(method)}
               className={`rounded-full px-4 py-2 text-sm transition ${
                 splitMethod === method
-                  ? 'bg-slate-900 font-medium text-white'
+                  ? 'bg-brand-600 font-medium text-white'
                   : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -516,7 +514,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
             <button
               type="button"
               onClick={spreadEvenly}
-              className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
             >
               Split evenly between selected
             </button>
@@ -719,12 +717,12 @@ function CategoryManager({
           onChange={(e) => setLabel(e.target.value)}
           maxLength={40}
           placeholder="Add a cost type, e.g. Gas cylinder"
-          className="min-w-0 flex-1 rounded-full border border-slate-300 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-slate-900 focus:bg-white"
+          className="min-w-0 flex-1 rounded-full border border-slate-300 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white"
         />
         <button
           type="submit"
           disabled={busy || !label.trim()}
-          className="rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
           Add
         </button>
@@ -797,7 +795,7 @@ function AddBillForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
           {saving ? 'Saving...' : 'Save bill'}
         </button>
@@ -851,7 +849,7 @@ function EditBill({
   }
 
   return (
-    <li className="rounded-2xl border border-slate-900 p-4">
+    <li className="rounded-2xl border border-brand-600 p-4">
       <form onSubmit={submit}>
         <h3 className="font-semibold">Edit bill</h3>
         {fields}
@@ -859,7 +857,7 @@ function EditBill({
           <button
             type="submit"
             disabled={saving}
-            className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
           >
             {saving ? 'Saving...' : 'Save changes'}
           </button>

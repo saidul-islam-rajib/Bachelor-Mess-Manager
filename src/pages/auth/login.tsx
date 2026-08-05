@@ -6,16 +6,12 @@ import { TextField } from '@/components/TextField';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { XssWarningModal } from '@/components/XssWarningModal';
-import { ROUTES } from '@/lib/routes';
+import { Button, PageTitle } from '@/components/ui';
+import { strings as i18n } from '@/lib/i18n';
+import { ROUTES, safeNextPath } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
 import { isValidEmail } from '@/lib/validation';
 import { findXssField } from '@/lib/xss';
-
-function safeNext(next: unknown): string | null {
-  if (typeof next !== 'string') return null;
-  if (!next.startsWith('/') || next.startsWith('//')) return null;
-  return next;
-}
 
 export default function LoginPage() {
   const strings = STRINGS.auth.login;
@@ -67,7 +63,7 @@ export default function LoginPage() {
 
       await refresh();
       toast.success(`Welcome back, ${data.user?.name ?? ''}`.trim() + '.');
-      await router.push(safeNext(router.query.next) ?? ROUTES.dashboard);
+      await router.push(safeNextPath(router.query.next) ?? ROUTES.dashboard);
     } catch {
       setFormError('Could not reach the server. Check your connection and try again.');
     } finally {
@@ -76,7 +72,8 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 text-slate-900">
+      <PageTitle title={strings.title} />
       <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
@@ -115,23 +112,19 @@ export default function LoginPage() {
               error={errors.password}
             />
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-full bg-slate-900 px-6 py-3 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? 'Signing in...' : strings.submit}
-            </button>
+            <Button type="submit" size="lg" fullWidth loading={loading}>
+              {loading ? i18n.auth.login.submitting : strings.submit}
+            </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-slate-600">
             {strings.registerLink}{' '}
-            <Link href={ROUTES.auth.register} className="font-medium text-slate-900 hover:underline">
+            <Link href={ROUTES.auth.register} className="font-medium text-brand-700 hover:underline">
               {strings.register}
             </Link>
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

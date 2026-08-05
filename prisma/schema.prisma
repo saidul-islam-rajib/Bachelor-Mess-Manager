@@ -708,9 +708,6 @@ model Comment {
   @@index([groupId, createdAt])
 }
 
-/// One post in the app-wide community room every approved member belongs to.
-/// System posts (welcome notes, release announcements) carry a stable `key`
-/// so they can be published exactly once, whatever restarts the app.
 model CommunityMessage {
   id            String    @id @default(uuid())
   type          String    @default("MEMBER")
@@ -733,7 +730,6 @@ model CommunityMessage {
   @@index([pinned, createdAt])
 }
 
-/// How far each member has read the community room, for the unread badge.
 model CommunityRead {
   id            String    @id @default(uuid())
   user          User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -748,9 +744,6 @@ model CommunityRead {
   unpublishedAt DateTime?
 }
 
-/// A one-tap "are you eating?" ask for one member, one group, one day.
-/// The token is stored hashed and only ever authorises meal counts for that
-/// exact row, so the link is safe to send by email and useless afterwards.
 model MealPrompt {
   id                String    @id @default(uuid())
   user              User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)

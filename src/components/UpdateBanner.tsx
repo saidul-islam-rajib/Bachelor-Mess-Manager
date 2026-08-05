@@ -7,7 +7,7 @@ export default function UpdateBanner() {
 
   return (
     <div className="bg-green-600 text-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
+      <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm">
         <p className="font-medium">A new version of Bachelor Point is ready.</p>
         <button
           type="button"

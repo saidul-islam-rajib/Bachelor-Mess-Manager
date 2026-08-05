@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
 import { useCommunity } from '@/components/CommunityProvider';
 import { timeAgo } from '@/components/InvitationsProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import {
+  ActionLink,
   Alert,
   Avatar,
   Badge,
@@ -21,6 +22,7 @@ import { appConfig, communityConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { encodeMentions } from '@/lib/mentions';
+import { commentsAnchorPath } from '@/lib/routes';
 
 type CommunityMessage = {
   id: string;
@@ -28,6 +30,7 @@ type CommunityMessage = {
   system: boolean;
   authorId: string | null;
   authorName: string;
+  authorImage: string | null;
   title: string | null;
   text: string;
   pinned: boolean;
@@ -46,6 +49,9 @@ type FeedResponse = {
   canModerate: boolean;
   maxLength: number;
 };
+
+const INITIAL_VISIBLE = 5;
+const REVEAL_STEP = 10;
 
 const TYPE_TONES: Record<string, string> = {
   WELCOME: 'border-emerald-200 bg-emerald-50',
@@ -86,7 +92,12 @@ function MessageBubble({
       }`}
     >
       <div className="flex items-start gap-3">
-        <Avatar name={message.system ? appConfig.name : message.authorName} size="sm" muted={message.system} />
+        <Avatar
+          name={message.system ? appConfig.name : message.authorName}
+          image={message.system ? null : message.authorImage}
+          size="sm"
+          muted={message.system}
+        />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -102,7 +113,7 @@ function MessageBubble({
                 onClick={() => onDelete(message)}
                 aria-label={strings.community.deleteAction}
                 title={strings.community.deleteAction}
-                className="ml-auto rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600"
+                className="-my-1.5 ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 6h18" />
@@ -119,7 +130,7 @@ function MessageBubble({
             text={message.text}
             members={members}
             mentionNames={mentionNames}
-            className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700"
+            className="mt-1 hyphens-auto whitespace-pre-wrap break-words text-justify text-sm text-slate-700"
           />
         </div>
       </div>
@@ -146,9 +157,13 @@ export default function CommunityPage() {
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [posting, setPosting] = useState(false);
   const [text, setText] = useState('');
+  const [firstVisibleId, setFirstVisibleId] = useState<string | null>(null);
 
   const bottom = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLUListElement>(null);
   const newestAt = useRef<string | null>(null);
+  const scrolledToId = useRef<string | null>(null);
+  const keepDistanceFromBottom = useRef<number | null>(null);
 
   const rememberNewest = useCallback((list: CommunityMessage[]) => {
     const last = list[list.length - 1];
@@ -216,13 +231,67 @@ export default function CommunityPage() {
     markRead();
   }, [loading, markRead, messages.length, user]);
 
-  useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [messages.length]);
+  const newestId = messages[messages.length - 1]?.id ?? null;
 
-  async function loadOlder() {
+  useEffect(() => {
+    if (!newestId || scrolledToId.current === newestId) return;
+    scrolledToId.current = newestId;
+    bottom.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [newestId]);
+
+  const firstVisibleIndex = useMemo(() => {
+    const fallback = Math.max(0, messages.length - INITIAL_VISIBLE);
+    if (!firstVisibleId) return fallback;
+
+    const index = messages.findIndex((message) => message.id === firstVisibleId);
+    return index === -1 ? fallback : index;
+  }, [firstVisibleId, messages]);
+
+  const visibleMessages = messages.slice(firstVisibleIndex);
+  const canReadMore = firstVisibleIndex > 0 || hasMore;
+
+  useEffect(() => {
+    const container = list.current;
+    const distance = keepDistanceFromBottom.current;
+    if (!container || distance === null) return;
+
+    keepDistanceFromBottom.current = null;
+    container.scrollTop = container.scrollHeight - distance;
+  }, [visibleMessages.length]);
+
+  async function readMore() {
+    if (loadingOlder) return;
+
+    const container = list.current;
+    if (container) {
+      keepDistanceFromBottom.current = container.scrollHeight - container.scrollTop;
+    }
+
+    if (firstVisibleIndex >= REVEAL_STEP) {
+      setFirstVisibleId(messages[firstVisibleIndex - REVEAL_STEP].id);
+      return;
+    }
+
+    if (!hasMore) {
+      if (firstVisibleIndex === 0) keepDistanceFromBottom.current = null;
+      setFirstVisibleId(messages[0]?.id ?? null);
+      return;
+    }
+
+    const older = await fetchOlder();
+    if (!older) {
+      keepDistanceFromBottom.current = null;
+      return;
+    }
+
+    const target = older.length + firstVisibleIndex - REVEAL_STEP;
+    const combined = [...older, ...messages];
+    setFirstVisibleId(combined[Math.max(0, target)]?.id ?? null);
+  }
+
+  async function fetchOlder(): Promise<CommunityMessage[] | null> {
     const oldest = messages[0];
-    if (!oldest || loadingOlder) return;
+    if (!oldest) return null;
 
     setLoadingOlder(true);
     try {
@@ -232,8 +301,10 @@ export default function CommunityPage() {
       setMessages((current) => mergeById(data.messages, current));
       setMentionNames((current) => ({ ...current, ...data.mentionNames }));
       setHasMore(data.hasMore);
+      return data.messages;
     } catch (error) {
       toast.error(errorMessage(error));
+      return null;
     } finally {
       setLoadingOlder(false);
     }
@@ -293,26 +364,11 @@ export default function CommunityPage() {
 
   return (
     <PageContainer>
-      <PageHeader title={strings.community.title} description={strings.community.subtitle(appConfig.name)} />
-
-      {pinned.length > 0 && (
-        <Card className="mb-4">
-          <CardHeader title={strings.community.pinned} />
-          <ul className="mt-3 space-y-2">
-            {pinned.map((message) => (
-              <li key={message.id} className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
-                {message.title && <p className="text-sm font-semibold text-slate-900">{message.title}</p>}
-                <MentionText
-                  text={message.text}
-                  members={members}
-                  mentionNames={mentionNames}
-                  className="mt-0.5 whitespace-pre-wrap break-words text-sm text-slate-700"
-                />
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <PageHeader
+        title={strings.community.title}
+        description={strings.community.subtitle(appConfig.name)}
+        action={<ActionLink href={commentsAnchorPath()}>{strings.community.elsewhereLink}</ActionLink>}
+      />
 
       <Card>
         {loading ? (
@@ -321,16 +377,16 @@ export default function CommunityPage() {
           <EmptyState title={strings.community.empty} />
         ) : (
           <>
-            {hasMore && (
+            {canReadMore && (
               <div className="mb-3 flex justify-center">
-                <Button size="sm" variant="secondary" onClick={loadOlder} loading={loadingOlder}>
-                  {strings.community.loadOlder}
+                <Button size="sm" variant="secondary" onClick={readMore} loading={loadingOlder}>
+                  {strings.community.readMore}
                 </Button>
               </div>
             )}
 
-            <ul className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
-              {messages.map((message) => (
+            <ul ref={list} className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+              {visibleMessages.map((message) => (
                 <MessageBubble
                   key={message.id}
                   message={message}
@@ -371,6 +427,25 @@ export default function CommunityPage() {
           </div>
         </form>
       </Card>
+
+      {pinned.length > 0 && (
+        <Card className="mt-4">
+          <CardHeader title={strings.community.pinned} />
+          <ul className="mt-3 space-y-2">
+            {pinned.map((message) => (
+              <li key={message.id} className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+                {message.title && <p className="text-sm font-semibold text-slate-900">{message.title}</p>}
+                <MentionText
+                  text={message.text}
+                  members={members}
+                  mentionNames={mentionNames}
+                  className="mt-0.5 hyphens-auto whitespace-pre-wrap break-words text-justify text-sm text-slate-700"
+                />
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
     </PageContainer>
   );
 }

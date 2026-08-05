@@ -279,7 +279,14 @@ kubectl -n bachelor-point wait --for=condition=complete job/bachelor-point-migra
 kubectl -n bachelor-point set image deployment/bachelor-point-blue app=$IMAGE
 kubectl -n bachelor-point scale deployment/bachelor-point-blue --replicas=2
 kubectl -n bachelor-point rollout status deployment/bachelor-point-blue
+
+# daily one-tap meal ask, once blue is serving
+sed "s|REPLACE_IMAGE|$IMAGE|g" k8s/base/meal-prompt-cronjob.yaml | kubectl apply -f -
 ```
+
+The CronJob needs `MEAL_PROMPT_DISPATCH_SECRET` in the Secret and posts to the
+in-cluster service, so it keeps working across a colour switch. See
+[meal-prompts.md](meal-prompts.md).
 
 ### 5.10 Point DNS at the ALB
 

@@ -30,7 +30,7 @@ export default function InstallAppBanner() {
 
   return (
     <div className="border-b border-slate-200 bg-slate-900 text-white">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
+      <div className="mx-auto flex max-w-content flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="5" y="2" width="14" height="20" rx="2" />
@@ -67,7 +67,7 @@ export default function InstallAppBanner() {
           type="button"
           onClick={dismiss}
           aria-label="Dismiss install prompt"
-          className="rounded-full p-1.5 text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+          className="-mr-1.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M6 6l12 12M18 6L6 18" />

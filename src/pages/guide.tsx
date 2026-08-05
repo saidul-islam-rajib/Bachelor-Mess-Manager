@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useCurrentUser } from '@/components/UserProvider';
-import { ROUTES } from '@/lib/routes';
+import { commentsAnchorPath, ROUTES } from '@/lib/routes';
 import { appConfig } from '@/config';
 import {
   BalanceFigure,
@@ -23,12 +23,17 @@ const SECTIONS: Section[] = [
   { id: 'month', title: 'A month in the mess' },
   { id: 'joining', title: 'Getting in' },
   { id: 'meals', title: 'Meals and meal plans' },
+  { id: 'quick-reply', title: 'Answering meals in one tap' },
+  { id: 'talking', title: 'Talking to your mess' },
+  { id: 'community', title: 'The community room' },
+  { id: 'notifications', title: 'Notifications and the bell' },
   { id: 'rate', title: 'How the meal rate works' },
   { id: 'bazar', title: 'Bazar and comments' },
   { id: 'bills', title: 'Bills and fixed costs' },
   { id: 'balances', title: 'Balances and payments' },
   { id: 'past-meals', title: 'Changing a past meal' },
   { id: 'closing', title: 'Closing a month' },
+  { id: 'phone', title: 'Putting it on your phone' },
   { id: 'faq', title: 'Common questions' }
 ];
 
@@ -66,10 +71,10 @@ export default function GuidePage() {
       </Head>
 
       <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+        <div className="mx-auto max-w-content px-4 py-12 sm:py-16">
           <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Guide</p>
           <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">How {appConfig.name} works</h1>
-          <p className="mt-3 max-w-2xl text-lg text-slate-600">
+          <p className="mt-3 hyphens-auto text-justify text-lg text-slate-600">
             Everything a mess needs to agree on — who ate what, who bought the groceries, who paid the rent, and who
             owes whom at the end of the month. This page explains all of it, in order.
           </p>
@@ -78,7 +83,7 @@ export default function GuidePage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={ROUTES.auth.register}
-                className="rounded-full bg-slate-900 px-6 py-3 text-sm font-medium text-white hover:bg-slate-700"
+                className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
               >
                 Create an account
               </Link>
@@ -93,7 +98,7 @@ export default function GuidePage() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl gap-10 px-4 py-10 lg:flex lg:py-14">
+      <div className="mx-auto max-w-content gap-10 px-4 py-10 lg:flex lg:py-14">
         <nav aria-label="On this page" className="mb-8 lg:sticky lg:top-24 lg:mb-0 lg:h-fit lg:w-60 lg:shrink-0">
           <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">On this page</p>
           <ul className="mt-2 space-y-0.5">
@@ -104,7 +109,7 @@ export default function GuidePage() {
                   aria-current={active === section.id ? 'true' : undefined}
                   className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
                     active === section.id
-                      ? 'bg-slate-900 font-medium text-white'
+                      ? 'bg-brand-600 font-medium text-white'
                       : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
@@ -177,7 +182,7 @@ export default function GuidePage() {
                 'Register with your name and email. Depending on how the site is set up, your account is either usable straight away or waits for an admin to approve it.',
                 'A supervisor invites you to their mess. The invitation shows up in your notification bell and in your email.',
                 'Accept it, and you are a member from that moment. Your joining date matters — it is what the app uses to work out how much of the month you were actually there for.',
-                'Want to run your own mess instead? Ask for the supervisor role from your profile, then create a group.'
+                'Want to run your own mess instead? Open Your role on your profile, ask for supervisor access, then create a group once it is granted.'
               ]}
             />
           </Section>
@@ -196,6 +201,97 @@ export default function GuidePage() {
             <Callout>
               Not every meal costs the same to make. A supervisor can set <strong>meal weights</strong> — commonly
               breakfast 0.5, lunch 1, dinner 1 — so a light breakfast counts as half a meal when the cost is divided.
+            </Callout>
+          </Section>
+
+          <Section id="quick-reply" title="Answering meals in one tap">
+            <P>
+              Nobody wants to open an app to say &quot;yes, I am eating tomorrow&quot;. So the mess asks you instead.
+              Once a day you get a message with two buttons — <strong>Yes, count me in</strong> and{' '}
+              <strong>No meals</strong>. Tap one from your phone and your meals for that day are recorded. There is no
+              sign-in, no typing, and no app to open.
+            </P>
+            <P>
+              Yes fills in <em>your</em> usual meals for that weekday, taken from your meal plan, so someone who never
+              eats breakfast is never charged for one. Tap <strong>Choose meals</strong> instead if today is different
+              from usual. Changed your mind? Tap again — the link keeps working until the day starts.
+            </P>
+            <Callout>
+              The same question waits for you on the <Route href={ROUTES.dashboard}>Dashboard</Route> and in your
+              notifications, so you can answer wherever you happen to be. Supervisors can send the ask to everyone from
+              the <Route href={ROUTES.meals}>Meals</Route> page.
+            </Callout>
+          </Section>
+
+          <Section id="talking" title="Talking to your mess">
+            <P>
+              Every mess has its own thread, and it lives on the <Route href={ROUTES.members}>Members</Route> page as a
+              collapsible <strong>Mess comments</strong> section — open it, and the whole conversation is there. It sits
+              with the roster on purpose: the people and the talk about them belong on the same page.
+            </P>
+            <P>
+              Anyone in the mess can post, and anyone can reply to a post. Type{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code> and a name to pull one person in, or{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@everyone</code> to reach the whole house —
+              either way they get a notification linking straight back to what you wrote.
+            </P>
+            <Callout>
+              A posted comment cannot be edited, by anyone. If something needs to go, the supervisor removes it. That
+              rule exists so nobody can quietly reword what they agreed to last week.
+            </Callout>
+          </Section>
+
+          <Section id="community" title="The community room">
+            <P>
+              There are two places to talk, and they differ by who can read you.{' '}
+              <Route href={commentsAnchorPath()}>Mess comments</Route>, a section on the{' '}
+              <Route href={ROUTES.members}>Members</Route> page, is private to your mess. The{' '}
+              <Route href={ROUTES.community}>Community</Route> room is the other one: everybody on {appConfig.name},
+              in a single place. You are in it automatically from the moment your account is approved — there is
+              nothing to join.
+            </P>
+            <P>
+              Use it to ask a question no one mess can answer, to welcome the people who just signed up, and to catch
+              the pinned <strong>What&apos;s new</strong> cards whenever a feature lands. Type{' '}
+              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code> to pull someone into a message —
+              they get a notification, exactly like in a mess thread.
+            </P>
+          </Section>
+
+          <Section id="notifications" title="Notifications and the bell">
+            <P>
+              The bell in the header is the app tapping you on the shoulder. It carries a count of everything unread and
+              opens a short list; <Route href={ROUTES.notifications}>Notifications</Route> has the full history, with an
+              All / Unread filter and a <strong>Mark all read</strong> button.
+            </P>
+            <P>You get one when something genuinely needs you, and not otherwise:</P>
+            <Definitions
+              items={[
+                {
+                  term: 'Someone mentioned you',
+                  detail:
+                    'In a mess comment, a reply, a bazar note or the community room. The notification links straight to the message.'
+                },
+                {
+                  term: 'A past meal changed',
+                  detail:
+                    'When a supervisor edits a day that has already passed, every member is told what changed and on which day — in the app and by email.'
+                },
+                {
+                  term: 'A decision on your request',
+                  detail:
+                    'Your past-meal change was approved or declined, or your request for supervisor access was answered.'
+                },
+                {
+                  term: 'An invitation to a mess',
+                  detail:
+                    'Invitations sit in the bell too, with Accept and Decline right there — you never have to go looking for them.'
+                }
+              ]}
+            />
+            <Callout>
+              Announcements about new features are deliberately <em>not</em> notifications. They are pinned in the
+              community room and raise the badge there instead, so a release never fills seven hundred bells at once.
             </Callout>
           </Section>
 
@@ -354,9 +450,48 @@ export default function GuidePage() {
             </Figure>
           </Section>
 
+          <Section id="phone" title="Putting it on your phone">
+            <P>
+              There is nothing to download and no app store to visit. {appConfig.name} runs in the browser, but it can
+              also be installed to your home screen, where it opens full-screen with its own icon and no address bar —
+              the same thing a normal app does.
+            </P>
+            <P>
+              When your phone supports it, a bar appears at the top offering to install. Dismiss it and it stays
+              dismissed. If you want it later, use your browser instead:
+            </P>
+            <Definitions
+              items={[
+                {
+                  term: 'Android — Chrome',
+                  detail: 'Menu (⋮) → Install app, or Add to Home screen. Accept the prompt and the icon appears.'
+                },
+                {
+                  term: 'iPhone — Safari',
+                  detail:
+                    'The Share button → Add to Home Screen. Safari is the only browser on iOS that can do this, so use Safari rather than Chrome for the install.'
+                },
+                {
+                  term: 'Desktop — Chrome or Edge',
+                  detail: 'The install icon at the right-hand end of the address bar opens it in its own window.'
+                }
+              ]}
+            />
+            <Callout>
+              Installed or not, you are looking at the same live data — it is the same site either way. Installing only
+              changes how it opens, and the app tells you when a new version is ready so you are never stuck on an old
+              one.
+            </Callout>
+          </Section>
+
           <Section id="faq" title="Common questions">
             <Definitions
               items={[
+                {
+                  term: 'Where did the Comments tab go?',
+                  detail:
+                    'It is now a Mess comments section on the Members page — open it and the thread is there, unchanged. Old links and mention notifications still work; they take you straight to it. The Community room, which everyone on the site shares, is separate and still has its own tab.'
+                },
                 {
                   term: 'I bought the groceries. Do I get that money back?',
                   detail:
@@ -400,7 +535,7 @@ export default function GuidePage() {
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={user ? ROUTES.dashboard : ROUTES.auth.register}
-                className="rounded-full bg-slate-900 px-6 py-2.5 text-sm font-medium text-white hover:bg-slate-700"
+                className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
               >
                 {user ? 'Back to dashboard' : 'Get started'}
               </Link>
@@ -428,7 +563,7 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p className="text-base leading-relaxed text-slate-600">{children}</p>;
+  return <p className="hyphens-auto text-justify text-base leading-relaxed text-slate-600">{children}</p>;
 }
 
 function A({ href, children }: { href: string; children: ReactNode }) {
@@ -449,7 +584,7 @@ function Route({ href, children }: { href: string; children: ReactNode }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm leading-relaxed text-slate-700">
+    <div className="hyphens-auto rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-justify text-sm leading-relaxed text-slate-700">
       {children}
     </div>
   );
@@ -461,7 +596,7 @@ function Definitions({ items }: { items: { term: string; detail: string }[] }) {
       {items.map((item) => (
         <div key={item.term} className="border-l-2 border-slate-200 pl-4">
           <dt className="font-semibold text-slate-900">{item.term}</dt>
-          <dd className="mt-1 leading-relaxed text-slate-600">{item.detail}</dd>
+          <dd className="mt-1 hyphens-auto text-justify leading-relaxed text-slate-600">{item.detail}</dd>
         </div>
       ))}
     </dl>
@@ -473,10 +608,10 @@ function Steps({ items }: { items: string[] }) {
     <ol className="space-y-4">
       {items.map((item, index) => (
         <li key={item} className="flex gap-4">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
             {index + 1}
           </span>
-          <span className="pt-0.5 leading-relaxed text-slate-600">{item}</span>
+          <span className="hyphens-auto pt-0.5 text-justify leading-relaxed text-slate-600">{item}</span>
         </li>
       ))}
     </ol>

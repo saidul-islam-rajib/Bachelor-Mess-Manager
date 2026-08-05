@@ -138,6 +138,7 @@ APP_URL="https://bachelor-point.team-sober.com"
 DATABASE_URL="sqlserver://<host>;database=bachelor_point;user=<user>;password=<pw>;encrypt=true"
 AUTH_SECRET="<32+ random characters, different from local>"
 SESSION_COOKIE_SECURE=true
+MEAL_PROMPT_DISPATCH_SECRET="<32 random bytes, for the daily meal ask>"
 ```
 
 ### HTTPS is mandatory
@@ -160,6 +161,17 @@ powershell -ExecutionPolicy Bypass -File scripts\schedule-backup.ps1
 
 Keeps the newest 2 by default (`BACKUP_KEEP_COUNT`). Restore and verification steps are in
 [docs/BACKUPS.md](docs/BACKUPS.md).
+
+### The daily meal ask
+
+```bash
+npm run meals:prompt
+```
+
+Schedule it once a day, whenever suits the mess — members get a message with **Yes** and **No** buttons for
+tomorrow, and answering takes no sign-in. It needs `MEAL_PROMPT_DISPATCH_SECRET` and `APP_URL`, and running it
+twice sends nothing twice. On Kubernetes, apply `k8s/base/meal-prompt-cronjob.yaml` instead. Details in
+[docs/meal-prompts.md](docs/meal-prompts.md).
 
 ---
 
@@ -291,6 +303,7 @@ Budget $25 once for Google Play and $99/year for Apple, plus a Mac or macOS CI f
 | Install banner never appears | Not HTTPS, already installed, or previously dismissed | Check the URL scheme; clear `bp-install-dismissed` from localStorage |
 | iOS shows no install option | Not using Safari | Open in Safari |
 | Old version keeps loading after deploy | Service worker still serving the previous shell | The update banner appears within a minute; or DevTools → Application → Service Workers → Unregister |
+| In dev: the page reloads forever, and API calls start failing with "too many requests" | A service worker left over from an older build is serving stale `/_next/static` chunks, so Fast Refresh asks for a hot update that no longer exists and full-reloads on a loop | Fixed — the worker no longer registers outside production and unregisters itself in dev. A tab already trapped must be freed once: DevTools → Application → **Clear site data** (or close the tab and reopen) |
 | Header unreachable under the iOS clock | `apple-mobile-web-app-status-bar-style` set to `black-translucent` | Use `default`, or add `safe-top` to the sticky header |
 | Bounce mail for `@example.com` | A test suite sent to a reserved test domain | Nothing to fix — the suite now refuses to run when SMTP is configured |
 | Tests fail on email domain | `EMAIL_REQUIRE_MX` is on | Start dev with `EMAIL_REQUIRE_MX=false` |

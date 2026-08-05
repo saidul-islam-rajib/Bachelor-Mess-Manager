@@ -130,7 +130,7 @@ export function DashboardPreview() {
               </span>
               <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100">
                 <span
-                  className="block h-full rounded-full bg-slate-900"
+                  className="block h-full rounded-full bg-brand-600"
                   style={{ width: `${Math.round((row.amount / maxAmount) * 100)}%` }}
                 />
               </span>
@@ -198,7 +198,7 @@ export function MealsPreview() {
                   key={column.key}
                   className={`flex h-7 w-10 items-center justify-center rounded-full text-[11px] font-medium sm:w-16 ${
                     row[column.key]
-                      ? 'bg-slate-900 text-white'
+                      ? 'bg-brand-600 text-white'
                       : 'border border-dashed border-slate-200 text-slate-300'
                   }`}
                 >
@@ -342,7 +342,7 @@ export function MealRateDiagram() {
         <Fragment key={part.label}>
           <div
             className={`w-full rounded-2xl px-4 py-3 text-center sm:w-auto sm:min-w-[7.5rem] ${
-              index === parts.length - 1 ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-900'
+              index === parts.length - 1 ? 'bg-brand-600 text-white' : 'bg-slate-50 text-slate-900'
             }`}
           >
             <div

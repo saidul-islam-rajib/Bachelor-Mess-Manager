@@ -4,6 +4,8 @@ import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import MealPlanCard from '@/components/MealPlanCard';
 import MealPromptDispatch from '@/components/MealPromptDispatch';
+import { PageTitle } from '@/components/ui';
+import { strings } from '@/lib/i18n';
 import { daysInMonth, todayKey } from '@/lib/month';
 
 type Member = { id: string; name: string; email: string };
@@ -74,6 +76,7 @@ export default function MealsPage() {
   const [editWindow, setEditWindow] = useState<EditWindow | null>(null);
   const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
   const [windowBusy, setWindowBusy] = useState(false);
+  const [openDay, setOpenDay] = useState('');
 
   const days = useMemo(() => daysInMonth(month), [month]);
   const today = todayKey();
@@ -232,7 +235,8 @@ export default function MealsPage() {
   }, [pendingChanges]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
+    <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title={strings.meals.title} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Meals</h1>
         <p className="mt-1 text-slate-600">
@@ -299,26 +303,32 @@ export default function MealsPage() {
                     <li
                       key={date}
                       className={`rounded-2xl border bg-white p-4 shadow-sm ${
-                        date === today ? 'border-slate-900 ring-1 ring-slate-900' : 'border-slate-200'
+                        date === today ? 'border-brand-600 ring-1 ring-brand-500' : 'border-slate-200'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="font-semibold">
                             {dayLabel(date)}
-                            {date === today && <span className="ml-2 text-xs font-medium text-green-600">Today</span>}
+                            {date === today && (
+                              <span className="ml-2 text-xs font-medium text-green-600">{strings.meals.today}</span>
+                            )}
                           </p>
                           <p className="mt-0.5 text-xs text-slate-500">
-                            {info ? `${info.meals} meals` : '0 meals'}
-                            {info && info.perMealPrice ? ` · ${taka(info.perMealPrice)}/meal` : ''}
+                            {strings.meals.mealCount(info?.meals ?? 0)}
+                            {info && info.perMealPrice
+                              ? ` · ${strings.meals.perMealShort(taka(info.perMealPrice))}`
+                              : ''}
                           </p>
                         </div>
                         {awaiting ? (
                           <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs text-amber-700">
-                            Awaiting approval
+                            {strings.meals.awaitingApproval}
                           </span>
                         ) : !canEdit ? (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-500">Locked</span>
+                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-500">
+                            {strings.meals.locked}
+                          </span>
                         ) : null}
                       </div>
 
@@ -346,12 +356,66 @@ export default function MealsPage() {
                       </div>
 
                       {canEdit && needsApproval(user?.id ?? '', date) && (
-                        <p className="mt-2 text-xs text-amber-700">
-                          Changes to this day go to your supervisor for approval before they count.
-                        </p>
+                        <p className="mt-2 text-xs text-amber-700">{strings.meals.approvalNotice}</p>
                       )}
 
-                      {others.length > 0 && (
+                      {others.length > 0 && canManage && (
+                        <div className="mt-3 border-t border-slate-100 pt-3">
+                          <button
+                            type="button"
+                            onClick={() => setOpenDay((current) => (current === date ? '' : date))}
+                            aria-expanded={openDay === date}
+                            className="flex min-h-[2rem] w-full items-center justify-between gap-2 rounded-xl px-1 py-1.5 text-xs font-medium text-brand-700 transition-colors hover:bg-brand-50"
+                          >
+                            {openDay === date ? strings.meals.hideEveryone : strings.meals.everyoneOnDay(others.length)}
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className={`transition-transform ${openDay === date ? 'rotate-180' : ''}`}
+                            >
+                              <path d="m6 9 6 6 6-6" />
+                            </svg>
+                          </button>
+
+                          {openDay === date && (
+                            <ul className="mt-2 space-y-3">
+                              {others.map((m) => {
+                                const memberCell = cell(m.id, date);
+                                return (
+                                  <li key={m.id} className="rounded-xl bg-slate-50 p-3">
+                                    <p className="text-xs font-medium text-slate-700">{m.name}</p>
+                                    <div className="mt-2 grid grid-cols-3 gap-2">
+                                      {FIELDS.map((f) => (
+                                        <label key={f} className="block">
+                                          <span className="text-[11px] text-slate-500">{FIELD_LABELS[f]}</span>
+                                          <input
+                                            type="number"
+                                            min={0}
+                                            inputMode="numeric"
+                                            aria-label={`${m.name} ${FIELD_LABELS[f]}`}
+                                            value={memberCell[f] || 0}
+                                            onChange={(e) => setLocal(m.id, date, f, parseInt(e.target.value, 10))}
+                                            onBlur={() => saveDay(m.id, date)}
+                                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-center text-sm"
+                                          />
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+
+                      {others.length > 0 && !canManage && (
                         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3 text-xs text-slate-500">
                           {others.map((m) => {
                             const c = cell(m.id, date);
@@ -443,7 +507,7 @@ export default function MealsPage() {
                                           ? 'Past day'
                                           : undefined
                                     }
-                                    className={`w-14 rounded-lg border bg-white px-1 py-1.5 text-center focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 ${
+                                    className={`w-14 rounded-lg border bg-white px-1 py-1.5 text-center focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
                                       awaiting ? 'border-amber-400 bg-amber-50' : 'border-slate-300'
                                     }`}
                                   />
@@ -523,7 +587,7 @@ function EditWindowCard({
               checked={editWindow.open}
               disabled={busy}
               onChange={(e) => onToggle(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 disabled:opacity-50"
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
             />
             <span className="text-base font-semibold">Edit my past meals</span>
           </label>
@@ -591,7 +655,7 @@ function PendingApprovals({
               <button
                 type="button"
                 onClick={() => onDecide(change.id, 'APPROVED')}
-                className="rounded-full bg-slate-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700"
+                className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
               >
                 Approve
               </button>

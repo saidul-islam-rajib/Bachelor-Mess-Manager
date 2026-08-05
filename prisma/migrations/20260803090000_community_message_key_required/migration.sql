@@ -2,10 +2,10 @@ BEGIN TRY
 
 BEGIN TRAN;
 
--- DropConstraint: the unique index depends on the column being altered.
+-- DropConstraint
 ALTER TABLE [dbo].[CommunityMessage] DROP CONSTRAINT [CommunityMessage_key_key];
 
--- Backfill: every message needs its own idempotency key before the column can be required.
+-- Backfill
 UPDATE [dbo].[CommunityMessage] SET [key] = CONCAT(N'message:', LOWER(CONVERT(NVARCHAR(36), NEWID()))) WHERE [key] IS NULL;
 
 -- AlterTable

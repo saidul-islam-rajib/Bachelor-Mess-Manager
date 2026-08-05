@@ -37,7 +37,7 @@ Everyone in the group is notified.
 order, and takes the last `carryOut` per user. That ordering matters: it means a partial close on the 12th followed by
 a whole-group close on the 31st resolves correctly for both the person who left and the people who stayed.
 
-Carry-in is only read when `Group.carryForwardEnabled` is on (default true, toggled on the group page). An **open**
+Carry-in is only read when `Group.carryForwardEnabled` is on (default true, toggled in Members → Group settings). An **open**
 month never carries forward — only a closed one — otherwise the balance would be counted twice the moment it settles.
 
 ## Reopening

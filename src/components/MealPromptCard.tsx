@@ -97,8 +97,90 @@ export function MealPromptCard({
   const locked = busy || disabled;
   const answered = Boolean(prompt.answer);
 
+  if (compact) {
+    return (
+      <div className="rounded-3xl border border-brand-100 bg-brand-50/70 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 11h18" />
+                <path d="M5 11a7 7 0 0 1 14 0" />
+                <path d="M4 15h16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+              </svg>
+            </span>
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-base font-semibold text-slate-900">{strings.mealPrompt.cardTitle}</p>
+                {answered && <Badge tone="success">{ANSWER_LABELS[prompt.answer as string] ?? ''}</Badge>}
+              </div>
+              <p className="mt-0.5 text-sm text-slate-600">
+                {strings.mealPrompt.question(prompt.groupName, formatDay(prompt.date))}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-500">
+                {answered
+                  ? strings.mealPrompt.savedDetail(summarizeCounts(prompt.counts))
+                  : `${strings.mealPrompt.usualHint} ${summarizeCounts(prompt.planned)}.`}
+              </p>
+            </div>
+          </div>
+
+          {!choosing && (
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Button disabled={locked} onClick={() => onAnswer(MEAL_PROMPT_ANSWERS.YES)}>
+                {strings.mealPrompt.yes}
+              </Button>
+              <Button variant="secondary" disabled={locked} onClick={() => onAnswer(MEAL_PROMPT_ANSWERS.NO)}>
+                {strings.mealPrompt.no}
+              </Button>
+              <button
+                type="button"
+                disabled={locked}
+                onClick={() => setChoosing(true)}
+                className="rounded-full px-3 py-2 text-sm font-medium text-brand-700 underline-offset-2 hover:underline disabled:opacity-40"
+              >
+                {strings.mealPrompt.choose}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {choosing && (
+          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            {MEALS.map((meal) => (
+              <Stepper
+                key={meal.key}
+                label={meal.label}
+                value={draft[meal.key]}
+                disabled={locked}
+                onChange={(next) => setDraft((current) => ({ ...current, [meal.key]: next }))}
+              />
+            ))}
+
+            <div className="flex flex-wrap justify-end gap-2 sm:col-span-3">
+              <Button variant="secondary" disabled={locked} onClick={() => setChoosing(false)}>
+                {strings.common.cancel}
+              </Button>
+              <Button
+                loading={busy}
+                disabled={disabled}
+                onClick={async () => {
+                  await onAnswer(MEAL_PROMPT_ANSWERS.CUSTOM, draft);
+                  setChoosing(false);
+                }}
+              >
+                {strings.common.save}
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className={`rounded-3xl border border-slate-200 bg-white ${compact ? 'p-4' : 'p-5 sm:p-6'}`}>
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-base font-semibold text-slate-900">{strings.mealPrompt.cardTitle}</p>

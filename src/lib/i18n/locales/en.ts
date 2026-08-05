@@ -47,17 +47,19 @@ const en = {
     dismiss: 'Dismiss notification',
     retry: 'Try again',
     of: 'of',
-    perPage: 'Per page'
+    perPage: 'Per page',
+    selected: 'Selected',
+    skipToContent: 'Skip to main content',
+    viewImage: 'View full image',
+    viewImageHint: 'Tap outside the image to close it.'
   },
   nav: {
     dashboard: 'Dashboard',
-    groups: 'Groups',
     meals: 'Meals',
     bazar: 'Bazar',
     bills: 'Bills',
     payments: 'Payments',
     members: 'Members',
-    comments: 'Comments',
     admin: 'Admin',
     community: 'Community',
     guide: 'Guide',
@@ -65,7 +67,8 @@ const en = {
     login: 'Login',
     register: 'Register',
     logout: 'Log out',
-    toggleMenu: 'Toggle menu'
+    toggleMenu: 'Toggle menu',
+    sectionMess: 'Your mess'
   },
   auth: {
     login: {
@@ -134,6 +137,7 @@ const en = {
     submitted: 'Request sent. An administrator will review it.',
     autoApproved: (role: string) => `You are now a ${role.toLowerCase()}. Sign in again to use the new permissions.`,
     pending: 'Your request is waiting for a decision.',
+    pendingBadge: 'Pending',
     cancel: 'Cancel request',
     cancelled: 'Request cancelled.',
     approve: 'Approve',
@@ -207,7 +211,19 @@ const en = {
     notGroupMember: 'You are not a member of this group.',
     loadFailed: (what: string) => `Could not load ${what}.`,
     saveFailed: (what: string) => `Could not save ${what}.`,
-    deleteFailed: (what: string) => `Could not delete ${what}.`
+    deleteFailed: (what: string) => `Could not delete ${what}.`,
+    page: {
+      notFoundTitle: 'This page does not exist',
+      notFoundBody:
+        'The link may be out of date, or the page may have been moved. Nothing is broken — pick a place to go from here.',
+      serverTitle: 'Something went wrong on our side',
+      serverBody:
+        'The page could not be loaded. This one is on us, not you. Try again in a moment, and if it keeps happening let your admin know.',
+      goDashboard: 'Go to dashboard',
+      goHome: 'Back to home',
+      goGuide: 'Read the guide',
+      tryAgain: 'Try again'
+    }
   },
   success: {
     saved: 'Saved.',
@@ -244,6 +260,25 @@ const en = {
     empty: 'No records'
   },
   dashboard: {
+    quickActions: 'Quick actions',
+    quickActionsHint: 'The things you do most, one tap away.',
+    actions: {
+      logBazar: 'Log bazar',
+      logBazarHint: 'Add what was bought today',
+      logBazarOwnHint: 'Groceries you bought',
+      enterMeals: 'Enter meals',
+      enterMealsHint: 'Tick who is eating',
+      enterOwnMeals: 'Enter my meals',
+      enterOwnMealsHint: 'Today and upcoming days',
+      recordPayment: 'Record a payment',
+      recordPaymentHint: 'Cash received from a member',
+      ownPayments: 'My payments',
+      ownPaymentsHint: 'What you have paid so far',
+      inviteMember: 'Invite a member',
+      inviteMemberHint: 'Add someone to the mess',
+      messComments: 'Mess comments',
+      messCommentsHint: 'Talk to your mess'
+    },
     title: 'Dashboard',
     signedInAs: (name: string, role: string) => `Signed in as ${name} (${role})`,
     subtitle: 'Your mess at a glance.',
@@ -334,11 +369,58 @@ const en = {
     activated: (name: string) => `"${name}" is active again.`,
     deactivated: (name: string) => `"${name}" is now inactive.`,
     statusUpdateFailed: 'Could not update the group status.',
-    onlySupervisorOrAdmin: 'Only this group\'s supervisor or an admin can update it.'
+    onlySupervisorOrAdmin: 'Only this group\'s supervisor or an admin can update it.',
+    yourGroups: 'Your groups',
+    yourGroupsHint: 'Every mess you supervise or belong to. The order here is the order they appear in every group picker.',
+    created: (name: string) => `Group "${name}" created.`,
+    createFailed: 'Could not create group.',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    mealWeightsTitle: 'Meal weights',
+    mealWeightsHint: 'How much each meal counts toward the cost split (e.g. breakfast 0.5, lunch 1, dinner 1).',
+    mealWeightsSaved: 'Meal weights updated.',
+    mealWeightsFailed: 'Could not save meal weights.',
+    costRulesTitle: 'How costs are worked out',
+    costRulesHint:
+      'These two settings decide how the meal rate is priced and what happens to unpaid balances at month end.',
+    rateLabel: 'Meal rate',
+    rateMonthly: 'One rate for the month (total bazar ÷ total meals)',
+    rateDaily: 'A rate for each day (that day\'s bazar ÷ that day\'s meals)',
+    rateMonthlyHint:
+      'One monthly rate is the simplest to explain and evens out days when bazar was unusually cheap or expensive.',
+    rateDailyHint:
+      'Day-wise pricing charges people for what was actually bought on the days they ate. Bazar bought on a day nobody ate is shared across the month, so nothing goes uncharged.',
+    rateSaved: 'Meal rate updated.',
+    carryLabel: 'Carry unpaid balances into the next month',
+    carryHint:
+      'When you close a month, whatever someone still owes (or is owed) opens the next month as their brought forward balance instead of being written off.',
+    carrySaved: 'Carry-forward updated.',
+    settingFailed: 'Could not save that setting.'
   },
   members: {
     title: 'Members',
-    subtitle: 'Who is in the mess now, who has left, and how long everyone has stayed.',
+    subtitle: 'Who is in the mess now, who runs it, and everything about the mess itself.',
+    groupLabel: 'Group',
+    showClosed: 'Show closed',
+    noGroups: 'You are not part of any mess yet.',
+    supervisedBy: (name: string, email: string) => `Supervisor: ${name} (${email})`,
+    tabs: {
+      roster: 'Roster',
+      invites: 'Invitations',
+      settings: 'Group settings',
+      groups: 'Your groups'
+    },
+    inviteTitle: 'Invite a member',
+    inviteHint: 'Enter the email of an approved user. They get an invitation to accept.',
+    invite: 'Invite',
+    inviting: 'Sending...',
+    pendingInvites: 'Pending invitations',
+    noPendingInvites: 'No invitations are waiting for an answer.',
+    inviteFailed: 'Could not send invitation.',
+    cancelInviteFailed: 'Could not cancel invitation.',
+    loadFailed: 'Could not load members.',
+    updateFailed: 'Could not update the member.',
+    leaveFailed: 'Could not leave the group.',
     current: 'Current members',
     past: 'Past members',
     pastHint: 'Their meals and costs stay on record for the months they were here.',
@@ -381,8 +463,13 @@ const en = {
     none: 'No pending invitations',
     noneHint: 'When a supervisor invites you to a mess, it shows up here and in the bell at the top.',
     pendingBadge: (count: number) => `${count} pending`,
+    pending: 'Pending',
     accept: 'Accept',
     decline: 'Decline',
+    invitedYouToJoin: 'invited you to join',
+    joinedGroup: (group: string) => `You joined "${group}".`,
+    declinedGroup: (group: string) => `Invitation to "${group}" declined.`,
+    updateFailed: 'Could not update invitation.',
     sent: (name: string) => `Invitation sent to ${name}.`,
     resent: (name: string) => `Invitation to ${name} was re-sent.`,
     accepted: 'Invitation accepted.',
@@ -408,7 +495,16 @@ const en = {
     ownOnly: 'You can only edit your own meals.',
     notAMember: 'That user is not a member of this group.',
     perMealPrice: 'Per meal price',
-    totalMeals: 'Total meals'
+    totalMeals: 'Total meals',
+    today: 'Today',
+    locked: 'Locked',
+    awaitingApproval: 'Awaiting approval',
+    mealCount: (count: number) => `${count} meal${count === 1 ? '' : 's'}`,
+    perMealShort: (price: string) => `${price}/meal`,
+    approvalNotice: 'Changes to this day go to your supervisor for approval before they count.',
+    everyoneOnDay: (count: number) => `Everyone else (${count})`,
+    hideEveryone: 'Hide everyone else',
+    editingFor: (name: string) => `Editing ${name}`
   },
   expenses: {
     title: 'Groceries (Bazar)',
@@ -506,10 +602,30 @@ const en = {
     countSummary: (count: number, total: string) => `${count} payments · ${total}`
   },
   comments: {
-    title: 'Comments',
+    title: 'Mess comments',
+    subtitle:
+      "Only your mess can read this. Anyone in it can post and reply, and mention someone with @. Once posted, a comment can't be edited — only the supervisor can remove it.",
+    sectionDescription: "Private to this mess. Post, reply, and mention someone with @.",
+    composeHeading: 'Say something',
+    threadHeading: 'Thread',
+    noGroup: "You're not part of any group yet.",
     placeholder: 'Write a message for your mess...',
     replyPlaceholder: 'Write a reply...',
     post: 'Post',
+    postComment: 'Post comment',
+    posting: 'Posting...',
+    sendReply: 'Send reply',
+    sending: 'Sending...',
+    deleteComment: 'Delete comment',
+    deleteReply: 'Delete reply',
+    posted: 'Comment posted.',
+    replyPosted: 'Reply posted.',
+    commentDeleted: 'Comment deleted.',
+    replyDeleted: 'Reply deleted.',
+    postFailed: 'Could not post.',
+    replyFailed: 'Could not reply.',
+    deleteFailed: 'Could not delete.',
+    loadFailed: 'Could not load comments.',
     reply: 'Reply',
     replies: (count: number) => `${count} ${count === 1 ? 'reply' : 'replies'}`,
     mentionHint: 'Type @ to mention someone, or @everyone to notify the whole mess.',
@@ -532,17 +648,36 @@ const en = {
       MENTION_EXPENSE_COMMENT: 'mentioned you in a bazar note',
       MENTION_COMMUNITY: 'mentioned you in the community'
     },
-    inGroup: 'in'
+    inGroup: 'in',
+    title: 'Notifications',
+    subtitle: 'Everything the mess has told you, newest first.',
+    panelTitle: 'Notifications',
+    newCount: (count: number) => `${count} new`,
+    markAllRead: 'Mark all read',
+    allRead: 'Everything is read.',
+    caughtUp: "You're all caught up",
+    caughtUpHint: 'Invitations and mentions will show up here.',
+    seeAll: 'See all notifications',
+    filterAll: 'All',
+    filterUnread: 'Unread',
+    emptyAll: 'Nothing here yet. Mentions, meal asks and decisions land here.',
+    emptyUnread: 'Nothing unread. Switch to All to see the older ones.',
+    pendingInvitations: (count: number) =>
+      `${count} pending invitation${count === 1 ? '' : 's'} — open the bell or your profile to respond.`
   },
   community: {
     title: 'Community',
-    subtitle: (app: string) => `One room for everyone on ${app}. Ask a question, share news, welcome new faces.`,
+    subtitle: (app: string) =>
+      `Everyone on ${app} can read this, not just your mess. Ask a question, share news, welcome new faces.`,
+    elsewhere: 'Looking for the thread only your mess can read?',
+    elsewhereLink: 'Open mess comments',
     placeholder: 'Write something for everyone...',
     send: 'Send',
     sending: 'Sending...',
     empty: 'No messages yet. Be the first to say hello.',
     loadOlder: 'Load older messages',
     loadingOlder: 'Loading...',
+    readMore: 'Read more',
     newMessages: (count: number) => `${count} new message${count === 1 ? '' : 's'}`,
     jumpToLatest: 'Jump to latest',
     markAllRead: 'Mark all as read',
@@ -800,9 +935,13 @@ const en = {
       primary: 'Create your account',
       secondary: 'Sign in',
       dashboard: 'Go to dashboard',
-      groups: 'View your groups',
+      groups: 'Your mess',
       signedInAs: (name: string) => `You are signed in as ${name}.`,
       note: 'Free to use. Register with your email and set a password from the link we send you.',
+      gatedTitle: 'That page is inside a mess',
+      gatedBody:
+        'The link you followed belongs to a private mess, so it needs a sign-in. Sign in and we will take you straight there.',
+      gatedAction: 'Sign in and continue',
       previewLabel: 'Preview of the member dashboard showing meals, meal rate and dues for the month',
       highlights: ['Fair, meal-based split', 'Bills divided automatically', 'Works on any phone']
     },
@@ -908,20 +1047,94 @@ const en = {
         }
       ]
     },
-    roles: {
-      title: 'Three kinds of people use it',
+    roleGuide: {
+      title: 'What you will actually be doing',
+      subtitle:
+        'Every mess has one supervisor and everyone else is a member. Pick the hat you will wear and see the job in full.',
+      dailyLabel: 'Your day to day',
+      limitLabel: 'What you cannot do',
       items: [
         {
           role: 'MEMBER',
-          body: 'Records their own meals, sees what the month is costing them, and knows exactly what is still due.'
+          tagline: 'You eat, you log it, you pay your share. That is the whole job.',
+          minutes: 'About 10 seconds a day',
+          does: [
+            'Tick the meals you ate — or set a meal plan once and let it fill your week in for you.',
+            'Answer the daily "are you eating tomorrow?" message with one tap from your phone. No sign-in needed.',
+            'Record the bazar when it is your turn to shop. What you spend is credited against what you owe, straight away.',
+            'Watch your due update live as the month goes on. No waiting until the 30th to find out.',
+            'Ask a question in mess comments and pull someone in with @.'
+          ],
+          cannot:
+            'You cannot record bills, take payments, or close a month — those belong to your supervisor. Editing a day that has already passed sends a request for them to approve.'
         },
         {
           role: 'SUPERVISOR',
-          body: 'Runs one or more messes: invites members, records bills, confirms payments and publishes the monthly report.'
+          tagline: 'You run the mess. The app does the arithmetic and the chasing.',
+          minutes: 'A few minutes a week',
+          does: [
+            'Create the mess and invite members by email. People can join, leave and rejoin — the history is kept.',
+            'Record rent, electricity, water, Wi-Fi and the cook. Split them evenly or name exact amounts per person.',
+            'Choose how the meal rate is worked out and what a breakfast is worth against a dinner.',
+            'Mark cash as it comes in. Everyone sees their balance move the moment you do.',
+            'Approve or decline a member’s past-meal change, and log meals for anyone who forgot.',
+            'Close the month. Anything unpaid carries forward into the next one instead of quietly vanishing.'
+          ],
+          cannot:
+            'You cannot see another mess, approve new sign-ups to the site, or change anyone’s account role. That is the admin’s job.'
         },
         {
           role: 'ADMIN',
-          body: 'Approves new registrations, manages users and groups, and looks after site settings and security.'
+          tagline: 'You look after the site, not the cooking.',
+          minutes: 'Only when something needs a decision',
+          does: [
+            'Approve new registrations before anyone can sign in.',
+            'Grant or withdraw supervisor access when someone asks for it.',
+            'Set how long a past-meal unlock stays open before it re-locks itself.',
+            'Watch failed sign-ins and released lock-outs.',
+            'Look after site-wide settings and keep an eye on every mess.'
+          ],
+          cannot:
+            'Nothing is off limits, but the day-to-day of a mess is deliberately left to the people living in it.'
+        }
+      ]
+    },
+    faq: {
+      title: 'The questions everyone asks first',
+      subtitle: 'The short answers. The guide has the long ones.',
+      more: 'Read the full guide',
+      illustrationLabel:
+        'Three housemates sharing a pot of food at a table, beside a phone showing the meal sheet and a settled receipt',
+      items: [
+        {
+          question: 'Does it cost anything?',
+          answer:
+            'No. Register with your email, set a password from the link we send you, and start using it. There is no paid tier and no card to enter.'
+        },
+        {
+          question: 'I was away for two weeks. Am I still charged for food?',
+          answer:
+            'No. You only pay for meals you actually logged. Bills like rent and Wi-Fi are a separate matter — those are usually split across everyone, because the flat is still yours while you are away.'
+        },
+        {
+          question: 'I bought the groceries. Do I get that money back?',
+          answer:
+            'It is credited against what you owe the moment it is recorded. Spend more than your share and your due goes negative, which shows as a refund the mess owes you.'
+        },
+        {
+          question: 'Can the supervisor change my meals without telling me?',
+          answer:
+            'No. Any change to a day that has already passed notifies every member of the mess, in the app and by email, naming the day and exactly what changed.'
+        },
+        {
+          question: 'Do I need to install anything?',
+          answer:
+            'No. It runs in the browser on any phone or laptop. If you want it to feel like a real app, you can add it to your home screen in two taps and it opens without the address bar.'
+        },
+        {
+          question: 'Who can see my mess’s numbers?',
+          answer:
+            'Only the people in it. Meals, bazar, bills and balances are visible to that mess and nobody else — not other messes, and not other users of the site.'
         }
       ]
     },
@@ -955,11 +1168,23 @@ const en = {
   footer: {
     newsletter: 'Newsletter',
     newsletterHint: 'Get occasional updates. No spam.',
+    newsletterFrom: (app: string) => `Get updates from ${app}.`,
     subscribe: 'Subscribe',
+    subscribing: 'Subscribing...',
+    unsubscribe: 'Unsubscribe',
+    unsubscribing: 'Unsubscribing...',
     subscribed: 'Thanks for subscribing.',
+    unsubscribed: 'You have been unsubscribed.',
     alreadySubscribed: 'That email is already subscribed.',
+    subscribedAs: (email: string) => `Subscribed as ${email}.`,
+    willUseAccountEmail: (email: string) => `We will use ${email}, the address on your account.`,
+    emailLabel: 'Email for newsletter',
+    emailRequired: 'A valid email address is required.',
     emailPlaceholder: 'you@example.com',
+    subscribeFailed: 'Could not update your subscription.',
+    unsubscribeSignedInOnly: 'Sign in to manage your subscription.',
     builtBy: (author: string) => `Built by ${author}`,
+    builtByLabel: 'Built by',
     rights: 'All rights reserved.',
     licensed: (license: string) => `Released under the ${license} License.`
   },

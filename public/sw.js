@@ -1,4 +1,4 @@
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = `bp-shell-${VERSION}`;
 const ASSET_CACHE = `bp-assets-${VERSION}`;
 const PAGE_CACHE = `bp-pages-${VERSION}`;
@@ -45,7 +45,13 @@ self.addEventListener('message', (event) => {
   }
 });
 
+function isBuildUpdate(url) {
+  return url.pathname.startsWith('/_next/static/webpack/') || url.pathname.includes('hot-update');
+}
+
 function isImmutableAsset(url) {
+  if (isBuildUpdate(url)) return false;
+
   return (
     url.pathname.startsWith('/_next/static/') ||
     url.pathname.startsWith('/icons/') ||

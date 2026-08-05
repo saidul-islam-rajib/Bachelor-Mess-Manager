@@ -36,6 +36,7 @@ const BROWSER_ENV_KEYS = [
   'APP_AUTHOR_EMAIL',
   'APP_AUTHOR_ROLE',
   'APP_AUTHOR_URL',
+  'APP_AUTHOR_PROFILE_URL',
   'APP_LICENSE',
   'APP_COPYRIGHT_START_YEAR',
   'PASSWORD_MIN_LENGTH',
@@ -83,6 +84,12 @@ const nextConfig = {
   compiler: {
     styledComponents: false,
     removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false
+  },
+  async redirects() {
+    return [
+      { source: '/groups', destination: '/members', permanent: true },
+      { source: '/groups/:groupId', destination: '/members?group=:groupId', permanent: true }
+    ];
   },
   async headers() {
     const headers = [...securityHeaders];

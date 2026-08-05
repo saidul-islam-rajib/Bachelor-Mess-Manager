@@ -1,6 +1,7 @@
 import {
   APP_DEFAULTS,
   AUTHOR,
+  CACHE_DEFAULTS,
   COMMUNITY_DEFAULTS,
   GROUP_DEFAULTS,
   MEAL_PROMPT_DEFAULTS,
@@ -26,6 +27,7 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   APP_AUTHOR_EMAIL: process.env.APP_AUTHOR_EMAIL,
   APP_AUTHOR_ROLE: process.env.APP_AUTHOR_ROLE,
   APP_AUTHOR_URL: process.env.APP_AUTHOR_URL,
+  APP_AUTHOR_PROFILE_URL: process.env.APP_AUTHOR_PROFILE_URL,
   APP_LICENSE: process.env.APP_LICENSE,
   APP_COPYRIGHT_START_YEAR: process.env.APP_COPYRIGHT_START_YEAR,
   PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
@@ -114,7 +116,8 @@ export const authorConfig = {
   role: readString('APP_AUTHOR_ROLE', AUTHOR.role),
   license: readString('APP_LICENSE', AUTHOR.license),
   copyrightStartYear: readInt('APP_COPYRIGHT_START_YEAR', AUTHOR.copyrightStartYear),
-  url: readString('APP_AUTHOR_URL', AUTHOR.url)
+  url: readString('APP_AUTHOR_URL', AUTHOR.url),
+  profileUrl: readString('APP_AUTHOR_PROFILE_URL', AUTHOR.profileUrl)
 } as const;
 
 export const sessionConfig = {
@@ -204,6 +207,11 @@ export const uiConfig = {
   searchDebounceMs: readInt('UI_SEARCH_DEBOUNCE_MS', UI_DEFAULTS.searchDebounceMs),
   monthsBack: readInt('UI_MONTHS_BACK', UI_DEFAULTS.monthsBack),
   monthsForward: readInt('UI_MONTHS_FORWARD', UI_DEFAULTS.monthsForward, 0)
+} as const;
+
+export const cacheConfig = {
+  siteSettingsMs: readInt('CACHE_SITE_SETTINGS_MS', CACHE_DEFAULTS.siteSettingsMs, 0),
+  groupListMs: readInt('CACHE_GROUP_LIST_MS', CACHE_DEFAULTS.groupListMs, 0)
 } as const;
 
 export const communityConfig = {

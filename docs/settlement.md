@@ -110,7 +110,7 @@ shopping, and it is subtracted in the balances table.
 
 ## The two rate modes
 
-Set per group on the group page (`Group.mealRateMode`).
+Set per group in Members → Group settings (`Group.mealRateMode`).
 
 | Mode | Rate | Good for |
 | --- | --- | --- |

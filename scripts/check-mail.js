@@ -41,9 +41,7 @@ function probe() {
       clearTimeout(timer);
       try {
         socket.destroy();
-      } catch {
-        /* already closed */
-      }
+      } catch {}
       resolve({ ...result, log });
     };
 

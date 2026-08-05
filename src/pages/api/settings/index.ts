@@ -3,16 +3,21 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { invalidateSecurityPolicyCache } from '@/lib/settings-service';
+import { cached, invalidate } from '@/lib/cache';
+import { cacheConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
 const SETTINGS_ID = 'singleton';
+const SETTINGS_CACHE_KEY = 'site-settings';
 
 async function getSettings() {
-  return prisma.siteSettings.upsert({
-    where: { id: SETTINGS_ID },
-    update: {},
-    create: { id: SETTINGS_ID }
-  });
+  return cached(SETTINGS_CACHE_KEY, cacheConfig.siteSettingsMs, () =>
+    prisma.siteSettings.upsert({
+      where: { id: SETTINGS_ID },
+      update: {},
+      create: { id: SETTINGS_ID }
+    })
+  );
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -86,6 +91,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     invalidateSecurityPolicyCache();
+    invalidate(SETTINGS_CACHE_KEY);
 
     return ok(res, { settings });
   }
