@@ -2,11 +2,10 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
-import { listLockedAccounts, listRecentFailures, unlockAccount } from '@/lib/login-attempts';
+import { listLockedAccounts, unlockAccount } from '@/lib/login-attempts';
 import { getSiteSettings, invalidateSecurityPolicyCache } from '@/lib/settings-service';
 import { prisma } from '@/lib/prisma';
 import { SETTINGS_SINGLETON_ID } from '@/lib/constants';
-import { paginationConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import { normalizeEmail } from '@/lib/validation';
 import { withAudit } from '@/lib/with-audit';
@@ -30,11 +29,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'GET') {
-    const [settings, lockedAccounts, recentFailures] = await Promise.all([
-      getSiteSettings(),
-      listLockedAccounts(),
-      listRecentFailures(paginationConfig.pageSize)
-    ]);
+    const [settings, lockedAccounts] = await Promise.all([getSiteSettings(), listLockedAccounts()]);
 
     return ok(res, {
       policy: {
@@ -46,8 +41,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         registrationWindowMinutes: settings.registrationWindowMinutes,
         requireStrongPasswords: settings.requireStrongPasswords
       },
-      lockedAccounts,
-      recentFailures
+      lockedAccounts
     });
   }
 

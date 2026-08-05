@@ -21,6 +21,18 @@ export function daysInMonth(monthKey?: string): string[] {
   return days;
 }
 
+export function previousMonthKey(monthKey?: string): string {
+  const { year, month } = parseMonth(monthKey);
+  const d = new Date(Date.UTC(year, month - 2, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
+export function nextMonthKey(monthKey?: string): string {
+  const { year, month } = parseMonth(monthKey);
+  const d = new Date(Date.UTC(year, month, 1));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
 export function dayToUtcDate(dayKey: string): Date {
   return new Date(`${dayKey}T00:00:00.000Z`);
 }

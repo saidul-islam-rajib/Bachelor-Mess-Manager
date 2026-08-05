@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
+import { strings } from '@/lib/i18n';
 
 export type Invitation = {
   id: string;
@@ -19,6 +20,8 @@ type InvitationsContextValue = {
   refresh: () => Promise<void>;
   respond: (invitation: Invitation, status: InvitationStatus) => Promise<void>;
 };
+
+const POLL_MS = 60_000;
 
 const InvitationsContext = createContext<InvitationsContextValue | null>(null);
 
@@ -59,6 +62,19 @@ export function InvitationsProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    if (!user) return;
+
+    const timer = setInterval(refresh, POLL_MS);
+    const onFocus = () => refresh();
+
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [user, refresh]);
+
   const respond = useCallback(
     async (invitation: Invitation, status: InvitationStatus) => {
       setBusyId(invitation.id);
@@ -69,13 +85,13 @@ export function InvitationsProvider({ children }: { children: ReactNode }) {
           body: JSON.stringify({ status })
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.error ?? 'Could not update invitation.');
+        if (!res.ok) throw new Error(data?.error ?? strings.invitations.updateFailed);
 
         setInvitations((prev) => prev.filter((i) => i.id !== invitation.id));
         toast.success(
           status === 'ACCEPTED'
-            ? `You joined "${invitation.group.name}".`
-            : `Invitation to "${invitation.group.name}" declined.`
+            ? strings.invitations.joinedGroup(invitation.group.name)
+            : strings.invitations.declinedGroup(invitation.group.name)
         );
         refreshUser();
       } catch (err) {

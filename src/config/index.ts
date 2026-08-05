@@ -1,7 +1,10 @@
 import {
   APP_DEFAULTS,
   AUTHOR,
+  CACHE_DEFAULTS,
+  COMMUNITY_DEFAULTS,
   GROUP_DEFAULTS,
+  MEAL_PROMPT_DEFAULTS,
   PAGINATION_DEFAULTS,
   PASSWORD_DEFAULTS,
   SECURITY_DEFAULTS,
@@ -12,19 +15,72 @@ import {
   VALIDATION_DEFAULTS
 } from '@/config/defaults';
 
+const BROWSER_ENV: Record<string, string | undefined> = {
+  APP_NAME: process.env.APP_NAME,
+  APP_TAGLINE: process.env.APP_TAGLINE,
+  APP_LOCALE: process.env.APP_LOCALE,
+  APP_CURRENCY_CODE: process.env.APP_CURRENCY_CODE,
+  APP_CURRENCY_SYMBOL: process.env.APP_CURRENCY_SYMBOL,
+  APP_DATE_LOCALE: process.env.APP_DATE_LOCALE,
+  APP_TIME_ZONE: process.env.APP_TIME_ZONE,
+  APP_AUTHOR_NAME: process.env.APP_AUTHOR_NAME,
+  APP_AUTHOR_EMAIL: process.env.APP_AUTHOR_EMAIL,
+  APP_AUTHOR_ROLE: process.env.APP_AUTHOR_ROLE,
+  APP_AUTHOR_URL: process.env.APP_AUTHOR_URL,
+  APP_AUTHOR_PROFILE_URL: process.env.APP_AUTHOR_PROFILE_URL,
+  APP_LICENSE: process.env.APP_LICENSE,
+  APP_COPYRIGHT_START_YEAR: process.env.APP_COPYRIGHT_START_YEAR,
+  PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH: process.env.PASSWORD_MAX_LENGTH,
+  GROUP_MAX_PER_SUPERVISOR: process.env.GROUP_MAX_PER_SUPERVISOR,
+  GROUP_MAX_NAME_LENGTH: process.env.GROUP_MAX_NAME_LENGTH,
+  GROUP_MEAL_WEIGHT_BREAKFAST: process.env.GROUP_MEAL_WEIGHT_BREAKFAST,
+  GROUP_MEAL_WEIGHT_LUNCH: process.env.GROUP_MEAL_WEIGHT_LUNCH,
+  GROUP_MEAL_WEIGHT_DINNER: process.env.GROUP_MEAL_WEIGHT_DINNER,
+  VALIDATION_NAME_MIN_LENGTH: process.env.VALIDATION_NAME_MIN_LENGTH,
+  VALIDATION_NAME_MAX_LENGTH: process.env.VALIDATION_NAME_MAX_LENGTH,
+  VALIDATION_EMAIL_MAX_LENGTH: process.env.VALIDATION_EMAIL_MAX_LENGTH,
+  VALIDATION_PHONE_MIN_DIGITS: process.env.VALIDATION_PHONE_MIN_DIGITS,
+  VALIDATION_PHONE_MAX_DIGITS: process.env.VALIDATION_PHONE_MAX_DIGITS,
+  VALIDATION_NOTE_MAX_LENGTH: process.env.VALIDATION_NOTE_MAX_LENGTH,
+  VALIDATION_COMMENT_MAX_LENGTH: process.env.VALIDATION_COMMENT_MAX_LENGTH,
+  VALIDATION_MAX_MONEY_AMOUNT: process.env.VALIDATION_MAX_MONEY_AMOUNT,
+  UPLOAD_MAX_IMAGE_BYTES: process.env.UPLOAD_MAX_IMAGE_BYTES,
+  PAGINATION_PAGE_SIZE: process.env.PAGINATION_PAGE_SIZE,
+  PAGINATION_MAX_PAGE_SIZE: process.env.PAGINATION_MAX_PAGE_SIZE,
+  UI_TOAST_DURATION_MS: process.env.UI_TOAST_DURATION_MS,
+  UI_TOAST_DEDUPE_WINDOW_MS: process.env.UI_TOAST_DEDUPE_WINDOW_MS,
+  UI_SEARCH_DEBOUNCE_MS: process.env.UI_SEARCH_DEBOUNCE_MS,
+  UI_MONTHS_BACK: process.env.UI_MONTHS_BACK,
+  UI_MONTHS_FORWARD: process.env.UI_MONTHS_FORWARD,
+  COMMUNITY_PAGE_SIZE: process.env.COMMUNITY_PAGE_SIZE,
+  COMMUNITY_MESSAGE_MAX_LENGTH: process.env.COMMUNITY_MESSAGE_MAX_LENGTH,
+  COMMUNITY_POLL_INTERVAL_MS: process.env.COMMUNITY_POLL_INTERVAL_MS,
+  MEAL_PROMPT_DEFAULT_BREAKFAST: process.env.MEAL_PROMPT_DEFAULT_BREAKFAST,
+  MEAL_PROMPT_DEFAULT_LUNCH: process.env.MEAL_PROMPT_DEFAULT_LUNCH,
+  MEAL_PROMPT_DEFAULT_DINNER: process.env.MEAL_PROMPT_DEFAULT_DINNER,
+  MEAL_PROMPT_MAX_COUNT: process.env.MEAL_PROMPT_MAX_COUNT
+};
+
+function readRaw(key: string): string | undefined {
+  const direct = process.env[key];
+  if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+  const inlined = BROWSER_ENV[key];
+  return typeof inlined === 'string' && inlined.trim() ? inlined.trim() : undefined;
+}
+
 function readString(key: string, fallback: string): string {
-  const value = process.env[key];
-  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+  return readRaw(key) ?? fallback;
 }
 
 function readOptionalString(key: string): string | null {
-  const value = process.env[key];
-  return typeof value === 'string' && value.trim() ? value.trim() : null;
+  return readRaw(key) ?? null;
 }
 
 function readNumber(key: string, fallback: number): number {
-  const raw = process.env[key];
-  if (raw === undefined || raw.trim() === '') return fallback;
+  const raw = readRaw(key);
+  if (raw === undefined) return fallback;
   const value = Number(raw);
   return Number.isFinite(value) ? value : fallback;
 }
@@ -35,9 +91,9 @@ function readInt(key: string, fallback: number, min = 1): number {
 }
 
 function readBoolean(key: string, fallback: boolean): boolean {
-  const raw = process.env[key];
-  if (raw === undefined || raw.trim() === '') return fallback;
-  return ['1', 'true', 'yes', 'on'].includes(raw.trim().toLowerCase());
+  const raw = readRaw(key);
+  if (raw === undefined) return fallback;
+  return ['1', 'true', 'yes', 'on'].includes(raw.toLowerCase());
 }
 
 export const nodeEnv = readString('NODE_ENV', 'development');
@@ -59,12 +115,16 @@ export const authorConfig = {
   email: readString('APP_AUTHOR_EMAIL', AUTHOR.email),
   role: readString('APP_AUTHOR_ROLE', AUTHOR.role),
   license: readString('APP_LICENSE', AUTHOR.license),
-  copyrightStartYear: readInt('APP_COPYRIGHT_START_YEAR', AUTHOR.copyrightStartYear)
+  copyrightStartYear: readInt('APP_COPYRIGHT_START_YEAR', AUTHOR.copyrightStartYear),
+  url: readString('APP_AUTHOR_URL', AUTHOR.url),
+  profileUrl: readString('APP_AUTHOR_PROFILE_URL', AUTHOR.profileUrl)
 } as const;
 
 export const sessionConfig = {
   cookieName: readString('SESSION_COOKIE_NAME', SESSION_DEFAULTS.cookieName),
   legacyCookieName: SESSION_DEFAULTS.legacyCookieName,
+  impersonationCookieName: SESSION_DEFAULTS.impersonationCookieName,
+  impersonationMaxAgeSeconds: readInt('IMPERSONATION_MAX_AGE_SECONDS', SESSION_DEFAULTS.impersonationMaxAgeSeconds),
   maxAgeSeconds: readInt('SESSION_MAX_AGE_SECONDS', SESSION_DEFAULTS.maxAgeSeconds),
   refreshAfterSeconds: readInt('SESSION_REFRESH_AFTER_SECONDS', SESSION_DEFAULTS.refreshAfterSeconds),
   minSecretLength: SESSION_DEFAULTS.minSecretLength,
@@ -149,6 +209,34 @@ export const uiConfig = {
   monthsForward: readInt('UI_MONTHS_FORWARD', UI_DEFAULTS.monthsForward, 0)
 } as const;
 
+export const cacheConfig = {
+  siteSettingsMs: readInt('CACHE_SITE_SETTINGS_MS', CACHE_DEFAULTS.siteSettingsMs, 0),
+  groupListMs: readInt('CACHE_GROUP_LIST_MS', CACHE_DEFAULTS.groupListMs, 0)
+} as const;
+
+export const communityConfig = {
+  pageSize: readInt('COMMUNITY_PAGE_SIZE', COMMUNITY_DEFAULTS.pageSize),
+  maxMessageLength: readInt('COMMUNITY_MESSAGE_MAX_LENGTH', COMMUNITY_DEFAULTS.maxMessageLength),
+  pollIntervalMs: readInt('COMMUNITY_POLL_INTERVAL_MS', COMMUNITY_DEFAULTS.pollIntervalMs),
+  directorySize: readInt('COMMUNITY_DIRECTORY_SIZE', COMMUNITY_DEFAULTS.directorySize),
+  mentionRecipientCap: readInt('COMMUNITY_MENTION_CAP', COMMUNITY_DEFAULTS.mentionRecipientCap),
+  everyoneRecipientCap: readInt('COMMUNITY_EVERYONE_CAP', COMMUNITY_DEFAULTS.everyoneRecipientCap)
+} as const;
+
+export const mealPromptConfig = {
+  tokenBytes: readInt('MEAL_PROMPT_TOKEN_BYTES', MEAL_PROMPT_DEFAULTS.tokenBytes, 16),
+  validHours: readInt('MEAL_PROMPT_VALID_HOURS', MEAL_PROMPT_DEFAULTS.validHours),
+  leadDays: readInt('MEAL_PROMPT_LEAD_DAYS', MEAL_PROMPT_DEFAULTS.leadDays, 0),
+  defaultCounts: {
+    breakfast: readInt('MEAL_PROMPT_DEFAULT_BREAKFAST', MEAL_PROMPT_DEFAULTS.breakfast, 0),
+    lunch: readInt('MEAL_PROMPT_DEFAULT_LUNCH', MEAL_PROMPT_DEFAULTS.lunch, 0),
+    dinner: readInt('MEAL_PROMPT_DEFAULT_DINNER', MEAL_PROMPT_DEFAULTS.dinner, 0)
+  },
+  batchSize: readInt('MEAL_PROMPT_BATCH_SIZE', MEAL_PROMPT_DEFAULTS.batchSize),
+  maxCountPerMeal: readInt('MEAL_PROMPT_MAX_COUNT', MEAL_PROMPT_DEFAULTS.maxCountPerMeal),
+  dispatchSecret: readOptionalString('MEAL_PROMPT_DISPATCH_SECRET')
+} as const;
+
 export const seedConfig = {
   enabled: readBoolean('SEED_ENABLED', !isProduction),
   emailDomain: readString('SEED_EMAIL_DOMAIN', 'bachelorpoint.local'),
@@ -183,7 +271,16 @@ export const appUrlConfig = {
   publicUrl: readOptionalString('APP_PUBLIC_URL')
 } as const;
 
+export const emailQualityConfig = {
+  requireMx: readBoolean('EMAIL_REQUIRE_MX', true),
+  mxResolvers: readString('EMAIL_MX_RESOLVERS', '1.1.1.1,8.8.8.8')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean),
+  mxTimeoutMs: readInt('EMAIL_MX_TIMEOUT_MS', 3000)
+} as const;
+
 export const passwordTokenConfig = {
-  hours: readInt('PASSWORD_TOKEN_HOURS', MAIL_DEFAULTS.passwordTokenHours),
+  minutes: readInt('PASSWORD_TOKEN_MINUTES', MAIL_DEFAULTS.passwordTokenMinutes),
   bytes: MAIL_DEFAULTS.passwordTokenBytes
 } as const;

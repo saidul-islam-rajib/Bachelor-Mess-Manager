@@ -1,11 +1,16 @@
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
-import { ROUTES } from '@/lib/routes';
-import { EXPENSE_TYPE_LABELS, USER_ROLES } from '@/lib/constants';
+import MealPromptsPanel from '@/components/MealPromptsPanel';
+import { ActionLink, LinkButton, Listbox } from '@/components/ui';
+import { commentsAnchorPath, groupPath, ROUTES } from '@/lib/routes';
+import { strings } from '@/lib/i18n';
+import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 const taka = (n: number) => `৳${n.toFixed(2)}`;
+
+const dashboardStrings = strings.dashboard;
 
 type AdminReport = {
   pendingApprovals: number;
@@ -115,28 +120,31 @@ export default function DashboardPage() {
   }, [month]);
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+    <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold sm:text-3xl">Dashboard</h1>
+          <h1 className="text-2xl font-semibold sm:text-3xl">{dashboardStrings.title}</h1>
           <p className="mt-1 text-slate-600">
-            {user ? `Signed in as ${user.name} (${user.role.toLowerCase()})` : 'Your mess at a glance.'}
+            {user ? dashboardStrings.signedInAs(user.name, user.role.toLowerCase()) : dashboardStrings.subtitle}
           </p>
         </div>
 
         {data?.role !== USER_ROLES.ADMIN && (
-          <label className="min-w-[12rem]">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Month</span>
-            <select value={month} onChange={(e) => setMonth(e.target.value)} className="app-select mt-1">
-              {monthOptions().map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Listbox
+            className="w-full sm:w-56"
+            label={strings.common.month}
+            value={month}
+            onChange={setMonth}
+            options={monthOptions().map((option) => ({ value: option.key, label: option.label }))}
+          />
         )}
       </div>
+
+      {user && (
+        <div className="mb-6 lg:hidden">
+          <MealPromptsPanel />
+        </div>
+      )}
 
       {userLoading || loading ? (
         <Panel>Loading...</Panel>
@@ -175,15 +183,10 @@ function AdminDashboard({ report }: { report: AdminReport }) {
             : 'Approve registrations, manage users and groups, and edit site settings.'}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Link href={ROUTES.admin} className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700">
-            Open admin dashboard
-          </Link>
-          <Link
-            href={ROUTES.groups}
-            className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
-          >
+          <LinkButton href={ROUTES.admin}>Open admin dashboard</LinkButton>
+          <LinkButton href={ROUTES.members} variant="secondary">
             All groups
-          </Link>
+          </LinkButton>
         </div>
       </Card>
 
@@ -204,11 +207,46 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Your groups" value={`${totals.groups} / 10`} />
-        <Stat label="Members" value={totals.members} />
-        <Stat label="Spent this month" value={taka(totals.expense)} />
-        <Stat label="Outstanding dues" value={taka(totals.outstanding)} tone={totals.outstanding > 0 ? 'red' : 'green'} />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+          <Stat label="Your groups" value={`${totals.groups} / 10`} />
+          <Stat label="Members" value={totals.members} />
+          <Stat label="Spent this month" value={taka(totals.expense)} />
+          <Stat
+            label="Outstanding dues"
+            value={taka(totals.outstanding)}
+            tone={totals.outstanding > 0 ? 'red' : 'green'}
+          />
+        </div>
+
+        <QuickActions
+          items={[
+            {
+              href: ROUTES.expenses,
+              label: dashboardStrings.actions.logBazar,
+              hint: dashboardStrings.actions.logBazarHint,
+              icon: 'cart'
+            },
+            {
+              href: ROUTES.meals,
+              label: dashboardStrings.actions.enterMeals,
+              hint: dashboardStrings.actions.enterMealsHint,
+              icon: 'bowl'
+            },
+            {
+              href: ROUTES.payments,
+              label: dashboardStrings.actions.recordPayment,
+              hint: dashboardStrings.actions.recordPaymentHint,
+              icon: 'cash'
+            },
+            {
+              href: ROUTES.members,
+              label: dashboardStrings.actions.inviteMember,
+              hint: dashboardStrings.actions.inviteMemberHint,
+              icon: 'user'
+            }
+          ]}
+        />
       </div>
 
       <CostBreakdown byType={report.byType} total={totals.expense} />
@@ -216,14 +254,12 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">Your groups</h2>
-          <Link href={ROUTES.groups} className="text-sm font-medium text-slate-900 hover:underline">
-            Manage
-          </Link>
+          <ActionLink href={ROUTES.members}>Manage</ActionLink>
         </div>
 
         {report.groups.length === 0 ? (
           <p className="mt-3 text-sm text-slate-500">
-            You haven&apos;t created a group yet. Head to Groups to create your first mess.
+            You haven&apos;t created a group yet. Head to Members to create your first mess.
           </p>
         ) : (
           <div className="mt-4 overflow-x-auto">
@@ -242,7 +278,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
                 {report.groups.map((group) => (
                   <tr key={group.id} className="border-b border-slate-100 last:border-0">
                     <td className="px-3 py-3 font-medium">
-                      <Link href={`/groups/${group.id}`} className="hover:underline">
+                      <Link href={groupPath(group.id)} className="hover:underline">
                         {group.name}
                       </Link>
                       {group.status === 'INACTIVE' && (
@@ -282,9 +318,9 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
               ))}
             </ul>
           )}
-          <Link href={ROUTES.payments} className="mt-4 inline-flex text-sm font-medium text-slate-900 hover:underline">
-            Record a payment →
-          </Link>
+          <ActionLink href={ROUTES.payments} className="mt-4">
+            Record a payment
+          </ActionLink>
         </Card>
 
         <Card>
@@ -329,14 +365,45 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
     <div className="space-y-6">
       {report.pendingInvitations > 0 && <InvitationBanner count={report.pendingInvitations} />}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Your meals" value={current.meals} />
-        <Stat label="Meal rate" value={taka(current.mealRate)} />
-        <Stat label="Your total cost" value={taka(current.totalCost)} />
-        <Stat
-          label={current.due < 0 ? 'Mess owes you' : 'You owe'}
-          value={taka(Math.abs(current.due))}
-          tone={current.due > 0.01 ? 'red' : 'green'}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+          <Stat label="Your meals" value={current.meals} />
+          <Stat label="Meal rate" value={taka(current.mealRate)} />
+          <Stat label="Your total cost" value={taka(current.totalCost)} />
+          <Stat
+            label={current.due < 0 ? 'Mess owes you' : 'You owe'}
+            value={taka(Math.abs(current.due))}
+            tone={current.due > 0.01 ? 'red' : 'green'}
+          />
+        </div>
+
+        <QuickActions
+          items={[
+            {
+              href: ROUTES.meals,
+              label: dashboardStrings.actions.enterOwnMeals,
+              hint: dashboardStrings.actions.enterOwnMealsHint,
+              icon: 'bowl'
+            },
+            {
+              href: ROUTES.expenses,
+              label: dashboardStrings.actions.logBazar,
+              hint: dashboardStrings.actions.logBazarOwnHint,
+              icon: 'cart'
+            },
+            {
+              href: ROUTES.payments,
+              label: dashboardStrings.actions.ownPayments,
+              hint: dashboardStrings.actions.ownPaymentsHint,
+              icon: 'cash'
+            },
+            {
+              href: commentsAnchorPath(),
+              label: dashboardStrings.actions.messComments,
+              hint: dashboardStrings.actions.messCommentsHint,
+              icon: 'chat'
+            }
+          ]}
         />
       </div>
 
@@ -358,15 +425,10 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
           />
         </dl>
         <div className="mt-5 flex flex-wrap gap-2">
-          <Link href={ROUTES.meals} className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700">
-            Enter meals
-          </Link>
-          <Link
-            href={ROUTES.payments}
-            className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
-          >
+          <LinkButton href={ROUTES.meals}>Enter meals</LinkButton>
+          <LinkButton href={ROUTES.payments} variant="secondary">
             Payments
-          </Link>
+          </LinkButton>
         </div>
       </Card>
 
@@ -391,9 +453,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">{group.name}</h2>
-          <Link href={`/groups/${group.id}`} className="text-sm font-medium text-slate-900 hover:underline">
-            Group page
-          </Link>
+          <ActionLink href={groupPath(group.id)}>Group page</ActionLink>
         </div>
         <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Field label="Members" value={String(group.memberCount)} />
@@ -442,6 +502,91 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
   );
 }
 
+type QuickActionIcon = 'cart' | 'bowl' | 'cash' | 'user' | 'chat';
+
+const QUICK_ACTION_ICONS: Record<QuickActionIcon, ReactNode> = {
+  cart: (
+    <>
+      <circle cx="9" cy="20" r="1.4" />
+      <circle cx="18" cy="20" r="1.4" />
+      <path d="M2 3h3l2.4 12.2a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.3L21 7H6" />
+    </>
+  ),
+  bowl: (
+    <>
+      <path d="M3 11h18" />
+      <path d="M5 11a7 7 0 0 1 14 0" />
+      <path d="M4 15h16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+    </>
+  ),
+  cash: (
+    <>
+      <rect x="2" y="6" width="20" height="12" rx="2.5" />
+      <circle cx="12" cy="12" r="2.6" />
+    </>
+  ),
+  user: (
+    <>
+      <path d="M19 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="11.5" cy="7" r="4" />
+    </>
+  ),
+  chat: (
+    <>
+      <path d="M21 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2Z" />
+    </>
+  )
+};
+
+function QuickActions({
+  items
+}: {
+  items: { href: string; label: string; hint: string; icon: QuickActionIcon }[];
+}) {
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold">{dashboardStrings.quickActions}</h2>
+      <p className="mt-1 text-sm text-slate-500">{dashboardStrings.quickActionsHint}</p>
+
+      <ul className="mt-4 space-y-1.5">
+        {items.map((item) => (
+          <li key={item.href + item.label}>
+            <Link
+              href={item.href}
+              className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+            >
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors group-hover:bg-brand-600 group-hover:text-white">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  {QUICK_ACTION_ICONS[item.icon]}
+                </svg>
+              </span>
+
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-slate-900">{item.label}</span>
+                <span className="block truncate text-xs text-slate-500">{item.hint}</span>
+              </span>
+
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-brand-600"
+              >
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function CostBreakdown({ byType, total }: { byType: Record<string, number>; total: number }) {
   const rows = Object.entries(byType)
     .filter(([, amount]) => amount > 0)
@@ -458,13 +603,13 @@ function CostBreakdown({ byType, total }: { byType: Record<string, number>; tota
           return (
             <li key={type}>
               <div className="flex items-baseline justify-between text-sm">
-                <span className="font-medium">{EXPENSE_TYPE_LABELS[type] ?? type}</span>
+                <span className="font-medium">{expenseTypeLabel(type)}</span>
                 <span className="text-slate-600">
                   {taka(amount)} <span className="text-xs text-slate-400">({percent}%)</span>
                 </span>
               </div>
               <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full bg-slate-900" style={{ width: `${percent}%` }} />
+                <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
               </div>
             </li>
           );
@@ -480,12 +625,9 @@ function InvitationBanner({ count }: { count: number }) {
       <p className="text-amber-800">
         You have {count} pending invitation{count === 1 ? '' : 's'}.
       </p>
-      <Link
-        href={ROUTES.invitations}
-        className="mt-3 inline-flex rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700"
-      >
+      <LinkButton href={ROUTES.invitations} size="sm" className="mt-3">
         View invitations
-      </Link>
+      </LinkButton>
     </div>
   );
 }

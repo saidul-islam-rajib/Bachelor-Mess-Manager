@@ -25,11 +25,12 @@
     "sql-server"
   ],
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "prisma generate && tsc --noEmit",
     "verify": "npm run typecheck && npm run lint && npm run build",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
@@ -37,8 +38,21 @@
     "db:reset": "prisma migrate reset --force",
     "db:sync-roles": "node scripts/sync-roles.js",
     "admin:init": "node scripts/init-admin.js",
+    "user:password": "node scripts/reset-password.js",
+    "cleanup:unverified": "node scripts/cleanup-unverified.js",
+    "meals:prompt": "node scripts/send-meal-prompts.js",
     "seed:db": "node prisma/seed.js",
-    "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init"
+    "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init",
+    "backup:db": "node scripts/backup-db.js",
+    "restore:db": "node scripts/restore-db.js",
+    "test:e2e": "node scripts/e2e-test.js",
+    "test:rate": "node scripts/check-meal-rate.js",
+    "test": "node scripts/test-all.js",
+    "test:all": "node scripts/test-all.js",
+    "test:allocation": "node scripts/check-allocation.js",
+    "icons:generate": "node scripts/generate-icons.js",
+    "test:signup": "node scripts/check-signup-flow.js",
+    "test:mail": "node scripts/check-mail.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -59,6 +73,7 @@
     "eslint-config-next": "^14.2.5",
     "postcss": "^8.4.35",
     "prisma": "^5.0.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.6.2"
   }

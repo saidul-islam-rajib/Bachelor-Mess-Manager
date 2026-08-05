@@ -36,13 +36,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const { link } = await issuePasswordToken({ userId: target.id, purpose: TOKEN_PURPOSE.SETUP, req });
-  const message = { ...passwordSetupEmail(target.name, link, passwordTokenConfig.hours), to: target.email };
+  const message = { ...passwordSetupEmail(target.name, link, passwordTokenConfig.minutes), to: target.email };
   const delivery = await sendMail(message);
 
   return ok(res, {
     link,
     email: target.email,
-    expiresInHours: passwordTokenConfig.hours,
+    expiresInMinutes: passwordTokenConfig.minutes,
     mailConfigured: isMailConfigured(),
     delivered: delivery.ok && 'delivered' in delivery ? delivery.delivered : false,
     error: delivery.ok ? null : delivery.error

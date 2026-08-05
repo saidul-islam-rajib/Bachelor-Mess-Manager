@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
-import { Field, controlClasses } from '@/components/ui/Field';
+import { Field } from '@/components/ui/Field';
+import { Listbox, ListboxControl } from '@/components/ui/Listbox';
 
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 
@@ -34,43 +35,31 @@ export function Select({
 
   if (compact) {
     return (
-      <label className={containerClassName}>
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</span>
-        <select
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          disabled={disabled}
-          className="app-select mt-1"
-        >
-          {placeholder !== undefined && <option value="">{placeholder}</option>}
-          {options.map((option) => (
-            <option key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Listbox
+        className={containerClassName}
+        label={label}
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
+        disabled={disabled}
+      />
     );
   }
 
   return (
     <Field id={id} label={label} error={error} hint={hint} optional={optional} className={containerClassName}>
-      <select
+      <ListboxControl
         id={id}
+        labelledBy={`${id}-label`}
+        describedBy={error ? `${id}-error` : undefined}
+        invalid={Boolean(error)}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
         disabled={disabled}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className={controlClasses(Boolean(error))}
-      >
-        {placeholder !== undefined && <option value="">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value} disabled={option.disabled}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      />
     </Field>
   );
 }
@@ -95,7 +84,7 @@ export function Checkbox({ label, checked, onChange, disabled = false, hint, cla
           checked={checked}
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
         />
         <span className="text-sm">{label}</span>
       </label>
@@ -142,7 +131,7 @@ export function RadioGroup({
               onClick={() => onChange(option.value)}
               className={`rounded-full px-4 py-2 text-sm transition disabled:opacity-50 ${
                 value === option.value
-                  ? 'bg-slate-900 font-medium text-white'
+                  ? 'bg-brand-600 font-medium text-white'
                   : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
               }`}
             >
@@ -161,7 +150,7 @@ export function RadioGroup({
                 checked={value === option.value}
                 disabled={option.disabled}
                 onChange={() => onChange(option.value)}
-                className="mt-0.5 h-4 w-4 border-slate-300 text-slate-900 focus:ring-slate-900"
+                className="mt-0.5 h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500"
               />
               <span>
                 <span className="block text-sm">{option.label}</span>

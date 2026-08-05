@@ -1,10 +1,27 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
-import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
+import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { dayToUtcDate, parseMonth, todayKey, utcDateToDay } from '@/lib/month';
 import { syncPlansForMonth } from '@/lib/meal-plan';
+import { GROUP_STATUS, NOTIFICATION_TYPES, REQUEST_STATUS } from '@/lib/constants';
+import { notifyGroup, notifyUsers } from '@/lib/notifications';
+import { ROUTES } from '@/lib/routes';
+import {
+  applyMealCounts,
+  countsEqual,
+  currentCounts,
+  describeChange,
+  readEditWindow,
+  serializeChangeRequest,
+  type MealCounts
+} from '@/lib/meal-edits';
 import { withAudit } from '@/lib/with-audit';
+
+function normalizeCounts(body: { breakfast?: unknown; lunch?: unknown; dinner?: unknown }): MealCounts {
+  const clamp = (value: unknown) => Math.min(9, Math.max(0, Math.trunc(Number(value ?? 0)) || 0));
+  return { breakfast: clamp(body.breakfast), lunch: clamp(body.lunch), dinner: clamp(body.dinner) };
+}
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req);
@@ -33,93 +50,194 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const { start, nextStart } = parseMonth(monthKey);
     await syncPlansForMonth(groupId, monthKey);
 
-    const memberships = await prisma.membership.findMany({
-      where: { groupId, isActive: true },
-      include: { user: { select: { id: true, name: true, email: true } } }
-    });
-    const members = memberships.map((m) => m.user);
+    const [memberships, rows, editWindow, pendingChanges] = await Promise.all([
+      prisma.membership.findMany({
+        where: { groupId, isActive: true },
+        include: { user: { select: { id: true, name: true, email: true } } }
+      }),
+      prisma.mealEntry.findMany({ where: { groupId, date: { gte: start, lt: nextStart } } }),
+      readEditWindow(sessionUser.id, groupId),
+      prisma.mealChangeRequest.findMany({
+        where: { groupId, status: REQUEST_STATUS.PENDING, date: { gte: start, lt: nextStart } },
+        include: { user: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' }
+      })
+    ]);
 
-    const rows = await prisma.mealEntry.findMany({
-      where: { groupId, date: { gte: start, lt: nextStart } }
-    });
-    const entries = rows.map((r) => ({
-      userId: r.userId,
-      date: utcDateToDay(r.date),
-      breakfast: r.breakfastCount,
-      lunch: r.lunchCount,
-      dinner: r.dinnerCount
-    }));
+    const canManage = await canManageGroup(groupId, sessionUser);
 
     return ok(res, {
-      members,
+      canManage,
+      currentUserId: sessionUser.id,
+      groupStatus: group.status,
+      members: memberships.map((m) => m.user),
       weights: {
         breakfast: group.mealWeightBreakfast,
         lunch: group.mealWeightLunch,
         dinner: group.mealWeightDinner
       },
-      entries
+      entries: rows.map((r) => ({
+        userId: r.userId,
+        date: utcDateToDay(r.date),
+        breakfast: r.breakfastCount,
+        lunch: r.lunchCount,
+        dinner: r.dinnerCount
+      })),
+      editWindow,
+      pendingChanges: pendingChanges
+        .filter((row) => canManage || row.userId === sessionUser.id)
+        .map(serializeChangeRequest)
     });
   }
 
   if (req.method === 'PUT') {
-    const body = req.body as {
-      date?: string;
-      breakfast?: number;
-      lunch?: number;
-      dinner?: number;
-      userId?: string;
-    };
+    const body = req.body as { date?: string; userId?: string; reason?: string };
 
     if (!body.date || !/^\d{4}-\d{2}-\d{2}$/.test(body.date)) {
       return badRequest(res, 'A valid date (YYYY-MM-DD) is required.');
     }
-    const targetUserId = admin && body.userId ? body.userId : sessionUser.id;
-    if (targetUserId !== sessionUser.id && !admin) {
-      return forbidden(res, 'You can only edit your own meals.');
-    }
-    if (!admin && body.date < todayKey()) {
-      return forbidden(res, 'Past dates are locked. You can only edit today or upcoming days.');
+
+    if (group.status === GROUP_STATUS.INACTIVE) {
+      return forbidden(res, 'This mess is closed. Ask an admin to reopen it before changing meals.');
     }
 
-    const targetIsMember = await isGroupMember(groupId, targetUserId);
-    if (!targetIsMember) {
+    const canManage = await canManageGroup(groupId, sessionUser);
+    const targetUserId = (canManage || admin) && body.userId ? body.userId : sessionUser.id;
+
+    if (targetUserId !== sessionUser.id && !canManage && !admin) {
+      return forbidden(res, 'You can only edit your own meals.');
+    }
+    if (!(await isGroupMember(groupId, targetUserId))) {
       return badRequest(res, 'That user is not a member of this group.');
     }
 
-    const breakfast = Math.max(0, Math.trunc(Number(body.breakfast ?? 0)));
-    const lunch = Math.max(0, Math.trunc(Number(body.lunch ?? 0)));
-    const dinner = Math.max(0, Math.trunc(Number(body.dinner ?? 0)));
     const date = dayToUtcDate(body.date);
-    const entry = await prisma.mealEntry.upsert({
-      where: { userId_groupId_date: { userId: targetUserId, groupId, date } },
-      update: {
-        breakfastCount: breakfast,
-        lunchCount: lunch,
-        dinnerCount: dinner,
-        totalMeals: breakfast + lunch + dinner,
-        fromPlan: false
-      },
-      create: {
-        userId: targetUserId,
-        groupId,
-        date,
-        breakfastCount: breakfast,
-        lunchCount: lunch,
-        dinnerCount: dinner,
-        totalMeals: breakfast + lunch + dinner,
-        fromPlan: false
+    const isPast = body.date < todayKey();
+    const next = normalizeCounts(req.body as Record<string, unknown>);
+    const previous = await currentCounts(targetUserId, groupId, date);
+
+    if (!isPast || canManage || admin) {
+      const entry = await applyMealCounts(targetUserId, groupId, date, next);
+
+      if (isPast && !countsEqual(previous, next)) {
+        const target = await prisma.user.findUnique({ where: { id: targetUserId }, select: { name: true } });
+        const whose = targetUserId === sessionUser.id ? `their own` : `${target?.name ?? 'a member'}’s`;
+
+        await notifyGroup(
+          groupId,
+          {
+            type: NOTIFICATION_TYPES.MEAL_CHANGED_BY_SUPERVISOR,
+            title: `${sessionUser.name} changed ${whose} meals for ${body.date}`,
+            excerpt: `${describeChange(previous, next)}. This changes the meal rate and everyone’s share for ${group.name}.`,
+            link: ROUTES.meals,
+            actorId: sessionUser.id
+          },
+          { excludeUserId: sessionUser.id }
+        );
       }
+
+      return ok(res, {
+        applied: true,
+        entry: {
+          userId: entry.userId,
+          date: utcDateToDay(entry.date),
+          breakfast: entry.breakfastCount,
+          lunch: entry.lunchCount,
+          dinner: entry.dinnerCount
+        }
+      });
+    }
+
+    const editWindow = await readEditWindow(sessionUser.id, groupId);
+    if (!editWindow.open) {
+      return forbidden(
+        res,
+        'Past days are locked. Turn on "Edit my past meals" in your profile first, then make the change.'
+      );
+    }
+
+    if (countsEqual(previous, next)) {
+      return ok(res, { applied: false, unchanged: true });
+    }
+
+    if (!editWindow.requiresApproval) {
+      const entry = await applyMealCounts(targetUserId, groupId, date, next);
+
+      await notifyGroup(
+        groupId,
+        {
+          type: NOTIFICATION_TYPES.MEAL_CHANGED_BY_SUPERVISOR,
+          title: `${sessionUser.name} changed their meals for ${body.date}`,
+          excerpt: `${describeChange(previous, next)}. This changes the meal rate and everyone’s share for ${group.name}.`,
+          link: ROUTES.meals,
+          actorId: sessionUser.id
+        },
+        { excludeUserId: sessionUser.id }
+      );
+
+      return ok(res, {
+        applied: true,
+        entry: {
+          userId: entry.userId,
+          date: utcDateToDay(entry.date),
+          breakfast: entry.breakfastCount,
+          lunch: entry.lunchCount,
+          dinner: entry.dinnerCount
+        }
+      });
+    }
+
+    const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 300) || null : null;
+    const pendingFields = {
+      fromBreakfast: previous.breakfast,
+      fromLunch: previous.lunch,
+      fromDinner: previous.dinner,
+      toBreakfast: next.breakfast,
+      toLunch: next.lunch,
+      toDinner: next.dinner,
+      reason
+    };
+
+    const existing = await prisma.mealChangeRequest.findFirst({
+      where: { groupId, userId: targetUserId, date, status: REQUEST_STATUS.PENDING },
+      select: { id: true }
     });
 
-    return ok(res, {
-      entry: {
-        userId: entry.userId,
-        date: utcDateToDay(entry.date),
-        breakfast: entry.breakfastCount,
-        lunch: entry.lunchCount,
-        dinner: entry.dinnerCount
-      }
+    const request = existing
+      ? await prisma.mealChangeRequest.update({
+          where: { id: existing.id },
+          data: pendingFields,
+          include: { user: { select: { id: true, name: true } } }
+        })
+      : await prisma.mealChangeRequest.create({
+          data: {
+            userId: targetUserId,
+            groupId,
+            date,
+            ...pendingFields,
+            status: REQUEST_STATUS.PENDING,
+            publishedAt: new Date()
+          },
+          include: { user: { select: { id: true, name: true } } }
+        });
+
+    const supervisor = await prisma.user.findUnique({
+      where: { id: group.supervisorId },
+      select: { id: true, name: true, email: true }
     });
+
+    if (supervisor && supervisor.id !== sessionUser.id) {
+      await notifyUsers([supervisor], {
+        type: NOTIFICATION_TYPES.MEAL_CHANGE_REQUESTED,
+        title: `${sessionUser.name} asked to change meals for ${body.date}`,
+        excerpt: `${describeChange(previous, next)}. Nothing changes in ${group.name} until you approve it on the meals page.`,
+        link: ROUTES.meals,
+        groupId,
+        actorId: sessionUser.id
+      });
+    }
+
+    return created(res, { applied: false, pending: true, request: serializeChangeRequest(request) });
   }
 
   return methodNotAllowed(res, ['GET', 'PUT']);

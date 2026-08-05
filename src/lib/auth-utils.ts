@@ -1,8 +1,20 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { parseCookies, setSessionCookie, SESSION_COOKIE_NAME } from '@/lib/auth';
-import { shouldRefresh, verifySessionToken } from '@/lib/session';
+import {
+  clearImpersonationCookie,
+  IMPERSONATION_COOKIE_NAME,
+  parseCookies,
+  setSessionCookie,
+  SESSION_COOKIE_NAME
+} from '@/lib/auth';
+import { shouldRefresh, verifyImpersonationToken, verifySessionToken } from '@/lib/session';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
+
+export type ImpersonatedBy = {
+  id: string;
+  name: string;
+  email: string;
+};
 
 export type SessionUser = {
   id: string;
@@ -12,40 +24,78 @@ export type SessionUser = {
   status: string;
   phone: string | null;
   profileImage: string | null;
+  impersonatedBy?: ImpersonatedBy;
 };
+
+type SessionUserRow = SessionUser & { tokenVersion: number };
+
+const SESSION_USER_SELECT = {
+  id: true,
+  name: true,
+  email: true,
+  role: true,
+  status: true,
+  phone: true,
+  profileImage: true,
+  tokenVersion: true
+} as const;
 
 export function readSessionToken(req: NextApiRequest): string | undefined {
   return parseCookies(req.headers.cookie)[SESSION_COOKIE_NAME];
 }
 
-export async function getSessionUser(req: NextApiRequest, res?: NextApiResponse): Promise<SessionUser | null> {
+export function readImpersonationToken(req: NextApiRequest): string | undefined {
+  return parseCookies(req.headers.cookie)[IMPERSONATION_COOKIE_NAME];
+}
+
+async function loadActiveUser(userId: string, tokenVersion: number): Promise<SessionUserRow | null> {
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: SESSION_USER_SELECT });
+
+  if (!user) return null;
+  if (user.tokenVersion !== tokenVersion) return null;
+  if (user.status !== USER_STATUS.APPROVED) return null;
+
+  return user;
+}
+
+function toSessionUser(row: SessionUserRow, impersonatedBy?: ImpersonatedBy): SessionUser {
+  const { tokenVersion: _tokenVersion, ...user } = row;
+  return impersonatedBy ? { ...user, impersonatedBy } : user;
+}
+
+export async function getRealSessionUser(req: NextApiRequest, res?: NextApiResponse): Promise<SessionUser | null> {
   const payload = await verifySessionToken(readSessionToken(req));
   if (!payload) return null;
 
-  const user = await prisma.user.findUnique({
-    where: { id: payload.uid },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      status: true,
-      phone: true,
-      profileImage: true,
-      tokenVersion: true
-    }
-  });
-
+  const user = await loadActiveUser(payload.uid, payload.sv);
   if (!user) return null;
-  if (user.tokenVersion !== payload.sv) return null;
-  if (user.status !== USER_STATUS.APPROVED) return null;
 
   if (res && shouldRefresh(payload)) {
     await setSessionCookie(res, user.id, user.tokenVersion);
   }
 
-  const { tokenVersion: _tokenVersion, ...sessionUser } = user;
-  return sessionUser;
+  return toSessionUser(user);
+}
+
+export async function getSessionUser(req: NextApiRequest, res?: NextApiResponse): Promise<SessionUser | null> {
+  const realUser = await getRealSessionUser(req, res);
+  if (!realUser) return null;
+
+  const impersonation = await verifyImpersonationToken(readImpersonationToken(req));
+  if (!impersonation) return realUser;
+
+  if (realUser.role !== USER_ROLES.ADMIN || impersonation.aid !== realUser.id) {
+    if (res) clearImpersonationCookie(res);
+    return realUser;
+  }
+
+  const target = await loadActiveUser(impersonation.uid, impersonation.sv);
+  if (!target || target.role === USER_ROLES.ADMIN) {
+    if (res) clearImpersonationCookie(res);
+    return realUser;
+  }
+
+  return toSessionUser(target, { id: realUser.id, name: realUser.name, email: realUser.email });
 }
 
 export function requireAdmin(user: { role?: string } | null) {

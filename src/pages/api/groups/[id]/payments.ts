@@ -3,8 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport } from '@/lib/group-report';
+import { categoryLabels } from '@/lib/expense-categories';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
+import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -52,28 +54,42 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, {
       canManage,
       currentUserId: sessionUser.id,
+      rateMode: report.rateMode,
+      effectiveRateMode: report.effectiveRateMode,
+      rateModeFallbackReason: report.rateModeFallbackReason,
+      categoryLabels: await categoryLabels(groupId),
+      closing: report.closing,
       members: report.members.map((m) => ({
         id: m.id,
         name: m.name,
         email: m.email,
         meals: m.meals,
+        carryIn: m.carryIn,
         mealCost: m.mealCost,
         billShare: m.billShare,
+        billShareByType: m.billShareByType,
         cost: m.totalCost,
         bazarPaid: m.bazarPaid,
         collected: m.collected,
         due: m.due,
-        status: m.status
+        status: m.status,
+        isActive: m.isActive
       })),
+      days: report.days,
       payments,
       totals: {
         bazar: report.totals.bazar,
         bills: report.totals.bills,
         expense: report.totals.expense,
-        cost: round2(report.totals.mealCost + report.totals.bills),
+        cost: round2(report.totals.mealCost + report.totals.bills + report.totals.carryIn),
+        carryIn: report.totals.carryIn,
+        mealRate: report.totals.mealRate,
+        meals: report.totals.meals,
         collected: report.totals.collected,
         outstanding: report.totals.outstanding,
-        refunds: report.totals.refunds
+        refunds: report.totals.refunds,
+        unallocatedBazar: report.totals.unallocatedBazar,
+        unpricedMeals: report.totals.unpricedMeals
       },
       byType: report.byType
     });
@@ -82,6 +98,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     if (!canManage) {
       return forbidden(res, 'Only the group supervisor can record payments.');
+    }
+    if (!isGroupWritable(group)) {
+      return forbidden(res, GROUP_CLOSED_MESSAGE);
     }
 
     const { userId, amount, date } = req.body as { userId?: string; amount?: number; date?: string };

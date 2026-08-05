@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { securityConfig } from '@/config';
 import { getSecurityPolicy } from '@/lib/settings-service';
@@ -120,21 +121,33 @@ export async function listLockedAccounts() {
     .sort((a, b) => b.failedAttempts - a.failedAttempts);
 }
 
-export async function listRecentFailures(limit: number) {
-  const rows = await prisma.loginAttempt.findMany({
-    where: { successful: false },
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-    select: { id: true, email: true, ipAddress: true, reason: true, createdAt: true }
-  });
+export async function listRecentFailures({ skip = 0, take, search }: { skip?: number; take: number; search?: string }) {
+  const where: Prisma.LoginAttemptWhereInput = {
+    successful: false,
+    ...(search ? { OR: [{ email: { contains: search } }, { ipAddress: { contains: search } }] } : {})
+  };
 
-  return rows.map((row) => ({
-    id: row.id,
-    email: row.email,
-    ipAddress: row.ipAddress,
-    reason: row.reason,
-    createdAt: row.createdAt.toISOString()
-  }));
+  const [total, rows] = await Promise.all([
+    prisma.loginAttempt.count({ where }),
+    prisma.loginAttempt.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      select: { id: true, email: true, ipAddress: true, reason: true, createdAt: true }
+    })
+  ]);
+
+  return {
+    total,
+    items: rows.map((row) => ({
+      id: row.id,
+      email: row.email,
+      ipAddress: row.ipAddress,
+      reason: row.reason,
+      createdAt: row.createdAt.toISOString()
+    }))
+  };
 }
 
 export async function unlockAccount(email: string) {

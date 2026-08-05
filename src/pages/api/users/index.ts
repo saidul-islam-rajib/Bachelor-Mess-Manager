@@ -8,6 +8,7 @@ import {
   SORT_DIRECTIONS,
   USER_ROLE_VALUES,
   USER_SORT_FIELDS,
+  USER_STATUS,
   USER_STATUS_VALUES,
   type UserSortField
 } from '@/lib/constants';
@@ -44,7 +45,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const conditions: Prisma.UserWhereInput[] = [];
 
   if (role) where.role = role;
-  if (status) where.status = status;
+  where.status = status ?? { not: USER_STATUS.UNVERIFIED };
 
   if (search) {
     conditions.push({ OR: SEARCHABLE_FIELDS.map((field) => ({ [field]: { contains: search } })) });
@@ -99,8 +100,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         groupsSupervised: { select: { id: true, name: true } }
       }
     }),
-    prisma.user.groupBy({ by: ['role'], _count: { _all: true } }),
-    prisma.user.groupBy({ by: ['status'], _count: { _all: true } })
+    prisma.user.groupBy({
+      by: ['role'],
+      where: { status: { not: USER_STATUS.UNVERIFIED } },
+      _count: { _all: true }
+    }),
+    prisma.user.groupBy({
+      by: ['status'],
+      where: { status: { not: USER_STATUS.UNVERIFIED } },
+      _count: { _all: true }
+    })
   ]);
 
   const users = rows.map((row) => ({

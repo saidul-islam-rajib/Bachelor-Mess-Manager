@@ -1,17 +1,23 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
-import { forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { invalidateSecurityPolicyCache } from '@/lib/settings-service';
+import { cached, invalidate } from '@/lib/cache';
+import { cacheConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
 const SETTINGS_ID = 'singleton';
+const SETTINGS_CACHE_KEY = 'site-settings';
 
 async function getSettings() {
-  return prisma.siteSettings.upsert({
-    where: { id: SETTINGS_ID },
-    update: {},
-    create: { id: SETTINGS_ID }
-  });
+  return cached(SETTINGS_CACHE_KEY, cacheConfig.siteSettingsMs, () =>
+    prisma.siteSettings.upsert({
+      where: { id: SETTINGS_ID },
+      update: {},
+      create: { id: SETTINGS_ID }
+    })
+  );
 }
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -61,8 +67,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (typeof body.autoApproveSupervisor === 'boolean') {
       data.autoApproveSupervisor = body.autoApproveSupervisor;
     }
+    if (typeof body.autoApproveRegistration === 'boolean') {
+      data.autoApproveRegistration = body.autoApproveRegistration;
+    }
     if (typeof body.allowSelfRoleSwitch === 'boolean') {
       data.allowSelfRoleSwitch = body.allowSelfRoleSwitch;
+    }
+    if (typeof body.mealEditRequiresApproval === 'boolean') {
+      data.mealEditRequiresApproval = body.mealEditRequiresApproval;
+    }
+    if (body.mealEditWindowMinutes !== undefined) {
+      const minutes = Number(body.mealEditWindowMinutes);
+      if (!Number.isInteger(minutes) || minutes < 0 || minutes > 10080) {
+        return badRequest(res, 'The meal edit window must be between 0 minutes (no limit) and 7 days.');
+      }
+      data.mealEditWindowMinutes = minutes;
     }
 
     const settings = await prisma.siteSettings.upsert({
@@ -70,6 +89,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       update: data,
       create: { id: SETTINGS_ID, ...data }
     });
+
+    invalidateSecurityPolicyCache();
+    invalidate(SETTINGS_CACHE_KEY);
 
     return ok(res, { settings });
   }

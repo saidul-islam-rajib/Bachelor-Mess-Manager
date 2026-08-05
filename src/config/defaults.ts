@@ -13,12 +13,16 @@ export const AUTHOR = {
   email: 'saidul.is.rajib@gmail.com',
   role: 'Author & Lead Developer',
   license: 'MIT',
-  copyrightStartYear: 2026
+  copyrightStartYear: 2026,
+  url: 'https://team-sober.com/',
+  profileUrl: 'https://www.facebook.com/saidul.is.rajib/'
 } as const;
 
 export const SESSION_DEFAULTS = {
   cookieName: 'bachelor_point_session',
   legacyCookieName: 'bachelor_point_legacy_session',
+  impersonationCookieName: 'bachelor_point_impersonation',
+  impersonationMaxAgeSeconds: 60 * 60,
   maxAgeSeconds: 60 * 60 * 24 * 30,
   refreshAfterSeconds: 60 * 60 * 24,
   minSecretLength: 32
@@ -87,10 +91,35 @@ export const UI_DEFAULTS = {
   monthsForward: 1
 } as const;
 
+export const CACHE_DEFAULTS = {
+  siteSettingsMs: 300_000,
+  groupListMs: 60_000
+} as const;
+
+export const COMMUNITY_DEFAULTS = {
+  pageSize: 30,
+  maxMessageLength: 1000,
+  pollIntervalMs: 45_000,
+  directorySize: 200,
+  mentionRecipientCap: 25,
+  everyoneRecipientCap: 500
+} as const;
+
+export const MEAL_PROMPT_DEFAULTS = {
+  tokenBytes: 32,
+  validHours: 36,
+  leadDays: 1,
+  breakfast: 0,
+  lunch: 1,
+  dinner: 1,
+  batchSize: 200,
+  maxCountPerMeal: 9
+} as const;
+
 export const MAIL_DEFAULTS = {
   port: 587,
   helo: 'bachelor-point',
   timeoutMs: 15000,
-  passwordTokenHours: 24,
+  passwordTokenMinutes: 5,
   passwordTokenBytes: 32
 } as const;

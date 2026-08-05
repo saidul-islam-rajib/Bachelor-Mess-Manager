@@ -6,7 +6,6 @@ export const ROUTES = {
     setPassword: '/auth/set-password'
   },
   dashboard: '/dashboard',
-  groups: '/groups',
   meals: '/meals',
   expenses: '/expenses',
   bills: '/bills',
@@ -14,6 +13,41 @@ export const ROUTES = {
   members: '/members',
   profile: '/profile',
   comments: '/comments',
+  community: '/community',
+  notifications: '/notifications',
+  mealReply: '/meal-reply',
   admin: '/admin',
-  invitations: '/invitations'
+  invitations: '/invitations',
+  guide: '/guide'
 };
+
+export const MESS_COMMENTS_ANCHOR = 'mess-comments';
+
+export function safeNextPath(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length === 0) return null;
+  if (!value.startsWith('/')) return null;
+  if (value.startsWith('//') || value.startsWith('/\\')) return null;
+  return value;
+}
+
+export function withNextParam(path: string, next: string | null): string {
+  return next ? `${path}?next=${encodeURIComponent(next)}` : path;
+}
+
+export function groupPath(groupId: string): string {
+  return `${ROUTES.members}?group=${encodeURIComponent(groupId)}`;
+}
+
+export function commentsAnchorPath(groupId?: string): string {
+  const base = groupId ? groupPath(groupId) : ROUTES.members;
+  return `${base}#${MESS_COMMENTS_ANCHOR}`;
+}
+
+export function mealReplyPath(token: string, answer?: string): string {
+  const query = answer ? `?answer=${encodeURIComponent(answer)}` : '';
+  return `${ROUTES.mealReply}/${encodeURIComponent(token)}${query}`;
+}
+
+export function mealReplyApiPath(token: string): string {
+  return `/api${ROUTES.mealReply}/${encodeURIComponent(token)}`;
+}

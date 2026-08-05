@@ -3,6 +3,7 @@ import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
+import { PageTitle } from '@/components/ui';
 import { encodeMentions } from '@/lib/mentions';
 import { todayKey } from '@/lib/month';
 
@@ -222,7 +223,8 @@ export default function ExpensesPage() {
   const canEditExpense = (e: Expense) => isAdmin || e.payer?.id === user?.id;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:py-10">
+    <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
+      <PageTitle title="Groceries (Bazar)" />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Groceries (Bazar)</h1>
         <p className="mt-1 text-slate-600">
@@ -291,7 +293,7 @@ export default function ExpensesPage() {
                 <button
                   type="submit"
                   disabled={adding}
-                  className="rounded-full bg-slate-900 px-6 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+                  className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
                 >
                   {adding ? 'Adding...' : 'Add purchase'}
                 </button>
@@ -621,7 +623,7 @@ function EditPanel({
         <button
           type="button"
           onClick={onSave}
-          className="rounded-full bg-slate-900 px-5 py-2 text-sm text-white hover:bg-slate-700"
+          className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px"
         >
           Save changes
         </button>
@@ -731,7 +733,7 @@ function CommentBox({
           disabled={busy || !text.trim()}
           aria-label="Post comment"
           title="Post comment"
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white transition-colors hover:bg-slate-700 disabled:bg-slate-200 disabled:text-slate-400"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 shadow-sm shadow-brand-600/20 text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:bg-slate-200 disabled:text-slate-400"
         >
           {busy ? (
             <span className="text-xs">···</span>
@@ -794,7 +796,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+      className="inline-flex min-h-[2rem] items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" />
@@ -809,7 +811,7 @@ function DeleteButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-2.5 py-1 text-xs font-medium text-red-600 transition-colors hover:border-red-200 hover:bg-red-100 hover:text-red-700"
+      className="inline-flex min-h-[2rem] items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-200 hover:bg-red-100 hover:text-red-700"
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 6h18" />

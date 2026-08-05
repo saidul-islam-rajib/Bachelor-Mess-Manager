@@ -2,8 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { BILL_TYPE_VALUES, SPLIT_METHODS } from '@/lib/constants';
+import { EXPENSE_TYPES, SPLIT_METHODS } from '@/lib/constants';
 import { computeShares, isBillType } from '@/lib/bills';
+import { isValidBillType } from '@/lib/expense-categories';
 import { dayToUtcDate, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
 import { withAudit } from '@/lib/with-audit';
@@ -24,7 +25,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const bill = await prisma.expenseEntry.findUnique({ where: { id: billId } });
-  if (!bill || !BILL_TYPE_VALUES.includes(bill.type)) {
+  if (!bill || bill.type === EXPENSE_TYPES.BAZAR) {
 
     return notFound(res, 'Bill not found.');
   }
@@ -52,7 +53,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const data: Record<string, unknown> = {};
 
   if (type !== undefined) {
-    if (!isBillType(type)) return badRequest(res, 'Choose a valid cost type.');
+    if (!isBillType(type) || !(await isValidBillType(bill.groupId, type))) {
+      return badRequest(res, 'Choose a cost type from this group’s list.');
+    }
     data.type = type;
   }
 

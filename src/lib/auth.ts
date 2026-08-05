@@ -1,8 +1,15 @@
 import type { NextApiResponse } from 'next';
-import { createSessionToken, SESSION_COOKIE_NAME, SESSION_MAX_AGE_SECONDS } from '@/lib/session';
+import {
+  createImpersonationToken,
+  createSessionToken,
+  IMPERSONATION_COOKIE_NAME,
+  IMPERSONATION_MAX_AGE_SECONDS,
+  SESSION_COOKIE_NAME,
+  SESSION_MAX_AGE_SECONDS
+} from '@/lib/session';
 import { sessionConfig } from '@/config';
 
-export { SESSION_COOKIE_NAME } from '@/lib/session';
+export { SESSION_COOKIE_NAME, IMPERSONATION_COOKIE_NAME } from '@/lib/session';
 
 export const LEGACY_SESSION_COOKIE_NAME = 'bachelor_point_legacy_session';
 
@@ -62,4 +69,19 @@ export async function setSessionCookie(res: NextApiResponse, userId: string, tok
 export function clearSessionCookie(res: NextApiResponse) {
   appendCookie(res, serializeCookie(SESSION_COOKIE_NAME, '', { maxAge: 0 }));
   appendCookie(res, serializeCookie(LEGACY_SESSION_COOKIE_NAME, '', { maxAge: 0 }));
+  clearImpersonationCookie(res);
+}
+
+export async function setImpersonationCookie(
+  res: NextApiResponse,
+  adminId: string,
+  targetId: string,
+  targetTokenVersion: number
+) {
+  const token = await createImpersonationToken(adminId, targetId, targetTokenVersion);
+  appendCookie(res, serializeCookie(IMPERSONATION_COOKIE_NAME, token, { maxAge: IMPERSONATION_MAX_AGE_SECONDS }));
+}
+
+export function clearImpersonationCookie(res: NextApiResponse) {
+  appendCookie(res, serializeCookie(IMPERSONATION_COOKIE_NAME, '', { maxAge: 0 }));
 }

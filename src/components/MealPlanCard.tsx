@@ -243,7 +243,7 @@ export default function MealPlanCard({ groupId, onApplied }: { groupId: string; 
               type="button"
               onClick={save}
               disabled={saving}
-              className="rounded-full bg-slate-900 px-6 py-2 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
+              className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
             >
               {saving ? 'Saving...' : 'Save plan'}
             </button>
@@ -283,7 +283,7 @@ function Switch({
       aria-label={label}
       disabled={disabled}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
+      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
         checked ? 'bg-green-600' : 'bg-slate-300'
       }`}
     >

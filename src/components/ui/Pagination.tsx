@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button';
+import { ListboxControl } from '@/components/ui/Listbox';
 import { paginationConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
@@ -19,21 +20,21 @@ export function Pagination({ meta, onPageChange, onPageSizeChange, disabled = fa
 
       <div className="flex flex-wrap items-center gap-2">
         {onPageSizeChange && (
-          <label className="flex items-center gap-2 text-sm text-slate-500">
-            <span>{strings.common.perPage}</span>
-            <select
-              value={meta.pageSize}
+          <div className="flex items-center gap-2 text-sm text-slate-500">
+            <span id="pagination-page-size-label">{strings.common.perPage}</span>
+            <ListboxControl
+              className="w-24"
+              labelledBy="pagination-page-size-label"
+              value={String(meta.pageSize)}
               disabled={disabled}
-              onChange={(event) => onPageSizeChange(Number(event.target.value))}
-              className="rounded-xl border border-slate-300 bg-white px-2 py-1 text-sm"
-            >
-              {paginationConfig.pageSizeOptions.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={(next) => onPageSizeChange(Number(next))}
+              buttonClassName="!min-h-[2.25rem] !rounded-xl !px-3 !py-1.5 text-sm"
+              options={paginationConfig.pageSizeOptions.map((size) => ({
+                value: String(size),
+                label: String(size)
+              }))}
+            />
+          </div>
         )}
 
         <Button

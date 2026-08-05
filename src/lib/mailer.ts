@@ -1,6 +1,8 @@
 import net from 'node:net';
 import tls from 'node:tls';
 import { appConfig, mailConfig } from '@/config';
+import { strings } from '@/lib/i18n';
+import { escapeHtml } from '@/lib/xss';
 
 export type MailMessage = {
   to: string;
@@ -165,14 +167,14 @@ export async function sendMail(message: MailMessage): Promise<MailResult> {
   }
 }
 
-export function passwordSetupEmail(name: string, link: string, hours: number): MailMessage {
+export function passwordSetupEmail(name: string, link: string, minutes: number): MailMessage {
   const subject = `Set your ${appConfig.name} password`;
 
   const text = [
     `Hello ${name},`,
     '',
     `An account was created for you on ${appConfig.name}.`,
-    'Open the link below to choose a password. It expires in ' + hours + ' hours.',
+    'Open the link below to choose a password. It expires in ' + minutes + ' minutes.',
     '',
     link,
     '',
@@ -187,9 +189,50 @@ export function passwordSetupEmail(name: string, link: string, hours: number): M
     <h1 style="margin:0 0 8px;font-size:20px">${appConfig.name}</h1>
     <p style="margin:0 0 24px;color:#475569;font-size:14px">Hello ${name}, choose a password to finish setting up your account.</p>
     <a href="${link}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:12px 24px;border-radius:999px;font-size:14px">Create your password</a>
-    <p style="margin:24px 0 0;color:#64748b;font-size:12px">This link expires in ${hours} hours. If the button does not work, paste this into your browser:</p>
+    <p style="margin:24px 0 0;color:#64748b;font-size:12px">This link expires in ${minutes} minutes and can only be used once. If the button does not work, paste this into your browser:</p>
     <p style="margin:8px 0 0;color:#64748b;font-size:12px;word-break:break-all">${link}</p>
     <p style="margin:24px 0 0;color:#94a3b8;font-size:12px">If you did not expect this email you can ignore it. No password is set until the link is used.</p>
+  </div>
+</body></html>`;
+
+  return { to: '', subject, text, html };
+}
+
+export function mealPromptEmail(params: {
+  name: string;
+  groupName: string;
+  dateLabel: string;
+  yesLink: string;
+  noLink: string;
+  chooseLink: string;
+}): MailMessage {
+  const subject = strings.mealPrompt.emailSubject(params.groupName, params.dateLabel);
+  const intro = strings.mealPrompt.emailIntro(params.name, params.groupName, params.dateLabel);
+
+  const text = [
+    intro,
+    '',
+    `${strings.mealPrompt.yes}: ${params.yesLink}`,
+    `${strings.mealPrompt.no}: ${params.noLink}`,
+    `${strings.mealPrompt.choose}: ${params.chooseLink}`,
+    '',
+    strings.mealPrompt.emailFooter,
+    '',
+    appConfig.name
+  ].join('\n');
+
+  const button = (link: string, label: string, background: string, color: string) =>
+    `<a href="${escapeHtml(link)}" style="display:inline-block;margin:0 8px 8px 0;background:${background};color:${color};text-decoration:none;padding:14px 28px;border-radius:999px;font-size:16px;font-weight:600">${escapeHtml(label)}</a>`;
+
+  const html = `<!doctype html>
+<html><body style="margin:0;padding:24px;background:#f8fafc;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#0f172a">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:32px">
+    <h1 style="margin:0 0 8px;font-size:20px">${escapeHtml(appConfig.name)}</h1>
+    <p style="margin:0 0 24px;color:#0f172a;font-size:16px">${escapeHtml(intro)}</p>
+    ${button(params.yesLink, strings.mealPrompt.yes, '#16a34a', '#ffffff')}
+    ${button(params.noLink, strings.mealPrompt.no, '#0f172a', '#ffffff')}
+    <p style="margin:16px 0 0;font-size:14px"><a href="${escapeHtml(params.chooseLink)}" style="color:#0f172a">${escapeHtml(strings.mealPrompt.choose)}</a></p>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:12px">${escapeHtml(strings.mealPrompt.emailFooter)}</p>
   </div>
 </body></html>`;
 

@@ -1,5 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
+export type ImpersonatedBy = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 export type CurrentUser = {
   id: string;
   name: string;
@@ -7,6 +13,7 @@ export type CurrentUser = {
   role: string;
   phone?: string | null;
   profileImage?: string | null;
+  impersonatedBy?: ImpersonatedBy;
 } | null;
 
 type UserContextValue = {
@@ -14,6 +21,7 @@ type UserContextValue = {
   loading: boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
+  stopImpersonating: () => Promise<void>;
 };
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -45,12 +53,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     setUser(null);
+
+    if (typeof navigator !== 'undefined' && navigator.serviceWorker?.controller) {
+      navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_CACHES' });
+    }
+
     window.location.href = '/auth/login';
+  }, []);
+
+  const stopImpersonating = useCallback(async () => {
+    await fetch('/api/admin/impersonate', { method: 'DELETE' });
+    window.location.href = '/admin';
   }, []);
 
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  return <UserContext.Provider value={{ user, loading, refresh, logout }}>{children}</UserContext.Provider>;
+  return (
+    <UserContext.Provider value={{ user, loading, refresh, logout, stopImpersonating }}>
+      {children}
+    </UserContext.Provider>
+  );
 }

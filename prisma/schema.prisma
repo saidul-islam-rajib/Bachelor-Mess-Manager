@@ -59,41 +59,51 @@ model RolePermission {
 }
 
 model User {
-  id                  String           @id @default(uuid())
+  id                  String              @id @default(uuid())
   name                String
-  email               String           @unique
+  email               String              @unique
   password            String
   phone               String?
   profileImage        String?
-  role                String           @default("MEMBER")
-  roleRef             Role             @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  status              String           @default("PENDING")
-  tokenVersion        Int              @default(0)
+  role                String              @default("MEMBER")
+  roleRef             Role                @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  status              String              @default("PENDING")
+  tokenVersion        Int                 @default(0)
   lastLoginAt         DateTime?
-  createdAt           DateTime         @default(now())
+  createdAt           DateTime            @default(now())
   createdById         String?
-  updatedAt           DateTime         @default(now()) @updatedAt
+  updatedAt           DateTime            @default(now()) @updatedAt
   updatedById         String?
-  isPublished         Boolean          @default(true)
+  isPublished         Boolean             @default(true)
   publishedAt         DateTime?
   unpublishedAt       DateTime?
   memberships         Membership[]
   comments            Comment[]
   mealEntries         MealEntry[]
   mealPlans           MealPlan[]
-  expensePayments     ExpenseEntry[]   @relation("ExpensePayer")
-  expenseHistory      ExpenseHistory[] @relation("ExpenseHistoryActor")
-  expenseComments     ExpenseComment[] @relation("ExpenseCommentAuthor")
+  expensePayments     ExpenseEntry[]      @relation("ExpensePayer")
+  expenseHistory      ExpenseHistory[]    @relation("ExpenseHistoryActor")
+  expenseComments     ExpenseComment[]    @relation("ExpenseCommentAuthor")
   expenseShares       ExpenseShare[]
-  commentReplies      CommentReply[]   @relation("CommentReplyAuthor")
+  commentReplies      CommentReply[]      @relation("CommentReplyAuthor")
   groupOrders         GroupOrder[]
   payments            PaymentStatus[]
-  groupsSupervised    Group[]          @relation("GroupSupervisor")
-  invitationsReceived Invitation[]     @relation("InvitationInvitee")
-  invitationsSent     Invitation[]     @relation("InvitationInviter")
-  roleRequests        RoleRequest[]    @relation("RoleRequestUser")
-  roleDecisions       RoleRequest[]    @relation("RoleRequestDecider")
+  groupsSupervised    Group[]             @relation("GroupSupervisor")
+  invitationsReceived Invitation[]        @relation("InvitationInvitee")
+  invitationsSent     Invitation[]        @relation("InvitationInviter")
+  roleRequests        RoleRequest[]       @relation("RoleRequestUser")
+  roleDecisions       RoleRequest[]       @relation("RoleRequestDecider")
   passwordTokens      PasswordToken[]
+  notifications       Notification[]      @relation("NotificationRecipient")
+  notificationsSent   Notification[]      @relation("NotificationActor")
+  mealEditWindows     MealEditWindow[]
+  mealChangeRequests  MealChangeRequest[] @relation("MealChangeSubject")
+  mealChangeDecisions MealChangeRequest[] @relation("MealChangeDecider")
+  closingsRun         MonthClosing[]      @relation("MonthClosingActor")
+  closingLines        ClosingLine[]
+  communityMessages   CommunityMessage[]  @relation("CommunityAuthor")
+  communityRead       CommunityRead?
+  mealPrompts         MealPrompt[]
 
   @@index([role])
   @@index([status])
@@ -165,19 +175,21 @@ model LoginAttempt {
 }
 
 model Group {
-  id                  String           @id @default(uuid())
+  id                  String              @id @default(uuid())
   name                String
-  supervisor          User             @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supervisor          User                @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   supervisorId        String
-  status              String           @default("ACTIVE")
-  mealWeightBreakfast Float            @default(0.5)
-  mealWeightLunch     Float            @default(1)
-  mealWeightDinner    Float            @default(1)
-  createdAt           DateTime         @default(now())
+  status              String              @default("ACTIVE")
+  mealWeightBreakfast Float               @default(0.5)
+  mealWeightLunch     Float               @default(1)
+  mealWeightDinner    Float               @default(1)
+  mealRateMode        String              @default("MONTHLY")
+  carryForwardEnabled Boolean             @default(true)
+  createdAt           DateTime            @default(now())
   createdById         String?
-  updatedAt           DateTime         @default(now()) @updatedAt
+  updatedAt           DateTime            @default(now()) @updatedAt
   updatedById         String?
-  isPublished         Boolean          @default(true)
+  isPublished         Boolean             @default(true)
   publishedAt         DateTime?
   unpublishedAt       DateTime?
   memberships         Membership[]
@@ -189,9 +201,162 @@ model Group {
   payments            PaymentStatus[]
   comments            Comment[]
   invitations         Invitation[]
+  categories          ExpenseCategory[]
+  notifications       Notification[]
+  mealEditWindows     MealEditWindow[]
+  mealChangeRequests  MealChangeRequest[]
+  closings            MonthClosing[]
+  mealPrompts         MealPrompt[]
 
   @@index([supervisorId])
   @@index([status])
+}
+
+model ExpenseCategory {
+  id            String    @id @default(uuid())
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  groupId       String
+  code          String
+  label         String
+  isSystem      Boolean   @default(false)
+  sortOrder     Int       @default(0)
+  archivedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([groupId, code])
+  @@index([groupId, archivedAt])
+}
+
+model Notification {
+  id            String    @id @default(uuid())
+  user          User      @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  actor         User?     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId       String?
+  type          String
+  group         Group?    @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String?
+  title         String?
+  excerpt       String?
+  link          String
+  readAt        DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([groupId, createdAt])
+}
+
+model MealEditWindow {
+  id            String    @id @default(uuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  openedAt      DateTime  @default(now())
+  expiresAt     DateTime?
+  closedAt      DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([userId, groupId])
+  @@index([expiresAt])
+}
+
+model MealChangeRequest {
+  id            String    @id @default(uuid())
+  user          User      @relation("MealChangeSubject", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  date          DateTime
+  fromBreakfast Int       @default(0)
+  fromLunch     Int       @default(0)
+  fromDinner    Int       @default(0)
+  toBreakfast   Int       @default(0)
+  toLunch       Int       @default(0)
+  toDinner      Int       @default(0)
+  reason        String?
+  status        String    @default("PENDING")
+  decidedBy     User?     @relation("MealChangeDecider", fields: [decidedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  decidedById   String?
+  decidedAt     DateTime?
+  decisionNote  String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([groupId, status, date])
+  @@index([userId, status])
+}
+
+model MonthClosing {
+  id            String        @id @default(uuid())
+  group         Group         @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  monthKey      String
+  closedThrough DateTime
+  closedBy      User?         @relation("MonthClosingActor", fields: [closedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  closedById    String?
+  note          String?
+  reopenedAt    DateTime?
+  createdAt     DateTime      @default(now())
+  createdById   String?
+  updatedAt     DateTime      @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean       @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  lines         ClosingLine[]
+
+  @@index([groupId, monthKey])
+}
+
+model ClosingLine {
+  id            String       @id @default(uuid())
+  closing       MonthClosing @relation(fields: [closingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  closingId     String
+  user          User         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  carryIn       Float        @default(0)
+  mealCount     Float        @default(0)
+  mealCost      Float        @default(0)
+  billShare     Float        @default(0)
+  bazarPaid     Float        @default(0)
+  cashPaid      Float        @default(0)
+  carryOut      Float        @default(0)
+  isFinal       Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([closingId, userId])
+  @@index([userId])
 }
 
 model SiteSettings {
@@ -214,7 +379,10 @@ model SiteSettings {
   registrationWindowMinutes Int     @default(60)
   requireStrongPasswords    Boolean @default(false)
   autoApproveSupervisor     Boolean @default(false)
+  autoApproveRegistration   Boolean @default(true)
   allowSelfRoleSwitch       Boolean @default(true)
+  mealEditWindowMinutes     Int     @default(5)
+  mealEditRequiresApproval  Boolean @default(true)
 
   createdAt     DateTime  @default(now())
   createdById   String?
@@ -538,4 +706,69 @@ model Comment {
   unpublishedAt DateTime?
 
   @@index([groupId, createdAt])
+}
+
+model CommunityMessage {
+  id            String    @id @default(uuid())
+  type          String    @default("MEMBER")
+  key           String    @unique
+  author        User?     @relation("CommunityAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  authorId      String?
+  title         String?
+  text          String
+  pinned        Boolean   @default(false)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([createdAt])
+  @@index([pinned, createdAt])
+}
+
+model CommunityRead {
+  id            String    @id @default(uuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String    @unique
+  lastReadAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+}
+
+model MealPrompt {
+  id                String    @id @default(uuid())
+  user              User      @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId            String
+  group             Group     @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId           String
+  date              DateTime
+  tokenHash         String    @unique
+  channel           String    @default("EMAIL")
+  answer            String?
+  answeredBreakfast Int?
+  answeredLunch     Int?
+  answeredDinner    Int?
+  respondedAt       DateTime?
+  sentAt            DateTime?
+  expiresAt         DateTime
+  createdAt         DateTime  @default(now())
+  createdById       String?
+  updatedAt         DateTime  @default(now()) @updatedAt
+  updatedById       String?
+  isPublished       Boolean   @default(true)
+  publishedAt       DateTime?
+  unpublishedAt     DateTime?
+
+  @@unique([userId, groupId, date])
+  @@index([groupId, date])
+  @@index([expiresAt])
 }

@@ -33,7 +33,7 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 pl-10 text-sm outline-none transition focus:border-slate-900 focus:bg-white"
+        className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 pl-10 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
       />
       <svg
         aria-hidden="true"

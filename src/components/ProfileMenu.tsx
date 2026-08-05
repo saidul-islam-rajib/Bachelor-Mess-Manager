@@ -54,7 +54,7 @@ export default function ProfileMenu() {
         aria-expanded={open}
         className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all ${
           onProfile || open
-            ? 'bg-slate-900 text-white ring-2 ring-slate-900 ring-offset-2'
+            ? 'bg-brand-600 text-white ring-2 ring-brand-500 ring-offset-2'
             : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
         }`}
       >
@@ -73,7 +73,7 @@ export default function ProfileMenu() {
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 border-b border-slate-100 px-4 py-3 transition-colors hover:bg-slate-50"
           >
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
               {user.profileImage ? (
 
                 <img src={user.profileImage} alt="" className="h-11 w-11 rounded-full object-cover" />

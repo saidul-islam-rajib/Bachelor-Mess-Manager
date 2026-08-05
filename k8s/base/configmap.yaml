@@ -8,7 +8,7 @@ data:
   PORT: "8080"
   HOSTNAME: "0.0.0.0"
 
-  APP_NAME: "Bachelor Point"
+  APP_NAME: "Team Sober"
   APP_TAGLINE: "Manage your mess without the arguments."
   APP_CURRENCY_CODE: "BDT"
   APP_CURRENCY_SYMBOL: "৳"
@@ -17,14 +17,10 @@ data:
   APP_AUTHOR_NAME: "Saidul Islam Rajib"
   APP_AUTHOR_EMAIL: "saidul.is.rajib@gmail.com"
   APP_LICENSE: "MIT"
-
+  APP_URL: "https://bachelor-point.team-sober.com"
   UPLOAD_DIR: "/data/uploads"
-
   SECURITY_TRUST_PROXY_HEADERS: "true"
-
   SESSION_COOKIE_SECURE: "true"
-
   SEED_ENABLED: "false"
-
   GROUP_MAX_PER_SUPERVISOR: "10"
   PAGINATION_PAGE_SIZE: "20"

@@ -6,6 +6,7 @@ import { dayToUtcDate, parseMonth, utcDateToDay } from '@/lib/month';
 import { recordExpenseCreated } from '@/lib/expense-history';
 import { mentionIdsIn } from '@/lib/mentions';
 import { parseItems } from '@/lib/expense-items';
+import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -101,6 +102,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'POST') {
+    if (!isGroupWritable(group)) {
+      return forbidden(res, GROUP_CLOSED_MESSAGE);
+    }
+
     const { date, items, note } = req.body as { date?: string; items?: unknown; note?: string };
 
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {

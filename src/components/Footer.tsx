@@ -1,8 +1,13 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import Logo from '@/components/Logo';
+import { Button } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
-import { authorConfig } from '@/config';
+import { useCurrentUser } from '@/components/UserProvider';
+import { appConfig, authorConfig, cacheConfig } from '@/config';
+import { cached } from '@/lib/cache';
 import { strings } from '@/lib/i18n';
+import { ROUTES } from '@/lib/routes';
 
 type Settings = {
   companyName: string;
@@ -21,32 +26,71 @@ export default function Footer() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [email, setEmail] = useState('');
   const [subscribing, setSubscribing] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
-    fetch('/api/settings')
-      .then((res) => res.json())
-      .then((data) => setSettings(data.settings))
-      .catch(() => setSettings(null));
+    let active = true;
+
+    cached('site-settings', cacheConfig.siteSettingsMs, () =>
+      fetch('/api/settings')
+        .then((res) => res.json())
+        .then((data) => data.settings as Settings)
+    )
+      .then((value) => {
+        if (active) setSettings(value);
+      })
+      .catch(() => {
+        if (active) setSettings(null);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const year = new Date().getFullYear();
-  const companyName = settings?.companyName ?? 'Team Sober';
-  const copyrightOwner = settings?.copyrightOwner ?? 'Team Sober';
+  const { user } = useCurrentUser();
+  const companyName = settings?.companyName ?? appConfig.name;
+  const copyrightOwner = settings?.copyrightOwner ?? appConfig.name;
   const showNewsletter = settings?.newsletterEnabled !== false;
 
-  async function subscribe(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (!user) {
+      setSubscribed(false);
+      return;
+    }
+
+    let active = true;
+    fetch('/api/newsletter')
+      .then((res) => res.json())
+      .then((data) => {
+        if (active) setSubscribed(Boolean(data?.subscribed));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (subscribing) return;
+
+    const unsubscribing = Boolean(user) && subscribed;
     setSubscribing(true);
     try {
       const res = await fetch('/api/newsletter', {
-        method: 'POST',
+        method: unsubscribing ? 'DELETE' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: unsubscribing ? undefined : JSON.stringify({ email })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not subscribe.');
-      toast.success(data.message ?? 'Subscribed!');
-      setEmail('');
+      if (!res.ok) throw new Error(data?.error ?? strings.footer.subscribeFailed);
+
+      setSubscribed(Boolean(data?.subscribed));
+      toast.success(data.message ?? strings.footer.subscribed);
+      if (!user) setEmail('');
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -55,24 +99,67 @@ export default function Footer() {
   }
 
   return (
-    <footer className="border-t border-slate-200 bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <div className="grid gap-8 md:grid-cols-3">
-          <div>
-            <div className="flex items-center gap-2">
+    <footer className="safe-bottom border-t border-slate-200 bg-white">
+      <div className="mx-auto max-w-content px-4 py-10">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+          <div className="lg:col-span-4">
+            <a
+              href={authorConfig.url}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl transition hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+            >
               <Logo className="h-10 w-auto" />
               <span className="text-lg font-semibold">{companyName}</span>
-            </div>
-            {settings?.tagline && <p className="mt-3 max-w-xs text-sm text-slate-500">{settings.tagline}</p>}
+            </a>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
+              {settings?.tagline || appConfig.tagline}
+            </p>
           </div>
 
-          <div className="text-sm text-slate-600">
+          <nav aria-label="Footer" className="text-sm text-slate-600 lg:col-span-2">
+            <h3 className="font-semibold text-slate-900">Explore</h3>
+            <ul className="mt-3 space-y-2">
+              <li>
+                <Link href={ROUTES.guide} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                  How it works
+                </Link>
+              </li>
+              <li>
+                <Link href={ROUTES.home} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                  Home
+                </Link>
+              </li>
+              {user ? (
+                <li>
+                  <Link href={ROUTES.dashboard} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                    Dashboard
+                  </Link>
+                </li>
+              ) : (
+                <>
+                  <li>
+                    <Link href={ROUTES.auth.login} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                      Sign in
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={ROUTES.auth.register} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                      Create an account
+                    </Link>
+                  </li>
+                </>
+              )}
+            </ul>
+          </nav>
+
+          <div className="text-sm text-slate-600 lg:col-span-3">
             <h3 className="font-semibold text-slate-900">Contact</h3>
-            <ul className="mt-3 space-y-1">
+            <ul className="mt-3 space-y-2">
               {settings?.address && <li>{settings.address}</li>}
               {settings?.contactEmail && (
                 <li>
-                  <a href={`mailto:${settings.contactEmail}`} className="hover:underline">
+                  <a href={`mailto:${settings.contactEmail}`} className="inline-block py-1 hover:underline">
                     {settings.contactEmail}
                   </a>
                 </li>
@@ -83,14 +170,14 @@ export default function Footer() {
               )}
             </ul>
             {(settings?.facebookUrl || settings?.twitterUrl) && (
-              <div className="mt-3 flex gap-4">
+              <div className="mt-4 flex gap-4">
                 {settings?.facebookUrl && (
-                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
                     Facebook
                   </a>
                 )}
                 {settings?.twitterUrl && (
-                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
                     Twitter / X
                   </a>
                 )}
@@ -99,29 +186,39 @@ export default function Footer() {
           </div>
 
           {showNewsletter && (
-            <div>
-              <h3 className="font-semibold text-slate-900">Newsletter</h3>
-              <p className="mt-3 text-sm text-slate-500">Get updates from {companyName}.</p>
-              <form className="mt-3 flex flex-col gap-2 sm:flex-row" onSubmit={subscribe}>
-                <input
-                  id="newsletter-email"
-                  name="newsletterEmail"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  type="email"
-                  autoComplete="email"
-                  aria-label="Email for newsletter"
-                  required
-                  placeholder="you@example.com"
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm"
-                />
-                <button
-                  type="submit"
-                  disabled={subscribing}
-                  className="rounded-full bg-slate-900 px-5 py-2.5 text-sm text-white hover:bg-slate-700 disabled:opacity-50"
-                >
-                  {subscribing ? '...' : 'Subscribe'}
-                </button>
+            <div className="lg:col-span-3">
+              <h3 className="font-semibold text-slate-900">{strings.footer.newsletter}</h3>
+              <p className="mt-3 text-sm text-slate-500">
+                {user && subscribed
+                  ? strings.footer.subscribedAs(user.email)
+                  : user
+                    ? strings.footer.willUseAccountEmail(user.email)
+                    : strings.footer.newsletterFrom(companyName)}
+              </p>
+              <form className="mt-3 flex flex-col gap-2" onSubmit={submit}>
+                {!user && (
+                  <input
+                    id="newsletter-email"
+                    name="newsletterEmail"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    type="email"
+                    autoComplete="email"
+                    aria-label={strings.footer.emailLabel}
+                    required
+                    placeholder={strings.footer.emailPlaceholder}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+                  />
+                )}
+                <Button type="submit" loading={subscribing} variant={subscribed ? 'secondary' : 'primary'}>
+                  {subscribing
+                    ? subscribed
+                      ? strings.footer.unsubscribing
+                      : strings.footer.subscribing
+                    : subscribed
+                      ? strings.footer.unsubscribe
+                      : strings.footer.subscribe}
+                </Button>
               </form>
             </div>
           )}
@@ -130,12 +227,20 @@ export default function Footer() {
         <div className="mt-8 space-y-1 border-t border-slate-100 pt-6 text-center text-sm text-slate-500">
           <p>
             &copy; {authorConfig.copyrightStartYear === year ? year : `${authorConfig.copyrightStartYear}-${year}`}{' '}
-            {copyrightOwner}. {strings.footer.rights}
+            <a href={authorConfig.url} target="_blank" rel="noreferrer" className="font-medium text-slate-600 hover:underline">
+              {copyrightOwner}
+            </a>
+            . {strings.footer.rights}
           </p>
           <p className="text-xs text-slate-400">
-            {strings.footer.builtBy(authorConfig.name)} ·{' '}
-            <a href={`mailto:${authorConfig.email}`} className="hover:underline">
-              {authorConfig.email}
+            {strings.footer.builtByLabel}{' '}
+            <a
+              href={authorConfig.profileUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-slate-500 hover:text-brand-700 hover:underline"
+            >
+              {authorConfig.name}
             </a>{' '}
             · {strings.footer.licensed(authorConfig.license)}
           </p>

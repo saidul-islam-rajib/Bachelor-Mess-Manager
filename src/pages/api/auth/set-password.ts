@@ -6,7 +6,8 @@ import { USER_STATUS } from '@/lib/constants';
 import { badRequest, methodNotAllowed, ok, tooManyRequests } from '@/lib/http';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
 import { consumeToken, findValidToken } from '@/lib/password-tokens';
-import { getSecurityPolicy } from '@/lib/settings-service';
+import { getSecurityPolicy, getSiteSettings } from '@/lib/settings-service';
+import { ensureWelcomeMessage } from '@/lib/community';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
@@ -48,11 +49,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, passwordCheck.error);
   }
 
+  const current = await prisma.user.findUnique({
+    where: { id: lookup.userId },
+    select: { status: true }
+  });
+
+  const settings = await getSiteSettings();
+  const settledStatus = settings.autoApproveRegistration ? USER_STATUS.APPROVED : USER_STATUS.PENDING;
+
   const user = await prisma.user.update({
     where: { id: lookup.userId },
     data: {
       password: await hashPassword(password as string),
-      tokenVersion: { increment: 1 }
+      tokenVersion: { increment: 1 },
+      ...(current?.status === USER_STATUS.UNVERIFIED ? { status: settledStatus } : {})
     },
     select: { id: true, name: true, email: true, role: true, status: true, tokenVersion: true }
   });
@@ -60,6 +70,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   await consumeToken(lookup.tokenId);
 
   if (user.status === USER_STATUS.APPROVED) {
+    await ensureWelcomeMessage(user);
     await setSessionCookie(res, user.id, user.tokenVersion);
     return ok(res, {
       signedIn: true,

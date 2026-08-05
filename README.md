@@ -2,7 +2,7 @@
 
 Mess management for bachelor messes and shared flats: registration and approval,
 supervisor-run groups, a monthly meal table, bazar and bill tracking, per-member dues,
-payments, and comments.
+payments, comments, a one-tap daily meal ask, and an app-wide community room.
 
 Next.js (pages router) · TypeScript · Tailwind CSS · Prisma · Microsoft SQL Server
 
@@ -24,8 +24,45 @@ npm run dev
 
 `npm run setup` chains the three database steps (`migrate deploy`, `db:sync-roles`, `admin:init`).
 
+> **[SETUP.md](SETUP.md)** — running it locally, deploying to the live site, and installing it
+> as an app on Android and iOS. Start here.
+>
 > **[docs/ACCOUNTS.md](docs/ACCOUNTS.md)** — administrator commands, and how supervisors and
-> members sign in. Start there for day-to-day account management.
+> members sign in.
+
+### How the app works
+
+`/guide` is the in-app explainer for members and supervisors — public, no sign-in needed. These are the
+engineering notes behind it:
+
+| Doc | Covers |
+| --- | --- |
+| [settlement.md](docs/settlement.md) | How a month's money is worked out, and the balance bugs it fixes |
+| [bills.md](docs/bills.md) | Rent, gas and wifi: how a bill is split and why shares are stored |
+| [payments.md](docs/payments.md) | Recording cash from members, and who still owes what |
+| [month-closing.md](docs/month-closing.md) | Freezing a month, carrying balances forward, mid-month departures |
+| [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |
+| [expense-categories.md](docs/expense-categories.md) | Per-group cost types for the bills dropdown |
+| [notifications.md](docs/notifications.md) | The notification model, bell, and email delivery |
+| [meal-prompts.md](docs/meal-prompts.md) | The daily one-tap meal ask and the sign-in-free reply link |
+| [community.md](docs/community.md) | The app-wide room, welcome posts, and release announcements |
+| [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
+| [colors.md](docs/colors.md) | The brand colour, what each colour means, and where it is defined |
+| [caching.md](docs/caching.md) | What is cached, for how long, and what invalidates it |
+
+### Operations
+
+| Doc | Covers |
+| --- | --- |
+| [BACKUPS.md](docs/BACKUPS.md) | Daily backups, rotation, restore, and proving a restore works |
+| [TESTING.md](docs/TESTING.md) | The end-to-end suite and what it asserts |
+
+```bash
+npm run backup:db     # take a backup now, rotate old ones
+npm run restore:db    # restore the newest backup
+npm test              # every suite, one summary (200 checks)
+npm test --quiet      # summary table only
+```
 
 ---
 
@@ -107,14 +144,20 @@ are synced from `src/lib/permissions.ts` by `npm run db:sync-roles`. 3 roles, 35
 before joining another. Supervisors are exempt — they belong to each group they run so
 their own meals count.
 
-**Money.** Bazar is shared by meals eaten, priced at each day's own rate. Bills (rent,
-electricity, water, waste, chef, wifi, other) are split once when recorded, either equally
+**Money.** Bazar is shared by meals eaten. A group picks one rate for the month (total bazar
+÷ total meals) or a rate per day; day-by-day pricing falls back to the monthly rate for any
+month where meals fall on days with no bazar, because otherwise those meals would cost
+nothing and whoever ate on shopping days would pay for everybody. Cost types are per group —
+supervisors add and retire their own. Bills are split once when recorded, either equally
 across the active roster or assigned to selected members, and stored as `ExpenseShare` rows
 so a later membership change cannot rewrite last month's numbers.
 
 ```
-due = meal share + bills share − groceries they bought − cash they paid
+due = brought forward + meal share + bills share − groceries they bought − cash they paid
 ```
+
+Every allocation is done in integer paisa with largest-remainder rounding, so member shares
+always add back to what the mess actually spent. See [docs/settlement.md](docs/settlement.md).
 
 ---
 
@@ -212,6 +255,8 @@ src/
   and `node scripts/strip-comments.js` keep it that way.
 - **No hardcoded values.** Everything configurable comes from `src/config`, the string
   catalogue, `src/lib/constants.ts`, or the database.
+- **One brand colour**, the `brand` scale in `tailwind.config.js`. Brand means interactive,
+  slate means furniture — see [docs/colors.md](docs/colors.md).
 - **All user-facing text** lives in `src/lib/i18n/locales/en.ts`. Add a locale by adding a
   file next to it and registering it in `src/lib/i18n/index.ts`.
 - **No `console.*` anywhere.** The application runtime is silent: API failures return a
@@ -253,6 +298,7 @@ src/
 | `npm run db:sync-roles` | Sync roles and permissions |
 | `npm run admin:init` | Create or promote the administrator |
 | `npm run seed:db` | Sample data (development only) |
+| `npm run meals:prompt` | Send the daily one-tap meal ask (needs `MEAL_PROMPT_DISPATCH_SECRET`) |
 
 ---
 

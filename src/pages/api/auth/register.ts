@@ -5,12 +5,14 @@ import { USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { badRequest, created, methodNotAllowed, tooManyRequests } from '@/lib/http';
 import { clientIp } from '@/lib/rate-limit';
 import { countRecentRegistrations, recordRegistrationAttempt } from '@/lib/login-attempts';
+import { checkEmailQuality } from '@/lib/email-quality';
 import { getSecurityPolicy } from '@/lib/settings-service';
 import { isMailConfigured, passwordSetupEmail, sendMail } from '@/lib/mailer';
 import { issuePasswordToken, TOKEN_PURPOSE } from '@/lib/password-tokens';
 import { passwordTokenConfig, isProduction } from '@/config';
 import { strings } from '@/lib/i18n';
 import { validateEmail, validateName, validatePhone } from '@/lib/validation';
+import { findXssField } from '@/lib/xss';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -29,6 +31,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const { name, email, phone } = req.body as Record<string, unknown>;
 
+  if (findXssField({ name, email, phone })) {
+    return badRequest(res, strings.errors.suspiciousInput);
+  }
+
   const nameCheck = validateName(name);
   if (!nameCheck.ok) return badRequest(res, nameCheck.error);
 
@@ -38,34 +44,51 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const phoneCheck = validatePhone(phone);
   if (!phoneCheck.ok) return badRequest(res, phoneCheck.error);
 
+  const quality = await checkEmailQuality(emailCheck.value);
+  if (!quality.ok) {
+    return badRequest(
+      res,
+      quality.reason === 'disposable' ? strings.errors.disposableEmail : strings.errors.emailDomainUnreachable
+    );
+  }
+
   const existing = await prisma.user.findUnique({
     where: { email: emailCheck.value },
-    select: { id: true, password: true }
+    select: { id: true, name: true, email: true, password: true, status: true }
   });
 
   await recordRegistrationAttempt(emailCheck.value, ipAddress);
 
-  if (existing) {
+  const awaitingFirstPassword = Boolean(existing && !existing.password);
+
+  if (existing && !awaitingFirstPassword) {
     return created(res, { message: strings.auth.checkEmail, emailSent: true });
   }
 
-  const isFirstUser = (await prisma.user.count()) === 0;
+  const isFirstUser = !existing && (await prisma.user.count()) === 0;
 
   try {
-    const user = await prisma.user.create({
-      data: {
-        name: nameCheck.value,
-        email: emailCheck.value,
-        password: '',
-        phone: phoneCheck.value,
-        role: isFirstUser ? USER_ROLES.ADMIN : USER_ROLES.MEMBER,
-        status: isFirstUser ? USER_STATUS.APPROVED : USER_STATUS.PENDING,
-        publishedAt: isFirstUser ? new Date() : null
-      }
-    });
+    const user = existing
+      ? await prisma.user.update({
+          where: { id: existing.id },
+          data: { name: nameCheck.value, phone: phoneCheck.value },
+          select: { id: true, name: true, email: true }
+        })
+      : await prisma.user.create({
+          data: {
+            name: nameCheck.value,
+            email: emailCheck.value,
+            password: '',
+            phone: phoneCheck.value,
+            role: isFirstUser ? USER_ROLES.ADMIN : USER_ROLES.MEMBER,
+            status: isFirstUser ? USER_STATUS.APPROVED : USER_STATUS.UNVERIFIED,
+            publishedAt: isFirstUser ? new Date() : null
+          },
+          select: { id: true, name: true, email: true }
+        });
 
     const { link } = await issuePasswordToken({ userId: user.id, purpose: TOKEN_PURPOSE.SETUP, req });
-    const message = { ...passwordSetupEmail(user.name, link, passwordTokenConfig.hours), to: user.email };
+    const message = { ...passwordSetupEmail(user.name, link, passwordTokenConfig.minutes), to: user.email };
     const delivery = await sendMail(message);
 
     const delivered = delivery.ok && delivery.delivered;

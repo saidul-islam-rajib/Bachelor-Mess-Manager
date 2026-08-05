@@ -1,4 +1,5 @@
 import { describeAdminOutcome, ensureAdministrator, type AdminBootstrapOutcome } from '@/lib/bootstrap/admin';
+import { publishPendingAnnouncements } from '@/lib/community';
 import { syncRolesAndPermissions, type RoleSyncResult } from '@/lib/bootstrap/roles';
 import { getSiteSettings } from '@/lib/settings-service';
 
@@ -30,6 +31,7 @@ async function runBootstrap() {
     const reference = await syncRolesAndPermissions();
     await getSiteSettings();
     const administrator = await ensureAdministrator();
+    await publishPendingAnnouncements();
 
     globalForBootstrap.applicationBootstrapStatus = {
       completedAt: new Date().toISOString(),

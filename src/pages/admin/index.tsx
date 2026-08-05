@@ -13,6 +13,7 @@ import {
   EmptyState,
   FilterBar,
   Input,
+  Listbox,
   LoadingCard,
   Modal,
   NumberInput,
@@ -32,7 +33,7 @@ import {
 import { api, errorMessage } from '@/lib/api-client';
 import { paginationConfig } from '@/config';
 import {
-  ASSIGNABLE_ROLES,
+  GROUP_STATUS,
   GROUP_STATUS_VALUES,
   USER_ROLES,
   USER_ROLE_VALUES,
@@ -40,6 +41,7 @@ import {
   USER_STATUS_VALUES
 } from '@/lib/constants';
 import { formatDate, formatDateTime, roleLabel, statusLabel } from '@/lib/format';
+import { groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
 
@@ -90,7 +92,11 @@ type SecurityPolicy = {
 type SecurityResponse = {
   policy: SecurityPolicy;
   lockedAccounts: { email: string; failedAttempts: number; lastAttemptAt: string | null }[];
-  recentFailures: { id: string; email: string; ipAddress: string; reason: string | null; createdAt: string }[];
+};
+
+type LoginFailuresResponse = {
+  failures: { id: string; email: string; ipAddress: string; reason: string | null; createdAt: string }[];
+  meta: PageMeta;
 };
 
 const TABS = [
@@ -105,6 +111,7 @@ const TABS = [
 type TabKey = (typeof TABS)[number]['key'];
 
 const ALL_OPTION = '';
+const RECENT_REGISTRATIONS = 10;
 
 function toOptions(values: string[], labeller: (value: string) => string): SelectOption[] {
   return values.map((value) => ({ value, label: labeller(value) }));
@@ -185,6 +192,23 @@ function RegistrationsPanel() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState('');
+  const [autoApprove, setAutoApprove] = useState(true);
+  const [policyLoading, setPolicyLoading] = useState(true);
+  const [savingPolicy, setSavingPolicy] = useState(false);
+  const [recent, setRecent] = useState<AdminUser[]>([]);
+  const [recentLoading, setRecentLoading] = useState(true);
+
+  const loadPolicy = useCallback(async () => {
+    setPolicyLoading(true);
+    try {
+      const data = await api.get<{ settings: { autoApproveRegistration: boolean } }>('/api/settings');
+      setAutoApprove(data.settings.autoApproveRegistration);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setPolicyLoading(false);
+    }
+  }, [toast]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -201,9 +225,47 @@ function RegistrationsPanel() {
     }
   }, [page, toast]);
 
+  const loadRecent = useCallback(async () => {
+    setRecentLoading(true);
+    try {
+      const data = await api.get<UsersResponse>('/api/users', {
+        query: { page: 1, pageSize: RECENT_REGISTRATIONS, sortBy: 'createdAt', sortDir: 'desc' }
+      });
+      setRecent(data.users);
+    } catch (error) {
+      toast.error(errorMessage(error, strings.errors.loadFailed(strings.admin.registrations.recentTitle)));
+    } finally {
+      setRecentLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    loadPolicy();
+  }, [loadPolicy]);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    loadRecent();
+  }, [loadRecent]);
+
+  async function saveAutoApprove(checked: boolean) {
+    setSavingPolicy(true);
+    const previous = autoApprove;
+    setAutoApprove(checked);
+    try {
+      await api.patch('/api/settings', { autoApproveRegistration: checked });
+      toast.success(strings.success.saved);
+      await load();
+    } catch (error) {
+      setAutoApprove(previous);
+      toast.error(errorMessage(error));
+    } finally {
+      setSavingPolicy(false);
+    }
+  }
 
   async function decide(target: AdminUser, status: string) {
     setBusy(target.id);
@@ -214,7 +276,7 @@ function RegistrationsPanel() {
           ? strings.admin.registrations.approved(target.name)
           : strings.admin.registrations.rejected(target.name)
       );
-      await load();
+      await Promise.all([load(), loadRecent()]);
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {
@@ -252,28 +314,91 @@ function RegistrationsPanel() {
     }
   ];
 
+  const recentColumns: Column<AdminUser>[] = [
+    {
+      key: 'name',
+      header: strings.common.name,
+      render: (row) => (
+        <div>
+          <p className="font-medium">{row.name}</p>
+          <p className="text-xs text-slate-500">{row.email}</p>
+        </div>
+      )
+    },
+    { key: 'role', header: strings.common.role, render: (row) => roleLabel(row.role) },
+    { key: 'status', header: strings.common.status, render: (row) => <StatusBadge status={row.status} /> },
+    {
+      key: 'createdAt',
+      header: strings.admin.registrations.registeredAt,
+      align: 'right',
+      render: (row) => <span className="text-xs text-slate-600">{formatDateTime(row.createdAt)}</span>
+    }
+  ];
+
   return (
-    <Card>
-      <CardHeader title={strings.admin.registrations.title} />
-      <div className="mt-4">
-        <DataTable
-          columns={columns}
-          rows={users}
-          rowKey={(row) => row.id}
-          loading={loading}
-          emptyTitle={strings.admin.registrations.empty}
-          emptyDescription=""
+    <div className="space-y-4">
+      <Card>
+        <CardHeader
+          title={strings.admin.registrations.policyTitle}
+          description={
+            autoApprove
+              ? strings.admin.registrations.autoApproveOnNotice
+              : strings.admin.registrations.autoApproveOffNotice
+          }
         />
-        {meta && <Pagination meta={meta} onPageChange={setPage} disabled={loading} />}
-      </div>
-    </Card>
+        <div className="mt-4">
+          <Checkbox
+            label={strings.admin.registrations.autoApproveLabel}
+            hint={strings.admin.registrations.autoApproveHint}
+            checked={autoApprove}
+            disabled={policyLoading || savingPolicy}
+            onChange={saveAutoApprove}
+          />
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader title={strings.admin.registrations.title} />
+        <div className="mt-4">
+          <DataTable
+            columns={columns}
+            rows={users}
+            rowKey={(row) => row.id}
+            loading={loading}
+            emptyTitle={strings.admin.registrations.empty}
+            emptyDescription=""
+          />
+          {meta && <Pagination meta={meta} onPageChange={setPage} disabled={loading} />}
+        </div>
+      </Card>
+
+      <Card>
+        <CardHeader
+          title={strings.admin.registrations.recentTitle}
+          description={strings.admin.registrations.recentHint}
+        />
+        <div className="mt-4">
+          <DataTable
+            columns={recentColumns}
+            rows={recent}
+            rowKey={(row) => row.id}
+            loading={recentLoading}
+            emptyTitle={strings.admin.registrations.recentEmpty}
+            emptyDescription=""
+          />
+        </div>
+      </Card>
+    </div>
   );
 }
 
 function UsersPanel() {
   const toast = useToast();
+  const confirm = useConfirm();
   const lookups = useLookups();
+  const currentUserId = useCurrentUser().user?.id;
 
+  const [busy, setBusy] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const search = useDebouncedValue(searchInput);
   const [role, setRole] = useState(ALL_OPTION);
@@ -334,6 +459,46 @@ function UsersPanel() {
     setOnlyWithoutGroup(false);
   }
 
+  async function impersonate(user: AdminUser) {
+    const confirmed = await confirm({
+      title: strings.admin.impersonation.confirmTitle,
+      message: strings.admin.impersonation.confirmBody(user.name),
+      confirmLabel: strings.admin.impersonation.action
+    });
+    if (!confirmed) return;
+
+    setBusy(user.id);
+    try {
+      await api.post('/api/admin/impersonate', { userId: user.id });
+      window.location.href = ROUTES.dashboard;
+    } catch (error) {
+      toast.error(errorMessage(error));
+      setBusy('');
+    }
+  }
+
+  async function deleteUser(user: AdminUser) {
+    const accepted = await confirm({
+      title: strings.admin.users.deleteConfirmTitle(user.name),
+      message: strings.admin.users.deleteConfirmBody,
+      confirmLabel: strings.admin.users.deletePermanently,
+      destructive: true
+    });
+    if (!accepted) return;
+
+    setBusy(user.id);
+    try {
+      await api.delete(`/api/users/${user.id}`);
+      toast.success(strings.admin.users.deleted(user.name));
+      setPage(1);
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusy('');
+    }
+  }
+
   const columns: Column<AdminUser>[] = [
     {
       key: 'name',
@@ -388,9 +553,21 @@ function UsersPanel() {
       header: strings.common.actions,
       align: 'right',
       render: (row) => (
-        <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
-          {strings.common.edit}
-        </Button>
+        <div className="flex justify-end gap-2">
+          {row.role !== USER_ROLES.ADMIN && row.status === USER_STATUS.APPROVED && (
+            <Button size="sm" variant="secondary" onClick={() => impersonate(row)} disabled={busy === row.id}>
+              {strings.admin.impersonation.action}
+            </Button>
+          )}
+          <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
+            {strings.common.edit}
+          </Button>
+          {row.id !== currentUserId && (
+            <Button size="sm" variant="danger" onClick={() => deleteUser(row)} disabled={busy === row.id}>
+              {strings.admin.users.deletePermanently}
+            </Button>
+          )}
+        </div>
       )
     }
   ];
@@ -511,11 +688,13 @@ function EditUserModal({
   onSaved: () => Promise<void>;
 }) {
   const toast = useToast();
+  const currentUserId = useCurrentUser().user?.id;
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState(USER_ROLES.MEMBER as string);
   const [status, setStatus] = useState(USER_STATUS.APPROVED as string);
+  const [password, setPassword] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -525,6 +704,7 @@ function EditUserModal({
     setPhone(user.phone ?? '');
     setRole(user.role);
     setStatus(user.status);
+    setPassword('');
   }, [user]);
 
   if (!user) return null;
@@ -533,8 +713,15 @@ function EditUserModal({
     if (!user) return;
     setSaving(true);
     try {
-      await api.patch(`/api/users/${user.id}`, { name, email, phone, role, status });
-      toast.success(strings.admin.users.updated(name));
+      await api.patch(`/api/users/${user.id}`, {
+        name,
+        email,
+        phone,
+        role,
+        status,
+        ...(password ? { password } : {})
+      });
+      toast.success(password ? strings.admin.users.passwordChanged(name) : strings.admin.users.updated(name));
       await onSaved();
     } catch (error) {
       toast.error(errorMessage(error));
@@ -543,7 +730,7 @@ function EditUserModal({
     }
   }
 
-  const isAdminAccount = user.role === USER_ROLES.ADMIN;
+  const isSelf = user.id === currentUserId;
 
   return (
     <Modal
@@ -566,16 +753,26 @@ function EditUserModal({
         <Input label={strings.common.name} value={name} onChange={setName} />
         <Input label={strings.common.email} type="email" value={email} onChange={setEmail} />
         <Input label={strings.common.phone} type="tel" value={phone} onChange={setPhone} optional required={false} />
+        <Input
+          label={strings.admin.users.newPassword}
+          type="password"
+          value={password}
+          onChange={setPassword}
+          hint={strings.admin.users.newPasswordHint}
+          autoComplete="new-password"
+          optional
+          required={false}
+        />
 
-        {isAdminAccount ? (
-          <Alert tone="warning">{strings.admin.users.roleChangeBlocked}</Alert>
+        {isSelf ? (
+          <Alert tone="warning">{strings.admin.users.cannotChangeSelf}</Alert>
         ) : (
           <>
             <Select
               label={strings.common.role}
               value={role}
               onChange={setRole}
-              options={toOptions(ASSIGNABLE_ROLES, roleLabel)}
+              options={toOptions(USER_ROLE_VALUES, roleLabel)}
             />
             <Select
               label={strings.common.status}
@@ -634,6 +831,50 @@ function GroupsPanel() {
     load();
   }, [load]);
 
+  async function toggleGroupStatus(group: AdminGroup) {
+    const deactivating = group.status === GROUP_STATUS.ACTIVE;
+    const accepted = await confirm({
+      title: deactivating
+        ? strings.groups.deactivateConfirm(group.name)
+        : strings.groups.activateConfirm(group.name),
+      message: deactivating ? strings.groups.deactivateMessage : strings.groups.activateMessage,
+      confirmLabel: deactivating ? strings.groups.deactivate : strings.groups.activate,
+      destructive: deactivating
+    });
+    if (!accepted) return;
+
+    try {
+      await api.patch(`/api/groups/${group.id}`, {
+        status: deactivating ? GROUP_STATUS.INACTIVE : GROUP_STATUS.ACTIVE
+      });
+      toast.success(
+        deactivating ? strings.groups.deactivated(group.name) : strings.groups.activated(group.name)
+      );
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error, strings.groups.statusUpdateFailed));
+    }
+  }
+
+  async function deleteGroup(group: AdminGroup) {
+    const accepted = await confirm({
+      title: strings.admin.groups.deleteConfirmTitle(group.name),
+      message: strings.admin.groups.deleteConfirmBody,
+      confirmLabel: strings.admin.groups.deletePermanently,
+      destructive: true
+    });
+    if (!accepted) return;
+
+    try {
+      await api.delete(`/api/groups/${group.id}`);
+      toast.success(strings.admin.groups.deleted(group.name));
+      setPage(1);
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error));
+    }
+  }
+
   async function createGroup() {
     setCreating(true);
     try {
@@ -656,7 +897,7 @@ function GroupsPanel() {
       key: 'name',
       header: strings.common.group,
       render: (row) => (
-        <Link href={`/groups/${row.id}`} className="font-medium hover:underline">
+        <Link href={groupPath(row.id)} className="font-medium hover:underline">
           {row.name}
         </Link>
       )
@@ -679,9 +920,21 @@ function GroupsPanel() {
       header: strings.common.actions,
       align: 'right',
       render: (row) => (
-        <Button size="sm" variant="secondary" onClick={() => setManaging(row)}>
-          {strings.admin.groups.manageMembers}
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button size="sm" variant="secondary" onClick={() => setManaging(row)}>
+            {strings.admin.groups.manageMembers}
+          </Button>
+          <Button
+            size="sm"
+            variant={row.status === GROUP_STATUS.ACTIVE ? 'danger' : 'secondary'}
+            onClick={() => toggleGroupStatus(row)}
+          >
+            {row.status === GROUP_STATUS.ACTIVE ? strings.groups.deactivate : strings.groups.activate}
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => deleteGroup(row)}>
+            {strings.admin.groups.deletePermanently}
+          </Button>
+        </div>
       )
     }
   ];
@@ -849,6 +1102,28 @@ function GroupMembersModal({
     }
   }
 
+  async function deleteAccount(member: { id: string; name: string }) {
+    const confirmed = await confirm({
+      title: strings.admin.users.deleteConfirmTitle(member.name),
+      message: strings.admin.users.deleteConfirmBody,
+      destructive: true,
+      confirmLabel: strings.admin.users.deletePermanently
+    });
+    if (!confirmed) return;
+
+    setBusy(member.id);
+    try {
+      await api.delete(`/api/users/${member.id}`);
+      toast.success(strings.admin.users.deleted(member.name));
+      await load();
+      await onChanged();
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusy('');
+    }
+  }
+
   const active = members.filter((member) => member.isActive);
 
   return (
@@ -887,9 +1162,14 @@ function GroupMembersModal({
                   <p className="truncate text-xs text-slate-500">{member.email}</p>
                 </div>
                 {!member.isSupervisor && (
-                  <Button size="sm" variant="danger" loading={busy === member.id} onClick={() => remove(member)}>
-                    {strings.common.remove}
-                  </Button>
+                  <div className="flex shrink-0 gap-2">
+                    <Button size="sm" variant="secondary" loading={busy === member.id} onClick={() => remove(member)}>
+                      {strings.common.remove}
+                    </Button>
+                    <Button size="sm" variant="danger" disabled={busy === member.id} onClick={() => deleteAccount(member)}>
+                      {strings.admin.groups.deleteMemberAccount}
+                    </Button>
+                  </div>
                 )}
               </li>
             ))}
@@ -908,6 +1188,11 @@ function SecurityPanel() {
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState('');
 
+  const [failures, setFailures] = useState<LoginFailuresResponse | null>(null);
+  const [failuresPage, setFailuresPage] = useState(1);
+  const [failuresPageSize, setFailuresPageSize] = useState(paginationConfig.pageSize);
+  const [failuresLoading, setFailuresLoading] = useState(true);
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -921,9 +1206,27 @@ function SecurityPanel() {
     }
   }, [toast]);
 
+  const loadFailures = useCallback(async () => {
+    setFailuresLoading(true);
+    try {
+      const response = await api.get<LoginFailuresResponse>('/api/admin/login-attempts', {
+        query: { page: failuresPage, pageSize: failuresPageSize }
+      });
+      setFailures(response);
+    } catch (error) {
+      toast.error(errorMessage(error, strings.errors.loadFailed(strings.admin.security.recentFailures)));
+    } finally {
+      setFailuresLoading(false);
+    }
+  }, [failuresPage, failuresPageSize, toast]);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    loadFailures();
+  }, [loadFailures]);
 
   async function save() {
     if (!form) return;
@@ -944,7 +1247,8 @@ function SecurityPanel() {
     try {
       await api.delete('/api/admin/security', { email });
       toast.success(strings.admin.security.unlocked(email));
-      await load();
+      setFailuresPage(1);
+      await Promise.all([load(), loadFailures()]);
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {
@@ -1052,11 +1356,13 @@ function SecurityPanel() {
       <Card>
         <CardHeader title={strings.admin.security.recentFailures} />
         <div className="mt-4">
-          {data.recentFailures.length === 0 ? (
+          {failuresLoading && !failures ? (
+            <LoadingCard />
+          ) : !failures || failures.failures.length === 0 ? (
             <EmptyState title={strings.admin.security.noRecentFailures} description="" />
           ) : (
             <ul className="divide-y divide-slate-100 text-sm">
-              {data.recentFailures.map((failure) => (
+              {failures.failures.map((failure) => (
                 <li key={failure.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
                   <span className="truncate">{failure.email}</span>
                   <span className="text-xs text-slate-500">
@@ -1065,6 +1371,17 @@ function SecurityPanel() {
                 </li>
               ))}
             </ul>
+          )}
+          {failures && (
+            <Pagination
+              meta={failures.meta}
+              onPageChange={setFailuresPage}
+              onPageSizeChange={(size) => {
+                setFailuresPageSize(size);
+                setFailuresPage(1);
+              }}
+              disabled={failuresLoading}
+            />
           )}
         </div>
       </Card>
@@ -1082,7 +1399,19 @@ type SiteSettings = {
   facebookUrl: string | null;
   twitterUrl: string | null;
   newsletterEnabled: boolean;
+  mealEditWindowMinutes: number;
+  mealEditRequiresApproval: boolean;
 };
+
+const MEAL_EDIT_WINDOW_OPTIONS = [
+  { value: 5, label: '5 minutes' },
+  { value: 10, label: '10 minutes' },
+  { value: 15, label: '15 minutes' },
+  { value: 30, label: '30 minutes' },
+  { value: 60, label: '1 hour' },
+  { value: 1440, label: '1 day' },
+  { value: 0, label: 'No time limit' }
+];
 
 function SettingsPanel() {
   const toast = useToast();
@@ -1111,7 +1440,7 @@ function SettingsPanel() {
     }
   }
 
-  function update(key: keyof SiteSettings, value: string | boolean) {
+  function update(key: keyof SiteSettings, value: string | boolean | number) {
     setSettings((current) => (current ? { ...current, [key]: value } : current));
   }
 
@@ -1150,6 +1479,32 @@ function SettingsPanel() {
         checked={settings.newsletterEnabled}
         onChange={(checked) => update('newsletterEnabled', checked)}
       />
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold">Editing past meals</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          A member unlocks past days from the meals page. This is how long that unlock lasts before it closes itself
+          again.
+        </p>
+
+        <Listbox
+          className="mt-4 block max-w-xs"
+          label="Unlock lasts for"
+          value={String(settings.mealEditWindowMinutes)}
+          onChange={(next) => update('mealEditWindowMinutes', Number(next))}
+          options={MEAL_EDIT_WINDOW_OPTIONS.map((option) => ({
+            value: String(option.value),
+            label: option.label
+          }))}
+        />
+
+        <Checkbox
+          className="mt-4"
+          label="Supervisor must approve a member's past-meal change before it counts"
+          checked={settings.mealEditRequiresApproval}
+          onChange={(checked) => update('mealEditRequiresApproval', checked)}
+        />
+      </div>
 
       <div className="mt-5">
         <Button onClick={save} loading={saving}>

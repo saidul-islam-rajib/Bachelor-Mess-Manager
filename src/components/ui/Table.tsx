@@ -34,7 +34,11 @@ export function DataTable<T>({
   renderCard
 }: DataTableProps<T>) {
   if (loading) {
-    return <SkeletonRows rows={5} />;
+    return (
+      <div role="status" aria-busy="true" aria-label={strings.common.loading}>
+        <SkeletonRows rows={5} />
+      </div>
+    );
   }
 
   if (rows.length === 0) {
@@ -48,7 +52,11 @@ export function DataTable<T>({
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               {columns.map((column) => (
-                <th key={column.key} className={`px-3 py-2 ${ALIGN_CLASSES[column.align ?? 'left']}`}>
+                <th
+                  key={column.key}
+                  scope="col"
+                  className={`whitespace-nowrap px-3 py-2 ${ALIGN_CLASSES[column.align ?? 'left']}`}
+                >
                   {column.header}
                 </th>
               ))}

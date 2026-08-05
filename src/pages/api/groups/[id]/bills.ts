@@ -2,10 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { BILL_TYPE_VALUES, SPLIT_METHODS } from '@/lib/constants';
+import { BILL_TYPE_FILTER, SPLIT_METHODS } from '@/lib/constants';
 import { computeShares, isBillType } from '@/lib/bills';
+import { categoryLabels, isValidBillType, listCategories } from '@/lib/expense-categories';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseCreated } from '@/lib/expense-history';
+import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -36,7 +38,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     const [rows, memberships] = await Promise.all([
       prisma.expenseEntry.findMany({
-        where: { groupId, type: { in: BILL_TYPE_VALUES }, date: { gte: start, lt: nextStart } },
+        where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
         include: {
           payer: { select: { id: true, name: true } },
           shares: { include: { user: { select: { id: true, name: true } } } }
@@ -71,9 +73,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
+    const [categories, labels] = await Promise.all([listCategories(groupId), categoryLabels(groupId)]);
+
     return ok(res, {
       canManage,
       currentUserId: sessionUser.id,
+      categories,
+      categoryLabels: labels,
       bills,
       members: memberships.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email })),
       totals: {
@@ -91,11 +97,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!canManage) {
       return forbidden(res, "Only this group's supervisor can record bills.");
     }
+    if (!isGroupWritable(group)) {
+      return forbidden(res, GROUP_CLOSED_MESSAGE);
+    }
 
     const { type, amount, date, note, splitMethod, shares, isReceived, payerId } = req.body as Record<string, unknown>;
 
-    if (!isBillType(type)) {
-      return badRequest(res, 'Choose a valid cost type.');
+    if (!isBillType(type) || !(await isValidBillType(groupId, type))) {
+      return badRequest(res, 'Choose a cost type from this group’s list.');
     }
 
     const value = Number(amount);

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { groupConfig } from '@/config';
-import { USER_ROLES } from '@/lib/constants';
+import { GROUP_STATUS, USER_ROLES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 
 export const MAX_GROUPS_PER_SUPERVISOR = groupConfig.maxGroupsPerSupervisor;
@@ -46,7 +46,9 @@ export async function canJoinGroupSelf(userId: string, groupId: string): Promise
 }
 
 export async function canCreateGroup(supervisorId: string): Promise<JoinCheck> {
-  const count = await prisma.group.count({ where: { supervisorId } });
+  const count = await prisma.group.count({
+    where: { supervisorId, status: GROUP_STATUS.ACTIVE }
+  });
   if (count >= groupConfig.maxGroupsPerSupervisor) {
     return { ok: false, error: strings.groups.limitExceeded(groupConfig.maxGroupsPerSupervisor, count) };
   }
@@ -67,6 +69,13 @@ export async function activateMembership(groupId: string, userId: string) {
     where: { id: existing.id },
     data: { isActive: true, leftAt: null, joinedAt: new Date() }
   });
+}
+
+export const GROUP_CLOSED_MESSAGE =
+  'This mess is closed. Reopen it from the group page before recording anything new.';
+
+export function isGroupWritable(group: { status: string } | null): boolean {
+  return group?.status === GROUP_STATUS.ACTIVE;
 }
 
 const MILLISECONDS_PER_DAY = 86_400_000;

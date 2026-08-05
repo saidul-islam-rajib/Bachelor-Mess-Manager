@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { PageTitle } from '@/components/ui/PageTitle';
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
@@ -35,7 +36,7 @@ export function PageContainer({
   width?: 'narrow' | 'medium' | 'wide';
   className?: string;
 }) {
-  const widthClass = width === 'narrow' ? 'max-w-2xl' : width === 'medium' ? 'max-w-4xl' : 'max-w-6xl';
+  const widthClass = width === 'narrow' ? 'max-w-2xl' : width === 'medium' ? 'max-w-4xl' : 'max-w-content';
   return <section className={`mx-auto ${widthClass} px-4 py-8 sm:py-10 ${className}`}>{children}</section>;
 }
 
@@ -50,6 +51,9 @@ export function PageHeader({
 }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      {typeof title === 'string' && (
+        <PageTitle title={title} description={typeof description === 'string' ? description : undefined} />
+      )}
       <div>
         <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
         {description && <p className="mt-1 text-slate-600">{description}</p>}

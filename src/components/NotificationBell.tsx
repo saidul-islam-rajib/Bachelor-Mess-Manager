@@ -1,15 +1,46 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ROUTES } from '@/lib/routes';
-import { useInvitations } from '@/components/InvitationsProvider';
+import { strings } from '@/lib/i18n';
+import { useInvitations, type Invitation } from '@/components/InvitationsProvider';
+import { useNotifications, type AppNotification } from '@/components/NotificationsProvider';
 import InvitationCard from '@/components/InvitationCard';
+import NotificationCard from '@/components/NotificationCard';
+
+type FeedItem =
+  | { kind: 'invitation'; id: string; createdAt: string; invitation: Invitation }
+  | { kind: 'notification'; id: string; createdAt: string; notification: AppNotification };
 
 export default function NotificationBell() {
-  const { invitations, count, loading } = useInvitations();
+  const { invitations, count: invitationCount, loading: loadingInvitations } = useInvitations();
+  const { notifications, unreadCount, loading: loadingNotifications, markAllRead } = useNotifications();
   const [open, setOpen] = useState(false);
+  const [anchorTop, setAnchorTop] = useState(0);
   const wrapper = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const count = invitationCount + unreadCount;
+  const loading = loadingInvitations || loadingNotifications;
+
+  const items = useMemo<FeedItem[]>(() => {
+    const merged: FeedItem[] = [
+      ...invitations.map((invitation) => ({
+        kind: 'invitation' as const,
+        id: `invitation-${invitation.id}`,
+        createdAt: invitation.createdAt,
+        invitation
+      })),
+      ...notifications.map((notification) => ({
+        kind: 'notification' as const,
+        id: `notification-${notification.id}`,
+        createdAt: notification.createdAt,
+        notification
+      }))
+    ];
+
+    return merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [invitations, notifications]);
 
   useEffect(() => {
     if (!open) return;
@@ -35,6 +66,23 @@ export default function NotificationBell() {
     return () => router.events.off('routeChangeComplete', close);
   }, [router.events]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const measure = () => {
+      const rect = wrapper.current?.getBoundingClientRect();
+      if (rect) setAnchorTop(rect.bottom + 8);
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [open]);
+
   return (
     <div ref={wrapper} className="relative">
       <button
@@ -56,43 +104,80 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <p className="text-sm font-semibold">Notifications</p>
-            {count > 0 && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">{count} new</span>
-            )}
-          </div>
+        <>
+          <div
+            aria-hidden
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-40 bg-slate-900/25 sm:hidden"
+          />
 
-          <div className="max-h-96 overflow-y-auto">
-            {loading ? (
-              <p className="px-4 py-6 text-center text-sm text-slate-400">Loading...</p>
-            ) : count === 0 ? (
-              <div className="px-4 py-8 text-center">
-                <p className="text-sm font-medium text-slate-600">You&apos;re all caught up</p>
-                <p className="mt-1 text-xs text-slate-400">Group invitations will show up here.</p>
+          <div
+            role="dialog"
+            aria-label={strings.notifications.panelTitle}
+            style={{ '--bell-top': `${anchorTop}px` } as CSSProperties}
+            className="fixed inset-x-3 top-[var(--bell-top)] z-50 flex max-h-[calc(100dvh_-_var(--bell-top)_-_1rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:max-h-none sm:w-[22rem]"
+          >
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-4 py-3">
+              <p className="text-sm font-semibold">{strings.notifications.panelTitle}</p>
+              <div className="flex items-center gap-2">
+                {count > 0 && (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                    {strings.notifications.newCount(count)}
+                  </span>
+                )}
+                {unreadCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => markAllRead()}
+                    className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-900"
+                  >
+                    {strings.notifications.markAllRead}
+                  </button>
+                )}
               </div>
-            ) : (
-              <ul className="divide-y divide-slate-100">
-                {invitations.map((invitation) => (
-                  <li key={invitation.id}>
-                    <InvitationCard invitation={invitation} compact />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+            </div>
 
-          <div className="border-t border-slate-100 bg-slate-50 px-4 py-2.5">
-            <Link
-              href={ROUTES.profile}
-              onClick={() => setOpen(false)}
-              className="text-xs font-medium text-slate-600 hover:text-slate-900"
-            >
-              Manage in profile →
-            </Link>
+            <div className="flex-1 overflow-y-auto overscroll-contain sm:max-h-96">
+              {loading && items.length === 0 ? (
+                <p className="px-4 py-6 text-center text-sm text-slate-400">{strings.common.loading}</p>
+              ) : items.length === 0 ? (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-sm font-medium text-slate-600">{strings.notifications.caughtUp}</p>
+                  <p className="mt-1 text-xs text-slate-400">{strings.notifications.caughtUpHint}</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-slate-100">
+                  {items.map((item) => (
+                    <li key={item.id}>
+                      {item.kind === 'invitation' ? (
+                        <InvitationCard invitation={item.invitation} compact />
+                      ) : (
+                        <NotificationCard notification={item.notification} onNavigate={() => setOpen(false)} />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-100 bg-slate-50 px-4 py-2.5">
+              <Link
+                href={ROUTES.notifications}
+                onClick={() => setOpen(false)}
+                className="text-xs font-semibold text-slate-700 hover:text-slate-900"
+              >
+                {strings.notifications.seeAll} →
+              </Link>
+              <Link
+                href={ROUTES.profile}
+                onClick={() => setOpen(false)}
+                className="text-xs font-medium text-slate-500 hover:text-slate-900"
+              >
+                {strings.nav.profile}
+              </Link>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

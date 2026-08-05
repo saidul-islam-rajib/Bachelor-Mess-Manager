@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { BILL_TYPE_VALUES, SPLIT_METHODS } from '@/lib/constants';
+import { BILL_TYPE_FILTER, EXPENSE_TYPES, SPLIT_METHODS } from '@/lib/constants';
 import { round2 } from '@/lib/month';
 
 export type ShareInput = { userId: string; amount: number };
@@ -10,7 +10,7 @@ export type ShareResult =
   | { ok: false; error: string };
 
 export function isBillType(type: unknown): type is string {
-  return typeof type === 'string' && BILL_TYPE_VALUES.includes(type);
+  return typeof type === 'string' && type.length > 0 && type !== EXPENSE_TYPES.BAZAR;
 }
 
 export function splitEqually(total: number, userIds: string[]): ComputedShare[] {
@@ -105,7 +105,7 @@ export async function computeShares(options: {
 export async function billSharesByUser(groupId: string, start: Date, nextStart: Date) {
   const rows = await prisma.expenseShare.findMany({
     where: {
-      expense: { groupId, type: { in: BILL_TYPE_VALUES }, date: { gte: start, lt: nextStart } }
+      expense: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } }
     },
     select: { userId: true, amount: true }
   });
@@ -120,7 +120,7 @@ export async function billSharesByUser(groupId: string, start: Date, nextStart: 
 export async function billTotalsByType(groupId: string, start: Date, nextStart: Date) {
   const rows = await prisma.expenseEntry.groupBy({
     by: ['type'],
-    where: { groupId, type: { in: BILL_TYPE_VALUES }, date: { gte: start, lt: nextStart } },
+    where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
     _sum: { amount: true }
   });
 
