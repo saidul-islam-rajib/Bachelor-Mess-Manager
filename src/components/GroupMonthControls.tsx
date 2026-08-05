@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { cacheConfig } from '@/config';
 import { cached, invalidate } from '@/lib/cache';
+import { strings } from '@/lib/i18n';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 
 export type GroupOption = {
@@ -75,14 +76,14 @@ export function GroupMonthControls({
   const options = monthOptions();
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <label className="flex-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Group</span>
+      <label className="min-w-0 flex-1">
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.group}</span>
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
           className="app-select mt-1"
         >
-          {groups.length === 0 && <option value="">No groups</option>}
+          {groups.length === 0 && <option value="">{strings.groups.noGroups}</option>}
           {groups.map((g) => (
             <option key={g.id} value={g.id}>
               {g.name}
@@ -90,8 +91,8 @@ export function GroupMonthControls({
           ))}
         </select>
       </label>
-      <label className="flex-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Month</span>
+      <label className="min-w-0 flex-1">
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.month}</span>
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value)}

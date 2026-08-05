@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import { Button } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { appConfig, authorConfig, cacheConfig } from '@/config';
@@ -25,6 +26,7 @@ export default function Footer() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [email, setEmail] = useState('');
   const [subscribing, setSubscribing] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -52,19 +54,43 @@ export default function Footer() {
   const copyrightOwner = settings?.copyrightOwner ?? appConfig.name;
   const showNewsletter = settings?.newsletterEnabled !== false;
 
-  async function subscribe(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (!user) {
+      setSubscribed(false);
+      return;
+    }
+
+    let active = true;
+    fetch('/api/newsletter')
+      .then((res) => res.json())
+      .then((data) => {
+        if (active) setSubscribed(Boolean(data?.subscribed));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (subscribing) return;
+
+    const unsubscribing = Boolean(user) && subscribed;
     setSubscribing(true);
     try {
       const res = await fetch('/api/newsletter', {
-        method: 'POST',
+        method: unsubscribing ? 'DELETE' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: unsubscribing ? undefined : JSON.stringify({ email })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not subscribe.');
-      toast.success(data.message ?? 'Subscribed!');
-      setEmail('');
+      if (!res.ok) throw new Error(data?.error ?? strings.footer.subscribeFailed);
+
+      setSubscribed(Boolean(data?.subscribed));
+      toast.success(data.message ?? strings.footer.subscribed);
+      if (!user) setEmail('');
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -161,28 +187,38 @@ export default function Footer() {
 
           {showNewsletter && (
             <div className="lg:col-span-3">
-              <h3 className="font-semibold text-slate-900">Newsletter</h3>
-              <p className="mt-3 text-sm text-slate-500">Get updates from {companyName}.</p>
-              <form className="mt-3 flex flex-col gap-2" onSubmit={subscribe}>
-                <input
-                  id="newsletter-email"
-                  name="newsletterEmail"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  type="email"
-                  autoComplete="email"
-                  aria-label="Email for newsletter"
-                  required
-                  placeholder="you@example.com"
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
-                />
-                <button
-                  type="submit"
-                  disabled={subscribing}
-                  className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
-                >
-                  {subscribing ? '...' : 'Subscribe'}
-                </button>
+              <h3 className="font-semibold text-slate-900">{strings.footer.newsletter}</h3>
+              <p className="mt-3 text-sm text-slate-500">
+                {user && subscribed
+                  ? strings.footer.subscribedAs(user.email)
+                  : user
+                    ? strings.footer.willUseAccountEmail(user.email)
+                    : strings.footer.newsletterFrom(companyName)}
+              </p>
+              <form className="mt-3 flex flex-col gap-2" onSubmit={submit}>
+                {!user && (
+                  <input
+                    id="newsletter-email"
+                    name="newsletterEmail"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    type="email"
+                    autoComplete="email"
+                    aria-label={strings.footer.emailLabel}
+                    required
+                    placeholder={strings.footer.emailPlaceholder}
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+                  />
+                )}
+                <Button type="submit" loading={subscribing} variant={subscribed ? 'secondary' : 'primary'}>
+                  {subscribing
+                    ? subscribed
+                      ? strings.footer.unsubscribing
+                      : strings.footer.subscribing
+                    : subscribed
+                      ? strings.footer.unsubscribe
+                      : strings.footer.subscribe}
+                </Button>
               </form>
             </div>
           )}

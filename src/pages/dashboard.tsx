@@ -123,15 +123,15 @@ export default function DashboardPage() {
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold sm:text-3xl">Dashboard</h1>
+          <h1 className="text-2xl font-semibold sm:text-3xl">{dashboardStrings.title}</h1>
           <p className="mt-1 text-slate-600">
-            {user ? `Signed in as ${user.name} (${user.role.toLowerCase()})` : 'Your mess at a glance.'}
+            {user ? dashboardStrings.signedInAs(user.name, user.role.toLowerCase()) : dashboardStrings.subtitle}
           </p>
         </div>
 
         {data?.role !== USER_ROLES.ADMIN && (
-          <label className="min-w-[12rem]">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Month</span>
+          <label className="w-full min-w-[12rem] sm:w-auto">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.month}</span>
             <select value={month} onChange={(e) => setMonth(e.target.value)} className="app-select mt-1">
               {monthOptions().map((o) => (
                 <option key={o.key} value={o.key}>
