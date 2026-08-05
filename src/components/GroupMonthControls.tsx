@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { cacheConfig } from '@/config';
+import { Listbox } from '@/components/ui';
 import { cached, invalidate } from '@/lib/cache';
 import { strings } from '@/lib/i18n';
 import { currentMonthKey, monthOptions } from '@/lib/month';
@@ -76,35 +77,21 @@ export function GroupMonthControls({
   const options = monthOptions();
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <label className="min-w-0 flex-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.group}</span>
-        <select
-          value={groupId}
-          onChange={(e) => setGroupId(e.target.value)}
-          className="app-select mt-1"
-        >
-          {groups.length === 0 && <option value="">{strings.groups.noGroups}</option>}
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className="min-w-0 flex-1">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.month}</span>
-        <select
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="app-select mt-1"
-        >
-          {options.map((o) => (
-            <option key={o.key} value={o.key}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Listbox
+        className="min-w-0 flex-1"
+        label={strings.common.group}
+        value={groupId}
+        onChange={setGroupId}
+        placeholder={strings.groups.noGroups}
+        options={groups.map((group) => ({ value: group.id, label: group.name }))}
+      />
+      <Listbox
+        className="min-w-0 flex-1"
+        label={strings.common.month}
+        value={month}
+        onChange={setMonth}
+        options={options.map((option) => ({ value: option.key, label: option.label }))}
+      />
     </div>
   );
 }

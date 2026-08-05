@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
-import { PageTitle } from '@/components/ui';
+import { Listbox, PageTitle } from '@/components/ui';
 import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import { todayKey } from '@/lib/month';
 
@@ -424,19 +424,18 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
   const fields = (
     <>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Cost type</span>
-          <select value={type} onChange={(e) => setType(e.target.value)} className="app-select mt-1">
-            {initial && !categories.some((c) => c.code === initial.type) && (
-              <option value={initial.type}>{initial.type} (retired)</option>
-            )}
-            {categories.map((category) => (
-              <option key={category.code} value={category.code}>
-                {category.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Listbox
+          className="block"
+          label="Cost type"
+          value={type}
+          onChange={setType}
+          options={[
+            ...(initial && !categories.some((c) => c.code === initial.type)
+              ? [{ value: initial.type, label: `${initial.type} (retired)` }]
+              : []),
+            ...categories.map((category) => ({ value: category.code, label: category.label }))
+          ]}
+        />
 
         <label className="block">
           <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Amount (৳)</span>
@@ -462,17 +461,14 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
           />
         </label>
 
-        <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Paid by</span>
-          <select value={payerId} onChange={(e) => setPayerId(e.target.value)} className="app-select mt-1">
-            <option value="">Not recorded</option>
-            {members.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <Listbox
+          className="block"
+          label="Paid by"
+          value={payerId}
+          onChange={setPayerId}
+          placeholder="Not recorded"
+          options={[{ value: '', label: 'Not recorded' }, ...members.map((m) => ({ value: m.id, label: m.name }))]}
+        />
       </div>
 
       <label className="mt-4 block">

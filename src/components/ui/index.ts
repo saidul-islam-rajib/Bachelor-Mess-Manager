@@ -13,6 +13,9 @@ export type { FieldProps } from '@/components/ui/Field';
 export { Input, NumberInput, PasswordInput, Textarea } from '@/components/ui/Input';
 export type { InputProps, NumberInputProps, PasswordInputProps, TextareaProps } from '@/components/ui/Input';
 
+export { Listbox, ListboxControl } from '@/components/ui/Listbox';
+export type { ListboxOption, ListboxProps, ListboxControlProps } from '@/components/ui/Listbox';
+
 export { Select, Checkbox, RadioGroup } from '@/components/ui/Select';
 export type { SelectOption, SelectProps, CheckboxProps, RadioGroupProps, RadioOption } from '@/components/ui/Select';
 

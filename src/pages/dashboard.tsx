@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
-import { ActionLink, LinkButton } from '@/components/ui';
+import { ActionLink, LinkButton, Listbox } from '@/components/ui';
 import { commentsAnchorPath, groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
@@ -130,16 +130,13 @@ export default function DashboardPage() {
         </div>
 
         {data?.role !== USER_ROLES.ADMIN && (
-          <label className="w-full min-w-[12rem] sm:w-auto">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.month}</span>
-            <select value={month} onChange={(e) => setMonth(e.target.value)} className="app-select mt-1">
-              {monthOptions().map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Listbox
+            className="w-full sm:w-56"
+            label={strings.common.month}
+            value={month}
+            onChange={setMonth}
+            options={monthOptions().map((option) => ({ value: option.key, label: option.label }))}
+          />
         )}
       </div>
 

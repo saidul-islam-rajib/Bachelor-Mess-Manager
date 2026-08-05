@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
-import { useConfirm } from '@/components/ui';
+import { Listbox, useConfirm } from '@/components/ui';
 import { GROUP_STATUS, MEAL_RATE_MODES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 
@@ -143,22 +143,17 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
         <h2 className="text-lg font-semibold">{strings.groups.costRulesTitle}</h2>
         <p className="mt-1 text-sm text-slate-500">{strings.groups.costRulesHint}</p>
 
-        <label className="mt-4 block max-w-md">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-            {strings.groups.rateLabel}
-          </span>
-          <select
-            value={group.mealRateMode}
-            disabled={busy}
-            onChange={(event) =>
-              patch({ mealRateMode: event.target.value }, strings.groups.rateSaved, strings.groups.settingFailed)
-            }
-            className="app-select mt-1 disabled:opacity-50"
-          >
-            <option value={MEAL_RATE_MODES.MONTHLY}>{strings.groups.rateMonthly}</option>
-            <option value={MEAL_RATE_MODES.DAILY}>{strings.groups.rateDaily}</option>
-          </select>
-        </label>
+        <Listbox
+          className="mt-4 block max-w-md"
+          label={strings.groups.rateLabel}
+          value={group.mealRateMode}
+          disabled={busy}
+          onChange={(next) => patch({ mealRateMode: next }, strings.groups.rateSaved, strings.groups.settingFailed)}
+          options={[
+            { value: MEAL_RATE_MODES.MONTHLY, label: strings.groups.rateMonthly },
+            { value: MEAL_RATE_MODES.DAILY, label: strings.groups.rateDaily }
+          ]}
+        />
         <p className="mt-2 max-w-xl text-xs text-slate-500">
           {group.mealRateMode === MEAL_RATE_MODES.DAILY
             ? strings.groups.rateDailyHint

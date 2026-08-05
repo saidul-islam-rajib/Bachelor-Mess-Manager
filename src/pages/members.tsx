@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
-import { Collapsible, PageTitle, useConfirm } from '@/components/ui';
+import { Collapsible, Listbox, PageTitle, useConfirm } from '@/components/ui';
 import InviteMembers from '@/components/members/InviteMembers';
 import GroupSettings from '@/components/members/GroupSettings';
 import MessComments from '@/components/members/MessComments';
@@ -205,24 +205,19 @@ export default function MembersPage() {
         <div className="space-y-6">
           <Card>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-              <label className="block min-w-0 flex-1">
-                <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  {strings.members.groupLabel}
-                </span>
-                <select
-                  value={groupId}
-                  onChange={(event) => setGroupId(event.target.value)}
-                  className="app-select mt-1"
-                >
-                  {groups.map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.status === GROUP_STATUS.ACTIVE
-                        ? group.name
-                        : `${group.name} (${strings.groups.inactive})`}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <Listbox
+                className="min-w-0 flex-1"
+                label={strings.members.groupLabel}
+                value={groupId}
+                onChange={setGroupId}
+                options={groups.map((group) => ({
+                  value: group.id,
+                  label:
+                    group.status === GROUP_STATUS.ACTIVE
+                      ? group.name
+                      : `${group.name} (${strings.groups.inactive})`
+                }))}
+              />
 
               {(showClosed || hiddenInactive > 0) && (
                 <label className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600">

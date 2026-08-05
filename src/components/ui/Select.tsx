@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
-import { Field, controlClasses } from '@/components/ui/Field';
+import { Field } from '@/components/ui/Field';
+import { Listbox, ListboxControl } from '@/components/ui/Listbox';
 
 export type SelectOption = { value: string; label: string; disabled?: boolean };
 
@@ -34,43 +35,31 @@ export function Select({
 
   if (compact) {
     return (
-      <label className={containerClassName}>
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</span>
-        <select
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          disabled={disabled}
-          className="app-select mt-1"
-        >
-          {placeholder !== undefined && <option value="">{placeholder}</option>}
-          {options.map((option) => (
-            <option key={option.value} value={option.value} disabled={option.disabled}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Listbox
+        className={containerClassName}
+        label={label}
+        value={value}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
+        disabled={disabled}
+      />
     );
   }
 
   return (
     <Field id={id} label={label} error={error} hint={hint} optional={optional} className={containerClassName}>
-      <select
+      <ListboxControl
         id={id}
+        labelledBy={`${id}-label`}
+        describedBy={error ? `${id}-error` : undefined}
+        invalid={Boolean(error)}
         value={value}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={onChange}
+        options={options}
+        placeholder={placeholder}
         disabled={disabled}
-        aria-invalid={Boolean(error)}
-        aria-describedby={error ? `${id}-error` : undefined}
-        className={controlClasses(Boolean(error))}
-      >
-        {placeholder !== undefined && <option value="">{placeholder}</option>}
-        {options.map((option) => (
-          <option key={option.value} value={option.value} disabled={option.disabled}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      />
     </Field>
   );
 }

@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
-import { PageTitle } from '@/components/ui';
+import { Listbox, ListboxControl, PageTitle } from '@/components/ui';
+import { strings } from '@/lib/i18n';
 import { todayKey } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
 
@@ -95,6 +96,10 @@ export default function PaymentsPage() {
 
   async function record(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!payerId) {
+      toast.error(strings.payments.selectMember);
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch(`/api/groups/${groupId}/payments`, {
@@ -176,20 +181,19 @@ export default function PaymentsPage() {
                   <h2 className="text-lg font-semibold">Record a payment</h2>
                   <p className="mt-1 text-sm text-slate-500">Log cash a member handed over for the mess.</p>
                   <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_auto_auto]" onSubmit={record}>
-                    <select
+                    <ListboxControl
                       value={payerId}
-                      onChange={(e) => setPayerId(e.target.value)}
-                      required
-                      className="app-select !rounded-xl !py-2"
-                    >
-                      <option value="">Select member</option>
-                      {data.members.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                          {m.id === user?.id ? ' (you)' : ''}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={setPayerId}
+                      placeholder="Select member"
+                      buttonClassName="!rounded-xl !py-2"
+                      options={[
+                        { value: '', label: 'Select member' },
+                        ...data.members.map((m) => ({
+                          value: m.id,
+                          label: `${m.name}${m.id === user?.id ? ' (you)' : ''}`
+                        }))
+                      ]}
+                    />
                     <input
                       type="number"
                       min="0"
@@ -459,17 +463,16 @@ function CloseForm({
         </label>
 
         {!lockScope && (
-          <label className="block">
-            <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Close for</span>
-            <select
-              value={scope}
-              onChange={(e) => setScope(e.target.value as 'GROUP' | 'MEMBERS')}
-              className="app-select mt-1"
-            >
-              <option value="GROUP">Everyone in the mess</option>
-              <option value="MEMBERS">Selected members only</option>
-            </select>
-          </label>
+          <Listbox
+            className="block"
+            label="Close for"
+            value={scope}
+            onChange={(next) => setScope(next as 'GROUP' | 'MEMBERS')}
+            options={[
+              { value: 'GROUP', label: 'Everyone in the mess' },
+              { value: 'MEMBERS', label: 'Selected members only' }
+            ]}
+          />
         )}
       </div>
 
