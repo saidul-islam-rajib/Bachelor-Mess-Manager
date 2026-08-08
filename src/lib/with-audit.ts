@@ -1,7 +1,7 @@
 import type { NextApiHandler, NextApiRequest } from 'next';
 import { parseCookies, SESSION_COOKIE_NAME } from '@/lib/auth';
 import { runWithActor } from '@/lib/audit';
-import { bootstrapApplication } from '@/lib/bootstrap';
+import { bootstrapApplication, bootstrapWithin } from '@/lib/bootstrap';
 import { securityConfig } from '@/config';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
 import { verifySessionToken } from '@/lib/session';
@@ -9,6 +9,7 @@ import { payloadTooLarge, serverError, tooManyRequests } from '@/lib/http';
 
 const WINDOW_MS = 60_000;
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const READ_BOOTSTRAP_WAIT_MS = 1_500;
 
 function isRead(req: NextApiRequest): boolean {
   return READ_METHODS.has((req.method ?? 'GET').toUpperCase());
@@ -40,7 +41,8 @@ export function withAudit(handler: NextApiHandler): NextApiHandler {
       return tooManyRequests(res);
     }
 
-    await bootstrapApplication();
+    if (read) await bootstrapWithin(READ_BOOTSTRAP_WAIT_MS);
+    else await bootstrapApplication();
 
     const token = parseCookies(req.headers.cookie)[SESSION_COOKIE_NAME];
     const payload = await verifySessionToken(token);
@@ -48,7 +50,8 @@ export function withAudit(handler: NextApiHandler): NextApiHandler {
     return runWithActor(payload?.uid ?? null, async () => {
       try {
         return await handler(req, res);
-      } catch {
+      } catch (error) {
+        console.error(`[api] ${req.method ?? 'GET'} ${req.url ?? ''} failed`, error);
         if (res.headersSent) return;
         return serverError(res);
       }

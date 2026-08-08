@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
+import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { dayToUtcDate, parseMonth, utcDateToDay } from '@/lib/month';
 import { recordExpenseCreated } from '@/lib/expense-history';
@@ -20,13 +20,26 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, 'Group ID is required.');
   }
 
-  const group = await prisma.group.findUnique({ where: { id: groupId } });
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    select: {
+      id: true,
+      status: true,
+      supervisorId: true,
+      supervisor: { select: { id: true, name: true } },
+      memberships: {
+        where: { userId: sessionUser.id, isActive: true },
+        select: { id: true },
+        take: 1
+      }
+    }
+  });
   if (!group) {
     return notFound(res, 'Group not found.');
   }
 
   const admin = requireAdmin(sessionUser);
-  const isMember = await isGroupMember(groupId, sessionUser.id);
+  const isMember = group.supervisorId === sessionUser.id || group.memberships.length > 0;
   if (!isMember && !admin) {
     return forbidden(res, 'You are not a member of this group.');
   }
@@ -37,19 +50,25 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
 
-    const rows = await prisma.expenseEntry.findMany({
-      where: { groupId, type: 'BAZAR', date: { gte: start, lt: nextStart } },
-      include: {
-        payer: { select: { id: true, name: true, email: true } },
-        items: { orderBy: { sortOrder: 'asc' } },
-        comments: {
-          where: { deletedAt: null },
-          include: { user: { select: { id: true, name: true } } },
-          orderBy: { createdAt: 'asc' }
-        }
-      },
-      orderBy: [{ date: 'asc' }, { createdAt: 'asc' }]
-    });
+    const [rows, memberships] = await Promise.all([
+      prisma.expenseEntry.findMany({
+        where: { groupId, type: 'BAZAR', date: { gte: start, lt: nextStart } },
+        include: {
+          payer: { select: { id: true, name: true, email: true } },
+          items: { orderBy: { sortOrder: 'asc' } },
+          comments: {
+            where: { deletedAt: null },
+            include: { user: { select: { id: true, name: true } } },
+            orderBy: { createdAt: 'asc' }
+          }
+        },
+        orderBy: [{ date: 'asc' }, { createdAt: 'asc' }]
+      }),
+      prisma.membership.findMany({
+        where: { groupId, isActive: true },
+        select: { user: { select: { id: true, name: true } } }
+      })
+    ]);
 
     const expenses = rows.map((r) => ({
       id: r.id,
@@ -67,17 +86,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }))
     }));
 
-    const [memberships, supervisor] = await Promise.all([
-      prisma.membership.findMany({
-        where: { groupId, isActive: true },
-        include: { user: { select: { id: true, name: true } } }
-      }),
-      prisma.user.findUnique({ where: { id: group.supervisorId }, select: { id: true, name: true } })
-    ]);
-
     const memberMap = new Map<string, { id: string; name: string }>();
     for (const membership of memberships) memberMap.set(membership.user.id, membership.user);
-    if (supervisor) memberMap.set(supervisor.id, supervisor);
+    if (group.supervisor) memberMap.set(group.supervisor.id, group.supervisor);
 
     const mentioned = new Set<string>();
     for (const expense of expenses) {

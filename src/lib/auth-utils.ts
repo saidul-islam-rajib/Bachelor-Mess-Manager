@@ -9,6 +9,9 @@ import {
 import { shouldRefresh, verifyImpersonationToken, verifySessionToken } from '@/lib/session';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
+import { cached } from '@/lib/cache';
+import { sessionUserKey } from '@/lib/cache-keys';
+import { cacheConfig } from '@/config';
 
 export type ImpersonatedBy = {
   id: string;
@@ -49,7 +52,9 @@ export function readImpersonationToken(req: NextApiRequest): string | undefined 
 }
 
 async function loadActiveUser(userId: string, tokenVersion: number): Promise<SessionUserRow | null> {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: SESSION_USER_SELECT });
+  const user = await cached(sessionUserKey(userId), cacheConfig.sessionUserMs, () =>
+    prisma.user.findUnique({ where: { id: userId }, select: SESSION_USER_SELECT })
+  );
 
   if (!user) return null;
   if (user.tokenVersion !== tokenVersion) return null;
@@ -107,11 +112,15 @@ export function requireSupervisorOrAdmin(user: { role?: string } | null) {
 }
 
 export async function isGroupMember(groupId: string, userId: string) {
-  const group = await prisma.group.findUnique({ where: { id: groupId }, select: { supervisorId: true } });
-  if (!group) return false;
-  if (group.supervisorId === userId) return true;
-  const membership = await prisma.membership.findFirst({ where: { groupId, userId, isActive: true } });
-  return Boolean(membership);
+  const group = await prisma.group.findFirst({
+    where: {
+      id: groupId,
+      OR: [{ supervisorId: userId }, { memberships: { some: { userId, isActive: true } } }]
+    },
+    select: { id: true }
+  });
+
+  return Boolean(group);
 }
 
 export async function canManageGroup(groupId: string, user: { id: string; role: string } | null) {
