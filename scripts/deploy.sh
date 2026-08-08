@@ -17,8 +17,15 @@ command -v docker >/dev/null || die "docker is not installed"
 cd "$REPO_DIR"
 
 if [ "${1:-}" = "--rollback" ]; then
-  log "Rolling back to the previous colour"
-  sudo KUBECTL="$KUBECTL" NAMESPACE="$NAMESPACE" APP="$APP" ./scripts/blue-green.sh rollback
+  active="$(kc get svc "${APP}-active" -o jsonpath='{.spec.selector.color}')"
+  case "$active" in
+    blue) previous=green ;;
+    *)    previous=blue ;;
+  esac
+  log "Active is ${active}; restoring ${previous}"
+  kc scale "deployment/${APP}-${previous}" --replicas=1
+  kc rollout status "deployment/${APP}-${previous}" --timeout=300s
+  sudo KUBECTL="$KUBECTL" NAMESPACE="$NAMESPACE" APP="$APP" ./scripts/blue-green.sh switch
   exit 0
 fi
 
@@ -44,13 +51,10 @@ if ! kc wait --for=condition=complete "job/${APP}-migrate" --timeout=900s; then
 fi
 kc logs "job/${APP}-migrate" --tail=20 || true
 
-log "Deploying to the idle colour"
+log "Deploying to the idle colour and switching traffic"
 sudo KUBECTL="$KUBECTL" NAMESPACE="$NAMESPACE" APP="$APP" ./scripts/blue-green.sh deploy "$FULL_IMAGE"
 
-log "Switching live traffic"
-sudo KUBECTL="$KUBECTL" NAMESPACE="$NAMESPACE" APP="$APP" ./scripts/blue-green.sh switch
-
-log "Scaling down the idle colour"
+log "Scaling down the previous colour"
 sudo KUBECTL="$KUBECTL" NAMESPACE="$NAMESPACE" APP="$APP" ./scripts/blue-green.sh scale-down-idle
 
 log "Deployed ${IMAGE}"

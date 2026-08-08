@@ -40,8 +40,13 @@ To undo the last release:
 
     ./scripts/deploy.sh --rollback
 
-Both wrap `scripts/blue-green.sh`, which deploys to the idle colour, smoke-tests
-it, switches traffic, and scales the old colour down.
+`blue-green.sh deploy` already switches traffic once the idle colour passes its
+smoke test, so `deploy.sh` must not call `switch` afterwards; doing so flips
+traffic straight back onto the colour that is mid-restart.
+
+Because the previous colour is scaled to zero after a release to save memory on
+a small node, rollback scales it back up and waits for it to become ready before
+switching, rather than assuming it still has running pods.
 
 ## Namespace quota
 
