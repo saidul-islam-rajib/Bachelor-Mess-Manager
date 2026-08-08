@@ -6,20 +6,34 @@ const { report, reportError, reportFailure } = require('./reporter');
 const SKIP = new Set(['_prisma_migrations']);
 
 function connectionFor(database) {
-  return (process.env.DATABASE_URL || '').replace(/([;?]database=)[^;]+/i, `$1${database}`);
+  const url = process.env.DATABASE_URL || '';
+  if (!database) return url;
+  try {
+    const parsed = new URL(url);
+    parsed.pathname = `/${encodeURIComponent(database)}`;
+    return parsed.toString();
+  } catch (error) {
+    return url.replace(/([;?]database=)[^;&]+/i, `$1${database}`);
+  }
 }
 
 async function counts(url) {
   const prisma = new PrismaClient({ datasources: { db: { url } } });
   try {
     const tables = await prisma.$queryRawUnsafe(
-      `SELECT TABLE_SCHEMA AS s, TABLE_NAME AS t FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' ORDER BY TABLE_NAME`
+      `SELECT table_schema AS s, table_name AS t
+       FROM information_schema.tables
+       WHERE table_type = 'BASE TABLE'
+         AND table_schema NOT IN ('pg_catalog', 'information_schema')
+       ORDER BY table_name`
     );
 
     const result = {};
     for (const { s, t } of tables) {
       if (SKIP.has(t)) continue;
-      const rows = await prisma.$queryRawUnsafe(`SELECT COUNT(*) AS n FROM [${s}].[${t}]`);
+      const rows = await prisma.$queryRawUnsafe(
+        `SELECT COUNT(*) AS n FROM "${String(s).replace(/"/g, '""')}"."${String(t).replace(/"/g, '""')}"`
+      );
       result[t] = Number(rows[0].n);
     }
     return result;

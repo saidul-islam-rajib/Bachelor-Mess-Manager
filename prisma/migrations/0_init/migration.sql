@@ -1,605 +1,1005 @@
-BEGIN TRY
-
-BEGIN TRAN;
-
 -- CreateTable
-CREATE TABLE [dbo].[Role] (
-    [code] NVARCHAR(1000) NOT NULL,
-    [name] NVARCHAR(1000) NOT NULL,
-    [description] NVARCHAR(1000),
-    [rank] INT NOT NULL CONSTRAINT [Role_rank_df] DEFAULT 0,
-    [isSystem] BIT NOT NULL CONSTRAINT [Role_isSystem_df] DEFAULT 1,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Role_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Role_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Role_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Role_pkey] PRIMARY KEY CLUSTERED ([code])
+CREATE TABLE "Role" (
+    "code" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "rank" INTEGER NOT NULL DEFAULT 0,
+    "isSystem" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Role_pkey" PRIMARY KEY ("code")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[Permission] (
-    [code] NVARCHAR(1000) NOT NULL,
-    [name] NVARCHAR(1000) NOT NULL,
-    [description] NVARCHAR(1000),
-    [category] NVARCHAR(1000) NOT NULL,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Permission_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Permission_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Permission_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Permission_pkey] PRIMARY KEY CLUSTERED ([code])
+CREATE TABLE "Permission" (
+    "code" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "category" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Permission_pkey" PRIMARY KEY ("code")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[RolePermission] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [roleCode] NVARCHAR(1000) NOT NULL,
-    [permissionCode] NVARCHAR(1000) NOT NULL,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [RolePermission_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [RolePermission_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [RolePermission_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [RolePermission_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [RolePermission_roleCode_permissionCode_key] UNIQUE NONCLUSTERED ([roleCode],[permissionCode])
+CREATE TABLE "RolePermission" (
+    "id" TEXT NOT NULL,
+    "roleCode" TEXT NOT NULL,
+    "permissionCode" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "RolePermission_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[User] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [name] NVARCHAR(1000) NOT NULL,
-    [email] NVARCHAR(1000) NOT NULL,
-    [password] NVARCHAR(1000) NOT NULL,
-    [phone] NVARCHAR(1000),
-    [profileImage] NVARCHAR(1000),
-    [role] NVARCHAR(1000) NOT NULL CONSTRAINT [User_role_df] DEFAULT 'MEMBER',
-    [status] NVARCHAR(1000) NOT NULL CONSTRAINT [User_status_df] DEFAULT 'PENDING',
-    [tokenVersion] INT NOT NULL CONSTRAINT [User_tokenVersion_df] DEFAULT 0,
-    [lastLoginAt] DATETIME2,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [User_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [User_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [User_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [User_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [User_email_key] UNIQUE NONCLUSTERED ([email])
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "phone" TEXT,
+    "profileImage" TEXT,
+    "role" TEXT NOT NULL DEFAULT 'MEMBER',
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "tokenVersion" INTEGER NOT NULL DEFAULT 0,
+    "lastLoginAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[LoginAttempt] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [email] NVARCHAR(1000) NOT NULL,
-    [ipAddress] NVARCHAR(1000) NOT NULL,
-    [userAgent] NVARCHAR(1000),
-    [successful] BIT NOT NULL CONSTRAINT [LoginAttempt_successful_df] DEFAULT 0,
-    [reason] NVARCHAR(1000),
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [LoginAttempt_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [LoginAttempt_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [LoginAttempt_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [LoginAttempt_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "RoleRequest" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "requestedRole" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "reason" TEXT,
+    "decidedById" TEXT,
+    "decidedAt" TIMESTAMP(3),
+    "decisionNote" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "RoleRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[Group] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [name] NVARCHAR(1000) NOT NULL,
-    [supervisorId] NVARCHAR(1000) NOT NULL,
-    [status] NVARCHAR(1000) NOT NULL CONSTRAINT [Group_status_df] DEFAULT 'ACTIVE',
-    [mealWeightBreakfast] FLOAT(53) NOT NULL CONSTRAINT [Group_mealWeightBreakfast_df] DEFAULT 0.5,
-    [mealWeightLunch] FLOAT(53) NOT NULL CONSTRAINT [Group_mealWeightLunch_df] DEFAULT 1,
-    [mealWeightDinner] FLOAT(53) NOT NULL CONSTRAINT [Group_mealWeightDinner_df] DEFAULT 1,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Group_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Group_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Group_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Group_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "PasswordToken" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "purpose" TEXT NOT NULL,
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "usedAt" TIMESTAMP(3),
+    "requestedIp" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "PasswordToken_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[SiteSettings] (
-    [id] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_id_df] DEFAULT 'singleton',
-    [companyName] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_companyName_df] DEFAULT 'Bachelor Point',
-    [tagline] NVARCHAR(1000),
-    [address] NVARCHAR(1000),
-    [contactEmail] NVARCHAR(1000),
-    [contactPhone] NVARCHAR(1000),
-    [copyrightOwner] NVARCHAR(1000) NOT NULL CONSTRAINT [SiteSettings_copyrightOwner_df] DEFAULT 'Bachelor Point',
-    [facebookUrl] NVARCHAR(1000),
-    [twitterUrl] NVARCHAR(1000),
-    [newsletterEnabled] BIT NOT NULL CONSTRAINT [SiteSettings_newsletterEnabled_df] DEFAULT 1,
-    [maxLoginAttempts] INT NOT NULL CONSTRAINT [SiteSettings_maxLoginAttempts_df] DEFAULT 5,
-    [loginLockoutMinutes] INT NOT NULL CONSTRAINT [SiteSettings_loginLockoutMinutes_df] DEFAULT 15,
-    [maxLoginAttemptsPerIp] INT NOT NULL CONSTRAINT [SiteSettings_maxLoginAttemptsPerIp_df] DEFAULT 40,
-    [ipLockoutMinutes] INT NOT NULL CONSTRAINT [SiteSettings_ipLockoutMinutes_df] DEFAULT 15,
-    [maxRegistrationsPerIp] INT NOT NULL CONSTRAINT [SiteSettings_maxRegistrationsPerIp_df] DEFAULT 5,
-    [registrationWindowMinutes] INT NOT NULL CONSTRAINT [SiteSettings_registrationWindowMinutes_df] DEFAULT 60,
-    [requireStrongPasswords] BIT NOT NULL CONSTRAINT [SiteSettings_requireStrongPasswords_df] DEFAULT 0,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [SiteSettings_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [SiteSettings_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [SiteSettings_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [SiteSettings_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "LoginAttempt" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "ipAddress" TEXT NOT NULL,
+    "userAgent" TEXT,
+    "successful" BOOLEAN NOT NULL DEFAULT false,
+    "reason" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "LoginAttempt_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[Subscriber] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [email] NVARCHAR(1000) NOT NULL,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Subscriber_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Subscriber_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Subscriber_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Subscriber_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [Subscriber_email_key] UNIQUE NONCLUSTERED ([email])
+CREATE TABLE "Group" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "supervisorId" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+    "mealWeightBreakfast" DOUBLE PRECISION NOT NULL DEFAULT 0.5,
+    "mealWeightLunch" DOUBLE PRECISION NOT NULL DEFAULT 1,
+    "mealWeightDinner" DOUBLE PRECISION NOT NULL DEFAULT 1,
+    "mealRateMode" TEXT NOT NULL DEFAULT 'MONTHLY',
+    "carryForwardEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Group_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[Invitation] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [inviteeId] NVARCHAR(1000) NOT NULL,
-    [invitedById] NVARCHAR(1000) NOT NULL,
-    [status] NVARCHAR(1000) NOT NULL CONSTRAINT [Invitation_status_df] DEFAULT 'PENDING',
-    [respondedAt] DATETIME2,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Invitation_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Invitation_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Invitation_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Invitation_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "ExpenseCategory" (
+    "id" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "code" TEXT NOT NULL,
+    "label" TEXT NOT NULL,
+    "isSystem" BOOLEAN NOT NULL DEFAULT false,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+    "archivedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ExpenseCategory_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[Membership] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [joinedAt] DATETIME2 NOT NULL CONSTRAINT [Membership_joinedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [leftAt] DATETIME2,
-    [isActive] BIT NOT NULL CONSTRAINT [Membership_isActive_df] DEFAULT 1,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Membership_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Membership_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Membership_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Membership_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "Notification" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "actorId" TEXT,
+    "type" TEXT NOT NULL,
+    "groupId" TEXT,
+    "title" TEXT,
+    "excerpt" TEXT,
+    "link" TEXT NOT NULL,
+    "readAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[MealEntry] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [date] DATETIME2 NOT NULL,
-    [breakfastCount] INT NOT NULL CONSTRAINT [MealEntry_breakfastCount_df] DEFAULT 0,
-    [lunchCount] INT NOT NULL CONSTRAINT [MealEntry_lunchCount_df] DEFAULT 0,
-    [dinnerCount] INT NOT NULL CONSTRAINT [MealEntry_dinnerCount_df] DEFAULT 0,
-    [totalMeals] INT NOT NULL CONSTRAINT [MealEntry_totalMeals_df] DEFAULT 0,
-    [fromPlan] BIT NOT NULL CONSTRAINT [MealEntry_fromPlan_df] DEFAULT 0,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [MealEntry_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [MealEntry_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [MealEntry_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [MealEntry_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [MealEntry_userId_groupId_date_key] UNIQUE NONCLUSTERED ([userId],[groupId],[date])
+CREATE TABLE "MealEditWindow" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "openedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "expiresAt" TIMESTAMP(3),
+    "closedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MealEditWindow_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[MealPlan] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [isActive] BIT NOT NULL CONSTRAINT [MealPlan_isActive_df] DEFAULT 1,
-    [startDate] DATETIME2 NOT NULL,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [MealPlan_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [MealPlan_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [MealPlan_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [MealPlan_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [MealPlan_userId_groupId_key] UNIQUE NONCLUSTERED ([userId],[groupId])
+CREATE TABLE "MealChangeRequest" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "fromBreakfast" INTEGER NOT NULL DEFAULT 0,
+    "fromLunch" INTEGER NOT NULL DEFAULT 0,
+    "fromDinner" INTEGER NOT NULL DEFAULT 0,
+    "toBreakfast" INTEGER NOT NULL DEFAULT 0,
+    "toLunch" INTEGER NOT NULL DEFAULT 0,
+    "toDinner" INTEGER NOT NULL DEFAULT 0,
+    "reason" TEXT,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "decidedById" TEXT,
+    "decidedAt" TIMESTAMP(3),
+    "decisionNote" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MealChangeRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[MealPlanDay] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [planId] NVARCHAR(1000) NOT NULL,
-    [weekday] INT NOT NULL,
-    [enabled] BIT NOT NULL CONSTRAINT [MealPlanDay_enabled_df] DEFAULT 0,
-    [breakfast] INT NOT NULL CONSTRAINT [MealPlanDay_breakfast_df] DEFAULT 0,
-    [lunch] INT NOT NULL CONSTRAINT [MealPlanDay_lunch_df] DEFAULT 0,
-    [dinner] INT NOT NULL CONSTRAINT [MealPlanDay_dinner_df] DEFAULT 0,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [MealPlanDay_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [MealPlanDay_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [MealPlanDay_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [MealPlanDay_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [MealPlanDay_planId_weekday_key] UNIQUE NONCLUSTERED ([planId],[weekday])
+CREATE TABLE "MonthClosing" (
+    "id" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "monthKey" TEXT NOT NULL,
+    "closedThrough" TIMESTAMP(3) NOT NULL,
+    "closedById" TEXT,
+    "note" TEXT,
+    "reopenedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MonthClosing_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[ExpenseEntry] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [type] NVARCHAR(1000) NOT NULL,
-    [amount] FLOAT(53) NOT NULL,
-    [date] DATETIME2 NOT NULL,
-    [payerId] NVARCHAR(1000),
-    [isReceived] BIT NOT NULL CONSTRAINT [ExpenseEntry_isReceived_df] DEFAULT 0,
-    [splitMethod] NVARCHAR(1000) NOT NULL,
-    [note] NVARCHAR(1000),
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseEntry_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseEntry_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [ExpenseEntry_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [ExpenseEntry_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "ClosingLine" (
+    "id" TEXT NOT NULL,
+    "closingId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "carryIn" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "mealCount" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "mealCost" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "billShare" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "bazarPaid" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "cashPaid" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "carryOut" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "isFinal" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ClosingLine_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[ExpenseShare] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [expenseId] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [amount] FLOAT(53) NOT NULL,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseShare_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseShare_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [ExpenseShare_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [ExpenseShare_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [ExpenseShare_expenseId_userId_key] UNIQUE NONCLUSTERED ([expenseId],[userId])
+CREATE TABLE "SiteSettings" (
+    "id" TEXT NOT NULL DEFAULT 'singleton',
+    "companyName" TEXT NOT NULL DEFAULT 'Bachelor Point',
+    "tagline" TEXT,
+    "address" TEXT,
+    "contactEmail" TEXT,
+    "contactPhone" TEXT,
+    "copyrightOwner" TEXT NOT NULL DEFAULT 'Bachelor Point',
+    "facebookUrl" TEXT,
+    "twitterUrl" TEXT,
+    "newsletterEnabled" BOOLEAN NOT NULL DEFAULT true,
+    "maxLoginAttempts" INTEGER NOT NULL DEFAULT 5,
+    "loginLockoutMinutes" INTEGER NOT NULL DEFAULT 15,
+    "maxLoginAttemptsPerIp" INTEGER NOT NULL DEFAULT 40,
+    "ipLockoutMinutes" INTEGER NOT NULL DEFAULT 15,
+    "maxRegistrationsPerIp" INTEGER NOT NULL DEFAULT 5,
+    "registrationWindowMinutes" INTEGER NOT NULL DEFAULT 60,
+    "requireStrongPasswords" BOOLEAN NOT NULL DEFAULT false,
+    "autoApproveSupervisor" BOOLEAN NOT NULL DEFAULT false,
+    "autoApproveRegistration" BOOLEAN NOT NULL DEFAULT true,
+    "allowSelfRoleSwitch" BOOLEAN NOT NULL DEFAULT true,
+    "mealEditWindowMinutes" INTEGER NOT NULL DEFAULT 5,
+    "mealEditRequiresApproval" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "SiteSettings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[ExpenseItem] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [expenseId] NVARCHAR(1000) NOT NULL,
-    [name] NVARCHAR(1000) NOT NULL,
-    [amount] FLOAT(53) NOT NULL,
-    [sortOrder] INT NOT NULL CONSTRAINT [ExpenseItem_sortOrder_df] DEFAULT 0,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseItem_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseItem_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [ExpenseItem_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [ExpenseItem_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "Subscriber" (
+    "id" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Subscriber_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[ExpenseComment] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [expenseId] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [text] NVARCHAR(1000) NOT NULL,
-    [deletedAt] DATETIME2,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseComment_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseComment_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [ExpenseComment_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [ExpenseComment_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "Invitation" (
+    "id" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "inviteeId" TEXT NOT NULL,
+    "invitedById" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "respondedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Invitation_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[PaymentStatus] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [expenseId] NVARCHAR(1000),
-    [amountDue] FLOAT(53) NOT NULL,
-    [amountPaid] FLOAT(53) NOT NULL CONSTRAINT [PaymentStatus_amountPaid_df] DEFAULT 0,
-    [status] NVARCHAR(1000) NOT NULL,
-    [dueDate] DATETIME2 NOT NULL,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [PaymentStatus_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [PaymentStatus_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [PaymentStatus_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [PaymentStatus_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "Membership" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "leftAt" TIMESTAMP(3),
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Membership_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[GroupOrder] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [position] INT NOT NULL,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [GroupOrder_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [GroupOrder_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [GroupOrder_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [GroupOrder_pkey] PRIMARY KEY CLUSTERED ([id]),
-    CONSTRAINT [GroupOrder_userId_groupId_key] UNIQUE NONCLUSTERED ([userId],[groupId])
+CREATE TABLE "MealEntry" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "breakfastCount" INTEGER NOT NULL DEFAULT 0,
+    "lunchCount" INTEGER NOT NULL DEFAULT 0,
+    "dinnerCount" INTEGER NOT NULL DEFAULT 0,
+    "totalMeals" INTEGER NOT NULL DEFAULT 0,
+    "fromPlan" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MealEntry_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[ExpenseHistory] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [expenseId] NVARCHAR(1000),
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [actorId] NVARCHAR(1000),
-    [action] NVARCHAR(1000) NOT NULL,
-    [expenseDate] DATETIME2,
-    [amountFrom] FLOAT(53),
-    [amountTo] FLOAT(53),
-    [dateFrom] DATETIME2,
-    [dateTo] DATETIME2,
-    [noteFrom] NVARCHAR(1000),
-    [noteTo] NVARCHAR(1000),
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseHistory_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [ExpenseHistory_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [ExpenseHistory_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [ExpenseHistory_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "MealPlan" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "startDate" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MealPlan_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[CommentReply] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [commentId] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [text] NVARCHAR(1000) NOT NULL,
-    [deletedAt] DATETIME2,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [CommentReply_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [CommentReply_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [CommentReply_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [CommentReply_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "MealPlanDay" (
+    "id" TEXT NOT NULL,
+    "planId" TEXT NOT NULL,
+    "weekday" INTEGER NOT NULL,
+    "enabled" BOOLEAN NOT NULL DEFAULT false,
+    "breakfast" INTEGER NOT NULL DEFAULT 0,
+    "lunch" INTEGER NOT NULL DEFAULT 0,
+    "dinner" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MealPlanDay_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE [dbo].[Comment] (
-    [id] NVARCHAR(1000) NOT NULL,
-    [userId] NVARCHAR(1000) NOT NULL,
-    [groupId] NVARCHAR(1000) NOT NULL,
-    [text] NVARCHAR(1000) NOT NULL,
-    [deletedAt] DATETIME2,
-    [createdAt] DATETIME2 NOT NULL CONSTRAINT [Comment_createdAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [createdById] NVARCHAR(1000),
-    [updatedAt] DATETIME2 NOT NULL CONSTRAINT [Comment_updatedAt_df] DEFAULT CURRENT_TIMESTAMP,
-    [updatedById] NVARCHAR(1000),
-    [isPublished] BIT NOT NULL CONSTRAINT [Comment_isPublished_df] DEFAULT 1,
-    [publishedAt] DATETIME2,
-    [unpublishedAt] DATETIME2,
-    CONSTRAINT [Comment_pkey] PRIMARY KEY CLUSTERED ([id])
+CREATE TABLE "ExpenseEntry" (
+    "id" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "type" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "payerId" TEXT,
+    "isReceived" BOOLEAN NOT NULL DEFAULT false,
+    "splitMethod" TEXT NOT NULL,
+    "note" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ExpenseEntry_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ExpenseShare" (
+    "id" TEXT NOT NULL,
+    "expenseId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ExpenseShare_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ExpenseItem" (
+    "id" TEXT NOT NULL,
+    "expenseId" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "amount" DOUBLE PRECISION NOT NULL,
+    "sortOrder" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ExpenseItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ExpenseComment" (
+    "id" TEXT NOT NULL,
+    "expenseId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ExpenseComment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "PaymentStatus" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "expenseId" TEXT,
+    "amountDue" DOUBLE PRECISION NOT NULL,
+    "amountPaid" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "status" TEXT NOT NULL,
+    "dueDate" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "PaymentStatus_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "GroupOrder" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "position" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "GroupOrder_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ExpenseHistory" (
+    "id" TEXT NOT NULL,
+    "expenseId" TEXT,
+    "groupId" TEXT NOT NULL,
+    "actorId" TEXT,
+    "action" TEXT NOT NULL,
+    "expenseDate" TIMESTAMP(3),
+    "amountFrom" DOUBLE PRECISION,
+    "amountTo" DOUBLE PRECISION,
+    "dateFrom" TIMESTAMP(3),
+    "dateTo" TIMESTAMP(3),
+    "noteFrom" TEXT,
+    "noteTo" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "ExpenseHistory_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CommentReply" (
+    "id" TEXT NOT NULL,
+    "commentId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "CommentReply_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Comment" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CommunityMessage" (
+    "id" TEXT NOT NULL,
+    "type" TEXT NOT NULL DEFAULT 'MEMBER',
+    "key" TEXT NOT NULL,
+    "authorId" TEXT,
+    "title" TEXT,
+    "text" TEXT NOT NULL,
+    "pinned" BOOLEAN NOT NULL DEFAULT false,
+    "deletedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "CommunityMessage_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "CommunityRead" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "lastReadAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "CommunityRead_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "MealPrompt" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "groupId" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "tokenHash" TEXT NOT NULL,
+    "channel" TEXT NOT NULL DEFAULT 'EMAIL',
+    "answer" TEXT,
+    "answeredBreakfast" INTEGER,
+    "answeredLunch" INTEGER,
+    "answeredDinner" INTEGER,
+    "respondedAt" TIMESTAMP(3),
+    "sentAt" TIMESTAMP(3),
+    "expiresAt" TIMESTAMP(3) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "createdById" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedById" TEXT,
+    "isPublished" BOOLEAN NOT NULL DEFAULT true,
+    "publishedAt" TIMESTAMP(3),
+    "unpublishedAt" TIMESTAMP(3),
+
+    CONSTRAINT "MealPrompt_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [RolePermission_roleCode_idx] ON [dbo].[RolePermission]([roleCode]);
+CREATE INDEX "RolePermission_roleCode_idx" ON "RolePermission"("roleCode");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [User_role_idx] ON [dbo].[User]([role]);
+CREATE UNIQUE INDEX "RolePermission_roleCode_permissionCode_key" ON "RolePermission"("roleCode", "permissionCode");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [User_status_idx] ON [dbo].[User]([status]);
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [User_createdAt_idx] ON [dbo].[User]([createdAt]);
+CREATE INDEX "User_role_idx" ON "User"("role");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [LoginAttempt_email_createdAt_idx] ON [dbo].[LoginAttempt]([email], [createdAt]);
+CREATE INDEX "User_status_idx" ON "User"("status");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [LoginAttempt_ipAddress_createdAt_idx] ON [dbo].[LoginAttempt]([ipAddress], [createdAt]);
+CREATE INDEX "User_createdAt_idx" ON "User"("createdAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [LoginAttempt_createdAt_idx] ON [dbo].[LoginAttempt]([createdAt]);
+CREATE INDEX "RoleRequest_userId_status_idx" ON "RoleRequest"("userId", "status");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Group_supervisorId_idx] ON [dbo].[Group]([supervisorId]);
+CREATE INDEX "RoleRequest_status_createdAt_idx" ON "RoleRequest"("status", "createdAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Group_status_idx] ON [dbo].[Group]([status]);
+CREATE UNIQUE INDEX "PasswordToken_tokenHash_key" ON "PasswordToken"("tokenHash");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Invitation_inviteeId_status_idx] ON [dbo].[Invitation]([inviteeId], [status]);
+CREATE INDEX "PasswordToken_userId_purpose_idx" ON "PasswordToken"("userId", "purpose");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Invitation_groupId_status_idx] ON [dbo].[Invitation]([groupId], [status]);
+CREATE INDEX "PasswordToken_expiresAt_idx" ON "PasswordToken"("expiresAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Membership_userId_isActive_idx] ON [dbo].[Membership]([userId], [isActive]);
+CREATE INDEX "LoginAttempt_email_createdAt_idx" ON "LoginAttempt"("email", "createdAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Membership_groupId_isActive_idx] ON [dbo].[Membership]([groupId], [isActive]);
+CREATE INDEX "LoginAttempt_ipAddress_createdAt_idx" ON "LoginAttempt"("ipAddress", "createdAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [MealEntry_groupId_date_idx] ON [dbo].[MealEntry]([groupId], [date]);
+CREATE INDEX "LoginAttempt_createdAt_idx" ON "LoginAttempt"("createdAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [MealEntry_userId_date_idx] ON [dbo].[MealEntry]([userId], [date]);
+CREATE INDEX "Group_supervisorId_idx" ON "Group"("supervisorId");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [ExpenseEntry_groupId_type_date_idx] ON [dbo].[ExpenseEntry]([groupId], [type], [date]);
+CREATE INDEX "Group_status_idx" ON "Group"("status");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [ExpenseEntry_groupId_date_idx] ON [dbo].[ExpenseEntry]([groupId], [date]);
+CREATE INDEX "ExpenseCategory_groupId_archivedAt_idx" ON "ExpenseCategory"("groupId", "archivedAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [ExpenseShare_userId_idx] ON [dbo].[ExpenseShare]([userId]);
+CREATE UNIQUE INDEX "ExpenseCategory_groupId_code_key" ON "ExpenseCategory"("groupId", "code");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [ExpenseItem_expenseId_idx] ON [dbo].[ExpenseItem]([expenseId]);
+CREATE INDEX "Notification_userId_readAt_idx" ON "Notification"("userId", "readAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [ExpenseComment_expenseId_idx] ON [dbo].[ExpenseComment]([expenseId]);
+CREATE INDEX "Notification_userId_createdAt_idx" ON "Notification"("userId", "createdAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [PaymentStatus_groupId_dueDate_idx] ON [dbo].[PaymentStatus]([groupId], [dueDate]);
+CREATE INDEX "Notification_groupId_createdAt_idx" ON "Notification"("groupId", "createdAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [PaymentStatus_userId_dueDate_idx] ON [dbo].[PaymentStatus]([userId], [dueDate]);
+CREATE INDEX "MealEditWindow_expiresAt_idx" ON "MealEditWindow"("expiresAt");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [ExpenseHistory_groupId_expenseDate_idx] ON [dbo].[ExpenseHistory]([groupId], [expenseDate]);
+CREATE UNIQUE INDEX "MealEditWindow_userId_groupId_key" ON "MealEditWindow"("userId", "groupId");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [CommentReply_commentId_idx] ON [dbo].[CommentReply]([commentId]);
+CREATE INDEX "MealChangeRequest_groupId_status_date_idx" ON "MealChangeRequest"("groupId", "status", "date");
 
 -- CreateIndex
-CREATE NONCLUSTERED INDEX [Comment_groupId_createdAt_idx] ON [dbo].[Comment]([groupId], [createdAt]);
+CREATE INDEX "MealChangeRequest_userId_status_idx" ON "MealChangeRequest"("userId", "status");
+
+-- CreateIndex
+CREATE INDEX "MonthClosing_groupId_monthKey_idx" ON "MonthClosing"("groupId", "monthKey");
+
+-- CreateIndex
+CREATE INDEX "ClosingLine_userId_idx" ON "ClosingLine"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ClosingLine_closingId_userId_key" ON "ClosingLine"("closingId", "userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Subscriber_email_key" ON "Subscriber"("email");
+
+-- CreateIndex
+CREATE INDEX "Invitation_inviteeId_status_idx" ON "Invitation"("inviteeId", "status");
+
+-- CreateIndex
+CREATE INDEX "Invitation_groupId_status_idx" ON "Invitation"("groupId", "status");
+
+-- CreateIndex
+CREATE INDEX "Membership_userId_isActive_idx" ON "Membership"("userId", "isActive");
+
+-- CreateIndex
+CREATE INDEX "Membership_groupId_isActive_idx" ON "Membership"("groupId", "isActive");
+
+-- CreateIndex
+CREATE INDEX "MealEntry_groupId_date_idx" ON "MealEntry"("groupId", "date");
+
+-- CreateIndex
+CREATE INDEX "MealEntry_userId_date_idx" ON "MealEntry"("userId", "date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MealEntry_userId_groupId_date_key" ON "MealEntry"("userId", "groupId", "date");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MealPlan_userId_groupId_key" ON "MealPlan"("userId", "groupId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MealPlanDay_planId_weekday_key" ON "MealPlanDay"("planId", "weekday");
+
+-- CreateIndex
+CREATE INDEX "ExpenseEntry_groupId_type_date_idx" ON "ExpenseEntry"("groupId", "type", "date");
+
+-- CreateIndex
+CREATE INDEX "ExpenseEntry_groupId_date_idx" ON "ExpenseEntry"("groupId", "date");
+
+-- CreateIndex
+CREATE INDEX "ExpenseShare_userId_idx" ON "ExpenseShare"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ExpenseShare_expenseId_userId_key" ON "ExpenseShare"("expenseId", "userId");
+
+-- CreateIndex
+CREATE INDEX "ExpenseItem_expenseId_idx" ON "ExpenseItem"("expenseId");
+
+-- CreateIndex
+CREATE INDEX "ExpenseComment_expenseId_idx" ON "ExpenseComment"("expenseId");
+
+-- CreateIndex
+CREATE INDEX "PaymentStatus_groupId_dueDate_idx" ON "PaymentStatus"("groupId", "dueDate");
+
+-- CreateIndex
+CREATE INDEX "PaymentStatus_userId_dueDate_idx" ON "PaymentStatus"("userId", "dueDate");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "GroupOrder_userId_groupId_key" ON "GroupOrder"("userId", "groupId");
+
+-- CreateIndex
+CREATE INDEX "ExpenseHistory_groupId_expenseDate_idx" ON "ExpenseHistory"("groupId", "expenseDate");
+
+-- CreateIndex
+CREATE INDEX "CommentReply_commentId_idx" ON "CommentReply"("commentId");
+
+-- CreateIndex
+CREATE INDEX "Comment_groupId_createdAt_idx" ON "Comment"("groupId", "createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CommunityMessage_key_key" ON "CommunityMessage"("key");
+
+-- CreateIndex
+CREATE INDEX "CommunityMessage_createdAt_idx" ON "CommunityMessage"("createdAt");
+
+-- CreateIndex
+CREATE INDEX "CommunityMessage_pinned_createdAt_idx" ON "CommunityMessage"("pinned", "createdAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "CommunityRead_userId_key" ON "CommunityRead"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MealPrompt_tokenHash_key" ON "MealPrompt"("tokenHash");
+
+-- CreateIndex
+CREATE INDEX "MealPrompt_groupId_date_idx" ON "MealPrompt"("groupId", "date");
+
+-- CreateIndex
+CREATE INDEX "MealPrompt_expiresAt_idx" ON "MealPrompt"("expiresAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "MealPrompt_userId_groupId_date_key" ON "MealPrompt"("userId", "groupId", "date");
 
 -- AddForeignKey
-ALTER TABLE [dbo].[RolePermission] ADD CONSTRAINT [RolePermission_roleCode_fkey] FOREIGN KEY ([roleCode]) REFERENCES [dbo].[Role]([code]) ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_roleCode_fkey" FOREIGN KEY ("roleCode") REFERENCES "Role"("code") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[RolePermission] ADD CONSTRAINT [RolePermission_permissionCode_fkey] FOREIGN KEY ([permissionCode]) REFERENCES [dbo].[Permission]([code]) ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "RolePermission" ADD CONSTRAINT "RolePermission_permissionCode_fkey" FOREIGN KEY ("permissionCode") REFERENCES "Permission"("code") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[User] ADD CONSTRAINT [User_role_fkey] FOREIGN KEY ([role]) REFERENCES [dbo].[Role]([code]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "User" ADD CONSTRAINT "User_role_fkey" FOREIGN KEY ("role") REFERENCES "Role"("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Group] ADD CONSTRAINT [Group_supervisorId_fkey] FOREIGN KEY ([supervisorId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "RoleRequest" ADD CONSTRAINT "RoleRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Invitation] ADD CONSTRAINT [Invitation_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "RoleRequest" ADD CONSTRAINT "RoleRequest_decidedById_fkey" FOREIGN KEY ("decidedById") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Invitation] ADD CONSTRAINT [Invitation_inviteeId_fkey] FOREIGN KEY ([inviteeId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "PasswordToken" ADD CONSTRAINT "PasswordToken_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Invitation] ADD CONSTRAINT [Invitation_invitedById_fkey] FOREIGN KEY ([invitedById]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Group" ADD CONSTRAINT "Group_supervisorId_fkey" FOREIGN KEY ("supervisorId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Membership] ADD CONSTRAINT [Membership_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "ExpenseCategory" ADD CONSTRAINT "ExpenseCategory_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Membership] ADD CONSTRAINT [Membership_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[MealEntry] ADD CONSTRAINT [MealEntry_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[MealEntry] ADD CONSTRAINT [MealEntry_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[MealPlan] ADD CONSTRAINT [MealPlan_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MealEditWindow" ADD CONSTRAINT "MealEditWindow_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[MealPlan] ADD CONSTRAINT [MealPlan_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MealEditWindow" ADD CONSTRAINT "MealEditWindow_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[MealPlanDay] ADD CONSTRAINT [MealPlanDay_planId_fkey] FOREIGN KEY ([planId]) REFERENCES [dbo].[MealPlan]([id]) ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "MealChangeRequest" ADD CONSTRAINT "MealChangeRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseEntry] ADD CONSTRAINT [ExpenseEntry_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MealChangeRequest" ADD CONSTRAINT "MealChangeRequest_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseEntry] ADD CONSTRAINT [ExpenseEntry_payerId_fkey] FOREIGN KEY ([payerId]) REFERENCES [dbo].[User]([id]) ON DELETE SET NULL ON UPDATE NO ACTION;
+ALTER TABLE "MealChangeRequest" ADD CONSTRAINT "MealChangeRequest_decidedById_fkey" FOREIGN KEY ("decidedById") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseShare] ADD CONSTRAINT [ExpenseShare_expenseId_fkey] FOREIGN KEY ([expenseId]) REFERENCES [dbo].[ExpenseEntry]([id]) ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "MonthClosing" ADD CONSTRAINT "MonthClosing_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseShare] ADD CONSTRAINT [ExpenseShare_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MonthClosing" ADD CONSTRAINT "MonthClosing_closedById_fkey" FOREIGN KEY ("closedById") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseItem] ADD CONSTRAINT [ExpenseItem_expenseId_fkey] FOREIGN KEY ([expenseId]) REFERENCES [dbo].[ExpenseEntry]([id]) ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "ClosingLine" ADD CONSTRAINT "ClosingLine_closingId_fkey" FOREIGN KEY ("closingId") REFERENCES "MonthClosing"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseComment] ADD CONSTRAINT [ExpenseComment_expenseId_fkey] FOREIGN KEY ([expenseId]) REFERENCES [dbo].[ExpenseEntry]([id]) ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "ClosingLine" ADD CONSTRAINT "ClosingLine_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseComment] ADD CONSTRAINT [ExpenseComment_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Invitation" ADD CONSTRAINT "Invitation_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[PaymentStatus] ADD CONSTRAINT [PaymentStatus_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Invitation" ADD CONSTRAINT "Invitation_inviteeId_fkey" FOREIGN KEY ("inviteeId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[PaymentStatus] ADD CONSTRAINT [PaymentStatus_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Invitation" ADD CONSTRAINT "Invitation_invitedById_fkey" FOREIGN KEY ("invitedById") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[PaymentStatus] ADD CONSTRAINT [PaymentStatus_expenseId_fkey] FOREIGN KEY ([expenseId]) REFERENCES [dbo].[ExpenseEntry]([id]) ON DELETE SET NULL ON UPDATE NO ACTION;
+ALTER TABLE "Membership" ADD CONSTRAINT "Membership_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[GroupOrder] ADD CONSTRAINT [GroupOrder_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "Membership" ADD CONSTRAINT "Membership_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[GroupOrder] ADD CONSTRAINT [GroupOrder_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MealEntry" ADD CONSTRAINT "MealEntry_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseHistory] ADD CONSTRAINT [ExpenseHistory_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MealEntry" ADD CONSTRAINT "MealEntry_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[ExpenseHistory] ADD CONSTRAINT [ExpenseHistory_actorId_fkey] FOREIGN KEY ([actorId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MealPlan" ADD CONSTRAINT "MealPlan_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[CommentReply] ADD CONSTRAINT [CommentReply_commentId_fkey] FOREIGN KEY ([commentId]) REFERENCES [dbo].[Comment]([id]) ON DELETE CASCADE ON UPDATE NO ACTION;
+ALTER TABLE "MealPlan" ADD CONSTRAINT "MealPlan_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[CommentReply] ADD CONSTRAINT [CommentReply_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "MealPlanDay" ADD CONSTRAINT "MealPlanDay_planId_fkey" FOREIGN KEY ("planId") REFERENCES "MealPlan"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Comment] ADD CONSTRAINT [Comment_userId_fkey] FOREIGN KEY ([userId]) REFERENCES [dbo].[User]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "ExpenseEntry" ADD CONSTRAINT "ExpenseEntry_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- AddForeignKey
-ALTER TABLE [dbo].[Comment] ADD CONSTRAINT [Comment_groupId_fkey] FOREIGN KEY ([groupId]) REFERENCES [dbo].[Group]([id]) ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "ExpenseEntry" ADD CONSTRAINT "ExpenseEntry_payerId_fkey" FOREIGN KEY ("payerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
 
-COMMIT TRAN;
+-- AddForeignKey
+ALTER TABLE "ExpenseShare" ADD CONSTRAINT "ExpenseShare_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "ExpenseEntry"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
-END TRY
-BEGIN CATCH
+-- AddForeignKey
+ALTER TABLE "ExpenseShare" ADD CONSTRAINT "ExpenseShare_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
-IF @@TRANCOUNT > 0
-BEGIN
-    ROLLBACK TRAN;
-END;
-THROW
+-- AddForeignKey
+ALTER TABLE "ExpenseItem" ADD CONSTRAINT "ExpenseItem_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "ExpenseEntry"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
 
-END CATCH
+-- AddForeignKey
+ALTER TABLE "ExpenseComment" ADD CONSTRAINT "ExpenseComment_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "ExpenseEntry"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ExpenseComment" ADD CONSTRAINT "ExpenseComment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "PaymentStatus" ADD CONSTRAINT "PaymentStatus_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "PaymentStatus" ADD CONSTRAINT "PaymentStatus_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "PaymentStatus" ADD CONSTRAINT "PaymentStatus_expenseId_fkey" FOREIGN KEY ("expenseId") REFERENCES "ExpenseEntry"("id") ON DELETE SET NULL ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "GroupOrder" ADD CONSTRAINT "GroupOrder_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "GroupOrder" ADD CONSTRAINT "GroupOrder_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ExpenseHistory" ADD CONSTRAINT "ExpenseHistory_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "ExpenseHistory" ADD CONSTRAINT "ExpenseHistory_actorId_fkey" FOREIGN KEY ("actorId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "CommentReply" ADD CONSTRAINT "CommentReply_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "Comment"("id") ON DELETE CASCADE ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "CommentReply" ADD CONSTRAINT "CommentReply_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "Comment" ADD CONSTRAINT "Comment_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "CommunityMessage" ADD CONSTRAINT "CommunityMessage_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "CommunityRead" ADD CONSTRAINT "CommunityRead_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "MealPrompt" ADD CONSTRAINT "MealPrompt_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- AddForeignKey
+ALTER TABLE "MealPrompt" ADD CONSTRAINT "MealPrompt_groupId_fkey" FOREIGN KEY ("groupId") REFERENCES "Group"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 

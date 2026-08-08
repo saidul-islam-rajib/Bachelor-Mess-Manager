@@ -1,23 +1,23 @@
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:16-alpine
     container_name: bachelor-point-db
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${MSSQL_SA_PASSWORD:-Local_Dev_Password_123}"
-      MSSQL_PID: Express
+      POSTGRES_USER: "${POSTGRES_USER:-bpadmin}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-Local_Dev_Password_123}"
+      POSTGRES_DB: "${POSTGRES_DB:-bachelor_point}"
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - mssql-data:/var/opt/mssql
+      - postgres-data:/var/lib/postgresql/data
     healthcheck:
       test:
         - CMD-SHELL
-        - /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" || exit 1
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -h 127.0.0.1
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 15s
 
   migrate:
     build:
@@ -25,7 +25,7 @@ services:
       target: builder
     container_name: bachelor-point-migrate
     environment:
-      DATABASE_URL: "sqlserver://db:1433;database=bachelor_point;user=sa;password=${MSSQL_SA_PASSWORD:-Local_Dev_Password_123};encrypt=true;trustServerCertificate=true"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-bpadmin}:${POSTGRES_PASSWORD:-Local_Dev_Password_123}@db:5432/${POSTGRES_DB:-bachelor_point}?schema=public"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@bachelorpoint.local}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-ChangeThisAdminPassword2026}"
       ADMIN_NAME: "${ADMIN_NAME:-System Administrator}"
@@ -43,7 +43,7 @@ services:
       target: runner
     container_name: bachelor-point-app
     environment:
-      DATABASE_URL: "sqlserver://db:1433;database=bachelor_point;user=sa;password=${MSSQL_SA_PASSWORD:-Local_Dev_Password_123};encrypt=true;trustServerCertificate=true"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-bpadmin}:${POSTGRES_PASSWORD:-Local_Dev_Password_123}@db:5432/${POSTGRES_DB:-bachelor_point}?schema=public"
       AUTH_SECRET: "${AUTH_SECRET:-local-development-secret-at-least-32-characters-long}"
       ADMIN_EMAIL: "${ADMIN_EMAIL:-admin@bachelorpoint.local}"
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-ChangeThisAdminPassword2026}"
@@ -59,5 +59,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  mssql-data:
+  postgres-data:
   uploads-data:

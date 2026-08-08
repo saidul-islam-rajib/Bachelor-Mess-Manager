@@ -10,15 +10,17 @@ const { report, reportError, reportFailure } = require('./reporter');
 const ARCHIVE_DIR = process.env.BACKUP_DIR || path.join(process.cwd(), 'backups');
 const SKIP_TABLES = new Set(['_prisma_migrations']);
 
-const quoteIdentifier = (name) => `[${String(name).replace(/]/g, ']]')}]`;
+const quoteIdentifier = (name) => `"${String(name).replace(/"/g, '""')}"`;
 
 function quoteValue(value) {
   if (value === null || value === undefined) return 'NULL';
   if (typeof value === 'number') return Number.isFinite(value) ? String(value) : 'NULL';
-  if (typeof value === 'boolean') return value ? '1' : '0';
-  if (value instanceof Date) return `'${value.toISOString()}'`;
-  if (Buffer.isBuffer(value)) return `0x${value.toString('hex')}`;
-  return `N'${String(value).replace(/'/g, "''")}'`;
+  if (typeof value === 'bigint') return String(value);
+  if (typeof value === 'boolean') return value ? 'TRUE' : 'FALSE';
+  if (value instanceof Date) return `'${value.toISOString()}'::timestamptz`;
+  if (Buffer.isBuffer(value)) return `'\\x${value.toString('hex')}'::bytea`;
+  if (typeof value === 'object') return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`;
+  return `'${String(value).replace(/'/g, "''")}'`;
 }
 
 function parseArgs(argv) {
@@ -58,7 +60,13 @@ async function verifyChecksum(file) {
 function connectionFor(database) {
   const url = process.env.DATABASE_URL || '';
   if (!database) return url;
-  return url.replace(/([;?]database=)[^;]+/i, `$1${database}`);
+  try {
+    const parsed = new URL(url);
+    parsed.pathname = `/${encodeURIComponent(database)}`;
+    return parsed.toString();
+  } catch (error) {
+    return url.replace(/([;?]database=)[^;&]+/i, `$1${database}`);
+  }
 }
 
 async function run() {
@@ -108,7 +116,10 @@ async function run() {
     report(`Restoring into ${label}`);
 
     const allLive = await prisma.$queryRawUnsafe(
-      `SELECT TABLE_SCHEMA AS s, TABLE_NAME AS t FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'`
+      `SELECT table_schema AS s, table_name AS t
+       FROM information_schema.tables
+       WHERE table_type = 'BASE TABLE'
+         AND table_schema NOT IN ('pg_catalog', 'information_schema')`
     );
     const live = allLive.filter((row) => !SKIP_TABLES.has(row.t));
     const liveNames = new Set(allLive.map((row) => row.t));
@@ -121,47 +132,43 @@ async function run() {
       );
     }
 
-    for (const row of live) {
-      await prisma.$executeRawUnsafe(
-        `ALTER TABLE ${quoteIdentifier(row.s)}.${quoteIdentifier(row.t)} NOCHECK CONSTRAINT ALL`
-      );
-    }
-
-    for (const row of live) {
-      await prisma.$executeRawUnsafe(`DELETE FROM ${quoteIdentifier(row.s)}.${quoteIdentifier(row.t)}`);
-    }
-
     let inserted = 0;
-    for (const { s: schema, t: table } of live) {
-      const rows = payload.tables[table];
-      if (!rows || rows.length === 0) continue;
 
-      const columns = Object.keys(rows[0]);
-      const columnList = columns.map(quoteIdentifier).join(', ');
+    await prisma.$transaction(
+      async (tx) => {
+        await tx.$executeRawUnsafe("SET LOCAL session_replication_role = 'replica'");
 
-      for (let i = 0; i < rows.length; i += 100) {
-        const chunk = rows.slice(i, i + 100);
-        const values = chunk
-          .map((record) => `(${columns.map((column) => quoteValue(record[column])).join(', ')})`)
-          .join(', ');
+        for (const row of live) {
+          await tx.$executeRawUnsafe(`DELETE FROM ${quoteIdentifier(row.s)}.${quoteIdentifier(row.t)}`);
+        }
 
-        await prisma.$executeRawUnsafe(
-          `INSERT INTO ${quoteIdentifier(schema)}.${quoteIdentifier(table)} (${columnList}) VALUES ${values}`
-        );
-      }
+        for (const { s: schema, t: table } of live) {
+          const rows = payload.tables[table];
+          if (!rows || rows.length === 0) continue;
 
-      inserted += rows.length;
-      report(`  ${table}: ${rows.length}`);
-    }
+          const columns = Object.keys(rows[0]);
+          const columnList = columns.map(quoteIdentifier).join(', ');
 
-    for (const row of live) {
-      await prisma.$executeRawUnsafe(
-        `ALTER TABLE ${quoteIdentifier(row.s)}.${quoteIdentifier(row.t)} WITH CHECK CHECK CONSTRAINT ALL`
-      );
-    }
+          for (let i = 0; i < rows.length; i += 100) {
+            const chunk = rows.slice(i, i + 100);
+            const values = chunk
+              .map((record) => `(${columns.map((column) => quoteValue(record[column])).join(', ')})`)
+              .join(', ');
+
+            await tx.$executeRawUnsafe(
+              `INSERT INTO ${quoteIdentifier(schema)}.${quoteIdentifier(table)} (${columnList}) VALUES ${values}`
+            );
+          }
+
+          inserted += rows.length;
+          report(`  ${table}: ${rows.length}`);
+        }
+      },
+      { maxWait: 30000, timeout: 600000 }
+    );
 
     report('');
-    report(`Restored ${inserted} rows into ${label}. Foreign keys re-checked and valid.`);
+    report(`Restored ${inserted} rows into ${label}.`);
     report(`Left ${[...SKIP_TABLES].join(', ')} untouched so the target keeps its own migration history.`);
   } finally {
     await prisma.$disconnect();

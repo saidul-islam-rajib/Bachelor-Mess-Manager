@@ -42,7 +42,7 @@ spec:
           port: 53
     - ports:
         - protocol: TCP
-          port: 1433
+          port: 5432
     - ports:
         - protocol: TCP
           port: 443
