@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { BILL_TYPE_FILTER, MEAL_RATE_MODES, PAYMENT_STATUS } from '@/lib/constants';
-import { dayToUtcDate, parseMonth, previousMonthKey, round2, utcDateToDay } from '@/lib/month';
+import { dayToUtcDate, parseMonth, previousMonthKey, round2, todayKey, utcDateToDay } from '@/lib/month';
 import { syncPlansForMonth } from '@/lib/meal-plan';
 
 const WEIGHT_SCALE = 1000;
@@ -139,10 +139,11 @@ export async function buildSettlement(
   const { key, start, nextStart } = parseMonth(monthKey);
   const groupId = group.id;
 
+  const endOfToday = dayToUtcDate(todayKey()).getTime() + 86_400_000;
   const throughDate =
     options.through && /^\d{4}-\d{2}-\d{2}$/.test(options.through)
       ? new Date(Math.min(dayToUtcDate(options.through).getTime() + 86_400_000, nextStart.getTime()))
-      : nextStart;
+      : new Date(Math.min(endOfToday, nextStart.getTime()));
   const windowEnd = throughDate > start ? throughDate : start;
 
   await syncPlansForMonth(groupId, key);

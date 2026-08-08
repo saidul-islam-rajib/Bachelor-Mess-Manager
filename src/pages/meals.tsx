@@ -6,7 +6,7 @@ import MealPlanCard from '@/components/MealPlanCard';
 import MealPromptDispatch from '@/components/MealPromptDispatch';
 import { PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
-import { daysInMonth, todayKey } from '@/lib/month';
+import { daysInMonth, round2, todayKey } from '@/lib/month';
 
 type Member = { id: string; name: string; email: string };
 type Weights = { breakfast: number; lunch: number; dinner: number };
@@ -15,6 +15,7 @@ type SummaryMember = { id: string; name: string; meals: number; cost: number; pa
 type SummaryDay = { date: string; meals: number; expense: number; perMealPrice: number };
 type Summary = {
   rateMode?: string;
+  through?: string;
   members: SummaryMember[];
   days: SummaryDay[];
   totals: { expense: number; meals: number; mealRate: number; memberCount: number };
@@ -215,6 +216,30 @@ export default function MealsPage() {
     return map;
   }, [summary]);
 
+  const logged = useMemo(() => {
+    const w = weights ?? { breakfast: 1, lunch: 1, dinner: 1 };
+    const byDay: Record<string, number> = {};
+    const byMember: Record<string, number> = {};
+    let total = 0;
+
+    for (const entry of Object.values(cells)) {
+      const units = entry.breakfast * w.breakfast + entry.lunch * w.lunch + entry.dinner * w.dinner;
+      if (units <= 0) continue;
+      byDay[entry.date] = (byDay[entry.date] ?? 0) + units;
+      byMember[entry.userId] = (byMember[entry.userId] ?? 0) + units;
+      total += units;
+    }
+
+    return { byDay, byMember, total: round2(total) };
+  }, [cells, weights]);
+
+  const rateNote = useMemo(() => {
+    const through = summary?.through;
+    if (!through || days.length === 0 || through >= days[days.length - 1]) return '';
+    if (through < days[0]) return strings.meals.notStartedYet;
+    return strings.meals.ratedThrough(dayLabel(through));
+  }, [summary?.through, days]);
+
   const isMe = (id: string) => user?.id === id;
   const editable = (userId: string, date: string) => {
     if (canManage) return true;
@@ -315,7 +340,7 @@ export default function MealsPage() {
                             )}
                           </p>
                           <p className="mt-0.5 text-xs text-slate-500">
-                            {strings.meals.mealCount(info?.meals ?? 0)}
+                            {strings.meals.mealCount(round2(logged.byDay[date] ?? 0))}
                             {info && info.perMealPrice
                               ? ` · ${strings.meals.perMealShort(taka(info.perMealPrice))}`
                               : ''}
@@ -522,7 +547,7 @@ export default function MealsPage() {
                               );
                             });
                           })}
-                          <td className="px-4 py-2 font-semibold">{info ? info.meals : 0}</td>
+                          <td className="px-4 py-2 font-semibold">{round2(logged.byDay[date] ?? 0)}</td>
                           <td className="px-4 py-2 text-slate-600">
                             {info && info.perMealPrice ? info.perMealPrice.toFixed(2) : '—'}
                           </td>
@@ -536,16 +561,22 @@ export default function MealsPage() {
                         <td className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 px-4 py-3 text-left">Total</td>
                         {members.map((m) => (
                           <td key={m.id} colSpan={3} className="border-r border-slate-200 px-3 py-3">
-                            {summary.members.find((s) => s.id === m.id)?.meals ?? 0}
+                            {round2(logged.byMember[m.id] ?? 0)}
                           </td>
                         ))}
-                        <td className="px-4 py-3">{summary.totals.meals}</td>
+                        <td className="px-4 py-3">{logged.total}</td>
                         <td className="px-4 py-3 text-slate-600">—</td>
                       </tr>
                     </tfoot>
                   )}
                 </table>
               </div>
+
+              {rateNote && (
+                <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                  {rateNote}
+                </p>
+              )}
 
               <MonthlySummary summary={summary} currentUserId={user?.id} />
             </>

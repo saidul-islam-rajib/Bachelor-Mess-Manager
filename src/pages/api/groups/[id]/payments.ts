@@ -54,6 +54,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, {
       canManage,
       currentUserId: sessionUser.id,
+      through: report.through,
       rateMode: report.rateMode,
       effectiveRateMode: report.effectiveRateMode,
       rateModeFallbackReason: report.rateModeFallbackReason,

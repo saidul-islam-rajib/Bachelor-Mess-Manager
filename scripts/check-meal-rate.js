@@ -77,7 +77,9 @@ async function makeUser(session, label, role) {
 }
 
 async function run() {
-  const month = new Date().toISOString().slice(0, 7);
+  const anchor = new Date();
+  if (anchor.getUTCDate() < 5) anchor.setUTCDate(0);
+  const month = anchor.toISOString().slice(0, 7);
   const day = (n) => `${month}-${String(n).padStart(2, '0')}`;
 
   const sup = makeSession();
@@ -239,6 +241,83 @@ async function run() {
   }
 
   check('category labels supplied for the UI', Boolean(after.categoryLabels && after.categoryLabels.RENT), JSON.stringify(after.categoryLabels || {}).slice(0, 80));
+
+  await futureMealsScenario(sup, supervisor);
+}
+
+async function futureMealsScenario(sup, supervisor) {
+  const now = new Date();
+  const lastDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+
+  report('');
+  report('Scenario: 300 bazar today, 3 meals today, 3 more already planned for tomorrow');
+
+  if (now.getUTCDate() >= lastDate) {
+    report('  skipped — today is the last day of the month, there is no future day to test with');
+    return;
+  }
+
+  const month = now.toISOString().slice(0, 7);
+  const today = now.toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1))
+    .toISOString()
+    .slice(0, 10);
+
+  const group = await sup.request('POST', '/api/groups', { name: `Future check ${tag}` });
+  const groupId = group.body.group.id;
+  created.groupIds.push(groupId);
+
+  await sup.request('PATCH', `/api/groups/${groupId}`, {
+    mealRateMode: 'MONTHLY',
+    mealWeightBreakfast: 1,
+    mealWeightLunch: 1,
+    mealWeightDinner: 1
+  });
+
+  await prisma.expenseEntry.create({
+    data: {
+      groupId,
+      type: 'BAZAR',
+      amount: 300,
+      date: new Date(`${today}T00:00:00.000Z`),
+      payerId: supervisor.id,
+      splitMethod: 'MEAL',
+      isReceived: true,
+      publishedAt: new Date()
+    }
+  });
+
+  for (const date of [today, tomorrow]) {
+    await prisma.mealEntry.create({
+      data: {
+        userId: supervisor.id,
+        groupId,
+        date: new Date(`${date}T00:00:00.000Z`),
+        breakfastCount: 0,
+        lunchCount: 3,
+        dinnerCount: 0,
+        totalMeals: 3,
+        publishedAt: new Date()
+      }
+    });
+  }
+
+  const data = (await sup.request('GET', `/api/groups/${groupId}/payments?month=${month}`)).body;
+
+  report('');
+  report(`  total meals   ${data.totals.meals}`);
+  report(`  month rate    ${data.totals.mealRate}`);
+  report(`  through       ${data.through}`);
+  report('');
+
+  check('the window stops at today', data.through === today, `through ${data.through}`);
+  check("tomorrow's planned meals stay out of the count", near(data.totals.meals, 3), `got ${data.totals.meals}`);
+  check('rate is 300 / 3, not 300 / 6', near(data.totals.mealRate, 100), `got ${data.totals.mealRate}`);
+  check(
+    'no day after today is priced',
+    (data.days ?? []).every((d) => d.date <= today),
+    JSON.stringify((data.days ?? []).map((d) => d.date))
+  );
 }
 
 async function cleanup() {

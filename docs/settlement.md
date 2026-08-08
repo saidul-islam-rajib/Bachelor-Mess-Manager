@@ -155,6 +155,32 @@ fact that the mess had a debt.
 what makes closing on any date possible, and it is the same code path as a full month — there is no second
 implementation of the maths for the mid-month case.
 
+### The window never runs past today
+
+With no `through` given, the window ends at the **end of today**, not the end of the month.
+
+This matters because meal plans pre-fill the whole month. `syncPlansForMonth` writes a `MealEntry` for every day a
+member's weekly plan covers, so on the 8th of a 31-day month the table already holds meals for the 9th to the 31st.
+Bazar, by contrast, only exists for days that have actually happened. Pricing the two together gives:
+
+```
+rate = bazar spent so far ÷ meals for the entire month
+```
+
+which is far too low — the reported symptom was every day of the month showing the same understated ৳/meal, future
+days included. The distribution was skewed too: `allocate()` still hands out every taka of bazar, so whoever had the
+most *planned* meals absorbed cost that nobody has spent yet.
+
+Clamping the default window to today fixes both. A past month is unaffected (today is already beyond its end), and a
+future month settles to nothing, which is correct — none of it has happened.
+
+An explicit `through` is still honoured as given, because the caller has said what it means. Month closing passes one
+(defaulting to the last day of the month), so closing the current month early does price whatever the plans have
+already written for the rest of it. Close a month after it ends, or pass `through` as the real last day.
+
+`Settlement.through` reports the last day actually priced. It is surfaced on `/api/groups/[id]/payments` and the meal
+summary so the UI can say which days the rate covers instead of leaving people to guess.
+
 ## Performance notes
 
 - One `Promise.all` of eight queries per settlement, no N+1.
@@ -167,5 +193,7 @@ implementation of the maths for the mid-month case.
 
 - `/payments` — member balances with the brought-forward column, the "Who is charged what" per-member cost-type
   breakdown, the day-wise rate table, and bazar bought per member.
-- `/meals` — monthly summary.
+- `/meals` — monthly summary. The meal grid itself counts meals straight from the entries it already loaded, so the
+  Meals column and per-member totals still show the whole month including planned days; only the ৳/meal column and
+  the money below it stop at `through`.
 - `/dashboard` — supervisor and member roll-ups.

@@ -518,7 +518,10 @@ const en = {
     approvalNotice: 'Changes to this day go to your supervisor for approval before they count.',
     everyoneOnDay: (count: number) => `Everyone else (${count})`,
     hideEveryone: 'Hide everyone else',
-    editingFor: (name: string) => `Editing ${name}`
+    editingFor: (name: string) => `Editing ${name}`,
+    ratedThrough: (day: string) =>
+      `The meal rate and everyone's cost are worked out from bazar and meals up to ${day}. Later days show planned meals only and are not priced yet.`,
+    notStartedYet: 'This month has not started. The numbers below are planned meals only — nothing is priced yet.'
   },
   expenses: {
     title: 'Groceries (Bazar)',

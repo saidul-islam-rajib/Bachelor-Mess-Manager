@@ -23,6 +23,7 @@ export type ReportMember = {
 
 export type GroupReport = {
   month: string;
+  through: string;
   rateMode: string;
   effectiveRateMode: string;
   rateModeFallbackReason: string | null;
@@ -63,6 +64,7 @@ export async function buildGroupReport(
 
   return {
     month: settlement.month,
+    through: settlement.through,
     rateMode: settlement.rateMode,
     effectiveRateMode: settlement.effectiveRateMode,
     rateModeFallbackReason: settlement.rateModeFallbackReason,

@@ -19,6 +19,7 @@ export type SummaryDay = { date: string; meals: number; expense: number; perMeal
 
 export type MealSummary = {
   rateMode: string;
+  through: string;
   weights: { breakfast: number; lunch: number; dinner: number };
   days: SummaryDay[];
   members: SummaryMember[];
@@ -30,6 +31,7 @@ export async function buildMealSummary(group: SettlementGroup, monthKey?: string
 
   return {
     rateMode: settlement.rateMode,
+    through: settlement.through,
     weights: settlement.weights,
     days: settlement.days.map((day) => ({
       date: day.date,
