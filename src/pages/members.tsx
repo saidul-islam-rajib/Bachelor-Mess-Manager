@@ -45,7 +45,7 @@ function shortDate(iso: string) {
 }
 
 export default function MembersPage() {
-  const { user } = useCurrentUser();
+  const { user, refresh: refreshUser } = useCurrentUser();
   const toast = useToast();
   const confirm = useConfirm();
 
@@ -132,6 +132,32 @@ export default function MembersPage() {
       );
       await load();
       await refreshGroups();
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function makeSupervisor(member: Member) {
+    const accepted = await confirm({
+      title: strings.groups.handoverConfirm(member.name),
+      message: strings.groups.handoverMessage,
+      confirmLabel: strings.groups.handover
+    });
+    if (!accepted) return;
+
+    setBusy(member.id);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/supervisor`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: member.id })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? strings.groups.handoverFailed);
+      toast.success(strings.groups.handoverDone(member.name));
+      await Promise.all([load(), refreshGroups(), refreshUser()]);
     } catch (err) {
       toast.error((err as Error).message);
     } finally {
@@ -331,14 +357,24 @@ export default function MembersPage() {
                             </p>
                           </div>
                           {canManage && !member.isSupervisor && (
-                            <button
-                              type="button"
-                              onClick={() => setActive(member, false)}
-                              disabled={busy === member.id}
-                              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                            >
-                              {strings.common.remove}
-                            </button>
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => makeSupervisor(member)}
+                                disabled={busy === member.id}
+                                className="rounded-full border border-brand-200 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50 disabled:opacity-50"
+                              >
+                                {strings.groups.handover}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setActive(member, false)}
+                                disabled={busy === member.id}
+                                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                              >
+                                {strings.common.remove}
+                              </button>
+                            </>
                           )}
                         </div>
                       </li>

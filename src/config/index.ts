@@ -90,6 +90,13 @@ function readInt(key: string, fallback: number, min = 1): number {
   return value >= min ? value : fallback;
 }
 
+function readOptionalInt(key: string, min = 1): number | null {
+  const raw = readRaw(key);
+  if (raw === undefined) return null;
+  const value = Math.trunc(Number(raw));
+  return Number.isFinite(value) && value >= min ? value : null;
+}
+
 function readBoolean(key: string, fallback: boolean): boolean {
   const raw = readRaw(key);
   if (raw === undefined) return fallback;
@@ -211,7 +218,13 @@ export const uiConfig = {
 
 export const cacheConfig = {
   siteSettingsMs: readInt('CACHE_SITE_SETTINGS_MS', CACHE_DEFAULTS.siteSettingsMs, 0),
-  groupListMs: readInt('CACHE_GROUP_LIST_MS', CACHE_DEFAULTS.groupListMs, 0)
+  groupListMs: readInt('CACHE_GROUP_LIST_MS', CACHE_DEFAULTS.groupListMs, 0),
+  sessionUserMs: readInt('CACHE_SESSION_USER_MS', CACHE_DEFAULTS.sessionUserMs, 0)
+} as const;
+
+export const databaseConfig = {
+  connectionLimit: readOptionalInt('DATABASE_CONNECTION_LIMIT'),
+  poolTimeoutSeconds: readOptionalInt('DATABASE_POOL_TIMEOUT_SECONDS')
 } as const;
 
 export const communityConfig = {

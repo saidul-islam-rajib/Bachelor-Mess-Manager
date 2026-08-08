@@ -13,10 +13,10 @@ const securityHeaders = [
       "form-action 'self'",
       "frame-ancestors 'none'",
       "img-src 'self' data: blob:",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com",
       "style-src 'self' 'unsafe-inline'",
       "font-src 'self' data:",
-      "connect-src 'self'",
+      "connect-src 'self' https://cloudflareinsights.com",
       "manifest-src 'self'",
       "worker-src 'self'",
       "object-src 'none'"

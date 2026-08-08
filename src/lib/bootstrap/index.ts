@@ -19,9 +19,12 @@ const EMPTY_STATUS: BootstrapStatus = {
   error: null
 };
 
+const RETRY_COOLDOWN_MS = 30_000;
+
 const globalForBootstrap = globalThis as unknown as {
   applicationBootstrap?: Promise<void>;
   applicationBootstrapStatus?: BootstrapStatus;
+  applicationBootstrapRetryAt?: number;
 };
 
 globalForBootstrap.applicationBootstrapStatus ??= EMPTY_STATUS;
@@ -41,17 +44,45 @@ async function runBootstrap() {
       error: null
     };
   } catch (error) {
+    console.error('[bootstrap] application bootstrap failed', error);
+
     globalForBootstrap.applicationBootstrapStatus = {
       ...EMPTY_STATUS,
       error: error instanceof Error ? error.message : String(error)
     };
-    globalForBootstrap.applicationBootstrap = undefined;
   }
 }
 
 export function bootstrapApplication(): Promise<void> {
-  globalForBootstrap.applicationBootstrap ??= runBootstrap();
-  return globalForBootstrap.applicationBootstrap;
+  const pending = globalForBootstrap.applicationBootstrap;
+  if (pending) return pending;
+
+  if (Date.now() < (globalForBootstrap.applicationBootstrapRetryAt ?? 0)) {
+    return Promise.resolve();
+  }
+
+  const run = runBootstrap().then(() => {
+    if (globalForBootstrap.applicationBootstrapStatus?.error) {
+      globalForBootstrap.applicationBootstrap = undefined;
+      globalForBootstrap.applicationBootstrapRetryAt = Date.now() + RETRY_COOLDOWN_MS;
+    }
+  });
+
+  globalForBootstrap.applicationBootstrap = run;
+  return run;
+}
+
+export function bootstrapWithin(timeoutMs: number): Promise<void> {
+  const run = bootstrapApplication();
+  if (timeoutMs <= 0) return run;
+
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, timeoutMs);
+    run.then(() => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
 }
 
 export function getBootstrapStatus(): BootstrapStatus {

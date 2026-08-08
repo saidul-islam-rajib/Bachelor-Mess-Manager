@@ -395,7 +395,21 @@ const en = {
     carryHint:
       'When you close a month, whatever someone still owes (or is owed) opens the next month as their brought forward balance instead of being written off.',
     carrySaved: 'Carry-forward updated.',
-    settingFailed: 'Could not save that setting.'
+    settingFailed: 'Could not save that setting.',
+    handover: 'Make supervisor',
+    handoverConfirm: (name: string) => `Hand supervision over to ${name}?`,
+    handoverMessage:
+      'They take over running this mess straight away. The current supervisor stays in the group as an ordinary member and loses the supervisor controls. A group only ever has one supervisor.',
+    handoverDone: (name: string) => `${name} now supervises this mess.`,
+    handoverFailed: 'Could not hand over supervision.',
+    handoverOnlySupervisor: 'Only this group\'s supervisor or an admin can hand over supervision.',
+    handoverSelf: 'That member already supervises this group.',
+    handoverNotMember: 'Only an active member of this group can take it over.',
+    handoverNotApproved: 'That account has not been approved yet.',
+    handoverAtLimit: (name: string, max: number) =>
+      `${name} already supervises ${max} group${max === 1 ? '' : 's'}, which is the limit.`,
+    handoverNotice: (from: string, to: string, group: string) =>
+      `${from} handed supervision of "${group}" over to ${to}.`
   },
   members: {
     title: 'Members',
@@ -646,7 +660,8 @@ const en = {
       MENTION_COMMENT: 'mentioned you in a comment',
       MENTION_REPLY: 'mentioned you in a reply',
       MENTION_EXPENSE_COMMENT: 'mentioned you in a bazar note',
-      MENTION_COMMUNITY: 'mentioned you in the community'
+      MENTION_COMMUNITY: 'mentioned you in the community',
+      SUPERVISOR_CHANGED: 'handed over supervision'
     },
     inGroup: 'in',
     title: 'Notifications',
