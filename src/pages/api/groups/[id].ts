@@ -4,6 +4,7 @@ import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { GROUP_STATUS_VALUES, MEAL_RATE_MODE_VALUES } from '@/lib/constants';
 import { deleteGroupPermanently } from '@/lib/hard-delete';
+import { getMealEditPolicy } from '@/lib/settings-service';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
@@ -38,7 +39,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!isMember && !requireAdmin(sessionUser)) {
       return forbidden(res, 'You are not a member of this group.');
     }
-    return ok(res, { group });
+    return ok(res, { group, mealEditPolicy: await getMealEditPolicy(groupId) });
   }
 
   if (req.method === 'PATCH') {
@@ -46,19 +47,34 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return forbidden(res, strings.groups.onlySupervisorOrAdmin);
     }
 
-    const { name, status, mealWeightBreakfast, mealWeightLunch, mealWeightDinner, mealRateMode, carryForwardEnabled } =
-      req.body as {
-        name?: string;
-        status?: string;
-        mealWeightBreakfast?: number;
-        mealWeightLunch?: number;
-        mealWeightDinner?: number;
-        mealRateMode?: string;
-        carryForwardEnabled?: boolean;
-      };
+    const {
+      name,
+      status,
+      mealWeightBreakfast,
+      mealWeightLunch,
+      mealWeightDinner,
+      mealRateMode,
+      carryForwardEnabled,
+      mealEditRequiresApproval
+    } = req.body as {
+      name?: string;
+      status?: string;
+      mealWeightBreakfast?: number;
+      mealWeightLunch?: number;
+      mealWeightDinner?: number;
+      mealRateMode?: string;
+      carryForwardEnabled?: boolean;
+      mealEditRequiresApproval?: boolean | null;
+    };
 
     const data: Record<string, unknown> = {};
     if (typeof name === 'string' && name.trim()) data.name = name.trim();
+    if (mealEditRequiresApproval !== undefined) {
+      if (mealEditRequiresApproval !== null && typeof mealEditRequiresApproval !== 'boolean') {
+        return badRequest(res, 'Past-meal approval must be on, off, or left to the site default.');
+      }
+      data.mealEditRequiresApproval = mealEditRequiresApproval;
+    }
     if (typeof status === 'string' && GROUP_STATUS_VALUES.includes(status)) data.status = status;
     if (mealRateMode !== undefined) {
       if (!MEAL_RATE_MODE_VALUES.includes(mealRateMode)) {

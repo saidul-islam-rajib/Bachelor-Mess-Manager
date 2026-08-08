@@ -44,6 +44,29 @@ member can untick it.
 The policy is cached for 30s alongside the security policy and invalidated on any settings save
 (`invalidateSecurityPolicyCache`).
 
+## The supervisor can override the approval rule for their own mess
+
+Members → Group settings → **Changes to past meals** writes `Group.mealEditRequiresApproval`, which is deliberately
+**nullable**:
+
+| Value | Meaning |
+| --- | --- |
+| `null` | Follow the site default — this mess moves whenever the admin changes `SiteSettings.mealEditRequiresApproval` |
+| `true` | Past-meal changes wait for this supervisor, whatever the site default says |
+| `false` | Past-meal changes count straight away and notify the group |
+
+A plain boolean defaulting to the site value could not express "follow the default": the moment the admin flipped the
+global switch, every group that had never been touched would silently stay on the old behaviour, because a copied
+default is indistinguishable from a deliberate choice. `null` keeps the two apart.
+
+`getMealEditPolicy(groupId)` resolves it — site policy first (cached), then a single indexed lookup for the group's
+override. Both `readEditWindow` and `openEditWindow` pass the group through, so the member-facing copy on `/meals`
+already reflects whichever rule is in force. The unlock **duration** stays site-wide; only the approval rule is
+delegated.
+
+The override is not cached, because a supervisor toggling it expects the next member edit to obey the new rule, and
+a primary-key lookup per meal write is cheaper than the confusion of a 30-second lag.
+
 ## Why a request table rather than a flag on MealEntry
 
 A pending change has to hold *two* states at once — what the table currently says and what the member is asking for —

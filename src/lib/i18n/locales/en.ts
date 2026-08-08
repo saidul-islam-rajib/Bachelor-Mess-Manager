@@ -396,6 +396,18 @@ const en = {
       'When you close a month, whatever someone still owes (or is owed) opens the next month as their brought forward balance instead of being written off.',
     carrySaved: 'Carry-forward updated.',
     settingFailed: 'Could not save that setting.',
+    pastMealsTitle: 'Changes to past meals',
+    pastMealsHint:
+      'A member unlocks past days from the meals page. This decides what happens next: the change either counts straight away, or it waits for you. The admin sets a site-wide default; you can override it for this mess.',
+    pastMealsLabel: 'When a member changes a past day',
+    pastMealsInherit: (current: string) => `Follow the site default — ${current.toLowerCase()}`,
+    pastMealsRequired: 'It waits for my approval',
+    pastMealsAuto: 'It counts straight away',
+    pastMealsRequiredHint:
+      'Changes land in "Meal changes waiting for you" on the meals page. Nothing moves the meal rate until you approve it.',
+    pastMealsAutoHint:
+      'Changes apply immediately and the whole mess is notified. Faster for a mess that trusts itself, but a back-dated edit shifts everyone else\'s share without a check.',
+    pastMealsSaved: 'Past-meal approval updated.',
     handover: 'Make supervisor',
     handoverConfirm: (name: string) => `Hand supervision over to ${name}?`,
     handoverMessage:
@@ -810,6 +822,7 @@ const en = {
       registrations: 'Registrations',
       users: 'Users',
       groups: 'Groups',
+      activity: 'Activity',
       security: 'Security',
       settings: 'Settings'
     },

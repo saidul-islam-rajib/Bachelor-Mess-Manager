@@ -13,6 +13,7 @@ export type EditWindowState = {
   secondsRemaining: number | null;
   windowMinutes: number;
   requiresApproval: boolean;
+  approvalSetBySupervisor: boolean;
 };
 
 export function isWindowOpen(window: { closedAt: Date | null; expiresAt: Date | null } | null, now = new Date()) {
@@ -24,7 +25,7 @@ export function isWindowOpen(window: { closedAt: Date | null; expiresAt: Date | 
 
 export async function readEditWindow(userId: string, groupId: string): Promise<EditWindowState> {
   const [policy, row] = await Promise.all([
-    getMealEditPolicy(),
+    getMealEditPolicy(groupId),
     prisma.mealEditWindow.findUnique({ where: { userId_groupId: { userId, groupId } } })
   ]);
 
@@ -39,12 +40,13 @@ export async function readEditWindow(userId: string, groupId: string): Promise<E
     secondsRemaining:
       open && row?.expiresAt ? Math.max(0, Math.ceil((row.expiresAt.getTime() - now.getTime()) / 1000)) : null,
     windowMinutes: policy.windowMinutes,
-    requiresApproval: policy.requiresApproval
+    requiresApproval: policy.requiresApproval,
+    approvalSetBySupervisor: policy.overriddenByGroup
   };
 }
 
 export async function openEditWindow(userId: string, groupId: string): Promise<EditWindowState> {
-  const policy = await getMealEditPolicy();
+  const policy = await getMealEditPolicy(groupId);
   const now = new Date();
   const expiresAt =
     policy.windowMinutes === MEAL_EDIT_WINDOW_UNLIMITED

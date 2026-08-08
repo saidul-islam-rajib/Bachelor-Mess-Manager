@@ -13,6 +13,7 @@ import {
 } from '@/lib/login-attempts';
 import { strings } from '@/lib/i18n';
 import { normalizeEmail } from '@/lib/validation';
+import { endSession, SESSION_END_REASONS, touchSession } from '@/lib/user-sessions';
 import { withAudit } from '@/lib/with-audit';
 
 const DUMMY_HASH =
@@ -104,6 +105,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   await recordLoginAttempt({ email: normalizedEmail, ipAddress, userAgent, successful: true, reason: null });
   await clearFailedAttempts(normalizedEmail);
+  await endSession(user.id, SESSION_END_REASONS.REPLACED);
+  await touchSession(user.id, req, { forceNew: true });
   await setSessionCookie(res, user.id, user.tokenVersion);
 
   return ok(res, {

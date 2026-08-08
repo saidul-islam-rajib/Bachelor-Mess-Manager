@@ -49,6 +49,7 @@ export async function deleteUserPermanently(userId: string, email: string): Prom
     prisma.groupOrder.deleteMany({ where: { userId } }),
     prisma.membership.deleteMany({ where: { userId } }),
     prisma.passwordToken.deleteMany({ where: { userId } }),
+    prisma.userSession.deleteMany({ where: { userId } }),
     prisma.loginAttempt.deleteMany({ where: { email } }),
     prisma.user.delete({ where: { id: userId } })
   ]);

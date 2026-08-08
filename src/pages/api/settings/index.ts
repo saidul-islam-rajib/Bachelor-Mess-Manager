@@ -10,6 +10,18 @@ import { withAudit } from '@/lib/with-audit';
 const SETTINGS_ID = 'singleton';
 const SETTINGS_CACHE_KEY = 'site-settings';
 
+const PUBLIC_FIELDS = [
+  'companyName',
+  'tagline',
+  'address',
+  'contactEmail',
+  'contactPhone',
+  'copyrightOwner',
+  'facebookUrl',
+  'twitterUrl',
+  'newsletterEnabled'
+] as const;
+
 async function getSettings() {
   return cached(SETTINGS_CACHE_KEY, cacheConfig.siteSettingsMs, () =>
     prisma.siteSettings.upsert({
@@ -20,10 +32,20 @@ async function getSettings() {
   );
 }
 
+function publicView(settings: Awaited<ReturnType<typeof getSettings>>) {
+  return Object.fromEntries(PUBLIC_FIELDS.map((field) => [field, settings[field]]));
+}
+
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  
   if (req.method === 'GET') {
-    return ok(res, { settings: await getSettings() });
+    const settings = await getSettings();
+    const sessionUser = await getSessionUser(req);
+
+    if (sessionUser && requireAdmin(sessionUser)) {
+      return ok(res, { settings });
+    }
+
+    return ok(res, { settings: publicView(settings) });
   }
 
   if (req.method === 'PATCH') {

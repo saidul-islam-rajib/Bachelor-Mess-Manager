@@ -104,6 +104,7 @@ model User {
   communityMessages   CommunityMessage[]  @relation("CommunityAuthor")
   communityRead       CommunityRead?
   mealPrompts         MealPrompt[]
+  sessions            UserSession[]
 
   @@index([role])
   @@index([status])
@@ -174,39 +175,69 @@ model LoginAttempt {
   @@index([createdAt])
 }
 
+model UserSession {
+  id            String    @id @default(uuid())
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  userId        String
+  startedAt     DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  endedAt       DateTime?
+  endedReason   String?
+  seconds       Int       @default(0)
+  startHour     Int       @default(0)
+  startWeekday  Int       @default(0)
+  startDay      String    @default("")
+  device        String    @default("DESKTOP")
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([userId, startedAt])
+  @@index([startedAt])
+  @@index([userId, endedAt])
+  @@index([startDay])
+}
+
 model Group {
-  id                  String              @id @default(uuid())
-  name                String
-  supervisor          User                @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  supervisorId        String
-  status              String              @default("ACTIVE")
-  mealWeightBreakfast Float               @default(0.5)
-  mealWeightLunch     Float               @default(1)
-  mealWeightDinner    Float               @default(1)
-  mealRateMode        String              @default("MONTHLY")
-  carryForwardEnabled Boolean             @default(true)
-  createdAt           DateTime            @default(now())
-  createdById         String?
-  updatedAt           DateTime            @default(now()) @updatedAt
-  updatedById         String?
-  isPublished         Boolean             @default(true)
-  publishedAt         DateTime?
-  unpublishedAt       DateTime?
-  memberships         Membership[]
-  meals               MealEntry[]
-  mealPlans           MealPlan[]
-  expenses            ExpenseEntry[]
-  expenseHistory      ExpenseHistory[]
-  orders              GroupOrder[]
-  payments            PaymentStatus[]
-  comments            Comment[]
-  invitations         Invitation[]
-  categories          ExpenseCategory[]
-  notifications       Notification[]
-  mealEditWindows     MealEditWindow[]
-  mealChangeRequests  MealChangeRequest[]
-  closings            MonthClosing[]
-  mealPrompts         MealPrompt[]
+  id                       String              @id @default(uuid())
+  name                     String
+  supervisor               User                @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supervisorId             String
+  status                   String              @default("ACTIVE")
+  mealWeightBreakfast      Float               @default(0.5)
+  mealWeightLunch          Float               @default(1)
+  mealWeightDinner         Float               @default(1)
+  mealRateMode             String              @default("MONTHLY")
+  carryForwardEnabled      Boolean             @default(true)
+  mealEditRequiresApproval Boolean?
+  createdAt                DateTime            @default(now())
+  createdById              String?
+  updatedAt                DateTime            @default(now()) @updatedAt
+  updatedById              String?
+  isPublished              Boolean             @default(true)
+  publishedAt              DateTime?
+  unpublishedAt            DateTime?
+  memberships              Membership[]
+  meals                    MealEntry[]
+  mealPlans                MealPlan[]
+  expenses                 ExpenseEntry[]
+  expenseHistory           ExpenseHistory[]
+  orders                   GroupOrder[]
+  payments                 PaymentStatus[]
+  comments                 Comment[]
+  invitations              Invitation[]
+  categories               ExpenseCategory[]
+  notifications            Notification[]
+  mealEditWindows          MealEditWindow[]
+  mealChangeRequests       MealChangeRequest[]
+  closings                 MonthClosing[]
+  mealPrompts              MealPrompt[]
 
   @@index([supervisorId])
   @@index([status])

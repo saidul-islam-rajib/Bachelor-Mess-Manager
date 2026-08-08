@@ -40,9 +40,16 @@ export async function getSiteSettings() {
 export type MealEditPolicy = {
   windowMinutes: number;
   requiresApproval: boolean;
+  siteRequiresApproval: boolean;
+  overriddenByGroup: boolean;
 };
 
-const MEAL_EDIT_FALLBACK: MealEditPolicy = { windowMinutes: 5, requiresApproval: true };
+const MEAL_EDIT_FALLBACK: MealEditPolicy = {
+  windowMinutes: 5,
+  requiresApproval: true,
+  siteRequiresApproval: true,
+  overriddenByGroup: false
+};
 
 const globalForMealEdit = globalThis as unknown as {
   mealEditPolicyCache?: { value: MealEditPolicy; expiresAt: number } | null;
@@ -53,7 +60,24 @@ export function invalidateSecurityPolicyCache() {
   globalForMealEdit.mealEditPolicyCache = null;
 }
 
-export async function getMealEditPolicy(): Promise<MealEditPolicy> {
+export async function getMealEditPolicy(groupId?: string): Promise<MealEditPolicy> {
+  const site = await getSiteMealEditPolicy();
+  if (!groupId) return site;
+
+  try {
+    const group = await prisma.group.findUnique({
+      where: { id: groupId },
+      select: { mealEditRequiresApproval: true }
+    });
+    if (typeof group?.mealEditRequiresApproval !== 'boolean') return site;
+
+    return { ...site, requiresApproval: group.mealEditRequiresApproval, overriddenByGroup: true };
+  } catch {
+    return site;
+  }
+}
+
+async function getSiteMealEditPolicy(): Promise<MealEditPolicy> {
   const cached = globalForMealEdit.mealEditPolicyCache;
   if (cached && cached.expiresAt > Date.now()) {
     return cached.value;
@@ -63,7 +87,9 @@ export async function getMealEditPolicy(): Promise<MealEditPolicy> {
     const settings = await getSiteSettings();
     const value: MealEditPolicy = {
       windowMinutes: Math.max(0, Math.trunc(settings.mealEditWindowMinutes)),
-      requiresApproval: settings.mealEditRequiresApproval
+      requiresApproval: settings.mealEditRequiresApproval,
+      siteRequiresApproval: settings.mealEditRequiresApproval,
+      overriddenByGroup: false
     };
     globalForMealEdit.mealEditPolicyCache = { value, expiresAt: Date.now() + CACHE_TTL_MS };
     return value;

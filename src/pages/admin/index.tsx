@@ -30,6 +30,7 @@ import {
   type Column,
   type SelectOption
 } from '@/components/ui';
+import ActivityPanel from '@/components/admin/ActivityPanel';
 import { api, errorMessage } from '@/lib/api-client';
 import { paginationConfig } from '@/config';
 import {
@@ -104,6 +105,7 @@ const TABS = [
   { key: 'roles', label: strings.roleRequests.title },
   { key: 'users', label: strings.admin.tabs.users },
   { key: 'groups', label: strings.admin.tabs.groups },
+  { key: 'activity', label: strings.admin.tabs.activity },
   { key: 'security', label: strings.admin.tabs.security },
   { key: 'settings', label: strings.admin.tabs.settings }
 ] as const;
@@ -179,6 +181,7 @@ export default function AdminPage() {
       {tab === 'roles' && <RoleRequestsPanel />}
       {tab === 'users' && <UsersPanel />}
       {tab === 'groups' && <GroupsPanel />}
+      {tab === 'activity' && <ActivityPanel />}
       {tab === 'security' && <SecurityPanel />}
       {tab === 'settings' && <SettingsPanel />}
     </PageContainer>
@@ -1500,10 +1503,14 @@ function SettingsPanel() {
 
         <Checkbox
           className="mt-4"
-          label="Supervisor must approve a member's past-meal change before it counts"
+          label="By default, a supervisor must approve a member's past-meal change before it counts"
           checked={settings.mealEditRequiresApproval}
           onChange={(checked) => update('mealEditRequiresApproval', checked)}
         />
+        <p className="mt-2 max-w-2xl text-xs text-slate-500">
+          This is the starting point for every mess. A supervisor can override it for their own mess in Members →
+          Group settings; messes left on &ldquo;follow the site default&rdquo; move with whatever you set here.
+        </p>
       </div>
 
       <div className="mt-5">

@@ -8,6 +8,7 @@ import { InvitationsProvider } from '@/components/InvitationsProvider';
 import { NotificationsProvider } from '@/components/NotificationsProvider';
 import { CommunityProvider } from '@/components/CommunityProvider';
 import { PwaProvider } from '@/components/PwaProvider';
+import PresenceTracker from '@/components/PresenceTracker';
 import { ConfirmProvider } from '@/components/ui';
 import { appConfig } from '@/config';
 
@@ -41,6 +42,7 @@ export default function App({ Component, pageProps }: AppProps) {
               <NotificationsProvider>
                 <CommunityProvider>
                   <PwaProvider>
+                    <PresenceTracker />
                     <Layout>
                       <Component {...pageProps} />
                     </Layout>

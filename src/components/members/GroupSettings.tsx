@@ -13,12 +13,25 @@ type GroupDetail = {
   mealWeightDinner: number;
   mealRateMode: string;
   carryForwardEnabled: boolean;
+  mealEditRequiresApproval: boolean | null;
 };
+
+type MealEditPolicy = {
+  windowMinutes: number;
+  requiresApproval: boolean;
+  siteRequiresApproval: boolean;
+  overriddenByGroup: boolean;
+};
+
+const APPROVAL_INHERIT = 'INHERIT';
+const APPROVAL_REQUIRED = 'REQUIRED';
+const APPROVAL_AUTO = 'AUTO';
 
 export default function GroupSettings({ groupId, onChanged }: { groupId: string; onChanged?: () => void }) {
   const toast = useToast();
   const confirm = useConfirm();
   const [group, setGroup] = useState<GroupDetail | null>(null);
+  const [policy, setPolicy] = useState<MealEditPolicy | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -29,6 +42,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
       const res = await fetch(`/api/groups/${groupId}`);
       const data = await res.json().catch(() => ({}));
       setGroup(res.ok ? data.group : null);
+      setPolicy(res.ok ? (data.mealEditPolicy ?? null) : null);
     } finally {
       setLoading(false);
     }
@@ -179,6 +193,48 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
             <span className="mt-0.5 block text-xs text-slate-500">{strings.groups.carryHint}</span>
           </span>
         </label>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold">{strings.groups.pastMealsTitle}</h2>
+        <p className="mt-1 max-w-2xl text-sm text-slate-500">{strings.groups.pastMealsHint}</p>
+
+        <Listbox
+          className="mt-4 block max-w-md"
+          label={strings.groups.pastMealsLabel}
+          value={
+            group.mealEditRequiresApproval === null || group.mealEditRequiresApproval === undefined
+              ? APPROVAL_INHERIT
+              : group.mealEditRequiresApproval
+                ? APPROVAL_REQUIRED
+                : APPROVAL_AUTO
+          }
+          disabled={busy}
+          onChange={(next) =>
+            patch(
+              {
+                mealEditRequiresApproval:
+                  next === APPROVAL_INHERIT ? null : next === APPROVAL_REQUIRED
+              },
+              strings.groups.pastMealsSaved,
+              strings.groups.settingFailed
+            )
+          }
+          options={[
+            {
+              value: APPROVAL_INHERIT,
+              label: strings.groups.pastMealsInherit(
+                policy?.siteRequiresApproval ?? true ? strings.groups.pastMealsRequired : strings.groups.pastMealsAuto
+              )
+            },
+            { value: APPROVAL_REQUIRED, label: strings.groups.pastMealsRequired },
+            { value: APPROVAL_AUTO, label: strings.groups.pastMealsAuto }
+          ]}
+        />
+
+        <p className="mt-2 max-w-2xl text-xs text-slate-500">
+          {policy?.requiresApproval ? strings.groups.pastMealsRequiredHint : strings.groups.pastMealsAutoHint}
+        </p>
       </Card>
     </div>
   );

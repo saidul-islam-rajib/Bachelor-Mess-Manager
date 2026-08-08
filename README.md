@@ -47,6 +47,8 @@ engineering notes behind it:
 | [meal-prompts.md](docs/meal-prompts.md) | The daily one-tap meal ask and the sign-in-free reply link |
 | [community.md](docs/community.md) | The app-wide room, welcome posts, and release announcements |
 | [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
+| [activity-tracking.md](docs/activity-tracking.md) | Visit tracking: how often members come, when, and for how long |
+| [site-settings.md](docs/site-settings.md) | The settings singleton, the public footer, and what stays admin-only |
 | [colors.md](docs/colors.md) | The brand colour, what each colour means, and where it is defined |
 | [caching.md](docs/caching.md) | What is cached, for how long, and what invalidates it |
 
