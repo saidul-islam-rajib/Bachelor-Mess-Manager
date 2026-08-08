@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const crypto = require('crypto');
+const os = require('os');
+const { spawn, spawnSync } = require('child_process');
 const { pipeline } = require('stream/promises');
 const { PrismaClient } = require('@prisma/client');
 const { report, reportError, reportFailure } = require('./reporter');
@@ -19,7 +21,14 @@ const PREFIX = 'backup';
 
 function databaseName() {
   const url = process.env.DATABASE_URL || '';
-  const match = /[;?]database=([^;]+)/i.exec(url);
+  try {
+    const parsed = new URL(url);
+    const fromPath = decodeURIComponent(parsed.pathname.replace(/^\//, ''));
+    if (fromPath) return fromPath;
+  } catch (error) {
+    /* not a URL-shaped connection string, fall through */
+  }
+  const match = /[;?]database=([^;&]+)/i.exec(url);
   if (!match) throw new Error('Could not read the database name from DATABASE_URL.');
   return match[1];
 }
@@ -28,8 +37,7 @@ function stamp() {
   return new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
 }
 
-const quoteIdentifier = (name) => `[${String(name).replace(/]/g, ']]')}]`;
-const quoteLiteral = (value) => `'${String(value).replace(/'/g, "''")}'`;
+const quoteIdentifier = (name) => `"${String(name).replace(/"/g, '""')}"`;
 
 async function ensureDir(dir) {
   await fs.promises.mkdir(dir, { recursive: true });
@@ -37,10 +45,11 @@ async function ensureDir(dir) {
 
 async function liveTables() {
   const rows = await prisma.$queryRawUnsafe(
-    `SELECT TABLE_SCHEMA AS s, TABLE_NAME AS t
-     FROM INFORMATION_SCHEMA.TABLES
-     WHERE TABLE_TYPE = 'BASE TABLE'
-     ORDER BY TABLE_SCHEMA, TABLE_NAME`
+    `SELECT table_schema AS s, table_name AS t
+     FROM information_schema.tables
+     WHERE table_type = 'BASE TABLE'
+       AND table_schema NOT IN ('pg_catalog', 'information_schema')
+     ORDER BY table_schema, table_name`
   );
   return rows.map((row) => ({ schema: row.s, table: row.t }));
 }
@@ -76,16 +85,35 @@ async function exportLogical(database, target) {
   return { rowCount, tableCount: tablesMeta.length, bytes: gz.length, rawBytes: Buffer.byteLength(json, 'utf8') };
 }
 
+function pgDumpAvailable() {
+  const probe = spawnSync('pg_dump', ['--version'], { stdio: 'ignore' });
+  return !probe.error && probe.status === 0;
+}
+
+function runPgTool(command, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let stderr = '';
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk.toString();
+    });
+    child.on('error', reject);
+    child.on('close', (code) => {
+      if (code === 0) return resolve();
+      const detail = stderr.trim().split('\n').pop() || `exit code ${code}`;
+      reject(new Error(`${command} failed: ${detail}`));
+    });
+  });
+}
+
 async function backupNative(database, dir) {
-  const serverFile = path.join(dir, `${database}-latest.bak`);
+  const target = path.join(dir, `${database}-${stamp()}.dump`);
+  const url = process.env.DATABASE_URL || '';
 
-  await prisma.$executeRawUnsafe(
-    `BACKUP DATABASE ${quoteIdentifier(database)} TO DISK = ${quoteLiteral(serverFile)} ` +
-      `WITH INIT, CHECKSUM, NAME = ${quoteLiteral(`${database} full backup`)}`
-  );
-  await prisma.$executeRawUnsafe(`RESTORE VERIFYONLY FROM DISK = ${quoteLiteral(serverFile)} WITH CHECKSUM`);
+  await runPgTool('pg_dump', ['--format=custom', '--no-owner', '--no-acl', '--file', target, url]);
+  await runPgTool('pg_restore', ['--list', target]);
 
-  return serverFile;
+  return target;
 }
 
 async function gzipCopy(source, target) {
@@ -128,21 +156,24 @@ async function run() {
   let kind;
   let summary = {};
 
-  const wantNative = MODE === 'native' || (MODE === 'auto' && NATIVE_DIR);
+  const wantNative = MODE === 'native' || (MODE === 'auto' && pgDumpAvailable());
 
   if (wantNative) {
-    const dir = NATIVE_DIR || ARCHIVE_DIR;
-    report(`Backing up ${database} (native BACKUP DATABASE)`);
+    const dir = NATIVE_DIR || (await fs.promises.mkdtemp(path.join(os.tmpdir(), 'bp-backup-')));
+    report(`Backing up ${database} (pg_dump, custom format)`);
+    let dumpFile;
     try {
-      const serverFile = await backupNative(database, dir);
-      report('  verified (RESTORE VERIFYONLY passed)');
-      finalPath = path.join(ARCHIVE_DIR, `${PREFIX}-${database}-${stamp()}.bak.gz`);
-      await gzipCopy(serverFile, finalPath);
+      dumpFile = await backupNative(database, dir);
+      report('  verified (pg_restore --list passed)');
+      finalPath = path.join(ARCHIVE_DIR, `${PREFIX}-${database}-${stamp()}.dump.gz`);
+      await gzipCopy(dumpFile, finalPath);
       kind = 'native';
     } catch (error) {
       if (MODE === 'native') throw error;
       reportError(`  native backup unavailable (${String(error.message).split('\n').pop().trim()})`);
       reportError('  falling back to a logical export');
+    } finally {
+      if (dumpFile) await fs.promises.unlink(dumpFile).catch(() => {});
     }
   }
 

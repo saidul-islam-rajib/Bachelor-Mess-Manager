@@ -9,6 +9,7 @@ resources:
   - deployment-blue.yaml
   - deployment-green.yaml
   - service.yaml
+  - backup-cronjob.yaml
 
 labels:
   - includeSelectors: false

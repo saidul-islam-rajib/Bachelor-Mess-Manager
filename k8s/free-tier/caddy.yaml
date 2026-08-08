@@ -12,6 +12,11 @@ data:
 
     bachelor-point.team-sober.com {
       encode gzip
+      @preview header Cookie *bp_preview=1*
+      reverse_proxy @preview bachelor-point-preview:80 {
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-For {remote_host}
+      }
       reverse_proxy bachelor-point-active:80 {
         header_up X-Forwarded-Proto {scheme}
         header_up X-Forwarded-For {remote_host}
@@ -19,6 +24,11 @@ data:
     }
 
     :80 {
+      @preview header Cookie *bp_preview=1*
+      reverse_proxy @preview bachelor-point-preview:80 {
+        header_up X-Forwarded-Proto http
+        header_up X-Forwarded-For {remote_host}
+      }
       reverse_proxy bachelor-point-active:80 {
         header_up X-Forwarded-Proto http
         header_up X-Forwarded-For {remote_host}
