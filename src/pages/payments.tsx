@@ -26,7 +26,7 @@ type MemberRow = {
 
 type Payment = { id: string; userId: string; userName: string; amount: number; date: string };
 
-type DayRate = { date: string; meals: number; bazar: number; rate: number; cost: number };
+type DayRate = { date: string; meals: number; bazar: number; charged: number; rate: number; cost: number };
 
 type Totals = {
   bazar: number;
@@ -35,6 +35,9 @@ type Totals = {
   cost: number;
   carryIn: number;
   mealRate: number;
+  averageDayRate: number;
+  ratioRate: number;
+  pricedDays: number;
   meals: number;
   collected: number;
   outstanding: number;
@@ -244,9 +247,7 @@ export default function PaymentsPage() {
               <MealRateBreakdown
                 days={data.days}
                 totals={data.totals}
-                rateMode={data.rateMode}
                 effectiveRateMode={data.effectiveRateMode}
-                fallbackReason={data.rateModeFallbackReason}
                 members={data.members}
                 currentUserId={user?.id}
               />
@@ -779,17 +780,13 @@ function MemberCostBreakdown({
 function MealRateBreakdown({
   days,
   totals,
-  rateMode,
   effectiveRateMode,
-  fallbackReason,
   members,
   currentUserId
 }: {
   days: DayRate[];
   totals: Totals;
-  rateMode: string;
   effectiveRateMode: string;
-  fallbackReason: string | null;
   members: MemberRow[];
   currentUserId?: string;
 }) {
@@ -806,21 +803,30 @@ function MealRateBreakdown({
         </span>
       </div>
 
-      <p className="mt-1 text-sm text-slate-500">
-        Month rate = {taka(totals.bazar)} bazar ÷ {totals.meals} meals ={' '}
-        <span className="font-semibold text-slate-900">{taka(totals.mealRate)}</span> per meal.
-      </p>
-
-      {fallbackReason === 'MEALS_WITHOUT_BAZAR' && rateMode === 'DAILY' && (
-        <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900">
-          <span className="font-semibold">Day-by-day pricing was not used this month.</span> {totals.unpricedMeals} meals
-          fell on days with no bazar recorded. Pricing each day on its own shopping would have charged those meals
-          nothing and made whoever ate on shopping days pay for everybody. The month&apos;s total bazar has been shared
-          across every meal instead.
+      {daily ? (
+        <p className="mt-1 text-sm text-slate-500">
+          Average meal rate ={' '}
+          <span className="font-semibold text-slate-900">{taka(totals.averageDayRate)}</span> per meal — the mean of
+          the {totals.pricedDays} daily rates below. Each day is priced on its own, so what everyone owes comes from
+          the day rates, not from this average.
+        </p>
+      ) : (
+        <p className="mt-1 text-sm text-slate-500">
+          Month rate = {taka(totals.bazar)} bazar ÷ {totals.meals} meals ={' '}
+          <span className="font-semibold text-slate-900">{taka(totals.mealRate)}</span> per meal.
         </p>
       )}
 
-      {totals.unallocatedBazar > 0.005 && (
+      {daily && (
+        <p className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-600">
+          Each shopping trip is spread over the days it fed the mess — from the day it was bought until the next trip.
+          A day&apos;s rate is its share of that bazar divided by the meals eaten that day, so a quiet day costs more
+          per meal than a busy one. Every taka still lands on somebody: the charges below add back to{' '}
+          {taka(totals.bazar)}.
+        </p>
+      )}
+
+      {!daily && totals.unallocatedBazar > 0.005 && (
         <p className="mt-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
           {taka(totals.unallocatedBazar)} of bazar fell on days with no meals. It has been shared across the
           month&apos;s meals rather than dropped.
@@ -837,7 +843,8 @@ function MealRateBreakdown({
                 <th className="px-3 py-2">Day</th>
                 <th className="px-3 py-2 text-right">Meals</th>
                 <th className="px-3 py-2 text-right">Bazar spent</th>
-                <th className="px-3 py-2 text-right">Rate used</th>
+                {daily && <th className="px-3 py-2 text-right">Bazar used</th>}
+                <th className="px-3 py-2 text-right">Rate that day</th>
                 <th className="px-3 py-2 text-right">Charged that day</th>
               </tr>
             </thead>
@@ -846,17 +853,23 @@ function MealRateBreakdown({
                 <tr key={day.date} className="border-t border-slate-100">
                   <td className="px-3 py-2 font-medium">{day.date}</td>
                   <td className="px-3 py-2 text-right text-slate-600">{day.meals}</td>
-                  <td className="px-3 py-2 text-right text-slate-600">{taka(day.bazar)}</td>
-                  <td className="px-3 py-2 text-right text-slate-600">{day.meals > 0 ? taka(day.rate) : '—'}</td>
+                  <td className="px-3 py-2 text-right text-slate-600">{day.bazar > 0 ? taka(day.bazar) : '—'}</td>
+                  {daily && (
+                    <td className="px-3 py-2 text-right text-slate-600">{day.charged > 0 ? taka(day.charged) : '—'}</td>
+                  )}
+                  <td className="px-3 py-2 text-right font-medium text-slate-900">
+                    {day.meals > 0 ? taka(day.rate) : '—'}
+                  </td>
                   <td className="px-3 py-2 text-right font-medium">{day.meals > 0 ? taka(day.cost) : '—'}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
-                <td className="px-3 py-2">Total</td>
+                <td className="px-3 py-2">{daily ? 'Average' : 'Total'}</td>
                 <td className="px-3 py-2 text-right">{totals.meals}</td>
                 <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>
+                {daily && <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>}
                 <td className="px-3 py-2 text-right">{taka(totals.mealRate)}</td>
                 <td className="px-3 py-2 text-right">{taka(days.reduce((a, d) => a + d.cost, 0))}</td>
               </tr>

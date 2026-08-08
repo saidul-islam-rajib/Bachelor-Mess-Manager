@@ -33,6 +33,7 @@ export type SettlementDay = {
   date: string;
   meals: number;
   bazar: number;
+  charged: number;
   rate: number;
   cost: number;
 };
@@ -53,6 +54,9 @@ export type Settlement = {
     expense: number;
     meals: number;
     mealRate: number;
+    averageDayRate: number;
+    ratioRate: number;
+    pricedDays: number;
     mealCost: number;
     billShare: number;
     carryIn: number;
@@ -115,6 +119,53 @@ export function settlementStatus(totalCostPaisa: number, creditPaisa: number, du
 
 function daySpan(start: Date, end: Date): number {
   return Math.max(0, Math.round((end.getTime() - start.getTime()) / 86_400_000));
+}
+
+function daySpanKeys(start: Date, end: Date): string[] {
+  const keys: string[] = [];
+  for (let t = start.getTime(); t < end.getTime(); t += 86_400_000) {
+    keys.push(utcDateToDay(new Date(t)));
+  }
+  return keys;
+}
+
+export function spreadBazarOverDays(
+  windowDays: string[],
+  bazarByDay: Map<string, number>,
+  unitsByDay: Map<string, Map<number, number>>
+): Map<string, number> {
+  const priced = new Map<string, number>();
+  const shoppingDays = [...bazarByDay.entries()]
+    .filter(([, paisa]) => paisa > 0)
+    .map(([day]) => day)
+    .sort();
+
+  if (shoppingDays.length === 0 || windowDays.length === 0) return priced;
+
+  const indexOfDay = new Map(windowDays.map((day, index) => [day, index]));
+
+  for (let i = 0; i < shoppingDays.length; i++) {
+    const amount = bazarByDay.get(shoppingDays[i]) ?? 0;
+    if (amount <= 0) continue;
+
+    const from = i === 0 ? 0 : (indexOfDay.get(shoppingDays[i]) ?? 0);
+    const nextIndex = i === shoppingDays.length - 1 ? windowDays.length : indexOfDay.get(shoppingDays[i + 1]);
+    const to = nextIndex === undefined ? windowDays.length : nextIndex;
+
+    const covered = windowDays.slice(from, Math.max(to, from + 1)).filter((day) => {
+      const units = unitsByDay.get(day);
+      return units !== undefined && [...units.values()].reduce((a, b) => a + b, 0) > 0;
+    });
+
+    if (covered.length === 0) continue;
+
+    const shares = allocate(amount, covered.map(() => 1));
+    covered.forEach((day, index) => {
+      priced.set(day, (priced.get(day) ?? 0) + shares[index]);
+    });
+  }
+
+  return priced;
 }
 
 async function loadCarryIn(groupId: string, monthKey: string): Promise<Map<string, number>> {
@@ -284,32 +335,34 @@ export async function buildSettlement(
   const totalUnits = unitsByMember.reduce((a, b) => a + b, 0);
   let unallocatedPaisa = 0;
 
+  const windowDays = daySpanKeys(start, windowEnd);
+  const effectiveMode = rateMode;
+  const pricedByDay =
+    effectiveMode === MEAL_RATE_MODES.DAILY ? spreadBazarOverDays(windowDays, bazarByDay, unitsByDay) : new Map();
+
   let unpricedMealUnits = 0;
-  for (const [day, dayUnits] of unitsByDay) {
-    if ((bazarByDay.get(day) ?? 0) <= 0) {
-      unpricedMealUnits += [...dayUnits.values()].reduce((a, b) => a + b, 0);
+  if (effectiveMode === MEAL_RATE_MODES.DAILY) {
+    for (const [day, dayUnits] of unitsByDay) {
+      if ((pricedByDay.get(day) ?? 0) <= 0) {
+        unpricedMealUnits += [...dayUnits.values()].reduce((a, b) => a + b, 0);
+      }
     }
   }
 
-  const dayPricingStarvesMeals = rateMode === MEAL_RATE_MODES.DAILY && unpricedMealUnits > 0;
-  const effectiveMode = dayPricingStarvesMeals ? MEAL_RATE_MODES.MONTHLY : rateMode;
-
   if (effectiveMode === MEAL_RATE_MODES.DAILY) {
-    for (const [day, dayBazarPaisa] of bazarByDay) {
+    let spreadPaisa = 0;
+    for (const [day, dayBazarPaisa] of pricedByDay) {
       const dayUnits = unitsByDay.get(day);
-      const dayTotalUnits = dayUnits ? [...dayUnits.values()].reduce((a, b) => a + b, 0) : 0;
+      if (!dayUnits) continue;
 
-      if (!dayUnits || dayTotalUnits <= 0) {
-        unallocatedPaisa += dayBazarPaisa;
-        continue;
-      }
-
+      spreadPaisa += dayBazarPaisa;
       const entries = [...dayUnits.entries()];
       const shares = allocate(dayBazarPaisa, entries.map(([, units]) => units));
       entries.forEach(([index], i) => {
         mealCostByMember[index] += shares[i];
       });
     }
+    unallocatedPaisa = totalBazarPaisa - spreadPaisa;
   } else {
     unallocatedPaisa = totalBazarPaisa;
   }
@@ -390,23 +443,33 @@ export async function buildSettlement(
   members.sort((a, b) => a.name.localeCompare(b.name));
 
   const monthRatePaisaPerUnit = totalUnits > 0 ? totalBazarPaisa / totalUnits : 0;
+  const dayRates: number[] = [];
 
   const days: SettlementDay[] = [...new Set([...unitsByDay.keys(), ...bazarByDay.keys()])].sort().map((day) => {
     const dayUnits = unitsByDay.get(day);
     const meals = dayUnits ? [...dayUnits.values()].reduce((a, b) => a + b, 0) : 0;
     const bazarPaisa = bazarByDay.get(day) ?? 0;
+    const chargedPaisa = pricedByDay.get(day) ?? 0;
 
-    const pricedOnOwnBazar = effectiveMode === MEAL_RATE_MODES.DAILY && bazarPaisa > 0 && meals > 0;
-    const ratePaisaPerUnit = pricedOnOwnBazar ? bazarPaisa / meals : monthRatePaisaPerUnit;
+    const pricedOnOwnBazar = effectiveMode === MEAL_RATE_MODES.DAILY && chargedPaisa > 0 && meals > 0;
+    const ratePaisaPerUnit = pricedOnOwnBazar ? chargedPaisa / meals : monthRatePaisaPerUnit;
+    const rate = round2((ratePaisaPerUnit * WEIGHT_SCALE) / 100);
+
+    if (meals > 0) dayRates.push(rate);
 
     return {
       date: day,
       meals: round2(meals / WEIGHT_SCALE),
       bazar: fromPaisa(bazarPaisa),
-      rate: round2((ratePaisaPerUnit * WEIGHT_SCALE) / 100),
+      charged: fromPaisa(chargedPaisa),
+      rate,
       cost: fromPaisa(Math.round(ratePaisaPerUnit * meals))
     };
   });
+
+  const averageDayRate = dayRates.length > 0 ? round2(dayRates.reduce((a, b) => a + b, 0) / dayRates.length) : 0;
+  const ratioRate = totalUnits > 0 ? round2(totalBazarPaisa / 100 / (totalUnits / WEIGHT_SCALE)) : 0;
+  const headlineRate = effectiveMode === MEAL_RATE_MODES.DAILY ? averageDayRate : ratioRate;
 
   const byType: Record<string, number> = {};
   for (const row of billTypeRows) byType[row.type] = round2(row._sum.amount ?? 0);
@@ -416,7 +479,7 @@ export async function buildSettlement(
     month: key,
     rateMode,
     effectiveRateMode: effectiveMode,
-    rateModeFallbackReason: dayPricingStarvesMeals ? 'MEALS_WITHOUT_BAZAR' : null,
+    rateModeFallbackReason: null,
     through: utcDateToDay(new Date(windowEnd.getTime() - 86_400_000)),
     carryForwardEnabled,
     weights: {
@@ -431,7 +494,10 @@ export async function buildSettlement(
       bills: round2(Object.values(byType).reduce((a, b) => a + b, 0)),
       expense: fromPaisa(totalBazarPaisa + billsTotalPaisa),
       meals: round2(totalUnits / WEIGHT_SCALE),
-      mealRate: totalUnits > 0 ? round2(totalBazarPaisa / 100 / (totalUnits / WEIGHT_SCALE)) : 0,
+      mealRate: headlineRate,
+      averageDayRate,
+      ratioRate,
+      pricedDays: dayRates.length,
       mealCost: fromPaisa(mealCostByMember.reduce((a, b) => a + b, 0)),
       billShare: fromPaisa(billsTotalPaisa),
       carryIn: round2(members.reduce((a, m) => a + m.carryIn, 0)),

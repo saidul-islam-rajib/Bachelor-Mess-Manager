@@ -36,6 +36,9 @@ export type GroupReport = {
     expense: number;
     meals: number;
     mealRate: number;
+    averageDayRate: number;
+    ratioRate: number;
+    pricedDays: number;
     mealCost: number;
     carryIn: number;
     collected: number;
@@ -95,6 +98,9 @@ export async function buildGroupReport(
       expense: settlement.totals.expense,
       meals: settlement.totals.meals,
       mealRate: settlement.totals.mealRate,
+      averageDayRate: settlement.totals.averageDayRate,
+      ratioRate: settlement.totals.ratioRate,
+      pricedDays: settlement.totals.pricedDays,
       mealCost: settlement.totals.mealCost,
       carryIn: settlement.totals.carryIn,
       collected: settlement.totals.cashPaid,

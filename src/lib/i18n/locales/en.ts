@@ -385,11 +385,11 @@ const en = {
       'These two settings decide how the meal rate is priced and what happens to unpaid balances at month end.',
     rateLabel: 'Meal rate',
     rateMonthly: 'One rate for the month (total bazar ÷ total meals)',
-    rateDaily: 'A rate for each day (that day\'s bazar ÷ that day\'s meals)',
+    rateDaily: 'A rate for each day (that day\'s share of bazar ÷ that day\'s meals)',
     rateMonthlyHint:
-      'One monthly rate is the simplest to explain and evens out days when bazar was unusually cheap or expensive.',
+      'One monthly rate is the simplest to explain and evens out days when bazar was unusually cheap or expensive. Every day in the meal table shows the same number.',
     rateDailyHint:
-      'Day-wise pricing charges people for what was actually bought on the days they ate. Bazar bought on a day nobody ate is shared across the month, so nothing goes uncharged.',
+      'Each shopping trip is spread over the days it fed the mess, so every day gets its own rate and a quiet day costs more per meal than a busy one. The headline rate becomes the average of those daily rates.',
     rateSaved: 'Meal rate updated.',
     carryLabel: 'Carry unpaid balances into the next month',
     carryHint:
@@ -531,6 +531,7 @@ const en = {
     everyoneOnDay: (count: number) => `Everyone else (${count})`,
     hideEveryone: 'Hide everyone else',
     editingFor: (name: string) => `Editing ${name}`,
+    averageRateHint: 'The average of the daily rates so far. Each day is charged at its own rate.',
     ratedThrough: (day: string) =>
       `The meal rate and everyone's cost are worked out from bazar and meals up to ${day}. Later days show planned meals only and are not priced yet.`,
     notStartedYet: 'This month has not started. The numbers below are planned meals only — nothing is priced yet.'

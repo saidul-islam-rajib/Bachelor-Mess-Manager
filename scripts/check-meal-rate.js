@@ -158,16 +158,22 @@ async function run() {
   report('');
   report(`  total bazar   ${data.totals.bazar}`);
   report(`  total meals   ${data.totals.meals}`);
-  report(`  month rate    ${data.totals.mealRate}`);
-  report(`  rate mode     requested=${data.rateMode} effective=${data.effectiveRateMode} reason=${data.rateModeFallbackReason}`);
+  report(`  average rate  ${data.totals.mealRate}  (mean of ${data.totals.pricedDays} daily rates)`);
+  report(`  ratio rate    ${data.totals.ratioRate}  (bazar / meals, for comparison)`);
+  report(`  rate mode     requested=${data.rateMode} effective=${data.effectiveRateMode}`);
   report('');
 
   check('total meals counted correctly', near(data.totals.meals, 15), `got ${data.totals.meals}`);
-  check('month rate = 1040 / 15', near(data.totals.mealRate, 69.33), `got ${data.totals.mealRate}`);
   check(
-    'day pricing detected as unfair and fell back',
-    data.effectiveRateMode === 'MONTHLY' && data.rateModeFallbackReason === 'MEALS_WITHOUT_BAZAR',
+    'day-by-day pricing stays in force, no fallback',
+    data.effectiveRateMode === 'DAILY' && data.rateModeFallbackReason === null,
     `${data.effectiveRateMode}/${data.rateModeFallbackReason}`
+  );
+  check('the one shop is spread over the 5 days that ate', data.totals.pricedDays === 5, String(data.totals.pricedDays));
+  check(
+    'headline rate is the average of the daily rates, not bazar / meals',
+    near(data.totals.mealRate, 77.65) && near(data.totals.ratioRate, 69.33),
+    `average ${data.totals.mealRate}, ratio ${data.totals.ratioRate}`
   );
 
   const allocated = members.reduce((acc, m) => acc + m.mealCost, 0);
@@ -188,9 +194,14 @@ async function run() {
     `A ${byId[memberA.id].mealCost} vs B ${byId[memberB.id].mealCost}`
   );
   check(
-    'member A cost = 6 x month rate',
-    near(byId[memberA.id].mealCost, 6 * data.totals.mealRate, 0.02),
+    'member A is charged the sum of their day shares, not average x meals',
+    near(byId[memberA.id].mealCost, 429.86, 0.02),
     `${byId[memberA.id].mealCost}`
+  );
+  check(
+    'charging average x meals would not have added up',
+    Math.abs(members.reduce((acc, m) => acc + m.meals * data.totals.mealRate, 0) - 1040) > 1,
+    'the two methods happen to agree here, so this case no longer proves anything'
   );
 
   check('grocery buyer credited the full 1040', near(byId[supervisor.id].bazarPaid, 1040), String(byId[supervisor.id].bazarPaid));
@@ -200,10 +211,27 @@ async function run() {
   let dayCostSum = 0;
   for (const d of data.days) {
     dayCostSum += d.cost;
-    report(`    ${d.date}  meals ${String(d.meals).padStart(4)}  bazar ${String(d.bazar).padStart(8)}  rate ${String(d.rate).padStart(7)}  charged ${String(d.cost).padStart(8)}`);
+    report(`    ${d.date}  meals ${String(d.meals).padStart(4)}  bazar ${String(d.bazar).padStart(8)}  used ${String(d.charged).padStart(8)}  rate ${String(d.rate).padStart(7)}  charged ${String(d.cost).padStart(8)}`);
   }
   check('day charges add back to total bazar', near(dayCostSum, 1040, 0.05), `sum ${dayCostSum.toFixed(2)}`);
   check('no day with meals shows a zero rate', data.days.every((d) => d.meals === 0 || d.rate > 0));
+
+  const eatenDays = data.days.filter((d) => d.meals > 0);
+  check(
+    'daily rates genuinely vary, they are not one flat number',
+    new Set(eatenDays.map((d) => d.rate)).size > 1,
+    JSON.stringify(eatenDays.map((d) => d.rate))
+  );
+  check(
+    'a quiet day costs more per meal than a busy one',
+    eatenDays.find((d) => near(d.meals, 2))?.rate > eatenDays.find((d) => near(d.meals, 5))?.rate,
+    JSON.stringify(eatenDays.map((d) => `${d.meals}m=${d.rate}`))
+  );
+  check(
+    'the average equals the mean of the day rates shown',
+    near(data.totals.mealRate, eatenDays.reduce((a, d) => a + d.rate, 0) / eatenDays.length, 0.02),
+    `${data.totals.mealRate}`
+  );
 
   report('');
   report('Adding bills to check the member-wise cost split');

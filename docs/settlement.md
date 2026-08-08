@@ -51,7 +51,7 @@ number and the rows were answering different questions.
 
 Both now come from the same pass, and `rateMode` is reported so the UI can say which one is in force.
 
-## Day-by-day pricing only works when bazar is recorded daily
+## Day-by-day pricing: a shop feeds the days until the next shop
 
 `DAILY` mode originally priced each day strictly on that day's own bazar. That is correct only if the mess shops
 every day. It is not what most messes do, and the failure was severe:
@@ -66,29 +66,61 @@ The whole month's ৳1040 landed on the five meals eaten on the shopping day, at
 the other four days cost nothing. Total allocation still equalled total bazar, so the books balanced — but the
 distribution was badly unfair, and the fairness bug was invisible precisely because the totals tied out.
 
-The cause was structural: the allocation loop iterated over `bazarByDay`, so a day with meals but no bazar was never
-visited and its meals were never charged.
+The first fix was a fallback: detect meals on bazar-less days and revert the whole month to one flat rate. That was
+safe, but it meant `DAILY` almost never actually applied — a mess that shops twice a week trips the condition every
+month — and every day in the table showed the same number, which is what a supervisor reported as a bug.
 
 ### What happens now
 
-Before allocating, the engine counts meals that fall on days with no bazar. If there are any, day-by-day pricing
-cannot fund them without overcharging the people who happened to eat on a shopping day, so the month falls back to
-one rate across every meal:
+`spreadBazarOverDays` treats a shopping trip as feeding the days until the next one. Each bazar entry is spread evenly
+across the days in its span **that had meals**; days nobody ate are skipped so their share is not stranded. The first
+trip of the window also reaches backwards to the window start, because meals recorded before the first recorded shop
+were still eaten out of something.
 
 ```
-totals.effectiveRateMode      MONTHLY
-totals.rateModeFallbackReason MEALS_WITHOUT_BAZAR
-totals.unpricedMeals          10
+Bazar   01: ৳1040                          (next shop: none, so the span runs to today)
+Meals   01: 5   02: 3   03: 2   04: 3   05: 2
+
+৳1040 over the 5 days that ate = ৳208 each
+
+01   5 meals   ৳208 used   rate  41.60
+02   3 meals   ৳208 used   rate  69.33
+03   2 meals   ৳208 used   rate 104.00
+04   3 meals   ৳208 used   rate  69.33
+05   2 meals   ৳208 used   rate 104.00
 ```
 
-The UI explains the fallback rather than hiding it, so a supervisor who picked `DAILY` understands why the table
-shows one rate. `DAILY` is still honoured whenever bazar genuinely covers the meal days.
+A quiet day costs more per meal than a busy one, which is the honest reading: the same groceries fed fewer people.
+`SettlementDay.bazar` is what was actually spent that day; `SettlementDay.charged` is what that day was priced on.
+They differ on every day except a one-day span.
 
-There is no third option here. Conservation forces it: `Σ member cost` must equal total bazar, so meals on bazar-less
-days can only be funded by spreading the month's bazar across every meal. That is the monthly rate.
+Members are charged from the day rates — each day's share is split across that day's meals by `allocate()`. So
+`Σ member meal cost` still equals total bazar to the paisa, exactly as before. The fallback is gone;
+`effectiveRateMode` now always equals `rateMode` and `rateModeFallbackReason` is always `null`.
 
-Verified by `npm run test:rate`, which reproduces the exact scenario above and asserts every member is charged in
-proportion to what they ate, and that the day charges add back to ৳1040 to the paisa.
+Bazar whose entire span had no meals cannot be placed this way. It falls to the same pooling step that `MONTHLY` uses
+and is spread across every meal in the window, so nothing is dropped.
+
+### The headline rate is the average of the daily rates
+
+In `DAILY` mode `totals.mealRate` is the **unweighted mean** of the day rates — `(41.60 + 69.33 + 104.00 + 69.33 +
+104.00) / 5 = ৳77.65` above. `totals.ratioRate` carries the old figure (`total bazar ÷ total meals`, ৳69.33) alongside
+it, and `totals.pricedDays` says how many days went into the mean.
+
+The two differ whenever meals per day vary: the ratio is the mean weighted by each day's meal count, the headline is
+not. That is deliberate — it is the number a supervisor quotes when asked "what's the rate this month?", and averaging
+the days they can see on the table is what they expect it to mean.
+
+**It is a reporting figure, not a charging figure.** `average rate × your meals` will not equal your cost, and it must
+not: charging that way would collect a different amount than the mess spent. Conservation comes from the per-day
+allocation, and the UI says so rather than leaving people to discover the gap.
+
+In `MONTHLY` mode nothing changed — `totals.mealRate` is still `total bazar ÷ total meals`, and every day shows it.
+A group that wants day-by-day rates has to be set to `DAILY` in Members → Group settings.
+
+Verified by `npm run test:rate`, which reproduces the scenario above and asserts the day rates genuinely vary, that a
+2-meal day is dearer than a 5-meal day, that the headline equals the mean of the rates shown, and that the day charges
+add back to ৳1040 to the paisa.
 
 ## Member-wise breakdown
 

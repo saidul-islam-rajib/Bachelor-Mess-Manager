@@ -18,7 +18,14 @@ type Summary = {
   through?: string;
   members: SummaryMember[];
   days: SummaryDay[];
-  totals: { expense: number; meals: number; mealRate: number; memberCount: number };
+  totals: {
+    expense: number;
+    meals: number;
+    mealRate: number;
+    averageDayRate: number;
+    pricedDays: number;
+    memberCount: number;
+  };
 };
 
 type EditWindow = {
@@ -565,7 +572,9 @@ export default function MealsPage() {
                           </td>
                         ))}
                         <td className="px-4 py-3">{logged.total}</td>
-                        <td className="px-4 py-3 text-slate-600">—</td>
+                        <td className="px-4 py-3 text-slate-600" title={strings.meals.averageRateHint}>
+                          {summary.totals.mealRate > 0 ? summary.totals.mealRate.toFixed(2) : '—'}
+                        </td>
                       </tr>
                     </tfoot>
                   )}

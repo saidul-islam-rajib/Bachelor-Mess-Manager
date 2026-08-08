@@ -23,7 +23,15 @@ export type MealSummary = {
   weights: { breakfast: number; lunch: number; dinner: number };
   days: SummaryDay[];
   members: SummaryMember[];
-  totals: { expense: number; meals: number; cost: number; mealRate: number; memberCount: number };
+  totals: {
+    expense: number;
+    meals: number;
+    cost: number;
+    mealRate: number;
+    averageDayRate: number;
+    pricedDays: number;
+    memberCount: number;
+  };
 };
 
 export async function buildMealSummary(group: SettlementGroup, monthKey?: string): Promise<MealSummary> {
@@ -57,6 +65,8 @@ export async function buildMealSummary(group: SettlementGroup, monthKey?: string
       meals: settlement.totals.meals,
       cost: settlement.totals.mealCost,
       mealRate: settlement.totals.mealRate,
+      averageDayRate: settlement.totals.averageDayRate,
+      pricedDays: settlement.totals.pricedDays,
       memberCount: settlement.totals.memberCount
     }
   };
