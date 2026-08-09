@@ -10,7 +10,7 @@ import { Badge, Collapsible, EmptyState, ImageViewer, PageTitle } from '@/compon
 import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 import { validateName, validatePhone } from '@/lib/validation';
-import { ACCEPTED_IMAGE_MIMES } from '@/lib/uploads.client';
+import { ACCEPTED_IMAGE_MIMES, evictCachedUpload } from '@/lib/uploads.client';
 import { formatBytes } from '@/lib/format';
 import { uploadConfig } from '@/config';
 
@@ -312,6 +312,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? strings.profile.photoUploadFailed);
 
+      evictCachedUpload(image);
       toast.success(strings.profile.photoUpdated);
       onChanged();
     } catch (err) {
@@ -331,6 +332,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error ?? strings.profile.photoRemoveFailed);
+      evictCachedUpload(image);
       toast.success(strings.profile.photoRemoved);
       onChanged();
     } catch (err) {

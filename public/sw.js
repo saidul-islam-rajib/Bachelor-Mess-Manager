@@ -1,4 +1,4 @@
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = `bp-shell-${VERSION}`;
 const ASSET_CACHE = `bp-assets-${VERSION}`;
 const PAGE_CACHE = `bp-pages-${VERSION}`;
@@ -42,6 +42,18 @@ self.addEventListener('message', (event) => {
 
   if (event.data.type === 'CLEAR_CACHES') {
     event.waitUntil(caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))));
+    return;
+  }
+
+  if (event.data.type === 'EVICT_UPLOAD') {
+    const urls = (Array.isArray(event.data.urls) ? event.data.urls : [event.data.url]).filter(Boolean);
+    if (urls.length === 0) return;
+
+    event.waitUntil(
+      caches
+        .open(ASSET_CACHE)
+        .then((cache) => Promise.all(urls.map((url) => cache.delete(url, { ignoreVary: true }))))
+    );
   }
 });
 

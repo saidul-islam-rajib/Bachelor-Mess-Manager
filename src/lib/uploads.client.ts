@@ -10,3 +10,10 @@ export type ImageFormat = (typeof IMAGE_FORMATS)[number];
 export const ACCEPTED_IMAGE_MIMES: string[] = IMAGE_FORMATS.map((format) => format.mime);
 
 export const ACCEPTED_IMAGE_EXTENSIONS: string[] = IMAGE_FORMATS.map((format) => format.ext);
+
+export function evictCachedUpload(url: string | null | undefined): void {
+  if (!url) return;
+  if (typeof navigator === 'undefined' || !navigator.serviceWorker) return;
+
+  navigator.serviceWorker.controller?.postMessage({ type: 'EVICT_UPLOAD', url });
+}

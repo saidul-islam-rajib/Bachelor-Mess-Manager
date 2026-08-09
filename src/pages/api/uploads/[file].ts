@@ -1,8 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser } from '@/lib/auth-utils';
 import { methodNotAllowed, notFound, unauthorized } from '@/lib/http';
-import { readProfileImage } from '@/lib/uploads';
+import { profileImageExists, readProfileImage } from '@/lib/uploads';
+import { uploadConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
+
+function matchesEtag(header: string | string[] | undefined, etag: string): boolean {
+  if (!header) return false;
+
+  const raw = Array.isArray(header) ? header.join(',') : header;
+  if (raw.trim() === '*') return true;
+
+  return raw
+    .split(',')
+    .map((candidate) => candidate.trim().replace(/^W\//, ''))
+    .includes(etag);
+}
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
@@ -19,6 +32,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Not found.');
   }
 
+  const etag = `"${name}"`;
+  const cacheControl = `private, max-age=${uploadConfig.cacheMaxAgeSeconds}, immutable`;
+
+  if (matchesEtag(req.headers['if-none-match'], etag)) {
+    if (!(await profileImageExists(name))) {
+      return notFound(res, 'Not found.');
+    }
+
+    res.setHeader('ETag', etag);
+    res.setHeader('Cache-Control', cacheControl);
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    return res.status(304).end();
+  }
+
   const file = await readProfileImage(name);
   if (!file) {
     return notFound(res, 'Not found.');
@@ -26,8 +53,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   res.setHeader('Content-Type', file.contentType);
   res.setHeader('Content-Length', file.body.length);
-
-  res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+  res.setHeader('ETag', etag);
+  res.setHeader('Cache-Control', cacheControl);
   res.setHeader('X-Content-Type-Options', 'nosniff');
 
   if (req.method === 'HEAD') return res.status(200).end();

@@ -95,6 +95,18 @@ export async function deleteProfileImage(url: string | null | undefined) {
   }
 }
 
+export async function profileImageExists(name: string): Promise<boolean> {
+  const fileName = safeFileName(name);
+  if (!fileName) return false;
+
+  try {
+    await fs.access(path.join(UPLOAD_DIR, fileName));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function readProfileImage(name: string): Promise<{ body: Buffer; contentType: string } | null> {
   const fileName = safeFileName(name);
   if (!fileName) return null;

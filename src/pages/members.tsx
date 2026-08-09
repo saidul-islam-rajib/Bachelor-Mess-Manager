@@ -4,6 +4,7 @@ import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
 import { Collapsible, Listbox, PageTitle, useConfirm } from '@/components/ui';
 import InviteMembers from '@/components/members/InviteMembers';
+import MemberProfile from '@/components/members/MemberProfile';
 import GroupSettings from '@/components/members/GroupSettings';
 import MessComments from '@/components/members/MessComments';
 import YourGroups from '@/components/members/YourGroups';
@@ -59,6 +60,7 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState('');
   const [tab, setTab] = useState<Tab>('roster');
+  const [profileId, setProfileId] = useState<string | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const commentsSection = useRef<HTMLDivElement>(null);
 
@@ -331,10 +333,15 @@ export default function MembersPage() {
                         key={member.membershipId}
                         className="flex flex-wrap items-center justify-between gap-3 py-3"
                       >
-                        <div className="flex min-w-0 items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setProfileId(member.id)}
+                          aria-label={strings.members.profile.viewLabel(member.name)}
+                          className="flex min-w-0 items-center gap-3 rounded-2xl text-left transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                        >
                           <Avatar member={member} />
-                          <div className="min-w-0">
-                            <p className="truncate font-medium">
+                          <span className="min-w-0">
+                            <span className="block truncate font-medium">
                               {member.name}
                               {member.id === user?.id && <span className="ml-1 text-xs text-green-600">(you)</span>}
                               {member.isSupervisor && (
@@ -342,13 +349,13 @@ export default function MembersPage() {
                                   supervisor
                                 </span>
                               )}
-                            </p>
-                            <p className="truncate text-xs text-slate-500">
+                            </span>
+                            <span className="block truncate text-xs text-slate-500">
                               {member.email}
                               {member.phone && ` · ${member.phone}`}
-                            </p>
-                          </div>
-                        </div>
+                            </span>
+                          </span>
+                        </button>
 
                         <div className="flex items-center gap-3">
                           <div className="text-right">
@@ -393,18 +400,23 @@ export default function MembersPage() {
                           key={member.membershipId}
                           className="flex flex-wrap items-center justify-between gap-3 py-3"
                         >
-                          <div className="flex min-w-0 items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setProfileId(member.id)}
+                            aria-label={strings.members.profile.viewLabel(member.name)}
+                            className="flex min-w-0 items-center gap-3 rounded-2xl text-left transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                          >
                             <Avatar member={member} muted />
-                            <div className="min-w-0">
-                              <p className="truncate font-medium text-slate-600">{member.name}</p>
-                              <p className="truncate text-xs text-slate-500">
+                            <span className="min-w-0">
+                              <span className="block truncate font-medium text-slate-600">{member.name}</span>
+                              <span className="block truncate text-xs text-slate-500">
                                 {member.leftAt
                                   ? strings.members.left(shortDate(member.leftAt))
                                   : strings.members.noLongerActive}{' '}
                                 · {strings.members.stay(formatStay(member.stayDays))}
-                              </p>
-                            </div>
-                          </div>
+                              </span>
+                            </span>
+                          </button>
                           {canManage && (
                             <button
                               type="button"
@@ -454,6 +466,8 @@ export default function MembersPage() {
           )}
         </div>
       )}
+
+      <MemberProfile userId={profileId} onClose={() => setProfileId(null)} />
     </section>
   );
 }
