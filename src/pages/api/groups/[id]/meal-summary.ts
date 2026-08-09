@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { buildMealSummary } from '@/lib/meal-summary';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -27,6 +29,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (!(await isGroupMember(groupId, sessionUser.id)) && !requireAdmin(sessionUser)) {
     return forbidden(res, 'You are not a member of this group.');
+  }
+  if (!hasPermission(sessionUser, PERMISSIONS.MEAL_VIEW)) {
+    return forbidden(res, strings.errors.permissionDenied);
   }
 
   const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;

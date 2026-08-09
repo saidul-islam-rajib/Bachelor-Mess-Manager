@@ -79,7 +79,22 @@ const en = {
       submit: 'Sign in',
       submitting: 'Signing in...',
       registerPrompt: "Don't have an account?",
-      registerLink: 'Register'
+      registerLink: 'Register',
+      forgotLink: 'Forgot your password?'
+    },
+    forgotPassword: {
+      title: 'Forgot your password?',
+      subtitle: 'Type the email you signed up with. If we know it, we will send you a link to choose a new password.',
+      email: 'Email',
+      submit: 'Send reset link',
+      submitting: 'Sending...',
+      backToLogin: 'Back to sign in',
+      sentTitle: 'Check your email',
+      sentBody: (email: string) =>
+        `If an account exists for ${email}, a password reset link is on its way. It expires shortly, so use it soon.`,
+      sentHint: 'Nothing arrived? Check your spam folder, or try again in a few minutes.',
+      resend: 'Use a different email',
+      devLinkNotice: 'Email is not configured on this server, so use the link below to reset the password.'
     },
     register: {
       title: 'Register',
@@ -121,8 +136,14 @@ const en = {
       checking: 'Checking your link...',
       invalidTitle: 'This link cannot be used',
       requestNew: 'Back to sign in',
+      requestAnother: 'Send me a new link',
       successSignedIn: 'Password created. You are signed in.',
-      successPending: 'Password created. An administrator will review your account before you can sign in.'
+      successPending: 'Password created. An administrator will review your account before you can sign in.',
+      resetTitle: 'Choose a new password',
+      resetSubtitle: (name: string) => `Hello ${name}. Pick a new password — this signs you out everywhere else.`,
+      resetSubmit: 'Save new password',
+      resetSuccessSignedIn: 'Password changed. You are signed in.',
+      resetSuccessPending: 'Password changed. An administrator will review your account before you can sign in.'
     }
   },
   roleRequests: {
@@ -207,6 +228,7 @@ const en = {
     emailInUse: 'That email is already in use.',
     nothingToUpdate: 'Nothing to update.',
     adminOnly: 'Only admins can perform this action.',
+    permissionDenied: 'Your account does not have permission to do that. Ask an admin if you need it.',
     supervisorOnly: "Only this group's supervisor can perform this action.",
     notGroupMember: 'You are not a member of this group.',
     loadFailed: (what: string) => `Could not load ${what}.`,
@@ -534,7 +556,33 @@ const en = {
     averageRateHint: 'The average of the daily rates so far. Each day is charged at its own rate.',
     ratedThrough: (day: string) =>
       `The meal rate and everyone's cost are worked out from bazar and meals up to ${day}. Later days show planned meals only and are not priced yet.`,
-    notStartedYet: 'This month has not started. The numbers below are planned meals only — nothing is priced yet.'
+    notStartedYet: 'This month has not started. The numbers below are planned meals only — nothing is priced yet.',
+    rate: {
+      title: 'Your meal rate',
+      todayLabel: "Today's rate",
+      latestLabel: (day: string) => `Latest priced day · ${day}`,
+      perMealUnit: 'per meal',
+      noRateYet: 'No rate yet',
+      noRateYetHint: 'A rate appears for a day once bazar has been recorded and someone has eaten.',
+      monthLabel: 'This month so far',
+      monthHintDaily: 'Average of every priced day this month.',
+      monthHintMonthly: 'Total bazar divided by every meal eaten this month.',
+      yourMealsToday: (count: number) => `You ate ${count} meal${count === 1 ? '' : 's'} today`,
+      yourCostToday: 'Your cost today',
+      yourMealsMonth: 'Your meals',
+      yourCostMonth: 'Your meal cost',
+      dayByDay: 'Day by day',
+      showAll: (count: number) => `Show all ${count} days`,
+      showLess: 'Show fewer days',
+      colDay: 'Day',
+      colRate: 'Rate',
+      colYourMeals: 'You',
+      colYourCost: 'Your cost',
+      colGroupMeals: 'Mess',
+      noPricedDays: 'No day has been priced yet this month.',
+      modeDaily: 'Each day is priced on its own bazar',
+      modeMonthly: 'One rate for the whole month'
+    }
   },
   expenses: {
     title: 'Groceries (Bazar)',
@@ -822,10 +870,55 @@ const en = {
     tabs: {
       registrations: 'Registrations',
       users: 'Users',
+      permissions: 'Permissions',
       groups: 'Groups',
       activity: 'Activity',
       security: 'Security',
       settings: 'Settings'
+    },
+    permissions: {
+      title: 'Roles & permissions',
+      subtitle:
+        'Every member starts with what their role allows. Give one person extra access, or take some away, without changing anybody else.',
+      action: 'Permissions',
+      modalTitle: (name: string) => `Permissions for ${name}`,
+      roleBaseline: (role: string) => `Role baseline: ${role}`,
+      roleBaselineHint:
+        'Leave a permission on "Role default" and it follows the role. Change the role later and the member moves with it.',
+      inherit: 'Role default',
+      allow: 'Allow',
+      deny: 'Block',
+      allowedByRole: 'Allowed by role',
+      blockedByRole: 'Not in role',
+      effectiveAllowed: 'Allowed',
+      effectiveBlocked: 'Blocked',
+      overrideCount: (added: number, removed: number) =>
+        `${added} added · ${removed} blocked`,
+      noOverrides: 'No personal exceptions — this member follows their role exactly.',
+      summary: (allowed: number, total: number) => `${allowed} of ${total} permissions allowed`,
+      presetReadOnly: 'Read only',
+      presetReadOnlyHint: 'Blocks every action that writes, keeps everything the role can view.',
+      presetReset: 'Follow the role',
+      presetResetHint: 'Clears every personal exception.',
+      saved: (name: string) => `Permissions updated for ${name}.`,
+      cannotChangeSelf: 'You cannot change your own permissions.',
+      invalidPayload: 'Permissions must be sent as a list of codes and effects.',
+      unknownPermission: (code: string) => `Unknown permission: ${code}.`,
+      unknownEffect: (effect: string) => `Effect must be ALLOW or DENY, not ${effect}.`,
+      searchPlaceholder: 'Filter permissions',
+      customBadge: 'Custom',
+      categories: {
+        USERS: 'Users',
+        GROUPS: 'Groups',
+        MEMBERSHIPS: 'Members',
+        MEALS: 'Meals',
+        EXPENSES: 'Bazar',
+        BILLS: 'Bills',
+        PAYMENTS: 'Payments',
+        COMMENTS: 'Comments',
+        SETTINGS: 'Settings',
+        REPORTS: 'Reports'
+      }
     },
     registrations: {
       title: 'Pending registrations',

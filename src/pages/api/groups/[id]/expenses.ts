@@ -7,6 +7,8 @@ import { recordExpenseCreated } from '@/lib/expense-history';
 import { mentionIdsIn } from '@/lib/mentions';
 import { parseItems } from '@/lib/expense-items';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -47,6 +49,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const isSupervisor = group.supervisorId === sessionUser.id || admin;
 
   if (req.method === 'GET') {
+    if (!hasPermission(sessionUser, PERMISSIONS.EXPENSE_VIEW)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
 
@@ -113,6 +119,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'POST') {
+    if (!hasPermission(sessionUser, PERMISSIONS.EXPENSE_CREATE)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
     if (!isGroupWritable(group)) {
       return forbidden(res, GROUP_CLOSED_MESSAGE);
     }

@@ -1,4 +1,5 @@
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { hasPermission, type PermissionCode } from '@/lib/permissions';
 
 export type ImpersonatedBy = {
   id: string;
@@ -13,12 +14,14 @@ export type CurrentUser = {
   role: string;
   phone?: string | null;
   profileImage?: string | null;
+  permissions?: string[];
   impersonatedBy?: ImpersonatedBy;
 } | null;
 
 type UserContextValue = {
   user: CurrentUser;
   loading: boolean;
+  can: (permission: PermissionCode) => boolean;
   refresh: () => Promise<void>;
   logout: () => Promise<void>;
   stopImpersonating: () => Promise<void>;
@@ -70,9 +73,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
-  return (
-    <UserContext.Provider value={{ user, loading, refresh, logout, stopImpersonating }}>
-      {children}
-    </UserContext.Provider>
+  const can = useCallback((permission: PermissionCode) => hasPermission(user, permission), [user]);
+
+  const value = useMemo(
+    () => ({ user, loading, can, refresh, logout, stopImpersonating }),
+    [user, loading, can, refresh, logout, stopImpersonating]
   );
+
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

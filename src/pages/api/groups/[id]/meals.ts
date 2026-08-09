@@ -5,6 +5,8 @@ import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unautho
 import { dayToUtcDate, parseMonth, todayKey, utcDateToDay } from '@/lib/month';
 import { syncPlansForMonth } from '@/lib/meal-plan';
 import { GROUP_STATUS, NOTIFICATION_TYPES, REQUEST_STATUS } from '@/lib/constants';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { notifyGroup, notifyUsers } from '@/lib/notifications';
 import { ROUTES } from '@/lib/routes';
 import {
@@ -46,6 +48,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'GET') {
+    if (!hasPermission(sessionUser, PERMISSIONS.MEAL_VIEW)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
     await syncPlansForMonth(groupId, monthKey);
@@ -106,6 +112,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (targetUserId !== sessionUser.id && !canManage && !admin) {
       return forbidden(res, 'You can only edit your own meals.');
+    }
+
+    const needed =
+      targetUserId === sessionUser.id ? PERMISSIONS.MEAL_RECORD_OWN : PERMISSIONS.MEAL_RECORD_ANY;
+    if (!hasPermission(sessionUser, needed)) {
+      return forbidden(res, strings.errors.permissionDenied);
     }
     if (!(await isGroupMember(groupId, targetUserId))) {
       return badRequest(res, 'That user is not a member of this group.');

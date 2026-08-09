@@ -4,7 +4,7 @@ import { getActiveMembership, getSessionUser, requireAdmin, requireSupervisorOrA
 import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport, type ReportMember } from '@/lib/group-report';
 import { INVITATION_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
-import { currentMonthKey, parseMonth, round2 } from '@/lib/month';
+import { currentMonthKey, parseMonth, round2, todayKey } from '@/lib/month';
 import { stayDays } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
@@ -164,6 +164,10 @@ async function memberReport(userId: string, month: string) {
   const me = mine(thisMonth.members, userId);
   const meLast = mine(lastMonth.members, userId);
 
+  const day = todayKey();
+  const pricedDays = thisMonth.days.filter((row) => row.rate > 0);
+  const latestPriced = pricedDays.find((row) => row.date === day) ?? pricedDays[pricedDays.length - 1] ?? null;
+
   return {
     group: {
       id: group.id,
@@ -184,6 +188,8 @@ async function memberReport(userId: string, month: string) {
       due: me?.due ?? 0,
       status: me?.status ?? 'PENDING',
       mealRate: thisMonth.totals.mealRate,
+      rateMode: thisMonth.effectiveRateMode,
+      dailyRate: latestPriced ? { date: latestPriced.date, rate: latestPriced.rate, isToday: latestPriced.date === day } : null,
       groupMeals: thisMonth.totals.meals,
       groupExpense: thisMonth.totals.expense,
       groupBazar: thisMonth.totals.bazar,

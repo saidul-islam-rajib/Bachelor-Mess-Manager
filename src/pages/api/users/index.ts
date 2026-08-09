@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getSessionUser } from '@/lib/auth-utils';
 import { forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { PERMISSION_EFFECTS } from '@/lib/user-permissions';
 import {
   SORT_DIRECTIONS,
   USER_ROLE_VALUES,
@@ -97,7 +98,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           where: { isActive: true },
           select: { group: { select: { id: true, name: true, supervisor: { select: { id: true, name: true } } } } }
         },
-        groupsSupervised: { select: { id: true, name: true } }
+        groupsSupervised: { select: { id: true, name: true } },
+        permissionOverrides: { select: { effect: true } }
       }
     }),
     prisma.user.groupBy({
@@ -127,7 +129,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       name: membership.group.name,
       supervisor: membership.group.supervisor
     })),
-    supervisedGroups: row.groupsSupervised
+    supervisedGroups: row.groupsSupervised,
+    permissionOverrides: {
+      added: row.permissionOverrides.filter((override) => override.effect === PERMISSION_EFFECTS.ALLOW).length,
+      blocked: row.permissionOverrides.filter((override) => override.effect === PERMISSION_EFFECTS.DENY).length
+    }
   }));
 
   return ok(res, {

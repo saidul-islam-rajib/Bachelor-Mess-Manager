@@ -61,6 +61,8 @@ type MemberReport = {
     due: number;
     status: string;
     mealRate: number;
+    rateMode: string;
+    dailyRate: { date: string; rate: number; isToday: boolean } | null;
     groupMeals: number;
     groupExpense: number;
     groupBazar: number;
@@ -367,9 +369,18 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
+          <Stat
+            label={
+              current.dailyRate
+                ? current.dailyRate.isToday
+                  ? strings.meals.rate.todayLabel
+                  : strings.meals.rate.latestLabel(shortDate(current.dailyRate.date))
+                : strings.meals.rate.todayLabel
+            }
+            value={current.dailyRate ? `${taka(current.dailyRate.rate)}` : '—'}
+          />
+          <Stat label={strings.meals.rate.monthLabel} value={taka(current.mealRate)} />
           <Stat label="Your meals" value={current.meals} />
-          <Stat label="Meal rate" value={taka(current.mealRate)} />
-          <Stat label="Your total cost" value={taka(current.totalCost)} />
           <Stat
             label={current.due < 0 ? 'Mess owes you' : 'You owe'}
             value={taka(Math.abs(current.due))}
@@ -649,6 +660,14 @@ function formatStay(days: number) {
   const years = Math.floor(months / 12);
   const rest = months % 12;
   return rest === 0 ? `${years} year${years === 1 ? '' : 's'}` : `${years}y ${rest}m`;
+}
+
+function shortDate(day: string) {
+  return new Date(`${day}T00:00:00Z`).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC'
+  });
 }
 
 function monthLabel(key: string) {

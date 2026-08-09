@@ -112,6 +112,15 @@ export default function LoginPage() {
               error={errors.password}
             />
 
+            <div className="-mt-2 text-right">
+              <Link
+                href={ROUTES.auth.forgotPassword}
+                className="text-sm font-medium text-brand-700 hover:underline"
+              >
+                {i18n.auth.login.forgotLink}
+              </Link>
+            </div>
+
             <Button type="submit" size="lg" fullWidth loading={loading}>
               {loading ? i18n.auth.login.submitting : strings.submit}
             </Button>

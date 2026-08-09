@@ -198,6 +198,39 @@ export function passwordSetupEmail(name: string, link: string, minutes: number):
   return { to: '', subject, text, html };
 }
 
+export function passwordResetEmail(name: string, link: string, minutes: number): MailMessage {
+  const safeName = escapeHtml(name);
+  const safeLink = escapeHtml(link);
+  const subject = `Reset your ${appConfig.name} password`;
+
+  const text = [
+    `Hello ${name},`,
+    '',
+    `Somebody asked to reset the password for your ${appConfig.name} account.`,
+    `Open the link below to choose a new one. It expires in ${minutes} minutes and can only be used once.`,
+    '',
+    link,
+    '',
+    'If this was not you, ignore this email. Your current password keeps working until the link is used.',
+    '',
+    appConfig.name
+  ].join('\n');
+
+  const html = `<!doctype html>
+<html><body style="margin:0;padding:24px;background:#f8fafc;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#0f172a">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:32px">
+    <h1 style="margin:0 0 8px;font-size:20px">${escapeHtml(appConfig.name)}</h1>
+    <p style="margin:0 0 24px;color:#475569;font-size:14px">Hello ${safeName}, somebody asked to reset your password. Choose a new one below.</p>
+    <a href="${safeLink}" style="display:inline-block;background:#0f172a;color:#fff;text-decoration:none;padding:12px 24px;border-radius:999px;font-size:14px">Reset your password</a>
+    <p style="margin:24px 0 0;color:#64748b;font-size:12px">This link expires in ${minutes} minutes and can only be used once. If the button does not work, paste this into your browser:</p>
+    <p style="margin:8px 0 0;color:#64748b;font-size:12px;word-break:break-all">${safeLink}</p>
+    <p style="margin:24px 0 0;color:#94a3b8;font-size:12px">If this was not you, ignore this email. Your current password keeps working until the link is used.</p>
+  </div>
+</body></html>`;
+
+  return { to: '', subject, text, html };
+}
+
 export function mealPromptEmail(params: {
   name: string;
   groupName: string;

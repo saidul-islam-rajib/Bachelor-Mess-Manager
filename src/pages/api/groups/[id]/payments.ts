@@ -7,6 +7,8 @@ import { categoryLabels } from '@/lib/expense-categories';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -31,6 +33,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const canManage = await canManageGroup(groupId, sessionUser);
 
   if (req.method === 'GET') {
+    if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_VIEW)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
 
@@ -102,6 +108,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     if (!canManage) {
       return forbidden(res, 'Only the group supervisor can record payments.');
+    }
+    if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD)) {
+      return forbidden(res, strings.errors.permissionDenied);
     }
     if (!isGroupWritable(group)) {
       return forbidden(res, GROUP_CLOSED_MESSAGE);

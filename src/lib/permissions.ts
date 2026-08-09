@@ -177,19 +177,23 @@ export function roleHasPermission(role: string | null | undefined, permission: P
   return PERMISSIONS_BY_ROLE[role]?.has(permission) ?? false;
 }
 
-export function hasPermission(user: { role?: string } | null | undefined, permission: PermissionCode): boolean {
-  return roleHasPermission(user?.role, permission);
+export type PermissionSubject = { role?: string; permissions?: string[] | null };
+
+export function hasPermission(user: PermissionSubject | null | undefined, permission: PermissionCode): boolean {
+  if (!user) return false;
+  if (Array.isArray(user.permissions)) return user.permissions.includes(permission);
+  return roleHasPermission(user.role, permission);
 }
 
 export function hasEveryPermission(
-  user: { role?: string } | null | undefined,
+  user: PermissionSubject | null | undefined,
   permissions: PermissionCode[]
 ): boolean {
   return permissions.every((permission) => hasPermission(user, permission));
 }
 
 export function hasAnyPermission(
-  user: { role?: string } | null | undefined,
+  user: PermissionSubject | null | undefined,
   permissions: PermissionCode[]
 ): boolean {
   return permissions.some((permission) => hasPermission(user, permission));

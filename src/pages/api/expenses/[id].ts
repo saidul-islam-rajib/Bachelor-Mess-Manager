@@ -6,6 +6,8 @@ import { EXPENSE_TYPES } from '@/lib/constants';
 import { dayToUtcDate, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
 import { parseItems } from '@/lib/expense-items';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -32,8 +34,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Expense not found.');
   }
 
-  if (expense.payerId !== sessionUser.id && !requireAdmin(sessionUser)) {
+  const isOwnExpense = expense.payerId === sessionUser.id;
+  if (!isOwnExpense && !requireAdmin(sessionUser)) {
     return forbidden(res, 'You can only edit your own expenses.');
+  }
+
+  const needed = isOwnExpense ? PERMISSIONS.EXPENSE_UPDATE_OWN : PERMISSIONS.EXPENSE_UPDATE_ANY;
+  if (!hasPermission(sessionUser, needed)) {
+    return forbidden(res, strings.errors.permissionDenied);
   }
 
   if (req.method === 'DELETE') {

@@ -9,7 +9,9 @@ import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 
-type TokenCheck = { valid: true; name: string; email: string } | { valid: false; error: string };
+type TokenCheck = { valid: true; name: string; email: string; purpose: string } | { valid: false; error: string };
+
+const RESET_PURPOSE = 'RESET';
 
 export default function SetPasswordPage() {
   const router = useRouter();
@@ -28,10 +30,10 @@ export default function SetPasswordPage() {
   const verify = useCallback(async () => {
     if (!token) return;
     try {
-      const data = await api.get<{ name: string; email: string }>('/api/auth/set-password', {
+      const data = await api.get<{ name: string; email: string; purpose: string }>('/api/auth/set-password', {
         query: { token }
       });
-      setCheck({ valid: true, name: data.name, email: data.email });
+      setCheck({ valid: true, name: data.name, email: data.email, purpose: data.purpose });
     } catch (error) {
       setCheck({ valid: false, error: errorMessage(error) });
     }
@@ -78,9 +80,12 @@ export default function SetPasswordPage() {
     }
   }
 
+  const isReset = Boolean(check?.valid && check.purpose === RESET_PURPOSE);
+  const title = isReset ? strings.auth.setPassword.resetTitle : strings.auth.setPassword.title;
+
   return (
     <div className="bg-slate-50 text-slate-900">
-      <PageTitle title={strings.auth.setPassword.title} />
+      <PageTitle title={title} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
           {!router.isReady || (token && !check) ? (
@@ -91,16 +96,23 @@ export default function SetPasswordPage() {
               <Alert tone="danger" className="mt-6">
                 {check && !check.valid ? check.error : strings.validation.required('Token')}
               </Alert>
-              <p className="mt-6 text-center text-sm">
-                <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
+              <div className="mt-6 flex flex-col items-center gap-2 text-sm">
+                <Link href={ROUTES.auth.forgotPassword} className="font-medium text-brand-700 hover:underline">
+                  {strings.auth.setPassword.requestAnother}
+                </Link>
+                <Link href={ROUTES.auth.login} className="font-medium text-slate-500 hover:underline">
                   {strings.auth.setPassword.requestNew}
                 </Link>
-              </p>
+              </div>
             </>
           ) : check && check.valid ? (
             <>
-              <h1 className="text-2xl font-semibold">{strings.auth.setPassword.title}</h1>
-              <p className="mt-1 text-sm text-slate-500">{strings.auth.setPassword.subtitle(check.name)}</p>
+              <h1 className="text-2xl font-semibold">{title}</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                {isReset
+                  ? strings.auth.setPassword.resetSubtitle(check.name)
+                  : strings.auth.setPassword.subtitle(check.name)}
+              </p>
               <p className="mt-1 text-xs text-slate-400">{check.email}</p>
 
               {formError && (
@@ -137,7 +149,11 @@ export default function SetPasswordPage() {
                 />
 
                 <Button type="submit" loading={saving} fullWidth size="lg">
-                  {saving ? strings.auth.setPassword.submitting : strings.auth.setPassword.submit}
+                  {saving
+                    ? strings.auth.setPassword.submitting
+                    : isReset
+                      ? strings.auth.setPassword.resetSubmit
+                      : strings.auth.setPassword.submit}
                 </Button>
               </form>
             </>

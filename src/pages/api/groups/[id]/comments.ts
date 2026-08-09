@@ -5,6 +5,8 @@ import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unautho
 import { mentionIdsIn } from '@/lib/mentions';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
 import { notifyMentions } from '@/lib/notifications';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 const MAX_LENGTH = 1000;
@@ -36,6 +38,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const isSupervisor = group.supervisorId === sessionUser.id || admin;
 
   if (req.method === 'GET') {
+    if (!hasPermission(sessionUser, PERMISSIONS.COMMENT_VIEW)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const [rows, memberships, supervisor] = await Promise.all([
       prisma.comment.findMany({
         where: { groupId, deletedAt: null },
@@ -100,6 +106,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'POST') {
+    if (!hasPermission(sessionUser, PERMISSIONS.COMMENT_CREATE)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const { text } = req.body as { text?: string };
     const value = typeof text === 'string' ? text.trim() : '';
 

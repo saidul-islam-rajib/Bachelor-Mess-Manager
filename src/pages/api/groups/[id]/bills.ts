@@ -8,6 +8,8 @@ import { categoryLabels, isValidBillType, listCategories } from '@/lib/expense-c
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseCreated } from '@/lib/expense-history';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -33,6 +35,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const canManage = await canManageGroup(groupId, sessionUser);
 
   if (req.method === 'GET') {
+    if (!hasPermission(sessionUser, PERMISSIONS.BILL_VIEW)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
     const { start, nextStart } = parseMonth(monthKey);
 
@@ -96,6 +102,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (!canManage) {
       return forbidden(res, "Only this group's supervisor can record bills.");
+    }
+    if (!hasPermission(sessionUser, PERMISSIONS.BILL_MANAGE)) {
+      return forbidden(res, strings.errors.permissionDenied);
     }
     if (!isGroupWritable(group)) {
       return forbidden(res, GROUP_CLOSED_MESSAGE);

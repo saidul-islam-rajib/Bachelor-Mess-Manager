@@ -11,6 +11,7 @@ import { USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { prisma } from '@/lib/prisma';
 import { cached } from '@/lib/cache';
 import { sessionUserKey } from '@/lib/cache-keys';
+import { effectivePermissions } from '@/lib/user-permissions';
 import { cacheConfig } from '@/config';
 
 export type ImpersonatedBy = {
@@ -27,6 +28,7 @@ export type SessionUser = {
   status: string;
   phone: string | null;
   profileImage: string | null;
+  permissions: string[];
   impersonatedBy?: ImpersonatedBy;
 };
 
@@ -40,7 +42,8 @@ const SESSION_USER_SELECT = {
   status: true,
   phone: true,
   profileImage: true,
-  tokenVersion: true
+  tokenVersion: true,
+  permissionOverrides: { select: { permissionCode: true, effect: true } }
 } as const;
 
 export function readSessionToken(req: NextApiRequest): string | undefined {
@@ -52,15 +55,16 @@ export function readImpersonationToken(req: NextApiRequest): string | undefined 
 }
 
 async function loadActiveUser(userId: string, tokenVersion: number): Promise<SessionUserRow | null> {
-  const user = await cached(sessionUserKey(userId), cacheConfig.sessionUserMs, () =>
+  const row = await cached(sessionUserKey(userId), cacheConfig.sessionUserMs, () =>
     prisma.user.findUnique({ where: { id: userId }, select: SESSION_USER_SELECT })
   );
 
-  if (!user) return null;
-  if (user.tokenVersion !== tokenVersion) return null;
-  if (user.status !== USER_STATUS.APPROVED) return null;
+  if (!row) return null;
+  if (row.tokenVersion !== tokenVersion) return null;
+  if (row.status !== USER_STATUS.APPROVED) return null;
 
-  return user;
+  const { permissionOverrides, ...user } = row;
+  return { ...user, permissions: effectivePermissions(row.role, permissionOverrides) };
 }
 
 function toSessionUser(row: SessionUserRow, impersonatedBy?: ImpersonatedBy): SessionUser {

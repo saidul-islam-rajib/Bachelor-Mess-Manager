@@ -30,6 +30,8 @@ export async function deleteUserPermanently(userId: string, email: string): Prom
     prisma.mealChangeRequest.updateMany({ where: { decidedById: userId }, data: { decidedById: null } }),
     prisma.roleRequest.updateMany({ where: { decidedById: userId }, data: { decidedById: null } }),
     prisma.notification.updateMany({ where: { actorId: userId }, data: { actorId: null } }),
+    prisma.userPermission.updateMany({ where: { grantedById: userId }, data: { grantedById: null } }),
+    prisma.userPermission.deleteMany({ where: { userId } }),
     prisma.mealPrompt.deleteMany({ where: { userId } }),
     prisma.communityMessage.deleteMany({ where: { authorId: userId } }),
     prisma.communityRead.deleteMany({ where: { userId } }),

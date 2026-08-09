@@ -5,6 +5,8 @@ import { INVITATION_STATUS, USER_STATUS } from '@/lib/constants';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { canJoinGroup } from '@/lib/groups';
 import { normalizeEmail } from '@/lib/validation';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -26,6 +28,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const canManage = group.supervisorId === sessionUser.id || requireAdmin(sessionUser);
   if (!canManage) {
     return forbidden(res, 'Only this group\'s supervisor can manage invitations.');
+  }
+  if (req.method !== 'GET' && !hasPermission(sessionUser, PERMISSIONS.MEMBERSHIP_INVITE)) {
+    return forbidden(res, strings.errors.permissionDenied);
   }
 
   if (req.method === 'GET') {

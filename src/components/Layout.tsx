@@ -5,6 +5,7 @@ import { ROUTES } from '@/lib/routes';
 import { STRINGS } from '@/lib/strings';
 import { strings } from '@/lib/i18n';
 import { USER_ROLES } from '@/lib/constants';
+import { PERMISSIONS } from '@/lib/permissions';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useCommunity } from '@/components/CommunityProvider';
 import NotificationBell from '@/components/NotificationBell';
@@ -75,7 +76,7 @@ function DesktopNavLink({ link, active }: { link: NavLink; active: boolean }) {
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { user, loading, logout, stopImpersonating } = useCurrentUser();
+  const { user, loading, can, logout, stopImpersonating } = useCurrentUser();
   const { unreadCount: communityUnread } = useCommunity();
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -104,11 +105,11 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   if (user) {
     messLinks.push({ href: ROUTES.dashboard, label: strings.nav.dashboard });
-    messLinks.push({ href: ROUTES.meals, label: strings.nav.meals });
-    messLinks.push({ href: ROUTES.expenses, label: strings.nav.bazar });
-    messLinks.push({ href: ROUTES.bills, label: strings.nav.bills });
-    messLinks.push({ href: ROUTES.payments, label: strings.nav.payments });
-    messLinks.push({ href: ROUTES.members, label: strings.nav.members });
+    if (can(PERMISSIONS.MEAL_VIEW)) messLinks.push({ href: ROUTES.meals, label: strings.nav.meals });
+    if (can(PERMISSIONS.EXPENSE_VIEW)) messLinks.push({ href: ROUTES.expenses, label: strings.nav.bazar });
+    if (can(PERMISSIONS.BILL_VIEW)) messLinks.push({ href: ROUTES.bills, label: strings.nav.bills });
+    if (can(PERMISSIONS.PAYMENT_VIEW)) messLinks.push({ href: ROUTES.payments, label: strings.nav.payments });
+    if (can(PERMISSIONS.MEMBERSHIP_VIEW)) messLinks.push({ href: ROUTES.members, label: strings.nav.members });
 
     appLinks.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
     if (user.role === USER_ROLES.ADMIN) {

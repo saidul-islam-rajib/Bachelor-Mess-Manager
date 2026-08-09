@@ -31,6 +31,7 @@ import {
   type SelectOption
 } from '@/components/ui';
 import ActivityPanel from '@/components/admin/ActivityPanel';
+import UserPermissionsModal from '@/components/admin/UserPermissionsModal';
 import { api, errorMessage } from '@/lib/api-client';
 import { paginationConfig } from '@/config';
 import {
@@ -57,6 +58,7 @@ type AdminUser = {
   createdAt: string;
   groups: { id: string; name: string; supervisor: { id: string; name: string } }[];
   supervisedGroups: { id: string; name: string }[];
+  permissionOverrides?: { added: number; blocked: number };
 };
 
 type Lookups = {
@@ -417,6 +419,7 @@ function UsersPanel() {
   const [data, setData] = useState<UsersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<AdminUser | null>(null);
+  const [permissionsFor, setPermissionsFor] = useState<AdminUser | null>(null);
 
   useEffect(() => {
     setPage(1);
@@ -513,7 +516,24 @@ function UsersPanel() {
         </div>
       )
     },
-    { key: 'role', header: strings.common.role, render: (row) => <Badge>{roleLabel(row.role)}</Badge> },
+    {
+      key: 'role',
+      header: strings.common.role,
+      render: (row) => {
+        const overrides = row.permissionOverrides;
+        const custom = overrides ? overrides.added + overrides.blocked : 0;
+        return (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge>{roleLabel(row.role)}</Badge>
+            {custom > 0 && overrides && (
+              <span title={strings.admin.permissions.overrideCount(overrides.added, overrides.blocked)}>
+                <Badge tone="warning">{strings.admin.permissions.customBadge}</Badge>
+              </span>
+            )}
+          </div>
+        );
+      }
+    },
     { key: 'status', header: strings.common.status, render: (row) => <StatusBadge status={row.status} /> },
     {
       key: 'groups',
@@ -565,6 +585,11 @@ function UsersPanel() {
           <Button size="sm" variant="secondary" onClick={() => setEditing(row)}>
             {strings.common.edit}
           </Button>
+          {row.id !== currentUserId && (
+            <Button size="sm" variant="secondary" onClick={() => setPermissionsFor(row)}>
+              {strings.admin.permissions.action}
+            </Button>
+          )}
           {row.id !== currentUserId && (
             <Button size="sm" variant="danger" onClick={() => deleteUser(row)} disabled={busy === row.id}>
               {strings.admin.users.deletePermanently}
@@ -674,6 +699,15 @@ function UsersPanel() {
         onClose={() => setEditing(null)}
         onSaved={async () => {
           setEditing(null);
+          await load();
+        }}
+      />
+
+      <UserPermissionsModal
+        user={permissionsFor}
+        onClose={() => setPermissionsFor(null)}
+        onSaved={async () => {
+          setPermissionsFor(null);
           await load();
         }}
       />

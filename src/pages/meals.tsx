@@ -4,9 +4,11 @@ import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import MealPlanCard from '@/components/MealPlanCard';
 import MealPromptDispatch from '@/components/MealPromptDispatch';
+import MealRateCard, { type DailyRate } from '@/components/MealRateCard';
 import { PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
 import { daysInMonth, round2, todayKey } from '@/lib/month';
+import { PERMISSIONS } from '@/lib/permissions';
 
 type Member = { id: string; name: string; email: string };
 type Weights = { breakfast: number; lunch: number; dinner: number };
@@ -71,7 +73,9 @@ function dayLabel(date: string) {
 }
 
 export default function MealsPage() {
-  const { user } = useCurrentUser();
+  const { user, can } = useCurrentUser();
+  const canRecordOwn = can(PERMISSIONS.MEAL_RECORD_OWN);
+  const canRecordAny = can(PERMISSIONS.MEAL_RECORD_ANY);
   const toast = useToast();
   const { groups, groupId, setGroupId, month, setMonth, loadingGroups } = useGroupMonth();
 
@@ -240,6 +244,25 @@ export default function MealsPage() {
     return { byDay, byMember, total: round2(total) };
   }, [cells, weights]);
 
+  const myDailyRates = useMemo<DailyRate[]>(() => {
+    const weight = weights ?? { breakfast: 1, lunch: 1, dinner: 1 };
+
+    return (summary?.days ?? []).map((day) => {
+      const mine = cells[`${user?.id}|${day.date}`];
+      const myMeals = mine
+        ? round2(mine.breakfast * weight.breakfast + mine.lunch * weight.lunch + mine.dinner * weight.dinner)
+        : 0;
+
+      return {
+        date: day.date,
+        rate: day.perMealPrice,
+        groupMeals: day.meals,
+        myMeals,
+        myCost: round2(myMeals * day.perMealPrice)
+      };
+    });
+  }, [summary?.days, cells, weights, user?.id]);
+
   const rateNote = useMemo(() => {
     const through = summary?.through;
     if (!through || days.length === 0 || through >= days[days.length - 1]) return '';
@@ -249,6 +272,7 @@ export default function MealsPage() {
 
   const isMe = (id: string) => user?.id === id;
   const editable = (userId: string, date: string) => {
+    if (!(isMe(userId) ? canRecordOwn : canRecordAny)) return false;
     if (canManage) return true;
     if (!isMe(userId)) return false;
     return date >= today || Boolean(editWindow?.open);
@@ -293,7 +317,7 @@ export default function MealsPage() {
             )}
           </Card>
 
-          {belongsToGroup && !canManage && editWindow && (
+          {belongsToGroup && !canManage && canRecordOwn && editWindow && (
             <EditWindowCard window={editWindow} busy={windowBusy} onToggle={toggleEditWindow} />
           )}
 
@@ -307,12 +331,25 @@ export default function MealsPage() {
             <MyPendingChanges changes={myPending} onWithdraw={withdrawChange} />
           )}
 
-          {groupId && belongsToGroup && <MealPlanCard groupId={groupId} onApplied={load} />}
+          {groupId && belongsToGroup && can(PERMISSIONS.MEAL_PLAN_MANAGE) && (
+            <MealPlanCard groupId={groupId} onApplied={load} />
+          )}
 
           {loading ? (
             <Card>Loading meals...</Card>
           ) : (
             <>
+              {summary && belongsToGroup && (
+                <MealRateCard
+                  days={myDailyRates}
+                  today={today}
+                  monthRate={summary.totals.mealRate}
+                  rateMode={summary.rateMode ?? ''}
+                  myMeals={me?.meals ?? 0}
+                  myCost={me?.cost ?? 0}
+                />
+              )}
+
               {me && (
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                   <Stat label="Your meals" value={String(me.meals)} />
@@ -348,10 +385,12 @@ export default function MealsPage() {
                           </p>
                           <p className="mt-0.5 text-xs text-slate-500">
                             {strings.meals.mealCount(round2(logged.byDay[date] ?? 0))}
-                            {info && info.perMealPrice
-                              ? ` · ${strings.meals.perMealShort(taka(info.perMealPrice))}`
-                              : ''}
                           </p>
+                          {info && info.perMealPrice > 0 && (
+                            <p className="mt-1.5 inline-flex items-center rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-800">
+                              {strings.meals.perMealShort(taka(info.perMealPrice))}
+                            </p>
+                          )}
                         </div>
                         {awaiting ? (
                           <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs text-amber-700">

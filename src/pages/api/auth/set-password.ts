@@ -5,7 +5,7 @@ import { hashPassword, validatePasswordWithPolicy } from '@/lib/password';
 import { USER_STATUS } from '@/lib/constants';
 import { badRequest, methodNotAllowed, ok, tooManyRequests } from '@/lib/http';
 import { clientIp, rateLimit } from '@/lib/rate-limit';
-import { consumeToken, findValidToken } from '@/lib/password-tokens';
+import { consumeToken, findValidToken, TOKEN_PURPOSE } from '@/lib/password-tokens';
 import { getSecurityPolicy, getSiteSettings } from '@/lib/settings-service';
 import { ensureWelcomeMessage } from '@/lib/community';
 import { strings } from '@/lib/i18n';
@@ -69,17 +69,22 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   await consumeToken(lookup.tokenId);
 
+  const isReset = lookup.purpose === TOKEN_PURPOSE.RESET;
+
   if (user.status === USER_STATUS.APPROVED) {
     await ensureWelcomeMessage(user);
     await setSessionCookie(res, user.id, user.tokenVersion);
     return ok(res, {
       signedIn: true,
-      message: strings.auth.setPassword.successSignedIn,
+      message: isReset ? strings.auth.setPassword.resetSuccessSignedIn : strings.auth.setPassword.successSignedIn,
       user: { id: user.id, name: user.name, email: user.email, role: user.role }
     });
   }
 
-  return ok(res, { signedIn: false, message: strings.auth.setPassword.successPending });
+  return ok(res, {
+    signedIn: false,
+    message: isReset ? strings.auth.setPassword.resetSuccessPending : strings.auth.setPassword.successPending
+  });
 }
 
 export default withAudit(handler);

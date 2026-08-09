@@ -4,6 +4,8 @@ import { getSessionUser, isGroupMember } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { applyPlanToUpcoming, emptyPlanDays, type PlanDay } from '@/lib/meal-plan';
 import { dayToUtcDate, todayKey, utcDateToDay } from '@/lib/month';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 const MAX_PER_MEAL = 10;
@@ -58,6 +60,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'PUT') {
+    if (!hasPermission(sessionUser, PERMISSIONS.MEAL_PLAN_MANAGE)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const body = req.body as { isActive?: boolean; days?: PlanDay[]; overwriteEdited?: boolean };
 
     if (!Array.isArray(body.days) || body.days.length !== 7) {

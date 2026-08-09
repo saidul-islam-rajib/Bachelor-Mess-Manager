@@ -26,6 +26,8 @@ function withPoolSettings(url: string | undefined): string | undefined {
   return `${url}${separator}${params.join('&')}`;
 }
 
+const SESSION_SHAPING_MODELS = new Set(['User', 'UserPermission']);
+
 function createPrismaClient() {
   const url = withPoolSettings(process.env.DATABASE_URL);
 
@@ -51,26 +53,26 @@ function createPrismaClient() {
         },
         update({ model, args, query }) {
           args.data = stampUpdate(args.data);
-          if (model === 'User') invalidatePrefix(SESSION_USER_CACHE_PREFIX);
+          if (SESSION_SHAPING_MODELS.has(model)) invalidatePrefix(SESSION_USER_CACHE_PREFIX);
           return query(args);
         },
         updateMany({ model, args, query }) {
           args.data = stampUpdate(args.data);
-          if (model === 'User') invalidatePrefix(SESSION_USER_CACHE_PREFIX);
+          if (SESSION_SHAPING_MODELS.has(model)) invalidatePrefix(SESSION_USER_CACHE_PREFIX);
           return query(args);
         },
         upsert({ model, args, query }) {
           args.create = stampCreate(args.create);
           args.update = stampUpdate(args.update);
-          if (model === 'User') invalidatePrefix(SESSION_USER_CACHE_PREFIX);
+          if (SESSION_SHAPING_MODELS.has(model)) invalidatePrefix(SESSION_USER_CACHE_PREFIX);
           return query(args);
         },
         delete({ model, args, query }) {
-          if (model === 'User') invalidatePrefix(SESSION_USER_CACHE_PREFIX);
+          if (SESSION_SHAPING_MODELS.has(model)) invalidatePrefix(SESSION_USER_CACHE_PREFIX);
           return query(args);
         },
         deleteMany({ model, args, query }) {
-          if (model === 'User') invalidatePrefix(SESSION_USER_CACHE_PREFIX);
+          if (SESSION_SHAPING_MODELS.has(model)) invalidatePrefix(SESSION_USER_CACHE_PREFIX);
           return query(args);
         }
       }
