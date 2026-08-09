@@ -42,6 +42,9 @@ engineering notes behind it:
 | [payments.md](docs/payments.md) | Recording cash from members, and who still owes what |
 | [month-closing.md](docs/month-closing.md) | Freezing a month, carrying balances forward, mid-month departures |
 | [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |
+| [meal-rate-on-mobile.md](docs/meal-rate-on-mobile.md) | Putting the daily meal rate where phone users can actually see it |
+| [member-permissions.md](docs/member-permissions.md) | Per-member allow/block exceptions on top of a role |
+| [password-reset.md](docs/password-reset.md) | Forgot-password links, enumeration defences, and rate limits |
 | [expense-categories.md](docs/expense-categories.md) | Per-group cost types for the bills dropdown |
 | [notifications.md](docs/notifications.md) | The notification model, bell, and email delivery |
 | [meal-prompts.md](docs/meal-prompts.md) | The daily one-tap meal ask and the sign-in-free reply link |
