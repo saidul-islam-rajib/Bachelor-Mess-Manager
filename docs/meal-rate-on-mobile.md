@@ -44,3 +44,19 @@ came out of the grid — it is still in the Your balance card directly below, an
 
 The inline `· ৳x/meal` on each mobile day card became a filled brand-coloured pill on its own line. Same number, but it
 now reads as a value rather than as a continuation of the meal count.
+
+## Only the days that matter
+
+A 31-card list is a lot of thumb on a phone when the only day you came to edit is today. The meals page now opens on a
+window around today — `UI_MEAL_DAYS_BEFORE` (2) through `UI_MEAL_DAYS_AFTER` (2), so five cards — with a bar above the
+list naming the range, how many days are hidden, and a **Show the whole month** button that swaps in all of them. The
+button flips back to **Back to the days around today**.
+
+Three details worth keeping:
+
+- The window applies to the mobile list **and** the desktop table, from one `visibleDays` array. Two code paths
+  rendering different day sets would be a bug waiting to happen.
+- Totals are unaffected. `logged.byDay` / `logged.byMember` and the table footer are computed from `cells`, which
+  always holds the whole month, so collapsing the view never changes a number.
+- Picking a month that does not contain today shows the whole month with no toggle — a window around a day that is not
+  in view means nothing. Switching months resets the toggle.
