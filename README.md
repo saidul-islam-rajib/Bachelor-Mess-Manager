@@ -3,8 +3,9 @@
 Mess management for bachelor messes and shared flats: registration and approval,
 supervisor-run groups, a monthly meal table, bazar and bill tracking, per-member dues,
 payments, comments, a one-tap daily meal ask, and an app-wide community room.
+Self-service password reset, and per-member permissions on top of the three roles.
 
-Next.js (pages router) · TypeScript · Tailwind CSS · Prisma · Microsoft SQL Server
+Next.js (pages router) · TypeScript · Tailwind CSS · Prisma · PostgreSQL
 
 **Author:** Saidul Islam Rajib &lt;saidul.is.rajib@gmail.com&gt; · Released under the [MIT License](LICENSE).
 
@@ -53,6 +54,7 @@ engineering notes behind it:
 | [community.md](docs/community.md) | The app-wide room, welcome posts, and release announcements |
 | [group-deactivation.md](docs/group-deactivation.md) | Closing a mess: hiding it and locking writes |
 | [activity-tracking.md](docs/activity-tracking.md) | Visit tracking: how often members come, when, and for how long |
+| [activity-device-drilldown.md](docs/activity-device-drilldown.md) | Clicking a device count to see who is on mobile and who is on desktop |
 | [site-settings.md](docs/site-settings.md) | The settings singleton, the public footer, and what stays admin-only |
 | [colors.md](docs/colors.md) | The brand colour, what each colour means, and where it is defined |
 | [caching.md](docs/caching.md) | What is cached, for how long, and what invalidates it |

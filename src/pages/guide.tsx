@@ -20,8 +20,11 @@ type Section = { id: string; title: string };
 const SECTIONS: Section[] = [
   { id: 'overview', title: 'What this is' },
   { id: 'roles', title: 'Who does what' },
+  { id: 'permissions', title: 'Changing what one person can do' },
+  { id: 'dashboard', title: 'What you see when you sign in' },
   { id: 'month', title: 'A month in the mess' },
   { id: 'joining', title: 'Getting in' },
+  { id: 'account', title: 'Your account, password and photo' },
   { id: 'meals', title: 'Meals and meal plans' },
   { id: 'quick-reply', title: 'Answering meals in one tap' },
   { id: 'talking', title: 'Talking to your mess' },
@@ -163,6 +166,79 @@ export default function GuidePage() {
             </Figure>
           </Section>
 
+          <Section id="permissions" title="Changing what one person can do">
+            <P>
+              The three roles are the starting point, not the whole story. A role decides what someone can do{' '}
+              <em>by default</em>, and an admin can then bend it for one person without touching anybody else. Open{' '}
+              <strong>Admin → Users → Permissions</strong> on any account.
+            </P>
+            <P>
+              Every permission sits in one of three states. <strong>Role default</strong> means it follows the role and
+              keeps following it — promote that person later and their access moves with them. <strong>Allow</strong>{' '}
+              hands them something their role does not include. <strong>Block</strong> takes something away that it
+              does. Where the two disagree, Block wins.
+            </P>
+            <Definitions
+              items={[
+                {
+                  term: 'A read-only member',
+                  detail:
+                    'The Read only preset blocks every action that writes and keeps everything the role can see. They can follow the meals, the bazar and their own balance, but cannot change any of it. Useful for a housemate who has moved out but still owes for last month.'
+                },
+                {
+                  term: 'A trusted member',
+                  detail:
+                    'Allow a single extra permission — recording payments, say, or managing bills — without making them supervisor of the whole mess.'
+                },
+                {
+                  term: 'A supervisor with one thing removed',
+                  detail:
+                    'Block just that one permission. Everything else about the role stays exactly as it was.'
+                }
+              ]}
+            />
+            <Callout>
+              A blocked page disappears from the menu, and the buttons for a blocked action stop being offered — but the
+              real check happens on the server every time, so nothing gets through by going straight to the address.
+              Anyone with a personal exception is flagged <strong>Custom</strong> in the users table.
+            </Callout>
+          </Section>
+
+          <Section id="dashboard" title="What you see when you sign in">
+            <P>
+              Everything on this page is public — you are reading it without an account. What is deliberately{' '}
+              <em>not</em> public is any actual mess data. Signed out, you get the front page, this guide, and the sign
+              in and register forms. No meals, no money, no names.
+            </P>
+            <P>
+              Sign in and the <Route href={ROUTES.dashboard}>Dashboard</Route> becomes your home. It shows a different
+              thing to each role, because each role has a different question to answer.
+            </P>
+            <Definitions
+              items={[
+                {
+                  term: 'A member asks: what do I owe?',
+                  detail:
+                    "Today's meal rate, the rate for the month so far, your meals, and what you owe — in that order, big enough to read at a glance on a phone. Under it: your full balance broken down, last month for comparison, where the mess's money went, and the whole roster so you can see you are being treated the same as everyone else."
+                },
+                {
+                  term: 'A supervisor asks: is my mess on track?',
+                  detail:
+                    'Group count, members, spend so far and total outstanding dues across every mess you run, then a row per mess with its meal rate and what is unpaid, who still owes, and your longest-staying members.'
+                },
+                {
+                  term: 'An admin asks: is the site healthy?',
+                  detail:
+                    'Registrations waiting for a decision, how many members and supervisors exist, active and inactive groups, and a shortcut into the admin tools. Admins see no money — a mess belongs to its supervisor.'
+                }
+              ]}
+            />
+            <Callout>
+              Whatever your role, the month picker at the top of the dashboard rewinds everything below it. Pick last
+              March and every figure on the page is March&apos;s.
+            </Callout>
+          </Section>
+
           <Section id="month" title="A month in the mess">
             <P>
               Every month follows the same five beats. Nothing here needs a spreadsheet or a group chat argument — each
@@ -187,6 +263,27 @@ export default function GuidePage() {
             />
           </Section>
 
+          <Section id="account" title="Your account, password and photo">
+            <P>
+              Your <Route href={ROUTES.profile}>Profile</Route> page holds your name, phone number, photo and password,
+              plus anything waiting for you — invitations, and the switch for unlocking your own past meals.
+            </P>
+            <P>
+              <strong>Forgotten your password?</strong> Use the <em>Forgot your password?</em> link under the sign-in
+              form. Put in your email and we send a one-time link. It expires quickly, it works once, and asking for a
+              new one kills the old one. The reply is the same whether or not we know the address — that is on purpose,
+              so nobody can use the form to find out who has an account here.
+            </P>
+            <P>
+              Setting a new password signs you out of every other device but keeps the one you are using. Changing it
+              from your profile works the same way, and there you have to type the old one first.
+            </P>
+            <Callout>
+              Photos can be PNG, JPEG, WebP or GIF. The size limit is set by your admin — the profile page always shows
+              the current one next to the upload button, so what you read there is what will actually be accepted.
+            </Callout>
+          </Section>
+
           <Section id="meals" title="Meals and meal plans">
             <P>
               Each member logs their own meals on the <Route href={ROUTES.meals}>Meals</Route> page: how many
@@ -197,6 +294,12 @@ export default function GuidePage() {
               If you eat roughly the same way every week, set a <strong>meal plan</strong> instead of typing the same
               numbers daily. Say &quot;lunch and dinner on weekdays, nothing on Fridays&quot; once, and the app fills
               your days in for you. You can always override any single day by hand.
+            </P>
+            <P>
+              The page opens on the days around today rather than the whole month, because on a phone the day you came
+              to edit is almost always this one. A bar above the list says which days you are looking at and how many
+              are hidden; <strong>Show the whole month</strong> brings back every day, and the button flips to take you
+              back. Your totals never change — they are always the full month, whichever view you are in.
             </P>
             <Callout>
               Not every meal costs the same to make. A supervisor can set <strong>meal weights</strong> — commonly
@@ -322,6 +425,22 @@ export default function GuidePage() {
             >
               <MealRateFigure />
             </Figure>
+            <P>
+              You do not have to hunt for the number. At the top of the{' '}
+              <Route href={ROUTES.meals}>Meals</Route> page, <strong>Your meal rate</strong> leads with today&apos;s
+              rate in the largest type on the screen, with your own meals and what they cost you today underneath, then
+              the month-to-date rate beside them. Below that is a day-by-day list — the rate for each day, your meals on
+              it, and your cost — showing the last week with the rest one tap away.
+            </P>
+            <P>
+              Today&apos;s rate is on your <Route href={ROUTES.dashboard}>Dashboard</Route> too. If today has no rate
+              yet — nobody has recorded bazar, or nobody has eaten — the card falls back to the most recent priced day
+              and says which one it is showing, rather than a blank.
+            </P>
+            <Callout>
+              A day is only priced once bazar has been recorded against it and somebody has eaten. Days later in the
+              month show planned meals but no rate, and the app says so rather than pretending the month is finished.
+            </Callout>
           </Section>
 
           <Section id="bazar" title="Bazar and comments">
@@ -491,6 +610,31 @@ export default function GuidePage() {
                   term: 'Where did the Comments tab go?',
                   detail:
                     'It is now a Mess comments section on the Members page — open it and the thread is there, unchanged. Old links and mention notifications still work; they take you straight to it. The Community room, which everyone on the site shares, is separate and still has its own tab.'
+                },
+                {
+                  term: 'I forgot my password.',
+                  detail:
+                    'Use "Forgot your password?" under the sign-in form. A one-time link comes by email, expires quickly, and works once. If nothing arrives, check spam — and note the page says the same thing whether or not the address is registered, so a missing email does not mean the link failed.'
+                },
+                {
+                  term: 'The meals page is only showing me five days.',
+                  detail:
+                    'That is deliberate — it opens on today plus two days either side so you are not scrolling a month on a phone. Show the whole month brings all of them back. Your totals are always the full month either way.'
+                },
+                {
+                  term: 'Why does today look like yesterday just after midnight?',
+                  detail:
+                    'It should not. The app decides which day is "today" in your mess\'s own time zone, not the server\'s, so a meal logged at 1 AM lands on the right day. If it ever looks wrong, tell your admin — it is one setting.'
+                },
+                {
+                  term: 'My photo will not upload.',
+                  detail:
+                    'It is either the wrong kind of file or over the size limit. PNG, JPEG, WebP and GIF are accepted, and the profile page prints the current limit right under the photo. Your admin sets that number and can raise it.'
+                },
+                {
+                  term: 'A page vanished from my menu.',
+                  detail:
+                    'An admin has blocked that permission on your account. Roles decide this by default, but a single person can be given more or less than their role. Ask an admin — it is two clicks to put back.'
                 },
                 {
                   term: 'I bought the groceries. Do I get that money back?',

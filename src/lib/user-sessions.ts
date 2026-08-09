@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { appConfig, dateConfig } from '@/config';
 import { clientIp } from '@/lib/rate-limit';
 import { zonedDayKey } from '@/lib/month';
+import { strings } from '@/lib/i18n';
 
 export const SESSION_IDLE_GAP_MS = 30 * 60_000;
 export const SESSION_ONLINE_WINDOW_MS = 5 * 60_000;
@@ -17,17 +18,25 @@ export const SESSION_END_REASONS = {
 
 export const DEVICES = { MOBILE: 'MOBILE', TABLET: 'TABLET', DESKTOP: 'DESKTOP' } as const;
 
+export type DeviceKey = (typeof DEVICES)[keyof typeof DEVICES];
+
+export const DEVICE_VALUES = Object.values(DEVICES) as string[];
+
+export function deviceLabel(device: string): string {
+  return strings.devices[device as keyof typeof strings.devices] ?? device;
+}
+
 export type TimeBucketKey = 'MORNING' | 'MIDDAY' | 'AFTERNOON' | 'EVENING' | 'NIGHT';
 
 export const TIME_BUCKETS: { key: TimeBucketKey; label: string; from: number; to: number }[] = [
-  { key: 'MORNING', label: 'Morning', from: 5, to: 11 },
-  { key: 'MIDDAY', label: 'Midday', from: 11, to: 15 },
-  { key: 'AFTERNOON', label: 'Afternoon', from: 15, to: 18 },
-  { key: 'EVENING', label: 'Evening', from: 18, to: 22 },
-  { key: 'NIGHT', label: 'Night', from: 22, to: 5 }
+  { key: 'MORNING', label: strings.timeBuckets.MORNING, from: 5, to: 11 },
+  { key: 'MIDDAY', label: strings.timeBuckets.MIDDAY, from: 11, to: 15 },
+  { key: 'AFTERNOON', label: strings.timeBuckets.AFTERNOON, from: 15, to: 18 },
+  { key: 'EVENING', label: strings.timeBuckets.EVENING, from: 18, to: 22 },
+  { key: 'NIGHT', label: strings.timeBuckets.NIGHT, from: 22, to: 5 }
 ];
 
-export const WEEKDAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+export const WEEKDAY_LABELS = Object.values(strings.weekdays).map((day) => day.label);
 
 const WEEKDAY_INDEX: Record<string, number> = {
   Sun: 0,
@@ -265,7 +274,7 @@ export async function buildActivityReport(options: {
 
       return {
         userId: row.userId,
-        name: user?.name ?? 'Deleted account',
+        name: user?.name ?? strings.admin.activity.deletedAccount,
         email: user?.email ?? '',
         role: user?.role ?? '',
         status: user?.status ?? '',
@@ -359,6 +368,119 @@ async function visitorsByDay(days: string[]): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   for (const row of rows) counts.set(row.startDay, (counts.get(row.startDay) ?? 0) + 1);
   return counts;
+}
+
+export type DeviceVisitor = {
+  userId: string;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  visits: number;
+  seconds: number;
+  lastSeenAt: string | null;
+  firstSeenAt: string | null;
+  online: boolean;
+  totalVisits: number;
+  share: number;
+  otherDevices: string[];
+};
+
+export type DeviceVisitorReport = {
+  device: string;
+  deviceLabel: string;
+  visits: number;
+  visitors: DeviceVisitor[];
+  total: number;
+};
+
+export async function listDeviceVisitors(options: {
+  device: string;
+  days: number | null;
+  sort: LeaderboardSort;
+  search?: string;
+  take: number;
+  skip: number;
+}): Promise<DeviceVisitorReport> {
+  const { since } = rangeFromDays(options.days);
+  const periodWhere = since ? { startedAt: { gte: since } } : {};
+
+  const [onDevice, everyDevice, onlineRows] = await Promise.all([
+    prisma.userSession.groupBy({
+      by: ['userId'],
+      where: { ...periodWhere, device: options.device },
+      _count: { _all: true },
+      _sum: { seconds: true },
+      _min: { startedAt: true },
+      _max: { lastSeenAt: true }
+    }),
+    prisma.userSession.groupBy({
+      by: ['userId', 'device'],
+      where: periodWhere,
+      _count: { _all: true }
+    }),
+    prisma.userSession.findMany({
+      where: { lastSeenAt: { gte: new Date(Date.now() - SESSION_ONLINE_WINDOW_MS) } },
+      select: { userId: true },
+      distinct: ['userId']
+    })
+  ]);
+
+  const users = await prisma.user.findMany({
+    where: { id: { in: onDevice.map((row) => row.userId) } },
+    select: { id: true, name: true, email: true, role: true, status: true }
+  });
+  const userById = new Map(users.map((user) => [user.id, user]));
+  const online = new Set(onlineRows.map((row) => row.userId));
+
+  const totalsByUser = new Map<string, number>();
+  const devicesByUser = new Map<string, Set<string>>();
+  for (const row of everyDevice) {
+    totalsByUser.set(row.userId, (totalsByUser.get(row.userId) ?? 0) + row._count._all);
+    const set = devicesByUser.get(row.userId) ?? new Set<string>();
+    set.add(row.device);
+    devicesByUser.set(row.userId, set);
+  }
+
+  const term = options.search?.trim().toLowerCase();
+
+  const rows: DeviceVisitor[] = onDevice
+    .map((row) => {
+      const user = userById.get(row.userId);
+      const visits = row._count._all;
+      const totalVisits = totalsByUser.get(row.userId) ?? visits;
+
+      return {
+        userId: row.userId,
+        name: user?.name ?? strings.admin.activity.deletedAccount,
+        email: user?.email ?? '',
+        role: user?.role ?? '',
+        status: user?.status ?? '',
+        visits,
+        seconds: row._sum.seconds ?? 0,
+        lastSeenAt: row._max.lastSeenAt ? row._max.lastSeenAt.toISOString() : null,
+        firstSeenAt: row._min.startedAt ? row._min.startedAt.toISOString() : null,
+        online: online.has(row.userId),
+        totalVisits,
+        share: totalVisits > 0 ? Math.round((visits / totalVisits) * 100) : 0,
+        otherDevices: [...(devicesByUser.get(row.userId) ?? [])].filter((device) => device !== options.device).sort()
+      };
+    })
+    .filter((row) => !term || row.name.toLowerCase().includes(term) || row.email.toLowerCase().includes(term));
+
+  rows.sort((a, b) => {
+    if (options.sort === 'time') return b.seconds - a.seconds || b.visits - a.visits;
+    if (options.sort === 'recent') return (b.lastSeenAt ?? '').localeCompare(a.lastSeenAt ?? '');
+    return b.visits - a.visits || b.seconds - a.seconds;
+  });
+
+  return {
+    device: options.device,
+    deviceLabel: deviceLabel(options.device),
+    visits: rows.reduce((sum, row) => sum + row.visits, 0),
+    visitors: rows.slice(options.skip, options.skip + options.take),
+    total: rows.length
+  };
 }
 
 export type MemberVisit = {

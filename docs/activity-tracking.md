@@ -35,9 +35,17 @@ afternoon contributes nothing. So the figure is engaged time, not tab-open time 
 ## Time of day
 
 `startHour`, `startWeekday` and `startDay` are written at visit-open time in the app's display timezone
-(`APP_TIME_ZONE`, default `UTC` — set it to `Asia/Dhaka` for a Bangladeshi mess). Denormalising them means the
+(`APP_TIME_ZONE`, now defaulting to `Asia/Dhaka` — see [time-zones.md](time-zones.md)). Denormalising them means the
 analytics queries are plain `groupBy` calls with no timezone arithmetic in SQL, and no risk of the buckets drifting
 because the server's `TZ` changed.
+
+Because the value is written once and stored, rows recorded before a zone change keep the bucket they were recorded
+in. That is the right trade for analytics — the alternative is re-bucketing history every time the setting moves.
+
+## Drilling into a device
+
+The device chips are clickable and open the members behind the count — see
+[activity-device-drilldown.md](activity-device-drilldown.md).
 
 Buckets:
 

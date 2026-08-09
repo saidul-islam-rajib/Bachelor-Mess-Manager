@@ -2,6 +2,7 @@ const en = {
   common: {
     appTagline: 'Manage groups, meals, expenses, and member dashboards in one place.',
     loading: 'Loading...',
+    dash: '—',
     saving: 'Saving...',
     save: 'Save',
     saveChanges: 'Save changes',
@@ -1018,6 +1019,97 @@ const en = {
       deleted: (name: string) => `${name} deleted permanently.`,
       deleteMemberAccount: 'Delete account'
     },
+    activity: {
+      title: 'Who is using the app',
+      subtitle: (timeZone: string) =>
+        `Every visit by a signed-in member, counted in ${timeZone}. A visit ends after 30 minutes without activity.`,
+      period: 'Period',
+      searchPlaceholder: 'Search name or email',
+      rankBy: 'Rank by',
+      ranges: {
+        week: 'Last 7 days',
+        month: 'Last 30 days',
+        quarter: 'Last 90 days',
+        all: 'All time'
+      },
+      sorts: {
+        visits: 'Most visits',
+        time: 'Most time on site',
+        recent: 'Most recently seen'
+      },
+      stats: {
+        visits: 'Visits',
+        visitors: 'People who visited',
+        totalTime: 'Total time on site',
+        averageVisit: 'Average visit',
+        onlineNow: 'Online now',
+        visitsToday: 'Visits today',
+        neverVisited: 'Never visited',
+        rankedMembers: 'Ranked members',
+        rankedOf: (count: number, cap: number) => `${count} of ${cap}+`
+      },
+      timeOfDay: { title: 'What time people come', subtitle: 'When a visit started, by local time of day.' },
+      hourByHour: 'Hour by hour',
+      hourTooltip: (hour: string, visits: number) => `${hour} — ${visits} visits`,
+      weekdays: { title: 'Which days', subtitle: 'Visits by day of the week.' },
+      trend: { title: 'Day by day', subtitle: 'Visits and how many different people made them.' },
+      trendTooltip: (day: string, visits: number, visitors: number) =>
+        `${day} — ${visits} visits from ${visitors} people`,
+      devices: {
+        title: 'Devices',
+        empty: 'Nothing recorded yet.',
+        openHint: (device: string) => `See who visited on ${device.toLowerCase()}`,
+        modalTitle: (device: string) => `${device} visitors`,
+        modalSubtitle: (visits: number, people: number, period: string) =>
+          `${visits} visit${visits === 1 ? '' : 's'} from ${people} ${people === 1 ? 'person' : 'people'} · ${period}`,
+        emptyTitle: 'Nobody used this device',
+        emptyBody: 'No visit in this period came from that kind of device.',
+        onlyDevice: 'Only device',
+        alsoUses: (others: string) => `Also uses ${others}`,
+        share: (percent: number) => `${percent}% of their visits`,
+        unknownDevice: (allowed: string) => `Device must be one of: ${allowed}.`
+      },
+      leaderboard: {
+        title: 'Top members',
+        subtitle: (cap: number, truncated: boolean) =>
+          `Ranked 1 to ${cap}${truncated ? ' — more members fell outside the top ' + cap : ''}.`,
+        emptyTitle: 'Nobody has visited in this period',
+        emptyBody: 'Try a longer period.'
+      },
+      columns: {
+        rank: '#',
+        member: 'Member',
+        role: 'Role',
+        visits: 'Visits',
+        timeOnSite: 'Time on site',
+        averageVisit: 'Average visit',
+        lastSeen: 'Last seen',
+        arrived: 'Arrived',
+        stayed: 'Stayed',
+        partOfDay: 'Part of day',
+        device: 'Device',
+        ended: 'Ended',
+        firstSeen: 'First seen'
+      },
+      visitsAction: 'Visits',
+      memberVisitsTitle: (name: string) => `${name} — visits`,
+      memberVisitsSubtitle: (visits: number, time: string, firstSeen: string) =>
+        `${visits} visits in the selected period · ${time} on site · first seen ${firstSeen}`,
+      noVisitsTitle: 'No visits recorded',
+      noVisitsBody: 'This account has not been seen since visit tracking started.',
+      cardSummary: (visits: number, time: string, last: string) => `${visits} visits · ${time} on site · last ${last}`,
+      online: 'online',
+      stillOpen: 'Still open',
+      signedOut: 'Signed out',
+      wentIdle: 'Went idle',
+      emptyTitle: 'No activity yet',
+      emptyBody: 'Nothing has been recorded so far.',
+      deletedAccount: 'Deleted account',
+      justNow: 'just now',
+      minutesAgo: (value: number) => `${value}m ago`,
+      hoursAgo: (value: number) => `${value}h ago`,
+      daysAgo: (value: number) => `${value}d ago`
+    },
     security: {
       title: 'Security policy',
       subtitle: 'Controls how the app defends itself against brute force and abuse.',
@@ -1335,7 +1427,12 @@ const en = {
     days: (count: number) => `${count} day${count === 1 ? '' : 's'}`,
     months: (count: number) => `${count} month${count === 1 ? '' : 's'}`,
     years: (count: number) => `${count} year${count === 1 ? '' : 's'}`,
-    yearsMonths: (years: number, months: number) => `${years}y ${months}m`
+    yearsMonths: (years: number, months: number) => `${years}y ${months}m`,
+    zeroMinutes: '0m',
+    underAMinute: '<1m',
+    minutesShort: (minutes: number) => `${minutes}m`,
+    hoursShort: (hours: number) => `${hours}h`,
+    hoursMinutesShort: (hours: number, minutes: number) => `${hours}h ${minutes}m`
   },
   status: {
     UNVERIFIED: 'Unverified',
@@ -1377,6 +1474,18 @@ const en = {
   mealRateModes: {
     MONTHLY: 'One rate for the month',
     DAILY: 'A rate for each day'
+  },
+  devices: {
+    MOBILE: 'Mobile',
+    TABLET: 'Tablet',
+    DESKTOP: 'Desktop'
+  },
+  timeBuckets: {
+    MORNING: 'Morning',
+    MIDDAY: 'Midday',
+    AFTERNOON: 'Afternoon',
+    EVENING: 'Evening',
+    NIGHT: 'Night'
   },
   weekdays: {
     0: { label: 'Sunday', short: 'Sun' },

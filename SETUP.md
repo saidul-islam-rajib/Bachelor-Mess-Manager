@@ -3,8 +3,8 @@
 How to run Bachelor Point locally, how it runs on the live site, and how the installable Android/iOS app works.
 
 - Live: **https://bachelor-point.team-sober.com/**
-- Stack: Next.js 14 (pages router) · TypeScript · Tailwind · Prisma · SQL Server
-- Hosting: EC2
+- Stack: Next.js 14 (pages router) · TypeScript · Tailwind · Prisma · PostgreSQL 16
+- Hosting: EC2 — see [docs/postgres-migration.md](docs/postgres-migration.md) for how the database is deployed
 
 ---
 
@@ -15,7 +15,7 @@ How to run Bachelor Point locally, how it runs on the live site, and how the ins
 | Tool | Version | Notes |
 | --- | --- | --- |
 | Node.js | 20+ | `node -v` |
-| SQL Server | 2019+ / Express | Local instance is fine |
+| PostgreSQL | 16+ | A local instance, or `docker compose up db` |
 | npm | 10+ | Ships with Node |
 
 ### First run
@@ -34,12 +34,17 @@ npm run dev                   # http://localhost:3000
 ### The `.env` values that matter
 
 ```env
-DATABASE_URL="sqlserver://localhost\SQLEXPRESS;database=bachelor_point;integratedSecurity=true;trustServerCertificate=true"
+DATABASE_URL="postgresql://bpadmin:Local_Dev_Password_123@localhost:5432/bachelor_point?schema=public"
 AUTH_SECRET="a-random-string-of-at-least-32-characters"
 ADMIN_EMAIL="admin@team-sober.com"
 ADMIN_PASSWORD="something-long"
 APP_URL="http://localhost:3000"
+APP_TIME_ZONE="Asia/Dhaka"
 ```
+
+`APP_TIME_ZONE` decides which calendar day counts as "today" — which day a meal belongs to, where the meal-rate
+cut-off falls, and how visits are bucketed. Set it to where the mess actually is, never to UTC.
+See [docs/time-zones.md](docs/time-zones.md).
 
 `APP_URL` is what notification emails link back to. Set it to the live domain in production or the buttons in
 emails will point at localhost.
@@ -135,8 +140,9 @@ Order matters: back up, migrate, build, restart.
 ```env
 NODE_ENV=production
 APP_URL="https://bachelor-point.team-sober.com"
-DATABASE_URL="sqlserver://<host>;database=bachelor_point;user=<user>;password=<pw>;encrypt=true"
+DATABASE_URL="postgresql://<user>:<pw>@<host>:5432/bachelor_point?schema=public&sslmode=require"
 AUTH_SECRET="<32+ random characters, different from local>"
+APP_TIME_ZONE="Asia/Dhaka"
 SESSION_COOKIE_SECURE=true
 MEAL_PROMPT_DISPATCH_SECRET="<32 random bytes, for the daily meal ask>"
 ```
@@ -316,6 +322,11 @@ Budget $25 once for Google Play and $99/year for Apple, plus a Mac or macOS CI f
 | --- | --- |
 | [docs/TESTING.md](docs/TESTING.md) | The test suites and what they assert |
 | [docs/BACKUPS.md](docs/BACKUPS.md) | Backups, rotation, restore, verification |
+| [docs/postgres-migration.md](docs/postgres-migration.md) | How the database is deployed and how it got here |
 | [docs/settlement.md](docs/settlement.md) | How the money is calculated |
+| [docs/time-zones.md](docs/time-zones.md) | Which day counts as "today", and why it must not be UTC |
+| [docs/member-permissions.md](docs/member-permissions.md) | Per-member allow/block exceptions on top of a role |
+| [docs/password-reset.md](docs/password-reset.md) | Forgot-password links and their rate limits |
+| [docs/profile-photo-size.md](docs/profile-photo-size.md) | The admin-set photo limit |
 | [docs/ACCOUNTS.md](docs/ACCOUNTS.md) | Admin, supervisor and member accounts |
 | `/guide` | The in-app explainer for end users (public) |
