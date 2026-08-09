@@ -7,9 +7,11 @@ import {
   SESSION_COOKIE_NAME,
   SESSION_MAX_AGE_SECONDS
 } from '@/lib/session';
+import { IDENTITY_COOKIE, identityCookieDomain, issueIdentity, ssoEnabled } from '@/lib/identity';
 import { sessionConfig } from '@/config';
 
 export { SESSION_COOKIE_NAME, IMPERSONATION_COOKIE_NAME } from '@/lib/session';
+export { IDENTITY_COOKIE } from '@/lib/identity';
 
 export const LEGACY_SESSION_COOKIE_NAME = 'bachelor_point_legacy_session';
 
@@ -35,6 +37,7 @@ export function serializeCookie(
     httpOnly?: boolean;
     sameSite?: 'lax' | 'strict' | 'none';
     secure?: boolean;
+    domain?: string;
   }
 ) {
   const opts = {
@@ -47,6 +50,7 @@ export function serializeCookie(
 
   const parts = [`${name}=${encodeURIComponent(value)}`, `Path=${opts.path}`, `SameSite=${opts.sameSite}`];
 
+  if (opts.domain) parts.push(`Domain=${opts.domain}`);
   if (opts.httpOnly) parts.push('HttpOnly');
   if (opts.secure) parts.push('Secure');
   if (opts.maxAge !== undefined) parts.push(`Max-Age=${opts.maxAge}`);
@@ -60,15 +64,52 @@ export function appendCookie(res: NextApiResponse, cookie: string) {
   res.setHeader('Set-Cookie', [...list, cookie]);
 }
 
-export async function setSessionCookie(res: NextApiResponse, userId: string, tokenVersion: number) {
-  const token = await createSessionToken(userId, tokenVersion);
+export type SessionCookieUser = {
+  id: string;
+  name: string;
+  email: string;
+  tokenVersion: number;
+};
+
+/**
+ * The shared cookie the other Team Sober apps read. Set alongside our own
+ * session rather than instead of it — `bp_session` stays the authority here,
+ * and this is purely so a sibling app can recognise the same person.
+ */
+async function setIdentityCookie(res: NextApiResponse, user: SessionCookieUser) {
+  if (!ssoEnabled()) return;
+
+  const domain = identityCookieDomain();
+
+  appendCookie(
+    res,
+    serializeCookie(IDENTITY_COOKIE, await issueIdentity(user), {
+      maxAge: SESSION_MAX_AGE_SECONDS,
+      ...(domain ? { domain } : {})
+    })
+  );
+}
+
+export async function setSessionCookie(res: NextApiResponse, user: SessionCookieUser) {
+  const token = await createSessionToken(user.id, user.tokenVersion);
   appendCookie(res, serializeCookie(SESSION_COOKIE_NAME, token, { maxAge: SESSION_MAX_AGE_SECONDS }));
   appendCookie(res, serializeCookie(LEGACY_SESSION_COOKIE_NAME, '', { maxAge: 0 }));
+  await setIdentityCookie(res, user);
 }
 
 export function clearSessionCookie(res: NextApiResponse) {
+  const domain = identityCookieDomain();
+
   appendCookie(res, serializeCookie(SESSION_COOKIE_NAME, '', { maxAge: 0 }));
   appendCookie(res, serializeCookie(LEGACY_SESSION_COOKIE_NAME, '', { maxAge: 0 }));
+
+  // Signing out signs you out of every Team Sober app, which is what a shared
+  // session means. The clear has to carry the same Domain to actually land.
+  appendCookie(
+    res,
+    serializeCookie(IDENTITY_COOKIE, '', { maxAge: 0, ...(domain ? { domain } : {}) })
+  );
+
   clearImpersonationCookie(res);
 }
 

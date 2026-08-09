@@ -107,7 +107,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   await clearFailedAttempts(normalizedEmail);
   await endSession(user.id, SESSION_END_REASONS.REPLACED);
   await touchSession(user.id, req, { forceNew: true });
-  await setSessionCookie(res, user.id, user.tokenVersion);
+  await setSessionCookie(res, user);
 
   return ok(res, {
     user: { id: user.id, name: user.name, email: user.email, role: user.role }

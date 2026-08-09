@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { readSessionClaims, SESSION_COOKIE_NAME } from '@/lib/session';
+import { IDENTITY_COOKIE, readIdentityClaims } from '@/lib/identity';
 import { ROUTES } from '@/lib/routes';
 
 const PUBLIC_PATHS = [
@@ -49,6 +50,14 @@ export function middleware(req: NextRequest) {
   const claims = readSessionClaims(token);
 
   if (claims) {
+    return NextResponse.next();
+  }
+
+  // No session of our own, but another Team Sober app may have signed them in.
+  // Let it through so the request reaches a handler that can verify the shared
+  // cookie for real and issue a `bp_session`; without this the redirect below
+  // would bounce them before single sign-on ever got a chance to run.
+  if (readIdentityClaims(req.cookies.get(IDENTITY_COOKIE)?.value)) {
     return NextResponse.next();
   }
 

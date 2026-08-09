@@ -73,7 +73,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (user.status === USER_STATUS.APPROVED) {
     await ensureWelcomeMessage(user);
-    await setSessionCookie(res, user.id, user.tokenVersion);
+    await setSessionCookie(res, user);
     return ok(res, {
       signedIn: true,
       message: isReset ? strings.auth.setPassword.resetSuccessSignedIn : strings.auth.setPassword.successSignedIn,

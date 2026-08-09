@@ -102,7 +102,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (data.tokenVersion) {
-    await setSessionCookie(res, user.id, user.tokenVersion);
+    await setSessionCookie(res, user);
   }
 
   const { tokenVersion: _tokenVersion, ...safeUser } = user;
