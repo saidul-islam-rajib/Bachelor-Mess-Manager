@@ -6,6 +6,7 @@ import { MentionInput, MentionText, type Member } from '@/components/MentionInpu
 import { PageTitle } from '@/components/ui';
 import { encodeMentions } from '@/lib/mentions';
 import { todayKey } from '@/lib/month';
+import { formatCurrency, formatDayKey, formatInstant } from '@/lib/format';
 
 type Item = { id: string; name: string; amount: number };
 type ExpenseComment = { id: string; text: string; authorId: string; authorName: string; createdAt: string };
@@ -35,21 +36,15 @@ type HistoryEvent = {
 
 type Draft = { name: string; amount: string };
 
-const taka = (n: number) => `৳${n.toFixed(2)}`;
+const taka = formatCurrency;
 const blankRow = (): Draft => ({ name: '', amount: '' });
 
 function longDate(day: string) {
-  return new Date(`${day}T00:00:00Z`).toLocaleDateString('en-US', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC'
-  });
+  return formatDayKey(day, 'weekdayLong');
 }
 
 function when(iso: string) {
-  return new Date(iso).toLocaleString('en-US', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+  return formatInstant(iso, 'dayMonthTime');
 }
 
 function describe(event: HistoryEvent) {

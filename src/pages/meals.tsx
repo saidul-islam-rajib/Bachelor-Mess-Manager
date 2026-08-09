@@ -7,8 +7,12 @@ import MealPromptDispatch from '@/components/MealPromptDispatch';
 import MealRateCard, { type DailyRate } from '@/components/MealRateCard';
 import { PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
-import { daysInMonth, round2, todayKey } from '@/lib/month';
+import { daysInMonth, round2, shiftDayKey, todayKey } from '@/lib/month';
 import { PERMISSIONS } from '@/lib/permissions';
+import { formatCurrency, formatDayKey } from '@/lib/format';
+import { uiConfig } from '@/config';
+
+const MONTH_KEY_LENGTH = 7;
 
 type Member = { id: string; name: string; email: string };
 type Weights = { breakfast: number; lunch: number; dinner: number };
@@ -61,15 +65,10 @@ const FIELD_LABELS: Record<(typeof FIELDS)[number], string> = {
 };
 const FIELD_SHORT: Record<(typeof FIELDS)[number], string> = { breakfast: 'B', lunch: 'L', dinner: 'D' };
 
-const taka = (n: number) => `৳${n.toFixed(2)}`;
+const taka = formatCurrency;
 
 function dayLabel(date: string) {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC'
-  });
+  return formatDayKey(date, 'weekdayDayMonth');
 }
 
 export default function MealsPage() {
@@ -89,9 +88,25 @@ export default function MealsPage() {
   const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
   const [windowBusy, setWindowBusy] = useState(false);
   const [openDay, setOpenDay] = useState('');
+  const [showWholeMonth, setShowWholeMonth] = useState(false);
 
   const days = useMemo(() => daysInMonth(month), [month]);
   const today = todayKey();
+  const todayIsInMonth = today.slice(0, MONTH_KEY_LENGTH) === month;
+
+  useEffect(() => {
+    setShowWholeMonth(false);
+  }, [month]);
+
+  const visibleDays = useMemo(() => {
+    if (showWholeMonth || !todayIsInMonth) return days;
+
+    const from = shiftDayKey(today, -uiConfig.mealDaysBefore);
+    const to = shiftDayKey(today, uiConfig.mealDaysAfter);
+    return days.filter((date) => date >= from && date <= to);
+  }, [days, showWholeMonth, todayIsInMonth, today]);
+
+  const hiddenDayCount = days.length - visibleDays.length;
 
   const loadSummary = useCallback(async () => {
     if (!groupId) return;
@@ -362,8 +377,16 @@ export default function MealsPage() {
                   />
                 </div>
               )}
+              <DayRangeBar
+                visibleDays={visibleDays}
+                totalDays={days.length}
+                hiddenDayCount={hiddenDayCount}
+                showWholeMonth={showWholeMonth}
+                onToggle={() => setShowWholeMonth((value) => !value)}
+              />
+
               <ul className="space-y-3 lg:hidden">
-                {days.map((date) => {
+                {visibleDays.map((date) => {
                   const info = dayInfo[date];
                   const canEdit = editable(user?.id ?? '', date);
                   const awaiting = pendingByCell.has(`${user?.id}|${date}`);
@@ -540,7 +563,7 @@ export default function MealsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {days.map((date) => {
+                    {visibleDays.map((date) => {
                       const info = dayInfo[date];
                       const isToday = date === today;
                       return (
@@ -632,6 +655,49 @@ export default function MealsPage() {
         </div>
       )}
     </section>
+  );
+}
+
+function DayRangeBar({
+  visibleDays,
+  totalDays,
+  hiddenDayCount,
+  showWholeMonth,
+  onToggle
+}: {
+  visibleDays: string[];
+  totalDays: number;
+  hiddenDayCount: number;
+  showWholeMonth: boolean;
+  onToggle: () => void;
+}) {
+  if (visibleDays.length === 0) return null;
+
+  const copy = strings.meals.window;
+  const collapsible = hiddenDayCount > 0 || showWholeMonth;
+  const first = visibleDays[0];
+  const last = visibleDays[visibleDays.length - 1];
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+      <div className="min-w-0">
+        <p className="text-sm font-medium">
+          {hiddenDayCount > 0 ? copy.showingRange(dayLabel(first), dayLabel(last)) : copy.showingAll(totalDays)}
+        </p>
+        {hiddenDayCount > 0 && <p className="mt-0.5 text-xs text-slate-500">{copy.hiddenNote(hiddenDayCount)}</p>}
+      </div>
+
+      {collapsible && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={showWholeMonth}
+          className="min-h-[2.25rem] shrink-0 rounded-full border border-slate-300 px-4 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
+        >
+          {showWholeMonth ? copy.showAroundToday : copy.showWholeMonth(totalDays)}
+        </button>
+      )}
+    </div>
   );
 }
 

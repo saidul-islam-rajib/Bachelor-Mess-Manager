@@ -2,6 +2,7 @@ import {
   APP_DEFAULTS,
   AUTHOR,
   CACHE_DEFAULTS,
+  DATE_DEFAULTS,
   COMMUNITY_DEFAULTS,
   GROUP_DEFAULTS,
   MEAL_PROMPT_DEFAULTS,
@@ -53,6 +54,8 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   UI_SEARCH_DEBOUNCE_MS: process.env.UI_SEARCH_DEBOUNCE_MS,
   UI_MONTHS_BACK: process.env.UI_MONTHS_BACK,
   UI_MONTHS_FORWARD: process.env.UI_MONTHS_FORWARD,
+  UI_MEAL_DAYS_BEFORE: process.env.UI_MEAL_DAYS_BEFORE,
+  UI_MEAL_DAYS_AFTER: process.env.UI_MEAL_DAYS_AFTER,
   COMMUNITY_PAGE_SIZE: process.env.COMMUNITY_PAGE_SIZE,
   COMMUNITY_MESSAGE_MAX_LENGTH: process.env.COMMUNITY_MESSAGE_MAX_LENGTH,
   COMMUNITY_POLL_INTERVAL_MS: process.env.COMMUNITY_POLL_INTERVAL_MS,
@@ -115,6 +118,12 @@ export const appConfig = {
   currencySymbol: readString('APP_CURRENCY_SYMBOL', APP_DEFAULTS.currencySymbol),
   dateLocale: readString('APP_DATE_LOCALE', APP_DEFAULTS.dateLocale),
   timeZone: readString('APP_TIME_ZONE', APP_DEFAULTS.timeZone)
+} as const;
+
+export const dateConfig = {
+  dayKeyTimeZone: DATE_DEFAULTS.dayKeyTimeZone,
+  dayKeyLocale: DATE_DEFAULTS.dayKeyLocale,
+  weekdayIndexLocale: DATE_DEFAULTS.weekdayIndexLocale
 } as const;
 
 export const authorConfig = {
@@ -194,10 +203,26 @@ export const validationConfig = {
   maxMoneyAmount: readNumber('VALIDATION_MAX_MONEY_AMOUNT', VALIDATION_DEFAULTS.maxMoneyAmount)
 } as const;
 
+const maxConfigurableImageBytes = readInt(
+  'UPLOAD_MAX_CONFIGURABLE_IMAGE_BYTES',
+  UPLOAD_DEFAULTS.maxConfigurableImageBytes
+);
+
+const uploadRequestBodyBytes = Math.ceil(
+  maxConfigurableImageBytes * UPLOAD_DEFAULTS.base64OverheadRatio + UPLOAD_DEFAULTS.requestBodySlackBytes
+);
+
 export const uploadConfig = {
   directory: readOptionalString('UPLOAD_DIR'),
   directoryName: UPLOAD_DEFAULTS.directoryName,
   maxImageBytes: readInt('UPLOAD_MAX_IMAGE_BYTES', UPLOAD_DEFAULTS.maxImageBytes),
+  minConfigurableImageBytes: readInt(
+    'UPLOAD_MIN_CONFIGURABLE_IMAGE_BYTES',
+    UPLOAD_DEFAULTS.minConfigurableImageBytes
+  ),
+  maxConfigurableImageBytes,
+  maxRequestBodyBytes: uploadRequestBodyBytes,
+  requestBodyLimit: `${Math.ceil(uploadRequestBodyBytes / (1024 * 1024))}mb`,
   routePrefix: UPLOAD_DEFAULTS.routePrefix,
   cacheMaxAgeSeconds: readInt('UPLOAD_CACHE_MAX_AGE_SECONDS', UPLOAD_DEFAULTS.cacheMaxAgeSeconds)
 } as const;
@@ -213,7 +238,9 @@ export const uiConfig = {
   toastDedupeWindowMs: readInt('UI_TOAST_DEDUPE_WINDOW_MS', UI_DEFAULTS.toastDedupeWindowMs),
   searchDebounceMs: readInt('UI_SEARCH_DEBOUNCE_MS', UI_DEFAULTS.searchDebounceMs),
   monthsBack: readInt('UI_MONTHS_BACK', UI_DEFAULTS.monthsBack),
-  monthsForward: readInt('UI_MONTHS_FORWARD', UI_DEFAULTS.monthsForward, 0)
+  monthsForward: readInt('UI_MONTHS_FORWARD', UI_DEFAULTS.monthsForward, 0),
+  mealDaysBefore: readInt('UI_MEAL_DAYS_BEFORE', UI_DEFAULTS.mealDaysBefore, 0),
+  mealDaysAfter: readInt('UI_MEAL_DAYS_AFTER', UI_DEFAULTS.mealDaysAfter, 0)
 } as const;
 
 export const cacheConfig = {

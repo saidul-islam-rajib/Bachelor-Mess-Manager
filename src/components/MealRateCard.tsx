@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { strings } from '@/lib/i18n';
 import { MEAL_RATE_MODES } from '@/lib/constants';
+import { formatCurrency, formatDayKey } from '@/lib/format';
 
 export type DailyRate = {
   date: string;
@@ -21,24 +22,10 @@ type Props = {
 
 const COLLAPSED_ROWS = 7;
 
-const taka = (value: number) => `৳${value.toFixed(2)}`;
+const taka = formatCurrency;
 
-function dayLabel(date: string) {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC'
-  });
-}
-
-function shortDayLabel(date: string) {
-  return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
-    weekday: 'short',
-    day: 'numeric',
-    timeZone: 'UTC'
-  });
-}
+const dayLabel = (date: string) => formatDayKey(date, 'weekdayDayMonth');
+const shortDayLabel = (date: string) => formatDayKey(date, 'weekdayDay');
 
 export default function MealRateCard({ days, today, monthRate, rateMode, myMeals, myCost }: Props) {
   const copy = strings.meals.rate;

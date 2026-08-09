@@ -21,9 +21,18 @@ function declaredBodyBytes(req: NextApiRequest): number {
   return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
-export function withAudit(handler: NextApiHandler): NextApiHandler {
+export type AuditOptions = {
+  maxRequestBodyBytes?: number;
+};
+
+export function withAudit(handler: NextApiHandler, options: AuditOptions = {}): NextApiHandler {
+  const maxRequestBodyBytes = Math.max(
+    securityConfig.maxRequestBodyBytes,
+    options.maxRequestBodyBytes ?? securityConfig.maxRequestBodyBytes
+  );
+
   return async (req, res) => {
-    if (declaredBodyBytes(req) > securityConfig.maxRequestBodyBytes) {
+    if (declaredBodyBytes(req) > maxRequestBodyBytes) {
       return payloadTooLarge(res);
     }
 

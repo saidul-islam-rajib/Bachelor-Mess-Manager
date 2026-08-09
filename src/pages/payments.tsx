@@ -4,7 +4,7 @@ import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import { Listbox, ListboxControl, PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
-import { todayKey } from '@/lib/month';
+import { daysInMonth, todayKey } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
 
 type MemberRow = {
@@ -261,9 +261,8 @@ export default function PaymentsPage() {
 }
 
 function lastDayOfMonth(month: string): string {
-  const [year, m] = month.split('-').map(Number);
-  const last = new Date(Date.UTC(year, m, 0));
-  return last.toISOString().slice(0, 10);
+  const days = daysInMonth(month);
+  return days[days.length - 1];
 }
 
 function CloseMonth({

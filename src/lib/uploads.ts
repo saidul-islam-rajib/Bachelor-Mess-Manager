@@ -3,44 +3,39 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { uploadConfig } from '@/config';
 import { strings } from '@/lib/i18n';
+import { formatBytes } from '@/lib/format';
+import { getUploadPolicy } from '@/lib/settings-service';
+import { ACCEPTED_IMAGE_EXTENSIONS, ACCEPTED_IMAGE_MIMES, IMAGE_FORMATS } from '@/lib/uploads.client';
 
-export const MAX_IMAGE_BYTES = uploadConfig.maxImageBytes;
 export const PUBLIC_UPLOAD_PREFIX = uploadConfig.routePrefix;
 
 const UPLOAD_DIR = uploadConfig.directory
   ? path.resolve(uploadConfig.directory)
   : path.join(process.cwd(), uploadConfig.directoryName);
 
-const IMAGE_TYPES: { mime: string; ext: string; matches: (buffer: Buffer) => boolean }[] = [
-  {
-    mime: 'image/png',
-    ext: 'png',
-    matches: (buffer) =>
-      buffer.length > 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-  },
-  {
-    mime: 'image/jpeg',
-    ext: 'jpg',
-    matches: (buffer) => buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff
-  },
-  {
-    mime: 'image/webp',
-    ext: 'webp',
-    matches: (buffer) =>
-      buffer.length > 12 &&
-      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
-      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
-  },
-  {
-    mime: 'image/gif',
-    ext: 'gif',
-    matches: (buffer) => buffer.length > 6 && buffer.subarray(0, 6).toString('ascii').startsWith('GIF8')
-  }
-];
+const SIGNATURES: Record<string, (buffer: Buffer) => boolean> = {
+  'image/png': (buffer) =>
+    buffer.length > 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  'image/jpeg': (buffer) => buffer.length > 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff,
+  'image/webp': (buffer) =>
+    buffer.length > 12 &&
+    buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    buffer.subarray(8, 12).toString('ascii') === 'WEBP',
+  'image/gif': (buffer) => buffer.length > 6 && buffer.subarray(0, 6).toString('ascii').startsWith('GIF8')
+};
 
-export const ACCEPTED_IMAGE_MIMES = IMAGE_TYPES.map((type) => type.mime);
+const IMAGE_TYPES = IMAGE_FORMATS.map((format) => ({
+  mime: format.mime as string,
+  ext: format.ext as string,
+  matches: SIGNATURES[format.mime]
+}));
 
-const FILE_NAME_PATTERN = /^[a-f0-9-]{36}-[a-f0-9]{16}\.(png|jpg|webp|gif)$/i;
+export { ACCEPTED_IMAGE_MIMES };
+
+const FILE_NAME_PATTERN = new RegExp(
+  `^[a-f0-9-]{36}-[a-f0-9]{16}\\.(${ACCEPTED_IMAGE_EXTENSIONS.join('|')})$`,
+  'i'
+);
 
 type SaveResult = { ok: true; url: string } | { ok: false; error: string };
 
@@ -55,10 +50,11 @@ export async function saveProfileImage(dataUrl: string, userId: string): Promise
     return { ok: false, error: strings.profile.imageWrongType };
   }
 
-  const maxMegabytes = Math.round(uploadConfig.maxImageBytes / (1024 * 1024));
+  const { maxImageBytes } = await getUploadPolicy();
+  const limitLabel = formatBytes(maxImageBytes);
 
-  if (Math.floor((base64.length * 3) / 4) > uploadConfig.maxImageBytes) {
-    return { ok: false, error: strings.profile.imageTooLarge(maxMegabytes) };
+  if (Math.floor((base64.length * 3) / 4) > maxImageBytes) {
+    return { ok: false, error: strings.profile.imageTooLarge(limitLabel) };
   }
 
   let buffer: Buffer;
@@ -69,8 +65,8 @@ export async function saveProfileImage(dataUrl: string, userId: string): Promise
   }
 
   if (buffer.length === 0) return { ok: false, error: strings.profile.imageEmpty };
-  if (buffer.length > uploadConfig.maxImageBytes) {
-    return { ok: false, error: strings.profile.imageTooLarge(maxMegabytes) };
+  if (buffer.length > maxImageBytes) {
+    return { ok: false, error: strings.profile.imageTooLarge(limitLabel) };
   }
 
   const detected = IMAGE_TYPES.find((type) => type.matches(buffer));

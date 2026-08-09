@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { appConfig, securityConfig } from '@/config';
+import { appConfig, securityConfig, uploadConfig } from '@/config';
 import { SETTINGS_SINGLETON_ID } from '@/lib/constants';
 
 export type SecurityPolicy = {
@@ -55,9 +55,54 @@ const globalForMealEdit = globalThis as unknown as {
   mealEditPolicyCache?: { value: MealEditPolicy; expiresAt: number } | null;
 };
 
+export type UploadPolicy = {
+  maxImageBytes: number;
+  minConfigurableBytes: number;
+  maxConfigurableBytes: number;
+};
+
+const globalForUpload = globalThis as unknown as {
+  uploadPolicyCache?: { value: UploadPolicy; expiresAt: number } | null;
+};
+
+export function clampImageBytes(value: number): number {
+  return Math.min(
+    uploadConfig.maxConfigurableImageBytes,
+    Math.max(uploadConfig.minConfigurableImageBytes, Math.trunc(value))
+  );
+}
+
+export function uploadPolicyFallback(): UploadPolicy {
+  return {
+    maxImageBytes: clampImageBytes(uploadConfig.maxImageBytes),
+    minConfigurableBytes: uploadConfig.minConfigurableImageBytes,
+    maxConfigurableBytes: uploadConfig.maxConfigurableImageBytes
+  };
+}
+
+export async function getUploadPolicy(): Promise<UploadPolicy> {
+  const cached = globalForUpload.uploadPolicyCache;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  try {
+    const settings = await getSiteSettings();
+    const value: UploadPolicy = {
+      ...uploadPolicyFallback(),
+      maxImageBytes: clampImageBytes(settings.maxProfileImageBytes)
+    };
+    globalForUpload.uploadPolicyCache = { value, expiresAt: Date.now() + CACHE_TTL_MS };
+    return value;
+  } catch {
+    return uploadPolicyFallback();
+  }
+}
+
 export function invalidateSecurityPolicyCache() {
   globalForSettings.securityPolicyCache = null;
   globalForMealEdit.mealEditPolicyCache = null;
+  globalForUpload.uploadPolicyCache = null;
 }
 
 export async function getMealEditPolicy(groupId?: string): Promise<MealEditPolicy> {

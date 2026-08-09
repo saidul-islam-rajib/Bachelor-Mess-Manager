@@ -7,8 +7,9 @@ import { commentsAnchorPath, groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
+import { formatCurrency, formatDayKey, formatMonthLabel } from '@/lib/format';
 
-const taka = (n: number) => `৳${n.toFixed(2)}`;
+const taka = formatCurrency;
 
 const dashboardStrings = strings.dashboard;
 
@@ -663,20 +664,11 @@ function formatStay(days: number) {
 }
 
 function shortDate(day: string) {
-  return new Date(`${day}T00:00:00Z`).toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC'
-  });
+  return formatDayKey(day, 'dayMonth');
 }
 
 function monthLabel(key: string) {
-  const [year, month] = key.split('-').map(Number);
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleString('en-US', {
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC'
-  });
+  return formatMonthLabel(key);
 }
 
 function Panel({ children }: { children: React.ReactNode }) {

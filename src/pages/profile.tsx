@@ -10,9 +10,11 @@ import { Badge, Collapsible, EmptyState, ImageViewer, PageTitle } from '@/compon
 import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 import { validateName, validatePhone } from '@/lib/validation';
+import { ACCEPTED_IMAGE_MIMES } from '@/lib/uploads.client';
+import { formatBytes } from '@/lib/format';
+import { uploadConfig } from '@/config';
 
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
-const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const ACCEPTED_IMAGE_TYPES = ACCEPTED_IMAGE_MIMES;
 
 export default function ProfilePage() {
   const toast = useToast();
@@ -260,6 +262,23 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
   const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [maxBytes, setMaxBytes] = useState(uploadConfig.maxImageBytes);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch('/api/settings')
+      .then((res) => res.json())
+      .then((body) => {
+        const configured = Number(body?.settings?.maxProfileImageBytes);
+        if (!cancelled && Number.isFinite(configured) && configured > 0) setMaxBytes(configured);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function upload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -268,11 +287,11 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
     if (!file) return;
 
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      toast.error('Choose a PNG, JPEG, WebP, or GIF image.');
+      toast.error(strings.profile.imageWrongType);
       return;
     }
-    if (file.size > MAX_IMAGE_BYTES) {
-      toast.error('That image is larger than 2 MB. Please pick a smaller one.');
+    if (file.size > maxBytes) {
+      toast.error(strings.profile.imageTooLarge(formatBytes(maxBytes)));
       return;
     }
 
@@ -281,7 +300,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error('Could not read that file.'));
+        reader.onerror = () => reject(new Error(strings.profile.imageUnreadable));
         reader.readAsDataURL(file);
       });
 
@@ -291,9 +310,9 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
         body: JSON.stringify({ image: dataUrl })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not upload that image.');
+      if (!res.ok) throw new Error(data?.error ?? strings.profile.photoUploadFailed);
 
-      toast.success('Photo updated.');
+      toast.success(strings.profile.photoUpdated);
       onChanged();
     } catch (err) {
       toast.error((err as Error).message);
@@ -311,8 +330,8 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
         body: JSON.stringify({ removeImage: true })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not remove the photo.');
-      toast.success('Photo removed.');
+      if (!res.ok) throw new Error(data?.error ?? strings.profile.photoRemoveFailed);
+      toast.success(strings.profile.photoRemoved);
       onChanged();
     } catch (err) {
       toast.error((err as Error).message);
@@ -367,8 +386,8 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
       )}
 
       <div>
-        <p className="text-sm font-medium text-slate-700">Profile photo</p>
-        <p className="text-xs text-slate-500">PNG, JPEG, WebP, or GIF. Up to 2 MB.</p>
+        <p className="text-sm font-medium text-slate-700">{strings.profile.photo}</p>
+        <p className="text-xs text-slate-500">{strings.profile.photoHint(formatBytes(maxBytes))}</p>
         <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
@@ -376,7 +395,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
             disabled={busy}
             className="rounded-full border border-slate-300 px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            {busy ? 'Working...' : image ? 'Change photo' : 'Upload photo'}
+            {busy ? strings.profile.working : image ? strings.profile.changePhoto : strings.profile.uploadPhoto}
           </button>
           {image && (
             <button
@@ -385,7 +404,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
               disabled={busy}
               className="rounded-full border border-red-200 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
             >
-              Remove
+              {strings.profile.removePhoto}
             </button>
           )}
         </div>

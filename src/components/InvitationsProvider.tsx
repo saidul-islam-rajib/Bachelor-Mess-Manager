@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { strings } from '@/lib/i18n';
+import { formatInstant } from '@/lib/format';
 
 export type Invitation = {
   id: string;
@@ -120,5 +121,5 @@ export function timeAgo(iso: string) {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
-  return new Date(iso).toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+  return formatInstant(iso, 'dayMonth');
 }

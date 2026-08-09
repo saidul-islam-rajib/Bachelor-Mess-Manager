@@ -5,7 +5,13 @@ export const APP_DEFAULTS = {
   currencyCode: 'BDT',
   currencySymbol: '৳',
   dateLocale: 'en-GB',
-  timeZone: 'UTC'
+  timeZone: 'Asia/Dhaka'
+} as const;
+
+export const DATE_DEFAULTS = {
+  dayKeyTimeZone: 'UTC',
+  dayKeyLocale: 'en-CA',
+  weekdayIndexLocale: 'en-US'
 } as const;
 
 export const AUTHOR = {
@@ -73,6 +79,10 @@ export const VALIDATION_DEFAULTS = {
 export const UPLOAD_DEFAULTS = {
   directoryName: 'uploads',
   maxImageBytes: 2 * 1024 * 1024,
+  minConfigurableImageBytes: 64 * 1024,
+  maxConfigurableImageBytes: 10 * 1024 * 1024,
+  base64OverheadRatio: 4 / 3,
+  requestBodySlackBytes: 64 * 1024,
   routePrefix: '/api/uploads/',
   cacheMaxAgeSeconds: 31_536_000
 } as const;
@@ -88,7 +98,9 @@ export const UI_DEFAULTS = {
   toastDedupeWindowMs: 1000,
   searchDebounceMs: 300,
   monthsBack: 11,
-  monthsForward: 1
+  monthsForward: 1,
+  mealDaysBefore: 2,
+  mealDaysAfter: 2
 } as const;
 
 export const CACHE_DEFAULTS = {

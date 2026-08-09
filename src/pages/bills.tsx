@@ -5,6 +5,7 @@ import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthContro
 import { Listbox, PageTitle } from '@/components/ui';
 import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import { todayKey } from '@/lib/month';
+import { formatCurrency, formatDayKey } from '@/lib/format';
 
 type Share = { userId: string; userName: string; amount: number };
 type Member = { id: string; name: string; email: string };
@@ -47,15 +48,10 @@ type BillsData = {
   };
 };
 
-const taka = (n: number) => `৳${n.toFixed(2)}`;
+const taka = formatCurrency;
 
 function longDate(day: string) {
-  return new Date(`${day}T00:00:00.000Z`).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC'
-  });
+  return formatDayKey(day, 'full');
 }
 
 export default function BillsPage() {

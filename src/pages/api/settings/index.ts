@@ -2,9 +2,11 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
-import { invalidateSecurityPolicyCache } from '@/lib/settings-service';
+import { invalidateSecurityPolicyCache, uploadPolicyFallback } from '@/lib/settings-service';
 import { cached, invalidate } from '@/lib/cache';
 import { cacheConfig } from '@/config';
+import { formatBytes } from '@/lib/format';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 const SETTINGS_ID = 'singleton';
@@ -19,7 +21,8 @@ const PUBLIC_FIELDS = [
   'copyrightOwner',
   'facebookUrl',
   'twitterUrl',
-  'newsletterEnabled'
+  'newsletterEnabled',
+  'maxProfileImageBytes'
 ] as const;
 
 async function getSettings() {
@@ -104,6 +107,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         return badRequest(res, 'The meal edit window must be between 0 minutes (no limit) and 7 days.');
       }
       data.mealEditWindowMinutes = minutes;
+    }
+    if (body.maxProfileImageBytes !== undefined) {
+      const bytes = Number(body.maxProfileImageBytes);
+      const { minConfigurableBytes, maxConfigurableBytes } = uploadPolicyFallback();
+
+      if (!Number.isInteger(bytes) || bytes < minConfigurableBytes || bytes > maxConfigurableBytes) {
+        return badRequest(
+          res,
+          strings.admin.settings.maxProfileImageInvalid(
+            formatBytes(minConfigurableBytes),
+            formatBytes(maxConfigurableBytes)
+          )
+        );
+      }
+      data.maxProfileImageBytes = bytes;
     }
 
     const settings = await prisma.siteSettings.upsert({

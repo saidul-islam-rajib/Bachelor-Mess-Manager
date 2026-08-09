@@ -1,7 +1,8 @@
 import type { NextApiRequest } from 'next';
 import { prisma } from '@/lib/prisma';
-import { appConfig } from '@/config';
+import { appConfig, dateConfig } from '@/config';
 import { clientIp } from '@/lib/rate-limit';
+import { zonedDayKey } from '@/lib/month';
 
 export const SESSION_IDLE_GAP_MS = 30 * 60_000;
 export const SESSION_ONLINE_WINDOW_MS = 5 * 60_000;
@@ -49,18 +50,11 @@ export function bucketOfHour(hour: number): TimeBucketKey {
   return 'NIGHT';
 }
 
-const partsFormatter = new Intl.DateTimeFormat('en-US', {
+const partsFormatter = new Intl.DateTimeFormat(dateConfig.weekdayIndexLocale, {
   timeZone: appConfig.timeZone,
   hour: '2-digit',
   hour12: false,
   weekday: 'short'
-});
-
-const dayFormatter = new Intl.DateTimeFormat('en-CA', {
-  timeZone: appConfig.timeZone,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit'
 });
 
 export function localStamp(date: Date): { hour: number; weekday: number; day: string } {
@@ -71,7 +65,7 @@ export function localStamp(date: Date): { hour: number; weekday: number; day: st
   return {
     hour: Number(hourPart) % 24,
     weekday: WEEKDAY_INDEX[weekdayPart] ?? 0,
-    day: dayFormatter.format(date)
+    day: zonedDayKey(date)
   };
 }
 

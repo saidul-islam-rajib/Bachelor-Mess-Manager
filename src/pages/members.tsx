@@ -10,6 +10,7 @@ import YourGroups from '@/components/members/YourGroups';
 import { GROUP_STATUS, USER_ROLES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 import { MESS_COMMENTS_ANCHOR } from '@/lib/routes';
+import { formatInstant } from '@/lib/format';
 
 type Member = {
   membershipId: string;
@@ -41,7 +42,7 @@ function formatStay(days: number) {
 }
 
 function shortDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  return formatInstant(iso, 'date');
 }
 
 export default function MembersPage() {

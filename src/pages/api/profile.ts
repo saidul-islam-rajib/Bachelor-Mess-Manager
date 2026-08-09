@@ -6,12 +6,12 @@ import { hashPassword, validatePassword, verifyPassword } from '@/lib/password';
 import { badRequest, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { deleteProfileImage, saveProfileImage } from '@/lib/uploads';
 import { validateName, validatePhone } from '@/lib/validation';
+import { uploadConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
 export const config = {
   api: {
-
-    bodyParser: { sizeLimit: '4mb' }
+    bodyParser: { sizeLimit: uploadConfig.requestBodyLimit }
   }
 };
 
@@ -109,4 +109,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   return ok(res, { user: safeUser, passwordChanged: Boolean(data.password) });
 }
 
-export default withAudit(handler);
+export default withAudit(handler, { maxRequestBodyBytes: uploadConfig.maxRequestBodyBytes });

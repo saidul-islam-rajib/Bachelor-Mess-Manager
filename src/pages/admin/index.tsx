@@ -33,7 +33,7 @@ import {
 import ActivityPanel from '@/components/admin/ActivityPanel';
 import UserPermissionsModal from '@/components/admin/UserPermissionsModal';
 import { api, errorMessage } from '@/lib/api-client';
-import { paginationConfig } from '@/config';
+import { paginationConfig, uploadConfig } from '@/config';
 import {
   GROUP_STATUS,
   GROUP_STATUS_VALUES,
@@ -42,7 +42,7 @@ import {
   USER_STATUS,
   USER_STATUS_VALUES
 } from '@/lib/constants';
-import { formatDate, formatDateTime, roleLabel, statusLabel } from '@/lib/format';
+import { formatBytes, formatDate, formatDateTime, roleLabel, statusLabel } from '@/lib/format';
 import { groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
@@ -1438,7 +1438,10 @@ type SiteSettings = {
   newsletterEnabled: boolean;
   mealEditWindowMinutes: number;
   mealEditRequiresApproval: boolean;
+  maxProfileImageBytes: number;
 };
+
+const BYTES_PER_KB = 1024;
 
 const MEAL_EDIT_WINDOW_OPTIONS = [
   { value: 5, label: '5 minutes' },
@@ -1545,6 +1548,25 @@ function SettingsPanel() {
           This is the starting point for every mess. A supervisor can override it for their own mess in Members →
           Group settings; messes left on &ldquo;follow the site default&rdquo; move with whatever you set here.
         </p>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold">{strings.admin.settings.uploadsTitle}</h3>
+        <p className="mt-1 text-sm text-slate-600">{strings.admin.settings.uploadsHint}</p>
+
+        <NumberInput
+          containerClassName="mt-4 max-w-xs"
+          label={strings.admin.settings.maxProfileImage}
+          value={String(Math.round(settings.maxProfileImageBytes / BYTES_PER_KB))}
+          onChange={(value) => update('maxProfileImageBytes', Number(value) * BYTES_PER_KB)}
+          hint={strings.admin.settings.maxProfileImageHint(
+            formatBytes(settings.maxProfileImageBytes),
+            formatBytes(uploadConfig.minConfigurableImageBytes),
+            formatBytes(uploadConfig.maxConfigurableImageBytes)
+          )}
+          min={Math.ceil(uploadConfig.minConfigurableImageBytes / BYTES_PER_KB)}
+          max={Math.floor(uploadConfig.maxConfigurableImageBytes / BYTES_PER_KB)}
+        />
       </div>
 
       <div className="mt-5">

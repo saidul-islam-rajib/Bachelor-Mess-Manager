@@ -439,6 +439,7 @@ model SiteSettings {
   allowSelfRoleSwitch       Boolean @default(true)
   mealEditWindowMinutes     Int     @default(5)
   mealEditRequiresApproval  Boolean @default(true)
+  maxProfileImageBytes      Int     @default(2097152)
 
   createdAt     DateTime  @default(now())
   createdById   String?

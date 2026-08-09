@@ -557,6 +557,13 @@ const en = {
     ratedThrough: (day: string) =>
       `The meal rate and everyone's cost are worked out from bazar and meals up to ${day}. Later days show planned meals only and are not priced yet.`,
     notStartedYet: 'This month has not started. The numbers below are planned meals only — nothing is priced yet.',
+    window: {
+      showingRange: (from: string, to: string) => `Showing ${from} – ${to}`,
+      showingAll: (count: number) => `Showing all ${count} days`,
+      showWholeMonth: (count: number) => `Show the whole month (${count} days)`,
+      showAroundToday: 'Back to the days around today',
+      hiddenNote: (count: number) => `${count} other day${count === 1 ? '' : 's'} this month are hidden.`
+    },
     rate: {
       title: 'Your meal rate',
       todayLabel: "Today's rate",
@@ -844,7 +851,7 @@ const en = {
     yourDetails: 'Your details',
     signInPrompt: 'Please sign in to view your profile.',
     photo: 'Profile photo',
-    photoHint: (maxMb: number) => `PNG, JPEG, WebP, or GIF. Up to ${maxMb} MB.`,
+    photoHint: (limit: string) => `PNG, JPEG, WebP, or GIF. Up to ${limit}.`,
     uploadPhoto: 'Upload photo',
     changePhoto: 'Change photo',
     removePhoto: 'Remove',
@@ -855,7 +862,11 @@ const en = {
     newPassword: 'New password',
     confirmNewPassword: 'Confirm new password',
     changing: 'Changing...',
-    imageTooLarge: (maxMb: number) => `That image is larger than ${maxMb} MB. Please pick a smaller one.`,
+    imageTooLarge: (limit: string) => `That image is larger than ${limit}. Please pick a smaller one.`,
+    photoUpdated: 'Photo updated.',
+    photoRemoved: 'Photo removed.',
+    photoUploadFailed: 'Could not upload that image.',
+    photoRemoveFailed: 'Could not remove the photo.',
     imageWrongType: 'Choose a PNG, JPEG, WebP, or GIF image.',
     imageUnreadable: 'Could not read that file.',
     imageInvalid: 'That file is not a valid image.',
@@ -1042,7 +1053,14 @@ const en = {
       twitterUrl: 'Twitter URL',
       newsletterEnabled: 'Newsletter signup enabled',
       saved: 'Settings saved.',
-      onlyAdmin: 'Only admins can change site settings.'
+      onlyAdmin: 'Only admins can change site settings.',
+      uploadsTitle: 'Profile photos',
+      uploadsHint:
+        'The largest profile photo a member may upload. Bigger photos mean slower uploads on a phone connection.',
+      maxProfileImage: 'Maximum photo size (KB)',
+      maxProfileImageHint: (current: string, min: string, max: string) =>
+        `Currently ${current}. Allowed between ${min} and ${max}.`,
+      maxProfileImageInvalid: (min: string, max: string) => `Photo size must be between ${min} and ${max}.`
     }
   },
   landing: {
