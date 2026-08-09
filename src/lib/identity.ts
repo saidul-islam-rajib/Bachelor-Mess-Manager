@@ -1,56 +1,26 @@
 import { isSessionSecretConfigured } from '@/lib/session';
 import { sessionConfig } from '@/config';
 
-/**
- * The cross-application session, shared with the other Team Sober apps.
- *
- * Every app is served from a subdomain of `team-sober.com` and signs this
- * cookie with the same `AUTH_SECRET`, so a cookie set on the parent domain is
- * readable by all of them and any app can verify a session another minted.
- * There are no redirects and no authorisation codes, and one app being down
- * never stops another signing somebody in.
- *
- * This file is the contract. It has to stay byte-compatible with
- * `team-sober/automation/src/shared/identity/identity.ts` — the encoding, the
- * claim names and the subject namespace are all load-bearing across repos.
- * Bachelor Point keeps its own `bp_session` as the authority on its own
- * sessions; this is strictly additional.
- */
-
 export const IDENTITY_COOKIE = 'ts_identity';
 
 export const IDENTITY_ISSUER = 'bachelor-point';
 
-/** Namespaced so a hash of an address here cannot be replayed anywhere else. */
 const SUBJECT_NAMESPACE = 'team-sober.com/identity/v1';
 
 export type IdentityClaims = {
-  /** Stable across every app, derived from the email address. */
   sub: string;
   email: string;
   name: string;
-  /** Which application minted this token. */
   iss: string;
-  /** The issuer's token version, for revoking its own sessions. */
   sv: number;
   iat: number;
   exp: number;
 };
 
-/**
- * Single sign-on is off entirely without a properly configured `AUTH_SECRET`.
- * Falling back to a development key would mean two apps with no configuration
- * silently trusting each other's sessions.
- */
 export function ssoEnabled(): boolean {
   return isSessionSecretConfigured();
 }
 
-/**
- * The `Domain` for the shared cookie — `.team-sober.com` in production. Unset
- * locally, which makes it host-only and keeps a development session from
- * leaking between apps on different ports.
- */
 export function identityCookieDomain(): string {
   return (process.env.SSO_COOKIE_DOMAIN ?? '').trim();
 }
@@ -96,10 +66,6 @@ function signingKey(): Promise<CryptoKey> {
   return cachedKey.key;
 }
 
-/**
- * The same address always yields the same subject, in any app, with no shared
- * table to look it up in. Shaped like a UUID so it reads like an id.
- */
 export async function identityId(email: string): Promise<string> {
   const digest = await crypto.subtle.digest(
     'SHA-256',
@@ -151,14 +117,6 @@ function wellFormed(claims: Partial<IdentityClaims>): boolean {
   );
 }
 
-/**
- * Decode the shared cookie *without* verifying its signature.
- *
- * Only for the middleware gate, which does exactly the same for `bp_session`:
- * cheap enough to run on every request, and synchronous. Letting a request
- * through proves nothing — it only means the request reaches a handler that
- * verifies properly before trusting anything.
- */
 export function readIdentityClaims(token: string | undefined | null): IdentityClaims | null {
   if (!token) return null;
 

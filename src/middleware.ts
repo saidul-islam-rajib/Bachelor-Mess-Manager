@@ -53,10 +53,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // No session of our own, but another Team Sober app may have signed them in.
-  // Let it through so the request reaches a handler that can verify the shared
-  // cookie for real and issue a `bp_session`; without this the redirect below
-  // would bounce them before single sign-on ever got a chance to run.
   if (readIdentityClaims(req.cookies.get(IDENTITY_COOKIE)?.value)) {
     return NextResponse.next();
   }

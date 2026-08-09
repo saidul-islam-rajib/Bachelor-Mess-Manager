@@ -71,11 +71,6 @@ export type SessionCookieUser = {
   tokenVersion: number;
 };
 
-/**
- * The shared cookie the other Team Sober apps read. Set alongside our own
- * session rather than instead of it — `bp_session` stays the authority here,
- * and this is purely so a sibling app can recognise the same person.
- */
 async function setIdentityCookie(res: NextApiResponse, user: SessionCookieUser) {
   if (!ssoEnabled()) return;
 
@@ -103,8 +98,6 @@ export function clearSessionCookie(res: NextApiResponse) {
   appendCookie(res, serializeCookie(SESSION_COOKIE_NAME, '', { maxAge: 0 }));
   appendCookie(res, serializeCookie(LEGACY_SESSION_COOKIE_NAME, '', { maxAge: 0 }));
 
-  // Signing out signs you out of every Team Sober app, which is what a shared
-  // session means. The clear has to carry the same Domain to actually land.
   appendCookie(
     res,
     serializeCookie(IDENTITY_COOKIE, '', { maxAge: 0, ...(domain ? { domain } : {}) })

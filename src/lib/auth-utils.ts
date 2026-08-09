@@ -79,16 +79,6 @@ function toSessionUser(row: SessionUserRow, impersonatedBy?: ImpersonatedBy): Se
   return impersonatedBy ? { ...user, impersonatedBy } : user;
 }
 
-/**
- * Adopt somebody carrying a valid session from a sibling Team Sober app.
- *
- * The address is proven — the cookie is signed with the secret only our own
- * apps hold — so there is no password to check and nothing to email. What it
- * is *not* is an approval: a Bachelor Point account reaches group dues, bills
- * and payments, so a stranger who signed up on the tutorials site lands in the
- * ordinary PENDING queue and waits for an admin, exactly as if they had filled
- * in the signup form here.
- */
 async function adoptFromIdentity(req: NextApiRequest): Promise<SessionUserRow | null> {
   const claims = await readIdentity(readIdentityToken(req));
   if (!claims) return null;
@@ -111,7 +101,6 @@ async function adoptFromIdentity(req: NextApiRequest): Promise<SessionUserRow | 
       }
     });
 
-    // Created, but deliberately not admitted: PENDING is not APPROVED.
     return null;
   }
 
@@ -125,11 +114,9 @@ export async function getRealSessionUser(req: NextApiRequest, res?: NextApiRespo
   const payload = await verifySessionToken(readSessionToken(req));
 
   if (!payload) {
-    // No session of our own. A sibling app may still vouch for them.
     const adopted = await adoptFromIdentity(req);
     if (!adopted) return null;
 
-    // Give them one of ours, so every later request takes the normal path.
     if (res) await setSessionCookie(res, adopted);
 
     return toSessionUser(adopted);
