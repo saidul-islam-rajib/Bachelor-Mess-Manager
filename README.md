@@ -40,6 +40,7 @@ engineering notes behind it:
 | --- | --- |
 | [settlement.md](docs/settlement.md) | How a month's money is worked out, and the balance bugs it fixes |
 | [bills.md](docs/bills.md) | Rent, gas and wifi: how a bill is split and why shares are stored |
+| [bill-collections.md](docs/bill-collections.md) | Which member has paid their share, part payments, and covering someone else |
 | [payments.md](docs/payments.md) | Recording cash from members, and who still owes what |
 | [month-closing.md](docs/month-closing.md) | Freezing a month, carrying balances forward, mid-month departures |
 | [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |

@@ -24,7 +24,15 @@ type MemberRow = {
   isActive: boolean;
 };
 
-type Payment = { id: string; userId: string; userName: string; amount: number; date: string };
+type Payment = {
+  id: string;
+  userId: string;
+  userName: string;
+  amount: number;
+  date: string;
+  billId: string | null;
+  billType: string | null;
+};
 
 type DayRate = { date: string; meals: number; bazar: number; charged: number; rate: number; cost: number };
 
@@ -251,7 +259,12 @@ export default function PaymentsPage() {
                 members={data.members}
                 currentUserId={user?.id}
               />
-              <PaymentLog payments={data.payments} canManage={canManage} onRemove={remove} />
+              <PaymentLog
+                payments={data.payments}
+                canManage={canManage}
+                categoryLabels={data.categoryLabels}
+                onRemove={remove}
+              />
             </>
           )}
         </div>
@@ -930,10 +943,12 @@ function MealRateBreakdown({
 function PaymentLog({
   payments,
   canManage,
+  categoryLabels,
   onRemove
 }: {
   payments: Payment[];
   canManage: boolean;
+  categoryLabels: Record<string, string>;
   onRemove: (id: string) => void;
 }) {
   const total = payments.reduce((sum, p) => sum + p.amount, 0);
@@ -951,7 +966,14 @@ function PaymentLog({
           {payments.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
               <div>
-                <p className="font-medium">{p.userName}</p>
+                <p className="font-medium">
+                  {p.userName}
+                  {p.billId && (
+                    <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                      {categoryLabels[p.billType ?? ''] ?? p.billType} bill
+                    </span>
+                  )}
+                </p>
                 <p className="text-sm text-slate-500">{p.date}</p>
               </div>
               <div className="flex items-center gap-3">

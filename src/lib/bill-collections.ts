@@ -1,0 +1,133 @@
+import { prisma } from '@/lib/prisma';
+import { PAYMENT_STATUS } from '@/lib/constants';
+import { round2 } from '@/lib/month';
+
+const TOLERANCE_PAISA = 1;
+
+const toPaisa = (amount: number) => Math.round(amount * 100);
+const fromPaisa = (paisa: number) => round2(paisa / 100);
+
+export type CollectionRow = {
+  id: string;
+  userId: string;
+  userName: string;
+  amount: number;
+  date: Date;
+};
+
+export type ShareState = {
+  userId: string;
+  userName: string;
+  share: number;
+  paid: number;
+  outstanding: number;
+  advance: number;
+  status: string;
+  collections: { id: string; amount: number; date: Date }[];
+};
+
+export type BillCollectionState = {
+  shares: ShareState[];
+  collected: number;
+  outstanding: number;
+  advance: number;
+  isFullyCollected: boolean;
+  unpaidMemberCount: number;
+};
+
+export function shareStatus(sharePaisa: number, paidPaisa: number): string {
+  if (sharePaisa <= 0) return PAYMENT_STATUS.PAID;
+  if (paidPaisa <= 0) return PAYMENT_STATUS.PENDING;
+  if (paidPaisa >= sharePaisa - TOLERANCE_PAISA) return PAYMENT_STATUS.PAID;
+  return PAYMENT_STATUS.PARTIAL;
+}
+
+export function buildCollectionState(
+  shares: { userId: string; userName: string; amount: number }[],
+  collections: CollectionRow[]
+): BillCollectionState {
+  const paidByUser = new Map<string, number>();
+  const rowsByUser = new Map<string, { id: string; amount: number; date: Date }[]>();
+
+  for (const row of collections) {
+    paidByUser.set(row.userId, (paidByUser.get(row.userId) ?? 0) + toPaisa(row.amount));
+    const list = rowsByUser.get(row.userId) ?? [];
+    list.push({ id: row.id, amount: round2(row.amount), date: row.date });
+    rowsByUser.set(row.userId, list);
+  }
+
+  const seen = new Set(shares.map((s) => s.userId));
+  const rows: ShareState[] = shares.map((share) => {
+    const sharePaisa = toPaisa(share.amount);
+    const paidPaisa = paidByUser.get(share.userId) ?? 0;
+    const outstandingPaisa = Math.max(0, sharePaisa - paidPaisa);
+    const advancePaisa = Math.max(0, paidPaisa - sharePaisa);
+
+    return {
+      userId: share.userId,
+      userName: share.userName,
+      share: round2(share.amount),
+      paid: fromPaisa(paidPaisa),
+      outstanding: fromPaisa(outstandingPaisa),
+      advance: fromPaisa(advancePaisa),
+      status: shareStatus(sharePaisa, paidPaisa),
+      collections: rowsByUser.get(share.userId) ?? []
+    };
+  });
+
+  for (const row of collections) {
+    if (seen.has(row.userId)) continue;
+    seen.add(row.userId);
+
+    const paidPaisa = paidByUser.get(row.userId) ?? 0;
+    rows.push({
+      userId: row.userId,
+      userName: row.userName,
+      share: 0,
+      paid: fromPaisa(paidPaisa),
+      outstanding: 0,
+      advance: fromPaisa(paidPaisa),
+      status: PAYMENT_STATUS.PAID,
+      collections: rowsByUser.get(row.userId) ?? []
+    });
+  }
+
+  const collectedPaisa = collections.reduce((a, row) => a + toPaisa(row.amount), 0);
+  const totalSharePaisa = shares.reduce((a, s) => a + toPaisa(s.amount), 0);
+  const outstandingPaisa = rows.reduce((a, r) => a + toPaisa(r.outstanding), 0);
+
+  return {
+    shares: rows,
+    collected: fromPaisa(collectedPaisa),
+    outstanding: fromPaisa(outstandingPaisa),
+    advance: fromPaisa(rows.reduce((a, r) => a + toPaisa(r.advance), 0)),
+    isFullyCollected: collectedPaisa >= totalSharePaisa - TOLERANCE_PAISA && totalSharePaisa > 0,
+    unpaidMemberCount: rows.filter((r) => toPaisa(r.outstanding) > TOLERANCE_PAISA).length
+  };
+}
+
+export async function collectionsByBill(billIds: string[]): Promise<Map<string, CollectionRow[]>> {
+  const byBill = new Map<string, CollectionRow[]>();
+  if (billIds.length === 0) return byBill;
+
+  const rows = await prisma.paymentStatus.findMany({
+    where: { expenseId: { in: billIds } },
+    include: { user: { select: { name: true } } },
+    orderBy: { dueDate: 'asc' }
+  });
+
+  for (const row of rows) {
+    if (!row.expenseId) continue;
+    const list = byBill.get(row.expenseId) ?? [];
+    list.push({
+      id: row.id,
+      userId: row.userId,
+      userName: row.user.name,
+      amount: row.amountPaid,
+      date: row.dueDate
+    });
+    byBill.set(row.expenseId, list);
+  }
+
+  return byBill;
+}

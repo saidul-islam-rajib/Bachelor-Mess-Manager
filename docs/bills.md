@@ -67,7 +67,16 @@ its shares are written together.
 
 `payerId` records who actually handed over the money — the landlord was paid by
 one person even though the rent is everyone's. `isReceived` marks a bill as
-settled with the outside party; it does not touch what members owe.
+settled with the outside party; it does not touch what members owe. The card
+labels it "Vendor paid" for exactly that reason — who has chipped in is a
+separate question, answered by [bill-collections.md](bill-collections.md).
+
+## Who has paid their share
+
+Each share carries its own paid/unpaid state, so a supervisor can mark that one
+member cleared their ৳360 while three others have not, and that somebody paid
+৳1300 toward an ৳1800 bill to cover the people who had not paid yet. That is
+[bill-collections.md](bill-collections.md).
 
 ## Editing
 

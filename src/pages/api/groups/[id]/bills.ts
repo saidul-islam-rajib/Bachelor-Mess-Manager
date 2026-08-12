@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { BILL_TYPE_FILTER, SPLIT_METHODS } from '@/lib/constants';
+import { buildCollectionState, collectionsByBill } from '@/lib/bill-collections';
 import { computeShares, isBillType } from '@/lib/bills';
 import { categoryLabels, isValidBillType, listCategories } from '@/lib/expense-categories';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
@@ -58,24 +59,53 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       })
     ]);
 
-    const bills = rows.map((row) => ({
-      id: row.id,
-      type: row.type,
-      amount: round2(row.amount),
-      date: utcDateToDay(row.date),
-      note: row.note ?? '',
-      isReceived: row.isReceived,
-      splitMethod: row.splitMethod,
-      payer: row.payer ? { id: row.payer.id, name: row.payer.name } : null,
-      shares: row.shares.map((s) => ({ userId: s.userId, userName: s.user.name, amount: round2(s.amount) }))
-    }));
+    const collections = await collectionsByBill(rows.map((row) => row.id));
+
+    const bills = rows.map((row) => {
+      const state = buildCollectionState(
+        row.shares.map((s) => ({ userId: s.userId, userName: s.user.name, amount: s.amount })),
+        collections.get(row.id) ?? []
+      );
+
+      return {
+        id: row.id,
+        type: row.type,
+        amount: round2(row.amount),
+        date: utcDateToDay(row.date),
+        note: row.note ?? '',
+        isReceived: row.isReceived,
+        splitMethod: row.splitMethod,
+        payer: row.payer ? { id: row.payer.id, name: row.payer.name } : null,
+        shares: state.shares.map((s) => ({
+          userId: s.userId,
+          userName: s.userName,
+          amount: s.share,
+          paid: s.paid,
+          outstanding: s.outstanding,
+          advance: s.advance,
+          status: s.status,
+          collections: s.collections.map((c) => ({
+            id: c.id,
+            amount: c.amount,
+            date: utcDateToDay(c.date)
+          }))
+        })),
+        collected: state.collected,
+        uncollected: state.outstanding,
+        advance: state.advance,
+        isFullyCollected: state.isFullyCollected,
+        unpaidMemberCount: state.unpaidMemberCount
+      };
+    });
 
     const byType: Record<string, number> = {};
     const byMember = new Map<string, number>();
+    const dueByMember = new Map<string, number>();
     for (const bill of bills) {
       byType[bill.type] = round2((byType[bill.type] ?? 0) + bill.amount);
       for (const share of bill.shares) {
         byMember.set(share.userId, round2((byMember.get(share.userId) ?? 0) + share.amount));
+        dueByMember.set(share.userId, round2((dueByMember.get(share.userId) ?? 0) + share.outstanding));
       }
     }
 
@@ -92,8 +122,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         total: round2(bills.reduce((a, b) => a + b.amount, 0)),
         settled: round2(bills.filter((b) => b.isReceived).reduce((a, b) => a + b.amount, 0)),
         outstanding: round2(bills.filter((b) => !b.isReceived).reduce((a, b) => a + b.amount, 0)),
+        collected: round2(bills.reduce((a, b) => a + b.collected, 0)),
+        uncollected: round2(bills.reduce((a, b) => a + b.uncollected, 0)),
         byType,
-        byMember: Object.fromEntries(byMember)
+        byMember: Object.fromEntries(byMember),
+        dueByMember: Object.fromEntries(dueByMember)
       }
     });
   }

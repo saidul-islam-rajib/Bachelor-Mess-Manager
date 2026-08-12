@@ -680,6 +680,7 @@ model PaymentStatus {
 
   @@index([groupId, dueDate])
   @@index([userId, dueDate])
+  @@index([expenseId])
 }
 
 model GroupOrder {

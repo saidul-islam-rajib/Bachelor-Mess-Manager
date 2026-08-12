@@ -44,7 +44,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       buildGroupReport(group, monthKey),
       prisma.paymentStatus.findMany({
         where: { groupId, dueDate: { gte: start, lt: nextStart } },
-        include: { user: { select: { id: true, name: true } } },
+        include: {
+          user: { select: { id: true, name: true } },
+          expense: { select: { id: true, type: true } }
+        },
         orderBy: { dueDate: 'asc' }
       })
     ]);
@@ -54,7 +57,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       userId: p.userId,
       userName: p.user.name,
       amount: round2(p.amountPaid),
-      date: utcDateToDay(p.dueDate)
+      date: utcDateToDay(p.dueDate),
+      billId: p.expense?.id ?? null,
+      billType: p.expense?.type ?? null
     }));
 
     return ok(res, {
