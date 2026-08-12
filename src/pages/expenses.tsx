@@ -4,9 +4,11 @@ import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import { MentionInput, MentionText, type Member } from '@/components/MentionInput';
 import { PageTitle } from '@/components/ui';
+import ChangeHistory, { type HistoryEvent } from '@/components/ChangeHistory';
 import { encodeMentions } from '@/lib/mentions';
 import { todayKey } from '@/lib/month';
 import { formatCurrency, formatDayKey, formatInstant } from '@/lib/format';
+import { strings } from '@/lib/i18n';
 
 type Item = { id: string; name: string; amount: number };
 type ExpenseComment = { id: string; text: string; authorId: string; authorName: string; createdAt: string };
@@ -21,19 +23,6 @@ type Expense = {
   comments: ExpenseComment[];
 };
 
-type HistoryEvent = {
-  id: string;
-  action: string;
-  actorName: string;
-  amountFrom: number | null;
-  amountTo: number | null;
-  dateFrom: string | null;
-  dateTo: string | null;
-  noteFrom: string | null;
-  noteTo: string | null;
-  at: string;
-};
-
 type Draft = { name: string; amount: string };
 
 const taka = formatCurrency;
@@ -45,21 +34,6 @@ function longDate(day: string) {
 
 function when(iso: string) {
   return formatInstant(iso, 'dayMonthTime');
-}
-
-function describe(event: HistoryEvent) {
-  const label = event.noteTo || event.noteFrom || 'a purchase';
-  if (event.action === 'CREATED') return `added ${label} for ${event.amountTo !== null ? taka(event.amountTo) : ''}`;
-  if (event.action === 'DELETED')
-    return `deleted ${label}${event.amountFrom !== null ? ` (${taka(event.amountFrom)})` : ''}`;
-
-  const parts: string[] = [];
-  if (event.amountFrom !== null && event.amountTo !== null) {
-    parts.push(`total ${taka(event.amountFrom)} → ${taka(event.amountTo)}`);
-  }
-  if (event.dateFrom && event.dateTo) parts.push(`date ${event.dateFrom} → ${event.dateTo}`);
-  if (event.noteFrom !== null && event.noteTo !== null) parts.push(`note "${event.noteFrom}" → "${event.noteTo}"`);
-  return `changed ${parts.join(', ')}`;
 }
 
 function itemsOf(expense: Expense): Item[] {
@@ -496,7 +470,11 @@ export default function ExpensesPage() {
             )}
           </div>
 
-          <ChangeHistory history={history} />
+          <ChangeHistory
+            history={history}
+            fallbackLabel={strings.expenses.label}
+            subtitle={strings.history.subtitleExpense}
+          />
         </div>
       )}
     </section>
@@ -744,48 +722,6 @@ function CommentBox({
   );
 }
 
-function ChangeHistory({ history }: { history: HistoryEvent[] }) {
-  const tone: Record<string, string> = {
-    CREATED: 'bg-green-50 text-green-700 ring-green-600/20',
-    UPDATED: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-    DELETED: 'bg-red-50 text-red-700 ring-red-600/20'
-  };
-  const label: Record<string, string> = { CREATED: 'Added', UPDATED: 'Changed', DELETED: 'Deleted' };
-
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">Change history</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Every edit to a grocery price is recorded here so the whole group can see it.
-      </p>
-
-      {history.length === 0 ? (
-        <p className="mt-4 text-slate-500">No changes recorded yet.</p>
-      ) : (
-        <ul className="mt-4 divide-y divide-slate-100">
-          {history.map((event) => (
-            <li key={event.id} className="flex flex-wrap items-start justify-between gap-2 py-3">
-              <div className="min-w-0">
-                <p className="text-sm">
-                  <span className="font-medium">{event.actorName}</span>{' '}
-                  <span className="text-slate-600">{describe(event)}</span>
-                </p>
-                <p className="mt-0.5 text-xs text-slate-400">{when(event.at)}</p>
-              </div>
-              <span
-                className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
-                  tone[event.action] ?? tone.UPDATED
-                }`}
-              >
-                {label[event.action] ?? event.action}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 function EditButton({ onClick }: { onClick: () => void }) {
   return (

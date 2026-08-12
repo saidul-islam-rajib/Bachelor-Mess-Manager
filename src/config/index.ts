@@ -233,6 +233,11 @@ export const paginationConfig = {
   pageSizeOptions: PAGINATION_DEFAULTS.pageSizeOptions
 } as const;
 
+export const historyConfig = {
+  pageSize: readInt('HISTORY_PAGE_SIZE', 50),
+  billPageSize: readInt('HISTORY_BILL_PAGE_SIZE', 20)
+} as const;
+
 export const uiConfig = {
   toastDurationMs: readInt('UI_TOAST_DURATION_MS', UI_DEFAULTS.toastDurationMs),
   toastDedupeWindowMs: readInt('UI_TOAST_DEDUPE_WINDOW_MS', UI_DEFAULTS.toastDedupeWindowMs),

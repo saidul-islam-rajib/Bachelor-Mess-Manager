@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { listExpenseHistory } from '@/lib/expense-history';
+import { historyConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -45,7 +46,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
-  const history = await listExpenseHistory(groupId, monthKey);
+  const expenseId = Array.isArray(req.query.expenseId) ? req.query.expenseId[0] : req.query.expenseId;
+
+  const history = await listExpenseHistory(groupId, {
+    monthKey,
+    expenseId,
+    limit: expenseId ? historyConfig.billPageSize : historyConfig.pageSize
+  });
 
   return ok(res, { history });
 }

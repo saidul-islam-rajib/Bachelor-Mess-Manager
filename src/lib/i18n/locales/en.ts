@@ -632,6 +632,26 @@ const en = {
       modeMonthly: 'One rate for the whole month'
     }
   },
+  history: {
+    title: 'Change history',
+    subtitleExpense: 'Every edit to a grocery price is recorded here so the whole group can see it.',
+    subtitleBill: 'Every edit to this bill is recorded here so the whole group can see it.',
+    empty: 'No changes recorded yet.',
+    unknownActor: 'Someone',
+    actions: {
+      CREATED: 'Added',
+      UPDATED: 'Changed',
+      DELETED: 'Deleted'
+    } as Record<string, string>,
+    added: (label: string, amount: string) => `added ${label}${amount ? ` for ${amount}` : ''}`,
+    deleted: (label: string, amount: string) => `deleted ${label}${amount ? ` (${amount})` : ''}`,
+    changed: (parts: string) => `changed ${parts}`,
+    amountChange: (from: string, to: string) => `total ${from} → ${to}`,
+    dateChange: (from: string, to: string) => `date ${from} → ${to}`,
+    noteChange: (from: string, to: string) => `note "${from}" → "${to}"`,
+    loading: 'Loading history…',
+    failed: 'Could not load the change history.'
+  },
   expenses: {
     title: 'Groceries (Bazar)',
     notFound: 'Expense not found.',
@@ -694,7 +714,11 @@ const en = {
     sharesMismatch: (sum: string, total: string) =>
       `The shares add up to ${sum}, but the bill is ${total}. They must match.`,
     payerNotMember: 'The person who paid must be a member of this group.',
-    label: 'bill'
+    label: 'bill',
+    manageCostTypes: (count: number) => `Manage cost types (${count})`,
+    recordOpen: 'Close',
+    recordCollapsedHint: 'Add rent, gas, electricity or any other fixed cost.',
+    noCostTypes: 'No cost types yet.'
   },
   payments: {
     title: 'Payments',

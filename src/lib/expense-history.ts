@@ -1,5 +1,9 @@
 import { prisma } from '@/lib/prisma';
 import { parseMonth, utcDateToDay } from '@/lib/month';
+import { historyConfig } from '@/config';
+import { strings } from '@/lib/i18n';
+
+const HISTORY_PAGE_SIZE = historyConfig.pageSize;
 
 export const EXPENSE_ACTIONS = {
   CREATED: 'CREATED',
@@ -81,11 +85,21 @@ export async function recordExpenseDeleted(params: {
   });
 }
 
-export async function listExpenseHistory(groupId: string, monthKey?: string, limit = 50) {
-  const { start, nextStart } = parseMonth(monthKey);
+export async function listExpenseHistory(
+  groupId: string,
+  options: { monthKey?: string; expenseId?: string; limit?: number } = {}
+) {
+  const { monthKey, expenseId, limit = HISTORY_PAGE_SIZE } = options;
+
+  const where = expenseId
+    ? { groupId, expenseId }
+    : (() => {
+        const { start, nextStart } = parseMonth(monthKey);
+        return { groupId, expenseDate: { gte: start, lt: nextStart } };
+      })();
 
   const rows = await prisma.expenseHistory.findMany({
-    where: { groupId, expenseDate: { gte: start, lt: nextStart } },
+    where,
     include: { actor: { select: { id: true, name: true } } },
     orderBy: { createdAt: 'desc' },
     take: limit
@@ -94,7 +108,7 @@ export async function listExpenseHistory(groupId: string, monthKey?: string, lim
   return rows.map((r) => ({
     id: r.id,
     action: r.action,
-    actorName: r.actor?.name ?? 'Someone',
+    actorName: r.actor?.name ?? strings.history.unknownActor,
     amountFrom: r.amountFrom,
     amountTo: r.amountTo,
     dateFrom: r.dateFrom ? utcDateToDay(r.dateFrom) : null,

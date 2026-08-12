@@ -3,9 +3,11 @@ import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import { Listbox, PageTitle } from '@/components/ui';
+import { HistoryList, type HistoryEvent } from '@/components/ChangeHistory';
 import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import { todayKey } from '@/lib/month';
 import { formatCurrency, formatDayKey, formatInstant } from '@/lib/format';
+import { strings } from '@/lib/i18n';
 
 type Collection = {
   id: string;
@@ -80,6 +82,25 @@ const taka = formatCurrency;
 
 function longDate(day: string) {
   return formatDayKey(day, 'full');
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
 }
 
 export default function BillsPage() {
@@ -200,6 +221,7 @@ export default function BillsPage() {
   const canManage = data?.canManage ?? false;
   const myShare = data ? (data.totals.byMember[user?.id ?? ''] ?? 0) : 0;
   const myDue = data ? (data.totals.dueByMember[user?.id ?? ''] ?? 0) : 0;
+  const hasBreakdown = Object.values(data?.totals.byType ?? {}).some((amount) => amount > 0);
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
@@ -236,19 +258,31 @@ export default function BillsPage() {
                 />
               </div>
 
-              <Breakdown byType={data.totals.byType} labels={data.categoryLabels} total={data.totals.total} />
+              <div className={`grid gap-4 ${hasBreakdown && canManage ? 'lg:grid-cols-5' : ''}`}>
+                {hasBreakdown && (
+                  <div className={canManage ? 'lg:col-span-3' : ''}>
+                    <Breakdown
+                      byType={data.totals.byType}
+                      labels={data.categoryLabels}
+                      total={data.totals.total}
+                    />
+                  </div>
+                )}
+                {canManage && (
+                  <div className={hasBreakdown ? 'lg:col-span-2' : ''}>
+                    <CategoryManager groupId={groupId} categories={data.categories} onChanged={refresh} />
+                  </div>
+                )}
+              </div>
 
               {canManage && (
-                <>
-                  <CategoryManager groupId={groupId} categories={data.categories} onChanged={refresh} />
-                  <AddBillForm
-                    groupId={groupId}
-                    members={data.members}
-                    categories={data.categories}
-                    month={month}
-                    onSaved={refresh}
-                  />
-                </>
+                <AddBillForm
+                  groupId={groupId}
+                  members={data.members}
+                  categories={data.categories}
+                  month={month}
+                  onSaved={refresh}
+                />
               )}
 
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -268,6 +302,7 @@ export default function BillsPage() {
                         <EditBill
                           key={bill.id}
                           bill={bill}
+                          groupId={groupId}
                           members={data.members}
                           categories={data.categories}
                           onCancel={() => setEditing(null)}
@@ -322,7 +357,7 @@ function Breakdown({
   if (rows.length === 0) return null;
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">Cost breakdown</h2>
       <ul className="mt-4 space-y-3">
         {rows.map((row) => {
@@ -1199,15 +1234,17 @@ function CategoryManager({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-3 text-sm font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50"
+        aria-expanded={false}
+        className="flex h-full w-full items-center justify-between gap-3 rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-3 text-left text-sm font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50"
       >
-        Manage cost types ({categories.length})
+        {strings.bills.manageCostTypes(categories.length)}
+        <Chevron open={false} />
       </button>
     );
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">Cost types</h2>
         <button
@@ -1318,9 +1355,14 @@ function AddBillForm({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-4 text-sm font-medium text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+        aria-expanded={false}
+        className="flex w-full items-center justify-between gap-3 rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-4 text-left hover:border-slate-400 hover:bg-slate-50"
       >
-        + Record a bill
+        <span>
+          <span className="block text-sm font-medium text-slate-700">{strings.bills.recordCta}</span>
+          <span className="mt-0.5 block text-xs text-slate-500">{strings.bills.recordCollapsedHint}</span>
+        </span>
+        <Chevron open={false} />
       </button>
     );
   }
@@ -1331,7 +1373,18 @@ function AddBillForm({
       onSubmit={submit}
       className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
     >
-      <h2 className="text-lg font-semibold">Record a bill</h2>
+      <button
+        type="button"
+        onClick={() => setOpen(false)}
+        aria-expanded
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <h2 className="text-lg font-semibold">{strings.bills.record}</h2>
+        <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+          {strings.bills.recordOpen}
+          <Chevron open />
+        </span>
+      </button>
       {fields}
       <div className="mt-5 flex gap-2">
         <button
@@ -1339,28 +1392,74 @@ function AddBillForm({
           disabled={saving}
           className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
-          {saving ? 'Saving...' : 'Save bill'}
+          {saving ? strings.common.saving : strings.common.save}
         </button>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
         >
-          Cancel
+          {strings.common.cancel}
         </button>
       </div>
     </form>
   );
 }
 
+function BillChangeHistory({ groupId, billId }: { groupId: string; billId: string }) {
+  const toast = useToast();
+  const [history, setHistory] = useState<HistoryEvent[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/groups/${groupId}/expense-history?expenseId=${billId}`);
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error ?? strings.history.failed);
+        if (!cancelled) setHistory(body.history ?? []);
+      } catch (err) {
+        if (!cancelled) {
+          toast.error((err as Error).message);
+          setHistory([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId, billId, toast]);
+
+  return (
+    <div className="mt-5 border-t border-slate-100 pt-4">
+      <h4 className="text-sm font-semibold">{strings.history.title}</h4>
+      <p className="mt-0.5 text-xs text-slate-500">{strings.history.subtitleBill}</p>
+      {loading ? (
+        <p className="mt-3 text-sm text-slate-500">{strings.history.loading}</p>
+      ) : (
+        <HistoryList history={history ?? []} fallbackLabel={strings.bills.label} />
+      )}
+    </div>
+  );
+}
+
 function EditBill({
   bill,
+  groupId,
   members,
   categories,
   onCancel,
   onSaved
 }: {
   bill: Bill;
+  groupId: string;
   members: Member[];
   categories: Category[];
   onCancel: () => void;
@@ -1393,7 +1492,7 @@ function EditBill({
   return (
     <li className="rounded-2xl border border-brand-600 p-4">
       <form onSubmit={submit}>
-        <h3 className="font-semibold">Edit bill</h3>
+        <h3 className="font-semibold">{strings.bills.edit}</h3>
         {fields}
         <div className="mt-5 flex gap-2">
           <button
@@ -1401,17 +1500,18 @@ function EditBill({
             disabled={saving}
             className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
           >
-            {saving ? 'Saving...' : 'Save changes'}
+            {saving ? strings.common.saving : strings.common.saveChanges}
           </button>
           <button
             type="button"
             onClick={onCancel}
             className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
           >
-            Cancel
+            {strings.common.cancel}
           </button>
         </div>
       </form>
+      <BillChangeHistory groupId={groupId} billId={bill.id} />
     </li>
   );
 }
