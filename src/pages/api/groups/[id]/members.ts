@@ -4,6 +4,7 @@ import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { USER_STATUS } from '@/lib/constants';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { activateMembership, canJoinGroup, stayDays } from '@/lib/groups';
+import { listSupervisors, removeCoSupervisor } from '@/lib/supervisors';
 import { normalizeEmail } from '@/lib/validation';
 import { withAudit } from '@/lib/with-audit';
 
@@ -34,14 +35,23 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return forbidden(res, 'You are not a member of this group.');
     }
 
-    const memberships = await prisma.membership.findMany({
-      where: { groupId },
-      include: { user: { select: { id: true, name: true, email: true, phone: true, profileImage: true } } },
-      orderBy: [{ isActive: 'desc' }, { joinedAt: 'asc' }]
-    });
+    const [memberships, supervisors] = await Promise.all([
+      prisma.membership.findMany({
+        where: { groupId },
+        include: { user: { select: { id: true, name: true, email: true, phone: true, profileImage: true } } },
+        orderBy: [{ isActive: 'desc' }, { joinedAt: 'asc' }]
+      }),
+      listSupervisors(groupId)
+    ]);
+
+    const coSupervisorIds = new Set(
+      supervisors.supervisors.filter((s) => !s.isPrimary).map((s) => s.id)
+    );
 
     return ok(res, {
       canManage,
+      isAdmin: requireAdmin(sessionUser),
+      supervisors,
       members: memberships.map((m) => ({
         membershipId: m.id,
         id: m.user.id,
@@ -51,6 +61,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         profileImage: m.user.profileImage,
         isActive: m.isActive,
         isSupervisor: m.userId === group.supervisorId,
+        isCoSupervisor: coSupervisorIds.has(m.userId),
         joinedAt: m.joinedAt.toISOString(),
         leftAt: m.leftAt ? m.leftAt.toISOString() : null,
         stayDays: stayDays(m.joinedAt, m.leftAt)
@@ -156,6 +167,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       where: { id: membership.id },
       data: { isActive: false, leftAt: new Date() }
     });
+
+    const wasCoSupervisor = await prisma.groupSupervisor.findUnique({
+      where: { groupId_userId: { groupId, userId: targetId } },
+      select: { id: true }
+    });
+    if (wasCoSupervisor) {
+      await removeCoSupervisor({ groupId, userId: targetId });
+    }
 
     return ok(res, { removed: true, left: isSelf });
   }

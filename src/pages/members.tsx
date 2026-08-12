@@ -22,12 +22,26 @@ type Member = {
   profileImage: string | null;
   isActive: boolean;
   isSupervisor: boolean;
+  isCoSupervisor: boolean;
   joinedAt: string;
   leftAt: string | null;
   stayDays: number;
 };
 
-type RosterData = { canManage: boolean; members: Member[] };
+type SupervisorState = {
+  supervisors: { id: string; name: string; email: string; isPrimary: boolean }[];
+  maxSupervisors: number;
+  siteMaxSupervisors: number;
+  overriddenByGroup: boolean;
+  canAddMore: boolean;
+};
+
+type RosterData = {
+  canManage: boolean;
+  isAdmin: boolean;
+  members: Member[];
+  supervisors: SupervisorState;
+};
 
 type Tab = 'roster' | 'invites' | 'settings' | 'groups';
 
@@ -168,6 +182,55 @@ export default function MembersPage() {
     }
   }
 
+  async function addCoSupervisor(member: Member) {
+    const accepted = await confirm({
+      title: strings.groups.coSupervisorConfirm(member.name),
+      message: strings.groups.coSupervisorMessage,
+      confirmLabel: strings.groups.coSupervisor
+    });
+    if (!accepted) return;
+
+    setBusy(member.id);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/co-supervisors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: member.id })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? strings.groups.coSupervisorFailed);
+      toast.success(strings.groups.coSupervisorAdded(member.name));
+      await Promise.all([load(), refreshGroups(), refreshUser()]);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  async function dropCoSupervisor(member: Member) {
+    const accepted = await confirm({
+      title: strings.groups.coSupervisorRemoveConfirm(member.name),
+      message: strings.groups.coSupervisorRemoveMessage,
+      confirmLabel: strings.groups.coSupervisorRemove,
+      destructive: true
+    });
+    if (!accepted) return;
+
+    setBusy(member.id);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/co-supervisors?userId=${member.id}`, { method: 'DELETE' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? strings.groups.coSupervisorFailed);
+      toast.success(strings.groups.coSupervisorRemoved(member.name));
+      await Promise.all([load(), refreshGroups(), refreshUser()]);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setBusy('');
+    }
+  }
+
   async function leave() {
     const accepted = await confirm({
       title: strings.members.leaveConfirm(selectedGroup?.name ?? ''),
@@ -276,6 +339,13 @@ export default function MembersPage() {
                 <span className="min-w-0 truncate">
                   {strings.members.supervisedBy(selectedGroup.supervisor.name, selectedGroup.supervisor.email)}
                 </span>
+                {data?.supervisors.supervisors
+                  .filter((s) => !s.isPrimary)
+                  .map((s) => (
+                    <span key={s.id} className="min-w-0 truncate">
+                      2nd supervisor: {s.name} ({s.email})
+                    </span>
+                  ))}
               </div>
             )}
           </Card>
@@ -349,6 +419,11 @@ export default function MembersPage() {
                                   supervisor
                                 </span>
                               )}
+                              {member.isCoSupervisor && (
+                                <span className="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-normal text-white">
+                                  2nd supervisor
+                                </span>
+                              )}
                             </span>
                             <span className="block truncate text-xs text-slate-500">
                               {member.email}
@@ -364,8 +439,28 @@ export default function MembersPage() {
                               {strings.members.since(shortDate(member.joinedAt))}
                             </p>
                           </div>
-                          {canManage && !member.isSupervisor && (
+                          {canManage && member.isCoSupervisor && (
+                            <button
+                              type="button"
+                              onClick={() => dropCoSupervisor(member)}
+                              disabled={busy === member.id}
+                              className="rounded-full border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                            >
+                              {strings.groups.coSupervisorRemove}
+                            </button>
+                          )}
+                          {canManage && !member.isSupervisor && !member.isCoSupervisor && (
                             <>
+                              {data?.supervisors.canAddMore && (
+                                <button
+                                  type="button"
+                                  onClick={() => addCoSupervisor(member)}
+                                  disabled={busy === member.id}
+                                  className="rounded-full border border-brand-200 px-3 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50 disabled:opacity-50"
+                                >
+                                  {strings.groups.coSupervisor}
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => makeSupervisor(member)}

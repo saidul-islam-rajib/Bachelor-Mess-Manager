@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { listExpenseHistory } from '@/lib/expense-history';
 import { withAudit } from '@/lib/with-audit';
@@ -36,7 +36,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Group not found.');
   }
 
-  const isMember = group.supervisorId === sessionUser.id || group.memberships.length > 0;
+  const isMember =
+    group.supervisorId === sessionUser.id ||
+    group.memberships.length > 0 ||
+    (await canManageGroup(groupId, sessionUser));
   if (!isMember && !requireAdmin(sessionUser)) {
     return forbidden(res, 'You are not a member of this group.');
   }

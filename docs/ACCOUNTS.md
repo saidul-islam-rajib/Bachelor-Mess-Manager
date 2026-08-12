@@ -172,6 +172,15 @@ they need to sign in again to pick up the new role.
 
 `npm run seed:db` creates 4 supervisors.
 
+**c) As a second supervisor**
+
+A mess normally has one supervisor. An admin can raise the limit to two — for
+every mess in `/admin` → **Settings**, or for one mess in **Members** → **Group
+settings**. Once raised, that mess's supervisor (or an admin) adds the second
+from **Members** → **Roster** → **Add as second supervisor**. They get the same
+controls inside that mess; the first supervisor stays the one who can hand the
+mess over. See [supervisors.md](supervisors.md).
+
 ### How a supervisor logs in
 
 1. Go to `/auth/login`

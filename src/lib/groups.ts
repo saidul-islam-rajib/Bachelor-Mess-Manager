@@ -130,6 +130,8 @@ export async function transferSupervision(params: {
   const demoted = await prisma.$transaction(async (tx) => {
     await tx.group.update({ where: { id: groupId }, data: { supervisorId: nextSupervisorId } });
 
+    await tx.groupSupervisor.deleteMany({ where: { groupId, userId: nextSupervisorId } });
+
     const outgoingMembership = await tx.membership.findFirst({
       where: { groupId, userId: previous.id },
       select: { id: true, isActive: true }
@@ -153,12 +155,13 @@ export async function transferSupervision(params: {
     const outgoing = await tx.user.findUnique({ where: { id: previous.id }, select: { role: true } });
     if (outgoing?.role !== USER_ROLES.SUPERVISOR) return false;
 
-    const [stillSupervises, activeGroups] = await Promise.all([
+    const [stillSupervises, stillCoSupervises, activeGroups] = await Promise.all([
       tx.group.count({ where: { supervisorId: previous.id } }),
+      tx.groupSupervisor.count({ where: { userId: previous.id } }),
       tx.membership.count({ where: { userId: previous.id, isActive: true } })
     ]);
 
-    if (stillSupervises > 0 || activeGroups > 1) return false;
+    if (stillSupervises > 0 || stillCoSupervises > 0 || activeGroups > 1) return false;
 
     await tx.user.update({ where: { id: previous.id }, data: { role: USER_ROLES.MEMBER } });
     return true;

@@ -2,7 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
-import { invalidateSecurityPolicyCache, uploadPolicyFallback } from '@/lib/settings-service';
+import {
+  invalidateSecurityPolicyCache,
+  SUPERVISORS_PER_GROUP_MAX,
+  SUPERVISORS_PER_GROUP_MIN,
+  uploadPolicyFallback
+} from '@/lib/settings-service';
+import { groupsOverSupervisorCap } from '@/lib/supervisors';
 import { cached, invalidate } from '@/lib/cache';
 import { cacheConfig } from '@/config';
 import { formatBytes } from '@/lib/format';
@@ -122,6 +128,30 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         );
       }
       data.maxProfileImageBytes = bytes;
+    }
+    if (body.maxSupervisorsPerGroup !== undefined) {
+      const cap = Number(body.maxSupervisorsPerGroup);
+      if (
+        !Number.isInteger(cap) ||
+        cap < SUPERVISORS_PER_GROUP_MIN ||
+        cap > SUPERVISORS_PER_GROUP_MAX
+      ) {
+        return badRequest(
+          res,
+          `A mess can have between ${SUPERVISORS_PER_GROUP_MIN} and ${SUPERVISORS_PER_GROUP_MAX} supervisors.`
+        );
+      }
+
+      const over = await groupsOverSupervisorCap(cap);
+      if (over.length > 0) {
+        const names = over.map((group) => `${group.name} (${group.count})`).join(', ');
+        return badRequest(
+          res,
+          `Lowering the limit to ${cap} would leave these messes over it: ${names}. Remove the extra supervisors first, or set a per-mess limit for them.`
+        );
+      }
+
+      data.maxSupervisorsPerGroup = cap;
     }
 
     const settings = await prisma.siteSettings.upsert({

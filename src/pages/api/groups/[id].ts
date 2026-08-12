@@ -1,10 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { GROUP_STATUS_VALUES, MEAL_RATE_MODE_VALUES } from '@/lib/constants';
 import { deleteGroupPermanently } from '@/lib/hard-delete';
-import { getMealEditPolicy } from '@/lib/settings-service';
+import {
+  getMealEditPolicy,
+  SUPERVISORS_PER_GROUP_MAX,
+  SUPERVISORS_PER_GROUP_MIN
+} from '@/lib/settings-service';
+import { listSupervisors } from '@/lib/supervisors';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
@@ -39,11 +44,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!isMember && !requireAdmin(sessionUser)) {
       return forbidden(res, 'You are not a member of this group.');
     }
-    return ok(res, { group, mealEditPolicy: await getMealEditPolicy(groupId) });
+    return ok(res, {
+      group,
+      mealEditPolicy: await getMealEditPolicy(groupId),
+      supervisors: await listSupervisors(groupId)
+    });
   }
 
   if (req.method === 'PATCH') {
-    if (group.supervisorId !== sessionUser.id && !requireAdmin(sessionUser)) {
+    if (!(await canManageGroup(groupId, sessionUser))) {
       return forbidden(res, strings.groups.onlySupervisorOrAdmin);
     }
 
@@ -55,7 +64,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       mealWeightDinner,
       mealRateMode,
       carryForwardEnabled,
-      mealEditRequiresApproval
+      mealEditRequiresApproval,
+      maxSupervisors
     } = req.body as {
       name?: string;
       status?: string;
@@ -65,9 +75,36 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       mealRateMode?: string;
       carryForwardEnabled?: boolean;
       mealEditRequiresApproval?: boolean | null;
+      maxSupervisors?: number | null;
     };
 
     const data: Record<string, unknown> = {};
+    if (maxSupervisors !== undefined) {
+      if (!requireAdmin(sessionUser)) {
+        return forbidden(res, 'Only an admin can change how many supervisors a mess may have.');
+      }
+
+      if (maxSupervisors === null) {
+        data.maxSupervisors = null;
+      } else {
+        const cap = Number(maxSupervisors);
+        if (!Number.isInteger(cap) || cap < SUPERVISORS_PER_GROUP_MIN || cap > SUPERVISORS_PER_GROUP_MAX) {
+          return badRequest(
+            res,
+            `A mess can have between ${SUPERVISORS_PER_GROUP_MIN} and ${SUPERVISORS_PER_GROUP_MAX} supervisors.`
+          );
+        }
+
+        const current = (await listSupervisors(groupId)).supervisors.length;
+        if (current > cap) {
+          return badRequest(
+            res,
+            `This mess already has ${current} supervisors. Remove one before lowering the limit to ${cap}.`
+          );
+        }
+        data.maxSupervisors = cap;
+      }
+    }
     if (typeof name === 'string' && name.trim()) data.name = name.trim();
     if (mealEditRequiresApproval !== undefined) {
       if (mealEditRequiresApproval !== null && typeof mealEditRequiresApproval !== 'boolean') {

@@ -165,7 +165,11 @@ export async function isGroupMember(groupId: string, userId: string) {
   const group = await prisma.group.findFirst({
     where: {
       id: groupId,
-      OR: [{ supervisorId: userId }, { memberships: { some: { userId, isActive: true } } }]
+      OR: [
+        { supervisorId: userId },
+        { coSupervisors: { some: { userId } } },
+        { memberships: { some: { userId, isActive: true } } }
+      ]
     },
     select: { id: true }
   });
@@ -176,8 +180,16 @@ export async function isGroupMember(groupId: string, userId: string) {
 export async function canManageGroup(groupId: string, user: { id: string; role: string } | null) {
   if (!user) return false;
   if (requireAdmin(user)) return true;
-  const group = await prisma.group.findUnique({ where: { id: groupId }, select: { supervisorId: true } });
-  return group?.supervisorId === user.id;
+
+  const group = await prisma.group.findFirst({
+    where: {
+      id: groupId,
+      OR: [{ supervisorId: user.id }, { coSupervisors: { some: { userId: user.id } } }]
+    },
+    select: { id: true }
+  });
+
+  return Boolean(group);
 }
 
 export async function getActiveMembership(userId: string) {

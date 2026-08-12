@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { dayToUtcDate, parseMonth, utcDateToDay } from '@/lib/month';
 import { recordExpenseCreated } from '@/lib/expense-history';
@@ -41,12 +41,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   const admin = requireAdmin(sessionUser);
-  const isMember = group.supervisorId === sessionUser.id || group.memberships.length > 0;
+  const isSupervisor = await canManageGroup(groupId, sessionUser);
+  const isMember = group.supervisorId === sessionUser.id || group.memberships.length > 0 || isSupervisor;
   if (!isMember && !admin) {
     return forbidden(res, 'You are not a member of this group.');
   }
-
-  const isSupervisor = group.supervisorId === sessionUser.id || admin;
 
   if (req.method === 'GET') {
     if (!hasPermission(sessionUser, PERMISSIONS.EXPENSE_VIEW)) {

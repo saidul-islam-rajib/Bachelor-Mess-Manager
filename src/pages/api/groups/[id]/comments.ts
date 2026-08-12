@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { mentionIdsIn } from '@/lib/mentions';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
@@ -35,7 +35,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return forbidden(res, 'You are not a member of this group.');
   }
 
-  const isSupervisor = group.supervisorId === sessionUser.id || admin;
+  const isSupervisor = await canManageGroup(groupId, sessionUser);
 
   if (req.method === 'GET') {
     if (!hasPermission(sessionUser, PERMISSIONS.COMMENT_VIEW)) {

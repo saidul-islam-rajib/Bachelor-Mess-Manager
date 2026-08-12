@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { withAudit } from '@/lib/with-audit';
 
@@ -21,12 +21,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const payment = await prisma.paymentStatus.findUnique({
     where: { id: paymentId },
-    include: { group: { select: { supervisorId: true } } }
+    include: { group: { select: { id: true, supervisorId: true } } }
   });
   if (!payment) {
     return notFound(res, 'Payment not found.');
   }
-  if (payment.group.supervisorId !== sessionUser.id && !requireAdmin(sessionUser)) {
+  if (!(await canManageGroup(payment.group.id, sessionUser))) {
     return forbidden(res, 'Only the group supervisor can remove a payment.');
   }
 

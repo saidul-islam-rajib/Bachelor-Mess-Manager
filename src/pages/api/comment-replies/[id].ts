@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { withAudit } from '@/lib/with-audit';
 
@@ -21,13 +21,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const reply = await prisma.commentReply.findUnique({
     where: { id: replyId },
-    include: { comment: { select: { group: { select: { supervisorId: true } } } } }
+    include: { comment: { select: { group: { select: { id: true, supervisorId: true } } } } }
   });
   if (!reply || reply.deletedAt) {
     return notFound(res, 'Reply not found.');
   }
 
-  const isSupervisor = reply.comment.group.supervisorId === sessionUser.id;
+  const isSupervisor = await canManageGroup(reply.comment.group.id, sessionUser);
   if (!isSupervisor && !requireAdmin(sessionUser)) {
     return forbidden(res, 'Only the group supervisor can delete replies.');
   }

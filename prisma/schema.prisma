@@ -112,6 +112,8 @@ model User {
   groupOrders         GroupOrder[]
   payments            PaymentStatus[]
   groupsSupervised    Group[]             @relation("GroupSupervisor")
+  groupsCoSupervised  GroupSupervisor[]   @relation("GroupCoSupervisor")
+  coSupervisorsAdded  GroupSupervisor[]   @relation("GroupCoSupervisorGrantor")
   invitationsReceived Invitation[]        @relation("InvitationInvitee")
   invitationsSent     Invitation[]        @relation("InvitationInviter")
   roleRequests        RoleRequest[]       @relation("RoleRequestUser")
@@ -241,6 +243,7 @@ model Group {
   mealRateMode             String              @default("MONTHLY")
   carryForwardEnabled      Boolean             @default(true)
   mealEditRequiresApproval Boolean?
+  maxSupervisors           Int?
   createdAt                DateTime            @default(now())
   createdById              String?
   updatedAt                DateTime            @default(now()) @updatedAt
@@ -263,9 +266,35 @@ model Group {
   mealChangeRequests       MealChangeRequest[]
   closings                 MonthClosing[]
   mealPrompts              MealPrompt[]
+  coSupervisors            GroupSupervisor[]
 
   @@index([supervisorId])
   @@index([status])
+}
+
+/// A second supervisor for a group, alongside the primary one on Group.supervisorId.
+/// The primary is deliberately NOT a row here: it stays a required column so every
+/// group always has exactly one owner to hand over, and only the extras are optional.
+/// How many are allowed is SiteSettings.maxSupervisorsPerGroup, overridable per group
+/// by Group.maxSupervisors, and the primary counts towards that total.
+model GroupSupervisor {
+  id            String    @id @default(uuid())
+  group         Group     @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  groupId       String
+  user          User      @relation("GroupCoSupervisor", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  userId        String
+  addedBy       User?     @relation("GroupCoSupervisorGrantor", fields: [addedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  addedById     String?
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([groupId, userId])
+  @@index([userId])
 }
 
 model ExpenseCategory {
@@ -440,6 +469,7 @@ model SiteSettings {
   mealEditWindowMinutes     Int     @default(5)
   mealEditRequiresApproval  Boolean @default(true)
   maxProfileImageBytes      Int     @default(2097152)
+  maxSupervisorsPerGroup    Int     @default(1)
 
   createdAt     DateTime  @default(now())
   createdById   String?

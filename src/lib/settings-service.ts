@@ -55,6 +55,30 @@ const globalForMealEdit = globalThis as unknown as {
   mealEditPolicyCache?: { value: MealEditPolicy; expiresAt: number } | null;
 };
 
+export type SupervisorPolicy = {
+  maxSupervisors: number;
+  siteMaxSupervisors: number;
+  overriddenByGroup: boolean;
+};
+
+export const SUPERVISORS_PER_GROUP_MIN = 1;
+export const SUPERVISORS_PER_GROUP_MAX = 2;
+
+const SUPERVISOR_FALLBACK: SupervisorPolicy = {
+  maxSupervisors: SUPERVISORS_PER_GROUP_MIN,
+  siteMaxSupervisors: SUPERVISORS_PER_GROUP_MIN,
+  overriddenByGroup: false
+};
+
+const globalForSupervisors = globalThis as unknown as {
+  supervisorPolicyCache?: { value: SupervisorPolicy; expiresAt: number } | null;
+};
+
+export function clampSupervisorCap(value: number): number {
+  if (!Number.isFinite(value)) return SUPERVISORS_PER_GROUP_MIN;
+  return Math.min(SUPERVISORS_PER_GROUP_MAX, Math.max(SUPERVISORS_PER_GROUP_MIN, Math.trunc(value)));
+}
+
 export type UploadPolicy = {
   maxImageBytes: number;
   minConfigurableBytes: number;
@@ -103,6 +127,45 @@ export function invalidateSecurityPolicyCache() {
   globalForSettings.securityPolicyCache = null;
   globalForMealEdit.mealEditPolicyCache = null;
   globalForUpload.uploadPolicyCache = null;
+  globalForSupervisors.supervisorPolicyCache = null;
+}
+
+export async function getSupervisorPolicy(groupId?: string): Promise<SupervisorPolicy> {
+  const site = await getSiteSupervisorPolicy();
+  if (!groupId) return site;
+
+  try {
+    const group = await prisma.group.findUnique({
+      where: { id: groupId },
+      select: { maxSupervisors: true }
+    });
+    if (typeof group?.maxSupervisors !== 'number') return site;
+
+    return { ...site, maxSupervisors: clampSupervisorCap(group.maxSupervisors), overriddenByGroup: true };
+  } catch {
+    return site;
+  }
+}
+
+async function getSiteSupervisorPolicy(): Promise<SupervisorPolicy> {
+  const cached = globalForSupervisors.supervisorPolicyCache;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  try {
+    const settings = await getSiteSettings();
+    const cap = clampSupervisorCap(settings.maxSupervisorsPerGroup);
+    const value: SupervisorPolicy = {
+      maxSupervisors: cap,
+      siteMaxSupervisors: cap,
+      overriddenByGroup: false
+    };
+    globalForSupervisors.supervisorPolicyCache = { value, expiresAt: Date.now() + CACHE_TTL_MS };
+    return value;
+  } catch {
+    return SUPERVISOR_FALLBACK;
+  }
 }
 
 export async function getMealEditPolicy(groupId?: string): Promise<MealEditPolicy> {

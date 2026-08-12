@@ -1,8 +1,13 @@
 # Handing over supervision
 
-A group has exactly one supervisor. That is structural, not a rule enforced in
-code: `Group.supervisorId` is a single column, so there is nowhere for a second
-supervisor to live. Handing over is therefore a move, never an addition.
+A group has exactly one **main** supervisor. That is structural: `Group.supervisorId`
+is a single required column, so handing over is a move, never an addition.
+
+A group may also have a **second** supervisor, if an admin has raised the limit.
+That one lives in a separate table and does not touch anything on this page —
+see [supervisors.md](supervisors.md). Handover always moves the main slot, and
+if the incoming person was the second supervisor their extra row is dropped so
+nobody holds both.
 
 ## Where it lives
 

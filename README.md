@@ -43,6 +43,7 @@ engineering notes behind it:
 | [bill-collections.md](docs/bill-collections.md) | Which member has paid their share, part payments, and covering someone else |
 | [payments.md](docs/payments.md) | Recording cash from members, and who still owes what |
 | [month-closing.md](docs/month-closing.md) | Freezing a month, carrying balances forward, mid-month departures |
+| [supervisors.md](docs/supervisors.md) | Allowing a second supervisor per mess, site-wide or for one group |
 | [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |
 | [meal-rate-on-mobile.md](docs/meal-rate-on-mobile.md) | Putting the daily meal rate where phone users can actually see it, and the day window |
 | [time-zones.md](docs/time-zones.md) | Which day counts as "today", day keys vs instants, and where each is formatted |

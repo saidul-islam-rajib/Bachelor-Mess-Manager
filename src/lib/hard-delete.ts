@@ -18,6 +18,7 @@ export async function deleteGroupPermanently(groupId: string): Promise<void> {
     prisma.invitation.deleteMany({ where: { groupId } }),
     prisma.groupOrder.deleteMany({ where: { groupId } }),
     prisma.membership.deleteMany({ where: { groupId } }),
+    prisma.groupSupervisor.deleteMany({ where: { groupId } }),
     prisma.group.delete({ where: { id: groupId } })
   ]);
 }
@@ -50,6 +51,7 @@ export async function deleteUserPermanently(userId: string, email: string): Prom
     prisma.notification.deleteMany({ where: { userId } }),
     prisma.groupOrder.deleteMany({ where: { userId } }),
     prisma.membership.deleteMany({ where: { userId } }),
+    prisma.groupSupervisor.deleteMany({ where: { OR: [{ userId }, { addedById: userId }] } }),
     prisma.passwordToken.deleteMany({ where: { userId } }),
     prisma.userSession.deleteMany({ where: { userId } }),
     prisma.loginAttempt.deleteMany({ where: { email } }),

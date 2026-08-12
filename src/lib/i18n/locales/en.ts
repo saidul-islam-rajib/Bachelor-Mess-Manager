@@ -434,7 +434,7 @@ const en = {
     handover: 'Make supervisor',
     handoverConfirm: (name: string) => `Hand supervision over to ${name}?`,
     handoverMessage:
-      'They take over running this mess straight away. The current supervisor stays in the group as an ordinary member and loses the supervisor controls. A group only ever has one supervisor.',
+      'They take over running this mess straight away. The current supervisor stays in the group as an ordinary member and loses the supervisor controls. A mess only ever has one main supervisor — to give somebody the same controls without handing over, add them as a second supervisor instead.',
     handoverDone: (name: string) => `${name} now supervises this mess.`,
     handoverFailed: 'Could not hand over supervision.',
     handoverOnlySupervisor: 'Only this group\'s supervisor or an admin can hand over supervision.',
@@ -444,7 +444,28 @@ const en = {
     handoverAtLimit: (name: string, max: number) =>
       `${name} already supervises ${max} group${max === 1 ? '' : 's'}, which is the limit.`,
     handoverNotice: (from: string, to: string, group: string) =>
-      `${from} handed supervision of "${group}" over to ${to}.`
+      `${from} handed supervision of "${group}" over to ${to}.`,
+    coSupervisor: 'Add as second supervisor',
+    coSupervisorRemove: 'Remove as supervisor',
+    coSupervisorConfirm: (name: string) => `Make ${name} a second supervisor of this mess?`,
+    coSupervisorMessage:
+      'They get the same controls as the supervisor: recording bazar, bills and payments, approving meal edits and managing members. The current supervisor keeps running the mess and stays the one who can hand it over.',
+    coSupervisorRemoveConfirm: (name: string) => `Remove ${name} as a supervisor of this mess?`,
+    coSupervisorRemoveMessage:
+      'They stay in the mess as an ordinary member and lose the supervisor controls straight away.',
+    coSupervisorAdded: (name: string) => `${name} is now a second supervisor.`,
+    coSupervisorRemoved: (name: string) => `${name} is no longer a supervisor.`,
+    coSupervisorFailed: 'Could not change the supervisors.',
+    coSupervisorAlready: 'They already supervise this mess.',
+    coSupervisorAlreadyPrimary: 'They already supervise this mess.',
+    coSupervisorNotFound: 'That member is not a second supervisor of this mess.',
+    coSupervisorCannotRemovePrimary:
+      'That is the main supervisor. Hand supervision over to somebody else instead of removing them.',
+    coSupervisorOnlySupervisor: 'Only this mess\'s supervisor or an admin can change the supervisors.',
+    coSupervisorAtCap: (max: number) =>
+      `This mess is limited to ${max} supervisor${max === 1 ? '' : 's'}. An admin can raise the limit in Admin → Settings.`,
+    coSupervisorNotice: (actor: string, name: string, group: string) =>
+      `${actor} made ${name} a second supervisor of "${group}".`
   },
   members: {
     title: 'Members',

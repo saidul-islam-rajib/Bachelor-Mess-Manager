@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
+import { useCurrentUser } from '@/components/UserProvider';
 import { Listbox, useConfirm } from '@/components/ui';
-import { GROUP_STATUS, MEAL_RATE_MODES } from '@/lib/constants';
+import { GROUP_STATUS, MEAL_RATE_MODES, USER_ROLES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 
 type GroupDetail = {
@@ -14,6 +15,15 @@ type GroupDetail = {
   mealRateMode: string;
   carryForwardEnabled: boolean;
   mealEditRequiresApproval: boolean | null;
+  maxSupervisors: number | null;
+};
+
+type SupervisorState = {
+  supervisors: { id: string; name: string; email: string; isPrimary: boolean }[];
+  maxSupervisors: number;
+  siteMaxSupervisors: number;
+  overriddenByGroup: boolean;
+  canAddMore: boolean;
 };
 
 type MealEditPolicy = {
@@ -23,6 +33,7 @@ type MealEditPolicy = {
   overriddenByGroup: boolean;
 };
 
+const SUPERVISORS_INHERIT = 'INHERIT';
 const APPROVAL_INHERIT = 'INHERIT';
 const APPROVAL_REQUIRED = 'REQUIRED';
 const APPROVAL_AUTO = 'AUTO';
@@ -30,8 +41,11 @@ const APPROVAL_AUTO = 'AUTO';
 export default function GroupSettings({ groupId, onChanged }: { groupId: string; onChanged?: () => void }) {
   const toast = useToast();
   const confirm = useConfirm();
+  const { user } = useCurrentUser();
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
   const [group, setGroup] = useState<GroupDetail | null>(null);
   const [policy, setPolicy] = useState<MealEditPolicy | null>(null);
+  const [supervisors, setSupervisors] = useState<SupervisorState | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -43,6 +57,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
       const data = await res.json().catch(() => ({}));
       setGroup(res.ok ? data.group : null);
       setPolicy(res.ok ? (data.mealEditPolicy ?? null) : null);
+      setSupervisors(res.ok ? (data.supervisors ?? null) : null);
     } finally {
       setLoading(false);
     }
@@ -236,6 +251,45 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
           {policy?.requiresApproval ? strings.groups.pastMealsRequiredHint : strings.groups.pastMealsAutoHint}
         </p>
       </Card>
+
+      {isAdmin && supervisors && (
+        <Card>
+          <h2 className="text-lg font-semibold">Supervisors for this mess</h2>
+          <p className="mt-1 max-w-2xl text-sm text-slate-500">
+            How many people may run this mess. The main supervisor counts towards the limit, so 2 means one second
+            supervisor alongside them.
+          </p>
+
+          <Listbox
+            className="mt-4 block max-w-md"
+            label="Supervisors allowed"
+            value={group.maxSupervisors === null || group.maxSupervisors === undefined ? SUPERVISORS_INHERIT : String(group.maxSupervisors)}
+            disabled={busy}
+            onChange={(next) =>
+              patch(
+                { maxSupervisors: next === SUPERVISORS_INHERIT ? null : Number(next) },
+                'Supervisor limit updated.',
+                strings.groups.settingFailed
+              )
+            }
+            options={[
+              {
+                value: SUPERVISORS_INHERIT,
+                label: `Follow the site default (${supervisors.siteMaxSupervisors})`
+              },
+              { value: '1', label: '1 — one supervisor' },
+              { value: '2', label: '2 — allow a second supervisor' }
+            ]}
+          />
+
+          <p className="mt-2 max-w-2xl text-xs text-slate-500">
+            Using {supervisors.supervisors.length} of {supervisors.maxSupervisors}.{' '}
+            {supervisors.canAddMore
+              ? 'Add the second supervisor from the Roster tab.'
+              : 'Remove one from the Roster tab before lowering this.'}
+          </p>
+        </Card>
+      )}
     </div>
   );
 }

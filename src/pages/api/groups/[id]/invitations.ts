@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser } from '@/lib/auth-utils';
 import { INVITATION_STATUS, USER_STATUS } from '@/lib/constants';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { canJoinGroup } from '@/lib/groups';
@@ -25,7 +25,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Group not found.');
   }
 
-  const canManage = group.supervisorId === sessionUser.id || requireAdmin(sessionUser);
+  const canManage = await canManageGroup(groupId, sessionUser);
   if (!canManage) {
     return forbidden(res, 'Only this group\'s supervisor can manage invitations.');
   }

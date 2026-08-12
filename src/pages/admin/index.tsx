@@ -1439,6 +1439,7 @@ type SiteSettings = {
   mealEditWindowMinutes: number;
   mealEditRequiresApproval: boolean;
   maxProfileImageBytes: number;
+  maxSupervisorsPerGroup: number;
 };
 
 const BYTES_PER_KB = 1024;
@@ -1547,6 +1548,30 @@ function SettingsPanel() {
         <p className="mt-2 max-w-2xl text-xs text-slate-500">
           This is the starting point for every mess. A supervisor can override it for their own mess in Members →
           Group settings; messes left on &ldquo;follow the site default&rdquo; move with whatever you set here.
+        </p>
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold">Supervisors per mess</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          Every mess has one main supervisor who can hand the mess over. Allowing two lets a second person share the
+          same controls — recording bazar, bills and payments, approving meal edits and managing members — without
+          giving up the first one.
+        </p>
+
+        <Listbox
+          className="mt-4 block max-w-xs"
+          label="Supervisors allowed"
+          value={String(settings.maxSupervisorsPerGroup)}
+          onChange={(next) => update('maxSupervisorsPerGroup', Number(next))}
+          options={[
+            { value: '1', label: '1 — one supervisor per mess' },
+            { value: '2', label: '2 — allow a second supervisor' }
+          ]}
+        />
+        <p className="mt-2 max-w-2xl text-xs text-slate-500">
+          This is the limit for every mess. To allow two in one mess only, leave this at 1 and set the limit for that
+          mess in Groups → Edit. Lowering it is refused while any mess is over the new limit.
         </p>
       </div>
 
