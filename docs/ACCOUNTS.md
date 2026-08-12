@@ -6,13 +6,62 @@ Sign-in page for everyone: **`/auth/login`**
 
 ---
 
-## 1. Administrator
+## 1. Before any of this works: the database
+
+Every command on this page reaches PostgreSQL through Prisma. Prisma validates `DATABASE_URL`
+against the provider declared in `prisma/schema.prisma` **before** it sends a query, so a URL for
+the wrong engine fails on the very first call:
+
+```
+error: Error validating datasource `db`: the URL must start with the protocol
+`postgresql://` or `postgres://`.
+```
+
+That means `.env` still points somewhere else — most often a leftover
+`sqlserver://localhost\SQLEXPRESS;...` from before the move to PostgreSQL (see
+[postgres-migration.md](postgres-migration.md)). It is never a problem with the command or its
+flags: `admin:init`, `user:password`, `db:sync-roles` and `prisma:deploy` all fail identically.
+
+### Get a database running
+
+```bash
+docker compose up -d db
+```
+
+That starts `postgres:16-alpine` on port 5432 with the credentials from `docker-compose.yml`. A
+local PostgreSQL 16 install does just as well — only the URL changes.
+
+### Point `.env` at it
+
+```env
+DATABASE_URL="postgresql://bpadmin:Local_Dev_Password_123@localhost:5432/bachelor_point?schema=public"
+```
+
+### Then run these, in this order
+
+```bash
+npm run prisma:deploy    # create every table
+npm run db:sync-roles    # create the ADMIN, SUPERVISOR and MEMBER role rows
+npm run admin:init       # create the administrator
+```
+
+`npm run setup` chains all three.
+
+The order matters. `admin:init` checks for the `ADMIN` role row first and stops without it:
+
+```
+The ADMIN role is missing. Run "npm run db:sync-roles" first.
+```
+
+---
+
+## 2. Administrator
 
 The administrator is **never** created by the seed. You create it yourself, from environment
 variables or the CLI. Every command below is idempotent — running it twice never produces a
 duplicate.
 
-### Create your own admin and remove the seeded one
+### Create your own admin and take over from the bootstrap one
 
 ```bash
 npm run admin:init -- --replace --email "your.email@gmail.com" --password "YourStrongPassword2026" --name "Saidul Islam Rajib"
@@ -21,18 +70,27 @@ npm run admin:init -- --replace --email "your.email@gmail.com" --password "YourS
 `--replace` creates (or promotes) your account, then demotes every *other* administrator to a
 deactivated member and revokes their sessions.
 
-### Update `.env`
-
-The startup bootstrap only creates an administrator when **none exists**, so a stale
-`ADMIN_EMAIL` will not resurrect an old admin behind your back. Still update it — otherwise
-the variables no longer describe your real admin, and if you ever wipe the database the app
-would recreate the *old* account instead of yours.
+### Update `.env` — this part is not optional
 
 ```env
 ADMIN_EMAIL="your.email@gmail.com"
 ADMIN_PASSWORD="YourStrongPassword2026"
 ADMIN_NAME="Saidul Islam Rajib"
 ```
+
+`--replace` **demotes** the previous administrator; it does not delete the row. On the first
+request it handles, the startup bootstrap looks up the `ADMIN_EMAIL` account by email and, finding
+it in any state other than approved-administrator, promotes it straight back — it does that even
+when another administrator already exists. Leave `ADMIN_EMAIL` pointing at the old address and the
+account you just demoted is an approved admin again within one page load.
+
+To switch the bootstrap off once your own admin is in place:
+
+```env
+ADMIN_BOOTSTRAP_ENABLED="false"
+```
+
+It defaults to on, and it is what makes a fresh deployment usable without shell access.
 
 ### Verify
 
@@ -56,13 +114,18 @@ You should see only your account.
 
 Optional flags: `--name`, `--phone`.
 
-### Deleting the seeded admin outright
+Every value falls back to `.env` when its flag is absent, so bare `npm run admin:init` uses
+`ADMIN_EMAIL` and `ADMIN_PASSWORD`. **`--remove` falls back too** — `npm run admin:init -- --remove`
+with no `--email` targets whatever `ADMIN_EMAIL` names, which is normally your own account. Always
+pass `--email` with `--remove`.
+
+### Deleting the old admin outright
 
 `--replace` demotes. To delete the row instead:
 
 ```bash
 npm run admin:init -- --email "your.email@gmail.com" --password "YourStrongPassword2026"
-npm run admin:init -- --remove --email "admin@bachelorpoint.local"
+npm run admin:init -- --remove --email "old.admin@example.com"
 ```
 
 `--remove` deletes the account when it has no linked records. If it does have linked data, the
@@ -90,7 +153,7 @@ Everything, at `/admin`:
 
 ---
 
-## 2. Supervisor
+## 3. Supervisor
 
 ### How a supervisor account comes to exist
 
@@ -127,7 +190,7 @@ A supervisor is automatically a member of every group they run, so their own mea
 
 ---
 
-## 3. Member
+## 4. Member
 
 ### Registering
 
@@ -168,9 +231,30 @@ current group first (`/members` → **Leave this group**), then accept the new i
 - Edit their profile, photo and password (`/profile`)
 - Leave their group
 
+### Fixing an account from the CLI
+
+`admin:init` only manages administrators. For anyone else — and for an admin whose password you
+want to change without touching their role — use `user:password`:
+
+| Command | What it does |
+| --- | --- |
+| `npm run user:password -- --email x@y.com --password "a-long-password"` | Set the password |
+| `npm run user:password -- --email x@y.com` | Set the password **to the email address itself** |
+| `npm run user:password -- --email x@y.com --approve` | Set the password and approve the account |
+| `npm run user:password -- --email x@y.com --create --name "Full Name"` | Create the account, already approved |
+| `npm run user:password -- --help` | Usage |
+
+`--create` takes `--role MEMBER` (the default) or `--role SUPERVISOR`, plus `--phone`. It refuses
+`--role ADMIN` — administrators go through `admin:init`.
+
+Every reset bumps `tokenVersion` and deletes that user's pending password links, so all their
+sessions and any reset email already in their inbox stop working immediately. Resetting the
+password of a `PENDING` or `REJECTED` account does not let them in; the script says so and tells
+you to add `--approve`.
+
 ---
 
-## 4. Sample accounts (development only)
+## 5. Sample accounts (development only)
 
 `npm run seed:db` creates these. **Every seeded account's password is its own email address.**
 
@@ -195,7 +279,7 @@ The domain and all counts are configurable: `SEED_EMAIL_DOMAIN`, `SEED_SUPERVISO
 
 ---
 
-## 5. Troubleshooting sign-in
+## 6. Troubleshooting sign-in
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
@@ -205,7 +289,10 @@ The domain and all counts are configurable: `SEED_EMAIL_DOMAIN`, `SEED_SUPERVISO
 | "Invalid email or password." | Wrong credentials, or the account does not exist | Deliberately identical for both cases so the login page cannot be used to discover who has an account |
 | Signed out unexpectedly | Password changed, or an admin changed your role or status | Sign in again |
 | Admin forgot their password | — | `npm run admin:init -- --reset-password --email you@x.com --password "NewPassword2026"` |
-| Member forgot their password | No email reset flow exists yet | Admin cannot read passwords; recreate the account, or the member changes it from `/profile` while still signed in |
+| Member forgot their password | — | They use **Forgot password** on `/auth/login`, which emails a reset link. See [password-reset.md](password-reset.md) |
+| Member forgot their password and SMTP is not configured | No mail can go out | Reset it from the CLI: `npm run user:password -- --email them@x.com --password "NewPassword2026"` |
+| Any of these commands fails with `the URL must start with the protocol postgresql://` | `DATABASE_URL` is not a PostgreSQL URL | See [section 1](#1-before-any-of-this-works-the-database) |
+| `The ADMIN role is missing.` | The role rows were never created | `npm run db:sync-roles` |
 
 ### Login attempt limits
 
@@ -215,7 +302,7 @@ the database, so they apply immediately without a restart.
 
 ---
 
-## 6. Mentioning someone in a comment
+## 7. Mentioning someone in a comment
 
 Type `@` in any comment box — in **Mess comments** on `/members`, on a bazar entry in
 **Bazar** (`/expenses`), or in the **Community** room (`/community`). A dropdown of members
@@ -234,7 +321,7 @@ every past mention updates automatically.
 > **Mentions do not send a notification yet.** The bell icon only carries group invitations.
 > A mention highlights the name in the thread; the person finds out by reading it.
 
-## 7. First-ever account on an empty database
+## 8. First-ever account on an empty database
 
 If the database has **no users at all**, the first person to register at `/auth/register`
 automatically becomes an approved administrator and is signed in immediately. This exists so a
