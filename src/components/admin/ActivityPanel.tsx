@@ -423,22 +423,47 @@ export default function ActivityPanel() {
       {report.trend.length > 0 && (
         <Card>
           <CardHeader title={copy.trend.title} description={copy.trend.subtitle} />
-          <div className="mt-5 flex h-28 items-end gap-1 overflow-x-auto">
-            {report.trend.map((point) => (
-              <div
-                key={point.day}
-                className="flex min-w-[10px] flex-1 flex-col justify-end"
-                title={copy.trendTooltip(point.day, point.visits, point.visitors)}
-              >
+          <div className="mt-5 flex items-start gap-3">
+            <div className="flex h-32 w-8 shrink-0 flex-col justify-between text-right text-[10px] tabular-nums text-slate-400">
+              <span>{trendMax}</span>
+              <span>{Math.round(trendMax / 2)}</span>
+              <span>0</span>
+            </div>
+            <div className="flex h-32 flex-1 items-end gap-1 overflow-x-auto border-l border-b border-slate-200 pl-1">
+              {report.trend.map((point) => (
                 <div
-                  className="w-full rounded-t bg-brand-500"
-                  style={{ height: `${Math.max(4, Math.round((point.visits / trendMax) * 100))}%` }}
-                />
-              </div>
-            ))}
+                  key={point.day}
+                  className="group relative flex h-full min-w-[12px] flex-1 flex-col justify-end"
+                  title={copy.trendTooltip(point.day, point.visits, point.visitors)}
+                >
+                  <span className="mb-0.5 text-center text-[10px] font-medium tabular-nums text-slate-500">
+                    {point.visits}
+                  </span>
+                  <div
+                    className="relative w-full rounded-t bg-brand-500/30"
+                    style={{ height: `${Math.max(3, Math.round((point.visits / trendMax) * 100))}%` }}
+                  >
+                    <div
+                      className="absolute bottom-0 w-full rounded-t bg-brand-600"
+                      style={{
+                        height: `${point.visits > 0 ? Math.round((point.visitors / point.visits) * 100) : 0}%`
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="mt-2 flex justify-between text-[10px] text-slate-400">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pl-11 text-[10px] text-slate-400">
             <span>{report.trend[0]?.day}</span>
+            <span className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-brand-600" aria-hidden /> people
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-sm bg-brand-500/30" aria-hidden /> visits
+              </span>
+            </span>
             <span>{report.trend[report.trend.length - 1]?.day}</span>
           </div>
         </Card>
