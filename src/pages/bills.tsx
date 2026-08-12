@@ -348,10 +348,12 @@ function Breakdown({
 const STATUS_STYLES: Record<string, { pill: string; label: string; dot: string }> = {
   PAID: { pill: 'bg-green-100 text-green-800', label: 'Paid', dot: 'bg-green-500' },
   PARTIAL: { pill: 'bg-amber-100 text-amber-800', label: 'Part paid', dot: 'bg-amber-500' },
-  PENDING: { pill: 'bg-rose-100 text-rose-800', label: 'Due', dot: 'bg-rose-500' }
+  PENDING: { pill: 'bg-rose-100 text-rose-800', label: 'Due', dot: 'bg-rose-500' },
+  ADVANCE: { pill: 'bg-teal-100 text-teal-800', label: 'Gets back', dot: 'bg-teal-500' }
 };
 
 function statusOf(share: Share) {
+  if (share.advance > 0) return STATUS_STYLES.ADVANCE;
   return STATUS_STYLES[share.status] ?? STATUS_STYLES.PENDING;
 }
 
@@ -364,6 +366,15 @@ function StatusPill({ share }: { share: Share }) {
       <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} aria-hidden />
       {style.label}
     </span>
+  );
+}
+
+function AdvanceNote({ share }: { share: Share }) {
+  if (share.advance <= 0) return null;
+  return (
+    <p className="mt-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800">
+      Paid {taka(share.advance)} over their share — the mess owes this back, funded by the members still due.
+    </p>
   );
 }
 
@@ -575,17 +586,22 @@ function SplitPanel({
             {rows.map((share) => {
               const isMe = share.userId === currentUserId;
               return (
-                <tr key={share.userId} className={isMe ? 'bg-brand-50/40' : 'bg-white'}>
+                <tr
+                  key={share.userId}
+                  className={
+                    share.advance > 0
+                      ? 'bg-teal-50/60'
+                      : isMe
+                        ? 'bg-brand-50/40'
+                        : 'bg-white'
+                  }
+                >
                   <td className="px-4 py-3 align-top">
                     <div className="font-medium text-slate-900">
                       {share.userName}
                       {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
                     </div>
-                    {share.advance > 0 && (
-                      <p className="mt-0.5 text-xs text-blue-600">
-                        Covered {taka(share.advance)} for others — refunded at settlement
-                      </p>
-                    )}
+                    <AdvanceNote share={share} />
                     <CollectionHistory share={share} canManage={canManage} onReverse={onReverseCollection} />
                   </td>
                   <td className="px-3 py-3 text-right align-top tabular-nums text-slate-600">{taka(share.amount)}</td>
@@ -595,6 +611,11 @@ function SplitPanel({
                   <td className="px-3 py-3 text-right align-top tabular-nums">
                     {share.outstanding > 0 ? (
                       <span className="font-semibold text-rose-600">{taka(share.outstanding)}</span>
+                    ) : share.advance > 0 ? (
+                      <span className="font-semibold text-teal-700">
+                        +{taka(share.advance)}
+                        <span className="block text-[10px] font-normal text-teal-600">gets back</span>
+                      </span>
                     ) : (
                       <span className="text-slate-300">—</span>
                     )}
@@ -633,7 +654,16 @@ function SplitPanel({
             share.amount > 0 ? Math.min(100, Math.round((share.paid / share.amount) * 100)) : 100;
 
           return (
-            <li key={share.userId} className={`p-3.5 ${isMe ? 'bg-brand-50/50' : 'bg-white'}`}>
+            <li
+              key={share.userId}
+              className={`p-3.5 ${
+                share.advance > 0
+                  ? 'border-l-4 border-teal-400 bg-teal-50/60'
+                  : isMe
+                    ? 'bg-brand-50/50'
+                    : 'bg-white'
+              }`}
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate font-semibold text-slate-900">
@@ -658,16 +688,16 @@ function SplitPanel({
                   <span className="shrink-0 text-sm font-bold tabular-nums text-rose-600">
                     {taka(share.outstanding)} due
                   </span>
+                ) : share.advance > 0 ? (
+                  <span className="shrink-0 text-sm font-bold tabular-nums text-teal-700">
+                    +{taka(share.advance)} back
+                  </span>
                 ) : (
                   <span className="shrink-0 text-sm font-semibold text-green-700">Settled</span>
                 )}
               </div>
 
-              {share.advance > 0 && (
-                <p className="mt-1.5 text-xs text-blue-600">
-                  Covered {taka(share.advance)} for others — refunded at settlement
-                </p>
-              )}
+              <AdvanceNote share={share} />
 
               <CollectionHistory share={share} canManage={canManage} onReverse={onReverseCollection} />
 
@@ -801,7 +831,7 @@ function BillRow({
             Collected <span className="font-semibold text-slate-900">{taka(bill.collected)}</span> of{' '}
             {taka(bill.amount)}
           </span>
-          <span className="flex items-center gap-2">
+          <span className="flex flex-wrap items-center gap-2">
             {bill.unpaidMemberCount > 0 ? (
               <span className="font-semibold text-amber-600">
                 {bill.unpaidMemberCount} {bill.unpaidMemberCount === 1 ? 'member owes' : 'members owe'}{' '}
@@ -809,6 +839,11 @@ function BillRow({
               </span>
             ) : (
               <span className="font-semibold text-green-600">Everyone has paid</span>
+            )}
+            {bill.advance > 0 && (
+              <span className="rounded-full bg-teal-100 px-2 py-0.5 font-semibold text-teal-800">
+                {taka(bill.advance)} back to those who overpaid
+              </span>
             )}
             <span className="text-slate-500">
               {isOpen ? 'Hide' : 'Show'} split ({bill.shares.length}) {isOpen ? '▲' : '▼'}

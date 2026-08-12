@@ -37,6 +37,7 @@ import { paginationConfig, uploadConfig } from '@/config';
 import {
   GROUP_STATUS,
   GROUP_STATUS_VALUES,
+  NOTIFICATION_TYPE_VALUES,
   USER_ROLES,
   USER_ROLE_VALUES,
   USER_STATUS,
@@ -1454,6 +1455,8 @@ type SiteSettings = {
   mealEditRequiresApproval: boolean;
   maxProfileImageBytes: number;
   maxSupervisorsPerGroup: number;
+  notificationsEnabled: boolean;
+  disabledNotificationTypes: string;
 };
 
 const BYTES_PER_KB = 1024;
@@ -1467,6 +1470,75 @@ const MEAL_EDIT_WINDOW_OPTIONS = [
   { value: 1440, label: '1 day' },
   { value: 0, label: 'No time limit' }
 ];
+
+function NotificationEventToggles({
+  value,
+  disabled,
+  onChange
+}: {
+  value: string;
+  disabled: boolean;
+  onChange: (next: string) => void;
+}) {
+  const off = new Set(
+    value
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  );
+  const types = NOTIFICATION_TYPE_VALUES;
+  const onCount = types.filter((type) => !off.has(type)).length;
+
+  function toggle(type: string, enabled: boolean) {
+    const next = new Set(off);
+    if (enabled) next.delete(type);
+    else next.add(type);
+    onChange([...next].join(','));
+  }
+
+  return (
+    <div className={`mt-5 rounded-2xl border border-slate-200 bg-white p-4 ${disabled ? 'opacity-50' : ''}`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h4 className="text-sm font-semibold">{strings.admin.settings.notificationsPerEvent}</h4>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {strings.admin.settings.notificationsCount(onCount, types.length)}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange('')}
+            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {strings.admin.settings.notificationsAllOn}
+          </button>
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(types.join(','))}
+            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          >
+            {strings.admin.settings.notificationsAllOff}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-x-6 gap-y-1 sm:grid-cols-2">
+        {types.map((type) => (
+          <Checkbox
+            key={type}
+            label={strings.admin.settings.notificationLabels[type] ?? type}
+            checked={!off.has(type)}
+            disabled={disabled}
+            onChange={(checked) => toggle(type, checked)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 type SupervisorLimitGroup = {
   id: string;
@@ -1739,6 +1811,30 @@ function SettingsPanel() {
         </p>
 
         <SupervisorLimitManager siteMax={settings.maxSupervisorsPerGroup} />
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold">{strings.admin.settings.notificationsTitle}</h3>
+        <p className="mt-1 max-w-3xl text-sm text-slate-600">{strings.admin.settings.notificationsHint}</p>
+
+        <Checkbox
+          className="mt-4"
+          label={strings.admin.settings.notificationsMaster}
+          checked={settings.notificationsEnabled}
+          onChange={(checked) => update('notificationsEnabled', checked)}
+        />
+
+        {!settings.notificationsEnabled && (
+          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {strings.admin.settings.notificationsMasterOff}
+          </p>
+        )}
+
+        <NotificationEventToggles
+          disabled={!settings.notificationsEnabled}
+          value={settings.disabledNotificationTypes}
+          onChange={(next) => update('disabledNotificationTypes', next)}
+        />
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">

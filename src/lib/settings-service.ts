@@ -79,6 +79,47 @@ export function clampSupervisorCap(value: number): number {
   return Math.min(SUPERVISORS_PER_GROUP_MAX, Math.max(SUPERVISORS_PER_GROUP_MIN, Math.trunc(value)));
 }
 
+export type NotificationPolicy = {
+  enabled: boolean;
+  disabledTypes: string[];
+};
+
+const NOTIFICATION_FALLBACK: NotificationPolicy = { enabled: true, disabledTypes: [] };
+
+const globalForNotifications = globalThis as unknown as {
+  notificationPolicyCache?: { value: NotificationPolicy; expiresAt: number } | null;
+};
+
+export function parseDisabledTypes(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  return [...new Set(raw.split(',').map((part) => part.trim()).filter(Boolean))];
+}
+
+export async function getNotificationPolicy(): Promise<NotificationPolicy> {
+  const cached = globalForNotifications.notificationPolicyCache;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  try {
+    const settings = await getSiteSettings();
+    const value: NotificationPolicy = {
+      enabled: settings.notificationsEnabled,
+      disabledTypes: parseDisabledTypes(settings.disabledNotificationTypes)
+    };
+    globalForNotifications.notificationPolicyCache = { value, expiresAt: Date.now() + CACHE_TTL_MS };
+    return value;
+  } catch {
+    return NOTIFICATION_FALLBACK;
+  }
+}
+
+export async function isNotificationEnabled(type: string): Promise<boolean> {
+  const policy = await getNotificationPolicy();
+  if (!policy.enabled) return false;
+  return !policy.disabledTypes.includes(type);
+}
+
 export type UploadPolicy = {
   maxImageBytes: number;
   minConfigurableBytes: number;
@@ -128,6 +169,7 @@ export function invalidateSecurityPolicyCache() {
   globalForMealEdit.mealEditPolicyCache = null;
   globalForUpload.uploadPolicyCache = null;
   globalForSupervisors.supervisorPolicyCache = null;
+  globalForNotifications.notificationPolicyCache = null;
 }
 
 export async function getSupervisorPolicy(groupId?: string): Promise<SupervisorPolicy> {

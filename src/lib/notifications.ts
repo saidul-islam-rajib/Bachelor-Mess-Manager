@@ -5,6 +5,7 @@ import { isMailConfigured, sendMail, type MailMessage } from '@/lib/mailer';
 import { commentsAnchorPath, ROUTES } from '@/lib/routes';
 import { buildPageMeta, type PageMeta } from '@/lib/query';
 import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/constants';
+import { isNotificationEnabled } from '@/lib/settings-service';
 import { escapeHtml } from '@/lib/xss';
 
 const MAX_RECIPIENTS = 10;
@@ -82,6 +83,7 @@ export async function notifyMentions({
       ? (await groupAudience(groupId, { excludeUserId: actorId })).map((recipient) => recipient.id)
       : await eligibleRecipients(groupId, mentioned);
     if (recipients.length === 0) return;
+    if (!(await isNotificationEnabled(type))) return;
 
     await prisma.notification.createMany({
       data: recipients.map((userId) => ({
@@ -202,6 +204,7 @@ function absoluteUrl(link: string): string | null {
 export async function createNotifications(recipientIds: string[], input: NotificationInput): Promise<number> {
   const targets = [...new Set(recipientIds.filter(Boolean))];
   if (targets.length === 0) return 0;
+  if (!(await isNotificationEnabled(input.type))) return 0;
 
   const now = new Date();
   const result = await prisma.notification.createMany({
@@ -225,9 +228,12 @@ export function deliverEmails(recipients: NotificationRecipient[], input: Notifi
 
   const url = absoluteUrl(input.link);
 
-  void Promise.allSettled(
-    recipients.map((recipient) => sendMail({ ...notificationEmail(recipient.name, input, url), to: recipient.email }))
-  );
+  void (async () => {
+    if (!(await isNotificationEnabled(input.type))) return;
+    await Promise.allSettled(
+      recipients.map((recipient) => sendMail({ ...notificationEmail(recipient.name, input, url), to: recipient.email }))
+    );
+  })();
 }
 
 export async function notifyUsers(

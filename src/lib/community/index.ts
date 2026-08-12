@@ -8,6 +8,7 @@ import { strings } from '@/lib/i18n';
 import { mentionIdsIn, mentionsEveryone } from '@/lib/mentions';
 import { createNotifications } from '@/lib/notifications';
 import { ROUTES } from '@/lib/routes';
+import { isNotificationEnabled } from '@/lib/settings-service';
 
 const WELCOME_KEY_PREFIX = 'welcome:';
 const MEMBER_KEY_PREFIX = 'message:';
@@ -187,6 +188,7 @@ export async function notifyMentions(params: { text: string; actorId: string; ca
       take: everyone ? communityConfig.everyoneRecipientCap : communityConfig.mentionRecipientCap
     });
     if (recipients.length === 0) return;
+    if (!(await isNotificationEnabled(NOTIFICATION_TYPES.MENTION_COMMUNITY))) return;
 
     await prisma.notification.createMany({
       data: recipients.map((recipient) => ({

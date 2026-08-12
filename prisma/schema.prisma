@@ -471,6 +471,8 @@ model SiteSettings {
   mealEditRequiresApproval  Boolean @default(true)
   maxProfileImageBytes      Int     @default(2097152)
   maxSupervisorsPerGroup    Int     @default(1)
+  notificationsEnabled      Boolean @default(true)
+  disabledNotificationTypes String  @default("")
 
   createdAt     DateTime  @default(now())
   createdById   String?

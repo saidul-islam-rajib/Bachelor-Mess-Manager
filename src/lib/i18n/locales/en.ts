@@ -1192,7 +1192,33 @@ const en = {
       maxProfileImage: 'Maximum photo size (KB)',
       maxProfileImageHint: (current: string, min: string, max: string) =>
         `Currently ${current}. Allowed between ${min} and ${max}.`,
-      maxProfileImageInvalid: (min: string, max: string) => `Photo size must be between ${min} and ${max}.`
+      maxProfileImageInvalid: (min: string, max: string) => `Photo size must be between ${min} and ${max}.`,
+      notificationsTitle: 'Notifications',
+      notificationsHint:
+        'Which events raise a bell notification and its email. Sign-in, registration and password emails are never affected by these — members can always get into their account.',
+      notificationsMaster: 'Send notifications',
+      notificationsMasterOff:
+        'All notifications are switched off. Nothing below is sent until you turn this back on.',
+      notificationsPerEvent: 'Events',
+      notificationsAllOn: 'Turn all on',
+      notificationsAllOff: 'Turn all off',
+      notificationsCount: (on: number, total: number) => `${on} of ${total} events on`,
+      notificationLabels: {
+        MENTION_COMMENT: 'Someone is mentioned in a mess comment',
+        MENTION_REPLY: 'Someone is mentioned in a reply',
+        MENTION_EXPENSE_COMMENT: 'Someone is mentioned on a bazar entry',
+        MENTION_COMMUNITY: 'Someone is mentioned in the community room',
+        MEAL_CHANGED_BY_SUPERVISOR: 'A supervisor changes a member’s meals',
+        MEAL_CHANGE_REQUESTED: 'A member asks to change a past meal',
+        MEAL_CHANGE_APPROVED: 'A past-meal change is approved',
+        MEAL_CHANGE_REJECTED: 'A past-meal change is rejected',
+        MEAL_PROMPT: 'The daily "are you eating tomorrow?" prompt',
+        MONTH_CLOSED: 'A month is closed',
+        MONTH_REOPENED: 'A closed month is reopened',
+        SUPERVISOR_CHANGED: 'Supervision is handed over or shared',
+        COMMUNITY_ANNOUNCEMENT: 'An admin posts a community announcement',
+        COMMUNITY_WELCOME: 'A new member is welcomed to the community room'
+      } as Record<string, string>
     }
   },
   landing: {

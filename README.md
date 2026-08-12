@@ -44,6 +44,7 @@ engineering notes behind it:
 | [payments.md](docs/payments.md) | Recording cash from members, and who still owes what |
 | [month-closing.md](docs/month-closing.md) | Freezing a month, carrying balances forward, mid-month departures |
 | [supervisors.md](docs/supervisors.md) | Allowing a second supervisor per mess, site-wide or for one group |
+| [notification-settings.md](docs/notification-settings.md) | Switching notifications off per event, and why sign-in mail is untouched |
 | [meal-edit-approvals.md](docs/meal-edit-approvals.md) | Editing past meals: unlock windows, approvals, notifications |
 | [meal-rate-on-mobile.md](docs/meal-rate-on-mobile.md) | Putting the daily meal rate where phone users can actually see it, and the day window |
 | [time-zones.md](docs/time-zones.md) | Which day counts as "today", day keys vs instants, and where each is formatted |

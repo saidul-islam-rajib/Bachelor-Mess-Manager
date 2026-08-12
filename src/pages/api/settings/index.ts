@@ -4,10 +4,12 @@ import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import {
   invalidateSecurityPolicyCache,
+  parseDisabledTypes,
   SUPERVISORS_PER_GROUP_MAX,
   SUPERVISORS_PER_GROUP_MIN,
   uploadPolicyFallback
 } from '@/lib/settings-service';
+import { NOTIFICATION_TYPE_VALUES } from '@/lib/constants';
 import { groupsOverSupervisorCap } from '@/lib/supervisors';
 import { cached, invalidate } from '@/lib/cache';
 import { cacheConfig } from '@/config';
@@ -128,6 +130,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         );
       }
       data.maxProfileImageBytes = bytes;
+    }
+    if (typeof body.notificationsEnabled === 'boolean') {
+      data.notificationsEnabled = body.notificationsEnabled;
+    }
+    if (body.disabledNotificationTypes !== undefined) {
+      const raw = body.disabledNotificationTypes;
+      const list = Array.isArray(raw) ? raw : parseDisabledTypes(String(raw));
+      const cleaned = [...new Set(list.map((value) => String(value).trim()).filter(Boolean))];
+
+      const unknown = cleaned.filter((type) => !NOTIFICATION_TYPE_VALUES.includes(type));
+      if (unknown.length > 0) {
+        return badRequest(res, `Unknown notification type: ${unknown.join(', ')}.`);
+      }
+
+      data.disabledNotificationTypes = cleaned.join(',');
     }
     if (body.maxSupervisorsPerGroup !== undefined) {
       const cap = Number(body.maxSupervisorsPerGroup);

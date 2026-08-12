@@ -70,6 +70,20 @@ down each. The advances and the arrears are equal and opposite by construction:
 `Σ advance == Σ outstanding` on a fully collected bill, which the verification
 asserts.
 
+That is the money the mess owes back, and the three who have not paid are where
+it comes from, so the two are shown as one balance rather than as an incidental
+note. Overpayment gets **its own colour** — teal, distinct from the rose of a
+due, the green of a settled share, the amber of a part payment, and the indigo
+that marks your own row. The row is tinted, the Due column shows `+৳940` with
+"gets back" beneath it instead of a dash, the status reads **Gets back** rather
+than **Paid**, and the bill header carries `৳1080 back to those who overpaid`
+beside `3 members owe ৳1080`.
+
+Teal was chosen over violet after checking the actual swatches: `violet-50` and
+the `brand-50` used for your own row are nearly the same pale blue, so an
+overpaying member and the reader's own row would have looked identical at a
+glance. Teal is unambiguous against all four colours already in play.
+
 ## What this deliberately does not do
 
 **It does not touch the meal rate.** The rate is bazar ÷ meal units. Bill shares
