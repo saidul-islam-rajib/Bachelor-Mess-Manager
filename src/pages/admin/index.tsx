@@ -78,6 +78,8 @@ type AdminGroup = {
   name: string;
   status: string;
   memberCount: number;
+  supervisorCount: number;
+  maxSupervisors: number | null;
   createdAt: string;
   supervisor: { id: string; name: string; email: string };
 };
@@ -944,8 +946,20 @@ function GroupsPanel() {
       header: strings.common.supervisor,
       render: (row) => (
         <div>
-          <p className="text-sm">{row.supervisor.name}</p>
-          <p className="text-xs text-slate-500">{row.supervisor.email}</p>
+          <p className="text-sm">
+            {row.supervisor.name}
+            {row.supervisorCount > 1 && (
+              <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold text-brand-700">
+                +{row.supervisorCount - 1}
+              </span>
+            )}
+          </p>
+          <p className="text-xs text-slate-500">
+            {row.supervisor.email}
+            {row.maxSupervisors !== null && (
+              <span className="ml-1 text-brand-600">· limit {row.maxSupervisors}</span>
+            )}
+          </p>
         </div>
       )
     },
@@ -1454,6 +1468,156 @@ const MEAL_EDIT_WINDOW_OPTIONS = [
   { value: 0, label: 'No time limit' }
 ];
 
+type SupervisorLimitGroup = {
+  id: string;
+  name: string;
+  status: string;
+  maxSupervisors: number | null;
+  effectiveMax: number;
+  overridden: boolean;
+  used: number;
+  canAddMore: boolean;
+  supervisors: { id: string; name: string; isPrimary: boolean }[];
+};
+
+const LIMIT_INHERIT = 'INHERIT';
+
+function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
+  const toast = useToast();
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebouncedValue(searchInput);
+  const [onlyExceptions, setOnlyExceptions] = useState(false);
+  const [groups, setGroups] = useState<SupervisorLimitGroup[]>([]);
+  const [exceptions, setExceptions] = useState(0);
+  const [meta, setMeta] = useState<PageMeta | null>(null);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState('');
+
+  useEffect(() => {
+    setPage(1);
+  }, [search]);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await api.get<{
+        siteMax: number;
+        exceptions: number;
+        groups: SupervisorLimitGroup[];
+        meta: PageMeta;
+      }>('/api/admin/supervisor-limits', { query: { search, page, pageSize: 10 } });
+      setGroups(response.groups);
+      setExceptions(response.exceptions);
+      setMeta(response.meta);
+    } catch (error) {
+      toast.error(errorMessage(error, 'Could not load the per-mess supervisor limits.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [search, page, toast]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function setLimit(group: SupervisorLimitGroup, value: string) {
+    setBusy(group.id);
+    try {
+      await api.patch(`/api/groups/${group.id}`, {
+        maxSupervisors: value === LIMIT_INHERIT ? null : Number(value)
+      });
+      toast.success(
+        value === LIMIT_INHERIT
+          ? `${group.name} now follows the site default.`
+          : `${group.name} may have ${value} supervisor${value === '1' ? '' : 's'}.`
+      );
+      await load();
+    } catch (error) {
+      toast.error(errorMessage(error, 'Could not change that limit.'));
+    } finally {
+      setBusy('');
+    }
+  }
+
+  const visible = onlyExceptions ? groups.filter((group) => group.overridden) : groups;
+
+  return (
+    <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h4 className="text-sm font-semibold">Limits for individual messes</h4>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {exceptions === 0
+              ? `Every mess follows the default of ${siteMax}.`
+              : `${exceptions} ${exceptions === 1 ? 'mess has' : 'messes have'} their own limit; the rest follow the default of ${siteMax}.`}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            value={searchInput}
+            onChange={setSearchInput}
+            placeholder="Find a mess"
+            className="w-48"
+          />
+          <Checkbox
+            label="Only exceptions"
+            checked={onlyExceptions}
+            onChange={setOnlyExceptions}
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <p className="mt-4 text-sm text-slate-500">Loading messes…</p>
+      ) : visible.length === 0 ? (
+        <p className="mt-4 text-sm text-slate-500">
+          {onlyExceptions ? 'No mess has its own limit yet.' : 'No messes match that search.'}
+        </p>
+      ) : (
+        <ul className="mt-4 divide-y divide-slate-100">
+          {visible.map((group) => (
+            <li key={group.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  {group.name}
+                  {group.overridden && (
+                    <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-700">
+                      custom
+                    </span>
+                  )}
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  Using {group.used} of {group.effectiveMax} ·{' '}
+                  {group.supervisors.map((s) => s.name).join(', ')}
+                </p>
+              </div>
+              <Listbox
+                className="w-56"
+                label=""
+                value={group.maxSupervisors === null ? LIMIT_INHERIT : String(group.maxSupervisors)}
+                disabled={busy === group.id}
+                onChange={(next) => setLimit(group, next)}
+                options={[
+                  { value: LIMIT_INHERIT, label: `Site default (${siteMax})` },
+                  { value: '1', label: '1 supervisor' },
+                  { value: '2', label: '2 supervisors' }
+                ]}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {meta && meta.totalPages > 1 && !onlyExceptions && (
+        <div className="mt-3">
+          <Pagination meta={meta} onPageChange={setPage} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 function SettingsPanel() {
   const toast = useToast();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -1570,9 +1734,11 @@ function SettingsPanel() {
           ]}
         />
         <p className="mt-2 max-w-2xl text-xs text-slate-500">
-          This is the limit for every mess. To allow two in one mess only, leave this at 1 and set the limit for that
-          mess in Groups → Edit. Lowering it is refused while any mess is over the new limit.
+          This is the starting point for every mess. Below you can give individual messes a different limit — the
+          default applies to every mess you do not list. Lowering a limit is refused while a mess is over it.
         </p>
+
+        <SupervisorLimitManager siteMax={settings.maxSupervisorsPerGroup} />
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">

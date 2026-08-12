@@ -58,7 +58,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         where,
         include: {
           supervisor: { select: { id: true, name: true, email: true } },
-          _count: { select: { memberships: { where: { isActive: true } } } }
+          _count: { select: { memberships: { where: { isActive: true } }, coSupervisors: true } }
         },
         orderBy: { [sortBy]: sortDir },
         ...(paginated ? { skip, take } : {})
@@ -98,6 +98,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         supervisor: group.supervisor,
         status: group.status,
         memberCount: group._count.memberships,
+        supervisorCount: 1 + group._count.coSupervisors,
+        maxSupervisors: group.maxSupervisors,
         createdAt: group.createdAt.toISOString()
       })),
       meta: buildPageMeta(page, pageSize, total),

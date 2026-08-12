@@ -32,7 +32,33 @@ Two settings, the same shape as past-meal approval:
 | Where | Column | Meaning |
 | --- | --- | --- |
 | Admin → Settings | `SiteSettings.maxSupervisorsPerGroup` | The default for every mess. Ships as `1`. |
-| Members → Group settings | `Group.maxSupervisors` | Null follows the site default; a number overrides it for that mess alone. |
+| Admin → Settings → *Limits for individual messes* | `Group.maxSupervisors` | Null follows the site default; a number overrides it for that mess alone. |
+| Members → Group settings | `Group.maxSupervisors` | The same override, for an admin already looking at one mess. |
+
+The exception list sits directly under the default, because the decision is one
+decision: *this is the rule, and these messes are different*. Splitting it across
+two screens would have meant an admin who wants two supervisors in two of eleven
+messes had to visit each mess in turn and remember which ones they had done.
+
+It reads as a row per mess — name, who currently supervises it, "using 1 of 2" —
+with a three-way control: **Site default (n)**, **1 supervisor**, **2
+supervisors**. Changes save on selection, one mess at a time, so there is no
+half-applied state and no Save button to forget. A **custom** tag marks the
+exceptions, an **Only exceptions** filter shows just them, and the header counts
+them, so "which messes did I change?" is answerable at a glance rather than by
+scrolling. The list is searchable and paged for a site with many messes.
+
+The override works in both directions: with the default at 2, setting a mess to
+1 pins that mess to a single supervisor.
+
+`GET /api/admin/supervisor-limits` feeds the list — admin only, returning each
+mess's own limit, its effective limit, how many seats are used and who holds
+them. Writes reuse `PATCH /api/groups/[id]`, so the cap validation lives in one
+place regardless of which screen made the change.
+
+The admin **Groups** tab also shows the state without opening anything: a `+1`
+chip beside a supervisor's name when a mess has a second one, and `· limit 2`
+when that mess carries its own limit.
 
 `getSupervisorPolicy(groupId)` in `src/lib/settings-service.ts` resolves the two,
 cached for 30 seconds like its neighbours. The ceiling is `2`, enforced in one
@@ -101,3 +127,11 @@ admin-only limit change, an ordinary member being refused entirely, both the
 site-wide and per-mess limits refusing to drop below what is in use, removal
 demoting the role back, and the main supervisor being unremovable through this
 route.
+
+A second run covers the exception list itself, 21 invariants over a real
+eleven-mess site: every mess starting at the default, two of them raised to 2
+while **the other nine stay at 1**, the site default staying at 1 throughout,
+the exception count and the custom flags, the raised mess accepting a second
+supervisor while a default one refuses, search narrowing the list, lowering
+refused while the seat is occupied and allowed once freed, and raising the site
+default covering every mess without needing any exception at all.
