@@ -108,9 +108,33 @@ exceed the member's share — that is how somebody fronts money for the group.
 who clears an August bill in September is credited in September and carries the
 August due forward, which is the honest record of what happened.
 
-Deleting a collection is a real delete, not a reversal entry. It is there for
-mistyping, and the guard checks the row actually belongs to that bill so one
-bill's undo cannot remove another's money.
+## The ledger is append-only
+
+**No entry is ever edited or deleted — by anybody, supervisor or member.** There
+is no route that mutates or removes a `PaymentStatus` row, so there is no way to
+quietly change what the record says happened.
+
+A mistake is corrected the way a ledger corrects one: by writing a second row
+that reverses the first. The correction carries the negative amount and a
+`reversalOfId` pointing back at the original. Both lines stay on screen — the
+original struck through and marked "reversed", the correction shown as a
+negative — so the history reads as *this was entered, then corrected*, never as
+if the first entry had not happened.
+
+That matters here more than in most software. The thing a mess argues about is
+whether somebody paid, and a supervisor who could silently delete a payment
+record is exactly the thing members would have to take on trust. Now they do
+not have to.
+
+`DELETE /api/bills/[id]/collections?collectionId=…` therefore *reverses*; it
+does not delete. The guards: the entry must belong to that bill, an entry can be
+reversed only once, and a correction cannot itself be reversed. The same rule
+and the same helper cover the general payments on `/payments`.
+
+Because a reversal is just another row with a negative `amountPaid`, the
+settlement needs no special case: the credit nets to zero, the member's due goes
+back to what it was, and the totals stay consistent by arithmetic rather than by
+a flag anybody has to remember to check.
 
 ## At month closing
 
@@ -128,11 +152,47 @@ collections rather than deleting them (`onDelete: SetNull`), so money a member
 genuinely handed over never disappears from their balance because a bill was
 tidied up.
 
+## The split panel
+
+Collapsed by default — a month of bills should read as a list, not a wall.
+
+Opening one keeps it open. It closes when you collapse it, click outside the
+card, or press Escape; **it does not close when you record a payment**, because
+the whole point of opening it is to work down the members one at a time. That
+took two fixes: the open/closed state lives on the page rather than inside the
+row, so it survives a re-render, and refreshing after a payment no longer blanks
+the list back to "Loading bills…" — which was unmounting every row and losing
+their state. Scrolling deliberately does not close it, since on a phone scrolling
+is how you reach the rest of the list.
+
+**Desktop** gets a real table: member, share, paid, due, status, and the record
+control, right-aligned numbers in tabular figures so columns line up and a wrong
+number is visible at a glance.
+
+**Mobile** gets one card per member instead of a squeezed table — name and status
+on the first line, a progress bar with the outstanding amount beside it on the
+second, and full-width tap targets. Rows are ordered with **you first**, then
+whoever owes the most, so the two things a member opens the app for are the two
+things at the top.
+
 ## Verified
 
 The `/bills` API returns per-member `paid`, `outstanding`, `advance` and
-`status`, and the run covering the ৳1800 case above checks 32 invariants: the
-split, both advances, the three arrears, `Σ advance == Σ outstanding`, a partial
-payment moving to `PARTIAL`, **Mark paid** settling exactly the remainder and
-refusing a second time, a member getting 403, undo restoring the debt, and the
-non-payer's ৳360 arriving in their settlement due while the meal rate stays put.
+`status`. Two runs cover it.
+
+The ৳1800 case above, 32 invariants: the split, both advances, the three
+arrears, `Σ advance == Σ outstanding`, a partial payment moving to `PARTIAL`,
+**Mark paid** settling exactly the remainder and refusing a second time, a member
+getting 403, a reversal restoring the debt, and the non-payer's ৳360 arriving in
+their settlement due while the meal rate stays put.
+
+The ledger, 20 invariants: the entry recording who entered it and when, the
+**original surviving a reversal**, the correction being appended with the
+negative amount, net paid returning to zero and the due restored in full,
+reversing twice refused, a correction being unreversable, a member refused
+outright, and the same behaviour on general payments including the settlement
+credit cancelling.
+
+`npm test` is unchanged at 209/216 — the 7 failures are pre-existing
+date-rollover flakes in the meal suites, identical on a clean checkout.
+`npm run build` and `npm run lint` are clean.

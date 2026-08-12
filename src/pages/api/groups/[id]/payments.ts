@@ -46,9 +46,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         where: { groupId, dueDate: { gte: start, lt: nextStart } },
         include: {
           user: { select: { id: true, name: true } },
-          expense: { select: { id: true, type: true } }
+          expense: { select: { id: true, type: true } },
+          reversedBy: { select: { id: true } }
         },
-        orderBy: { dueDate: 'asc' }
+        orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }]
       })
     ]);
 
@@ -59,7 +60,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       amount: round2(p.amountPaid),
       date: utcDateToDay(p.dueDate),
       billId: p.expense?.id ?? null,
-      billType: p.expense?.type ?? null
+      billType: p.expense?.type ?? null,
+      isReversal: Boolean(p.reversalOfId),
+      isReversed: Boolean(p.reversedBy)
     }));
 
     return ok(res, {

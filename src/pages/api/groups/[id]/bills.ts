@@ -86,8 +86,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           status: s.status,
           collections: s.collections.map((c) => ({
             id: c.id,
-            amount: c.amount,
-            date: utcDateToDay(c.date)
+            amount: round2(c.amount),
+            date: utcDateToDay(c.date),
+            recordedAt: c.recordedAt.toISOString(),
+            recordedByName: c.recordedByName,
+            isReversal: Boolean(c.reversalOfId),
+            isReversed: c.isReversed
           }))
         })),
         collected: state.collected,

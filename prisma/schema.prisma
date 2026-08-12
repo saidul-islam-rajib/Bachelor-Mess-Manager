@@ -111,6 +111,7 @@ model User {
   commentReplies      CommentReply[]      @relation("CommentReplyAuthor")
   groupOrders         GroupOrder[]
   payments            PaymentStatus[]
+  paymentsRecorded    PaymentStatus[]     @relation("PaymentRecorder")
   groupsSupervised    Group[]             @relation("GroupSupervisor")
   groupsCoSupervised  GroupSupervisor[]   @relation("GroupCoSupervisor")
   coSupervisorsAdded  GroupSupervisor[]   @relation("GroupCoSupervisorGrantor")
@@ -689,15 +690,20 @@ model ExpenseComment {
 }
 
 model PaymentStatus {
-  id            String        @id @default(uuid())
-  user          User          @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String          @id @default(uuid())
+  user          User            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userId        String
-  group         Group         @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group         Group           @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
-  expense       ExpenseEntry? @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  expense       ExpenseEntry?   @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   expenseId     String?
+  reversalOf    PaymentStatus?  @relation("PaymentReversal", fields: [reversalOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reversalOfId  String?         @unique
+  reversedBy    PaymentStatus?  @relation("PaymentReversal")
+  recordedBy    User?           @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recordedById  String?
   amountDue     Float
-  amountPaid    Float         @default(0)
+  amountPaid    Float           @default(0)
   status        String
   dueDate       DateTime
   createdAt     DateTime      @default(now())

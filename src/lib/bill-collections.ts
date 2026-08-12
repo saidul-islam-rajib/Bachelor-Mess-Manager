@@ -13,6 +13,20 @@ export type CollectionRow = {
   userName: string;
   amount: number;
   date: Date;
+  recordedAt: Date;
+  recordedByName: string | null;
+  reversalOfId: string | null;
+  isReversed: boolean;
+};
+
+export type CollectionEntry = {
+  id: string;
+  amount: number;
+  date: string;
+  recordedAt: string;
+  recordedByName: string | null;
+  isReversal: boolean;
+  isReversed: boolean;
 };
 
 export type ShareState = {
@@ -23,7 +37,7 @@ export type ShareState = {
   outstanding: number;
   advance: number;
   status: string;
-  collections: { id: string; amount: number; date: Date }[];
+  collections: CollectionRow[];
 };
 
 export type BillCollectionState = {
@@ -47,12 +61,12 @@ export function buildCollectionState(
   collections: CollectionRow[]
 ): BillCollectionState {
   const paidByUser = new Map<string, number>();
-  const rowsByUser = new Map<string, { id: string; amount: number; date: Date }[]>();
+  const rowsByUser = new Map<string, CollectionRow[]>();
 
   for (const row of collections) {
     paidByUser.set(row.userId, (paidByUser.get(row.userId) ?? 0) + toPaisa(row.amount));
     const list = rowsByUser.get(row.userId) ?? [];
-    list.push({ id: row.id, amount: round2(row.amount), date: row.date });
+    list.push(row);
     rowsByUser.set(row.userId, list);
   }
 
@@ -106,14 +120,65 @@ export function buildCollectionState(
   };
 }
 
+export type ReversalResult =
+  | { ok: true; amount: number; userId: string }
+  | { ok: false; error: string };
+
+/// The ledger is append-only. Correcting a mistake writes an opposite row rather
+/// than removing the original, so both the entry and the correction stay visible.
+export async function reversePayment(params: {
+  paymentId: string;
+  actorId: string;
+  groupId?: string;
+}): Promise<ReversalResult> {
+  const { paymentId, actorId, groupId } = params;
+
+  const original = await prisma.paymentStatus.findUnique({
+    where: { id: paymentId },
+    include: { reversedBy: { select: { id: true } } }
+  });
+
+  if (!original) return { ok: false, error: 'That entry does not exist.' };
+  if (groupId && original.groupId !== groupId) {
+    return { ok: false, error: 'That entry belongs to another mess.' };
+  }
+  if (original.reversalOfId) {
+    return { ok: false, error: 'That entry is already a correction, so it cannot be reversed again.' };
+  }
+  if (original.reversedBy) {
+    return { ok: false, error: 'That entry has already been reversed.' };
+  }
+
+  await prisma.paymentStatus.create({
+    data: {
+      userId: original.userId,
+      groupId: original.groupId,
+      expenseId: original.expenseId,
+      reversalOfId: original.id,
+      recordedById: actorId,
+      amountDue: original.amountDue,
+      amountPaid: -original.amountPaid,
+      status: PAYMENT_STATUS.REFUND,
+      dueDate: original.dueDate,
+      publishedAt: new Date()
+    }
+  });
+
+  return { ok: true, amount: round2(original.amountPaid), userId: original.userId };
+}
+
 export async function collectionsByBill(billIds: string[]): Promise<Map<string, CollectionRow[]>> {
   const byBill = new Map<string, CollectionRow[]>();
   if (billIds.length === 0) return byBill;
 
   const rows = await prisma.paymentStatus.findMany({
     where: { expenseId: { in: billIds } },
-    include: { user: { select: { name: true } } },
-    orderBy: { dueDate: 'asc' }
+    include: {
+      user: { select: { name: true } },
+      recordedBy: { select: { name: true } },
+      reversedBy: { select: { id: true } }
+    },
+    orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }]
   });
 
   for (const row of rows) {
@@ -124,7 +189,11 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
       userId: row.userId,
       userName: row.user.name,
       amount: row.amountPaid,
-      date: row.dueDate
+      date: row.dueDate,
+      recordedAt: row.createdAt,
+      recordedByName: row.recordedBy?.name ?? null,
+      reversalOfId: row.reversalOfId,
+      isReversed: Boolean(row.reversedBy)
     });
     byBill.set(row.expenseId, list);
   }

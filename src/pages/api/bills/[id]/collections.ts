@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember } from '@/lib/auth-utils';
-import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { EXPENSE_TYPES, PAYMENT_STATUS } from '@/lib/constants';
-import { buildCollectionState, collectionsByBill, shareStatus } from '@/lib/bill-collections';
+import { buildCollectionState, collectionsByBill, reversePayment, shareStatus } from '@/lib/bill-collections';
 import { dayToUtcDate, round2, todayKey, utcDateToDay } from '@/lib/month';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -51,16 +51,24 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       ? req.query.collectionId[0]
       : req.query.collectionId;
     if (!collectionId) {
-      return badRequest(res, 'Which payment should be removed?');
+      return badRequest(res, 'Which entry should be reversed?');
     }
 
     const existing = await prisma.paymentStatus.findUnique({ where: { id: collectionId } });
     if (!existing || existing.expenseId !== billId) {
-      return notFound(res, 'That payment is not recorded against this bill.');
+      return notFound(res, 'That entry is not recorded against this bill.');
     }
 
-    await prisma.paymentStatus.delete({ where: { id: collectionId } });
-    return ok(res, { deleted: true });
+    const reversed = await reversePayment({
+      paymentId: collectionId,
+      actorId: sessionUser.id,
+      groupId: bill.groupId
+    });
+    if (!reversed.ok) {
+      return conflict(res, reversed.error);
+    }
+
+    return ok(res, { reversed: true, amount: reversed.amount });
   }
 
   const { userId, amount, date, settle } = req.body as Record<string, unknown>;
@@ -104,6 +112,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       userId,
       groupId: bill.groupId,
       expenseId: billId,
+      recordedById: sessionUser.id,
       amountDue: owed,
       amountPaid: paid,
       status: owed > 0 ? shareStatus(Math.round(owed * 100), Math.round(paidAfter * 100)) : PAYMENT_STATUS.PAID,
@@ -120,7 +129,11 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       userId: collection.userId,
       userName: collection.user.name,
       amount: collection.amountPaid,
-      date: collection.dueDate
+      date: collection.dueDate,
+      recordedAt: collection.createdAt,
+      recordedByName: sessionUser.name,
+      reversalOfId: null,
+      isReversed: false
     }
   ]);
 

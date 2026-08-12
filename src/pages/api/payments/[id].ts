@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser } from '@/lib/auth-utils';
-import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { reversePayment } from '@/lib/bill-collections';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -27,11 +28,19 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Payment not found.');
   }
   if (!(await canManageGroup(payment.group.id, sessionUser))) {
-    return forbidden(res, 'Only the group supervisor can remove a payment.');
+    return forbidden(res, 'Only the group supervisor can reverse a payment.');
   }
 
-  await prisma.paymentStatus.delete({ where: { id: paymentId } });
-  return ok(res, { deleted: true });
+  const reversed = await reversePayment({
+    paymentId,
+    actorId: sessionUser.id,
+    groupId: payment.groupId
+  });
+  if (!reversed.ok) {
+    return conflict(res, reversed.error);
+  }
+
+  return ok(res, { reversed: true, amount: reversed.amount });
 }
 
 export default withAudit(handler);

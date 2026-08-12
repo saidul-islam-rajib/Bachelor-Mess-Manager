@@ -32,6 +32,8 @@ type Payment = {
   date: string;
   billId: string | null;
   billType: string | null;
+  isReversal: boolean;
+  isReversed: boolean;
 };
 
 type DayRate = { date: string; meals: number; bazar: number; charged: number; rate: number; cost: number };
@@ -132,11 +134,18 @@ export default function PaymentsPage() {
   }
 
   async function remove(id: string) {
+    if (
+      !window.confirm(
+        'Reverse this payment?\n\nThe original entry stays in the history and a matching correction is added beside it. Nothing is erased.'
+      )
+    ) {
+      return;
+    }
     try {
       const res = await fetch(`/api/payments/${id}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not remove payment.');
-      toast.success('Payment removed.');
+      if (!res.ok) throw new Error(body?.error ?? 'Could not reverse that payment.');
+      toast.success('Payment reversed. The original is kept in the history.');
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -962,34 +971,54 @@ function PaymentLog({
       {payments.length === 0 ? (
         <p className="mt-4 text-slate-500">No payments recorded this month.</p>
       ) : (
+        <>
         <ul className="mt-4 divide-y divide-slate-100">
           {payments.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-              <div>
-                <p className="font-medium">
+              <div className="min-w-0">
+                <p className={`font-medium ${p.isReversed ? 'text-slate-400 line-through' : ''}`}>
                   {p.userName}
                   {p.billId && (
                     <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
                       {categoryLabels[p.billType ?? ''] ?? p.billType} bill
                     </span>
                   )}
+                  {p.isReversal && (
+                    <span className="ml-2 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+                      correction
+                    </span>
+                  )}
                 </p>
-                <p className="text-sm text-slate-500">{p.date}</p>
+                <p className="text-sm text-slate-500">
+                  {p.date}
+                  {p.isReversed && <span className="ml-2 text-xs text-slate-400">reversed</span>}
+                </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="font-semibold text-green-600">{taka(p.amount)}</span>
-                {canManage && (
+                <span
+                  className={`font-semibold tabular-nums ${
+                    p.amount < 0 ? 'text-rose-600' : p.isReversed ? 'text-slate-400 line-through' : 'text-green-600'
+                  }`}
+                >
+                  {p.amount < 0 ? `−${taka(Math.abs(p.amount))}` : taka(p.amount)}
+                </span>
+                {canManage && !p.isReversal && !p.isReversed && (
                   <button
                     onClick={() => onRemove(p.id)}
                     className="rounded-full border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
                   >
-                    Remove
+                    Reverse
                   </button>
                 )}
               </div>
             </li>
           ))}
         </ul>
+        <p className="mt-3 text-xs text-slate-400">
+          Entries are never edited or deleted. Reversing one adds an opposite entry beside it, so the record of what
+          was entered — and of the correction — both survive.
+        </p>
+        </>
       )}
     </div>
   );

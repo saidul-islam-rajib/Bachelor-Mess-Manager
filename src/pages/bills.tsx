@@ -1,13 +1,21 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import { Listbox, PageTitle } from '@/components/ui';
 import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import { todayKey } from '@/lib/month';
-import { formatCurrency, formatDayKey } from '@/lib/format';
+import { formatCurrency, formatDayKey, formatInstant } from '@/lib/format';
 
-type Collection = { id: string; amount: number; date: string };
+type Collection = {
+  id: string;
+  amount: number;
+  date: string;
+  recordedAt: string;
+  recordedByName: string | null;
+  isReversal: boolean;
+  isReversed: boolean;
+};
 
 type Share = {
   userId: string;
@@ -82,22 +90,38 @@ export default function BillsPage() {
   const [data, setData] = useState<BillsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string[]>([]);
 
-  const load = useCallback(async () => {
-    if (!groupId) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/groups/${groupId}/bills?month=${month}`);
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not load bills.');
-      setData(body);
-    } catch (err) {
-      toast.error((err as Error).message);
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [groupId, month, toast]);
+  const toggleExpanded = useCallback((billId: string) => {
+    setExpanded((current) =>
+      current.includes(billId) ? current.filter((id) => id !== billId) : [...current, billId]
+    );
+  }, []);
+
+  const collapse = useCallback((billId: string) => {
+    setExpanded((current) => current.filter((id) => id !== billId));
+  }, []);
+
+  const load = useCallback(
+    async ({ quiet = false }: { quiet?: boolean } = {}) => {
+      if (!groupId) return;
+      if (!quiet) setLoading(true);
+      try {
+        const res = await fetch(`/api/groups/${groupId}/bills?month=${month}`);
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(body?.error ?? 'Could not load bills.');
+        setData(body);
+      } catch (err) {
+        toast.error((err as Error).message);
+        if (!quiet) setData(null);
+      } finally {
+        if (!quiet) setLoading(false);
+      }
+    },
+    [groupId, month, toast]
+  );
+
+  const refresh = useCallback(() => load({ quiet: true }), [load]);
 
   useEffect(() => {
     load();
@@ -113,7 +137,7 @@ export default function BillsPage() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error ?? 'Could not update the bill.');
       toast.success(bill.isReceived ? 'Marked as unpaid.' : 'Marked as paid.');
-      await load();
+      await refresh();
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -129,21 +153,28 @@ export default function BillsPage() {
       const payload = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(payload?.error ?? 'Could not record that payment.');
       toast.success('Payment recorded.');
-      await load();
+      await refresh();
     } catch (err) {
       toast.error((err as Error).message);
     }
   }
 
-  async function undoCollection(bill: Bill, collectionId: string) {
+  async function reverseCollection(bill: Bill, collectionId: string) {
+    if (
+      !window.confirm(
+        'Reverse this entry?\n\nThe original stays in the history and a matching correction is added beside it. Nothing is erased.'
+      )
+    ) {
+      return;
+    }
     try {
       const res = await fetch(`/api/bills/${bill.id}/collections?collectionId=${collectionId}`, {
         method: 'DELETE'
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload?.error ?? 'Could not remove that payment.');
-      toast.success('Payment removed.');
-      await load();
+      if (!res.ok) throw new Error(payload?.error ?? 'Could not reverse that entry.');
+      toast.success('Entry reversed. The original is kept in the history.');
+      await refresh();
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -159,7 +190,8 @@ export default function BillsPage() {
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body?.error ?? 'Could not delete the bill.');
       toast.success('Bill deleted.');
-      await load();
+      collapse(bill.id);
+      await refresh();
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -167,6 +199,7 @@ export default function BillsPage() {
 
   const canManage = data?.canManage ?? false;
   const myShare = data ? (data.totals.byMember[user?.id ?? ''] ?? 0) : 0;
+  const myDue = data ? (data.totals.dueByMember[user?.id ?? ''] ?? 0) : 0;
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
@@ -194,22 +227,26 @@ export default function BillsPage() {
             <>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                 <Stat label="Total bills" value={taka(data.totals.total)} />
-                <Stat label="Paid" value={taka(data.totals.settled)} tone="green" />
-                <Stat label="Unpaid" value={taka(data.totals.outstanding)} tone="red" />
-                <Stat label="Your share" value={taka(myShare)} />
+                <Stat label="Collected" value={taka(data.totals.collected)} tone="green" />
+                <Stat label="Still owed" value={taka(data.totals.uncollected)} tone="red" />
+                <Stat
+                  label={myDue > 0 ? 'Your share · due' : 'Your share'}
+                  value={myDue > 0 ? `${taka(myShare)} · ${taka(myDue)}` : taka(myShare)}
+                  tone={myDue > 0 ? 'red' : undefined}
+                />
               </div>
 
               <Breakdown byType={data.totals.byType} labels={data.categoryLabels} total={data.totals.total} />
 
               {canManage && (
                 <>
-                  <CategoryManager groupId={groupId} categories={data.categories} onChanged={load} />
+                  <CategoryManager groupId={groupId} categories={data.categories} onChanged={refresh} />
                   <AddBillForm
                     groupId={groupId}
                     members={data.members}
                     categories={data.categories}
                     month={month}
-                    onSaved={load}
+                    onSaved={refresh}
                   />
                 </>
               )}
@@ -236,7 +273,7 @@ export default function BillsPage() {
                           onCancel={() => setEditing(null)}
                           onSaved={async () => {
                             setEditing(null);
-                            await load();
+                            await refresh();
                           }}
                         />
                       ) : (
@@ -246,11 +283,14 @@ export default function BillsPage() {
                           label={data.categoryLabels[bill.type] ?? bill.type}
                           currentUserId={data.currentUserId}
                           canManage={canManage}
+                          isOpen={expanded.includes(bill.id)}
+                          onToggleOpen={() => toggleExpanded(bill.id)}
+                          onClose={() => collapse(bill.id)}
                           onEdit={() => setEditing(bill.id)}
                           onToggle={() => toggleSettled(bill)}
                           onDelete={() => remove(bill)}
                           onCollect={(body) => recordCollection(bill, body)}
-                          onUndoCollection={(collectionId) => undoCollection(bill, collectionId)}
+                          onReverseCollection={(collectionId) => reverseCollection(bill, collectionId)}
                         />
                       )
                     )}
@@ -305,21 +345,351 @@ function Breakdown({
     </div>
   );
 }
+const STATUS_STYLES: Record<string, { pill: string; label: string; dot: string }> = {
+  PAID: { pill: 'bg-green-100 text-green-800', label: 'Paid', dot: 'bg-green-500' },
+  PARTIAL: { pill: 'bg-amber-100 text-amber-800', label: 'Part paid', dot: 'bg-amber-500' },
+  PENDING: { pill: 'bg-rose-100 text-rose-800', label: 'Due', dot: 'bg-rose-500' }
+};
 
-function ShareBadge({ share }: { share: Share }) {
-  const styles: Record<string, string> = {
-    PAID: 'bg-green-100 text-green-700',
-    PARTIAL: 'bg-amber-100 text-amber-700',
-    PENDING: 'bg-slate-200 text-slate-600'
-  };
-  const labels: Record<string, string> = { PAID: 'Paid', PARTIAL: 'Part paid', PENDING: 'Due' };
+function statusOf(share: Share) {
+  return STATUS_STYLES[share.status] ?? STATUS_STYLES.PENDING;
+}
 
+function StatusPill({ share }: { share: Share }) {
+  const style = statusOf(share);
   return (
     <span
-      className={`ml-2 rounded-full px-2 py-0.5 text-xs font-medium ${styles[share.status] ?? styles.PENDING}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${style.pill}`}
     >
-      {labels[share.status] ?? 'Due'}
+      <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} aria-hidden />
+      {style.label}
     </span>
+  );
+}
+
+function CollectionHistory({
+  share,
+  canManage,
+  onReverse
+}: {
+  share: Share;
+  canManage: boolean;
+  onReverse: (collectionId: string) => void;
+}) {
+  if (share.collections.length === 0) return null;
+
+  return (
+    <ul className="mt-2 space-y-1 border-l-2 border-slate-200 pl-3">
+      {share.collections.map((entry) => (
+        <li key={entry.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+          <span
+            className={
+              entry.isReversal
+                ? 'font-medium text-rose-600'
+                : entry.isReversed
+                  ? 'text-slate-400 line-through'
+                  : 'font-medium text-slate-700'
+            }
+          >
+            {entry.isReversal ? '−' : ''}
+            {taka(Math.abs(entry.amount))}
+          </span>
+          <span className="text-slate-400">
+            {entry.isReversal ? 'correction' : formatDayKey(entry.date, 'dayMonth')}
+          </span>
+          {entry.recordedByName && <span className="text-slate-400">· by {entry.recordedByName}</span>}
+          <span className="text-slate-300" title={formatInstant(entry.recordedAt, 'dateTime')}>
+            · {formatInstant(entry.recordedAt, 'dayMonthTime')}
+          </span>
+          {entry.isReversed && <span className="text-slate-400">· reversed</span>}
+          {canManage && !entry.isReversal && !entry.isReversed && (
+            <button
+              type="button"
+              onClick={() => onReverse(entry.id)}
+              className="rounded px-1 text-rose-500 underline-offset-2 hover:underline"
+            >
+              reverse
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function MemberActions({
+  share,
+  editing,
+  amount,
+  setAmount,
+  onStart,
+  onCancel,
+  onSubmit,
+  onSettle,
+  compact
+}: {
+  share: Share;
+  editing: boolean;
+  amount: string;
+  setAmount: (value: string) => void;
+  onStart: () => void;
+  onCancel: () => void;
+  onSubmit: () => void;
+  onSettle: () => void;
+  compact?: boolean;
+}) {
+  const size = compact ? 'min-h-[2rem] px-3 text-xs' : 'min-h-[2.5rem] px-3.5 text-sm';
+
+  if (editing) {
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
+        <input
+          type="number"
+          inputMode="decimal"
+          step="0.01"
+          min="0"
+          autoFocus
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') onSubmit();
+            if (event.key === 'Escape') onCancel();
+          }}
+          placeholder="Amount"
+          aria-label={`Amount received from ${share.userName}`}
+          className={`w-28 rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+        />
+        <button
+          type="button"
+          onClick={onSubmit}
+          className={`rounded-full bg-brand-600 font-semibold text-white hover:bg-brand-700 ${size}`}
+        >
+          Save
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className={`rounded-full border border-slate-200 font-medium text-slate-600 hover:bg-slate-100 ${size}`}
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {share.outstanding > 0 && (
+        <button
+          type="button"
+          onClick={onSettle}
+          className={`rounded-full bg-green-600 font-semibold text-white hover:bg-green-700 ${size}`}
+        >
+          Mark paid · {taka(share.outstanding)}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={onStart}
+        className={`rounded-full border border-slate-300 font-medium text-slate-700 hover:bg-slate-50 ${size}`}
+      >
+        {share.outstanding > 0 ? 'Part' : 'Add'}
+      </button>
+    </div>
+  );
+}
+
+function SplitPanel({
+  bill,
+  currentUserId,
+  canManage,
+  onCollect,
+  onReverseCollection
+}: {
+  bill: Bill;
+  currentUserId: string;
+  canManage: boolean;
+  onCollect: (body: Record<string, unknown>) => void;
+  onReverseCollection: (collectionId: string) => void;
+}) {
+  const [editingFor, setEditingFor] = useState<string | null>(null);
+  const [amount, setAmount] = useState('');
+
+  const rows = useMemo(() => {
+    const copy = [...bill.shares];
+    copy.sort((a, b) => {
+      if (a.userId === currentUserId) return -1;
+      if (b.userId === currentUserId) return 1;
+      if (a.outstanding !== b.outstanding) return b.outstanding - a.outstanding;
+      return a.userName.localeCompare(b.userName);
+    });
+    return copy;
+  }, [bill.shares, currentUserId]);
+
+  function start(userId: string) {
+    setEditingFor(userId);
+    setAmount('');
+  }
+
+  function cancel() {
+    setEditingFor(null);
+    setAmount('');
+  }
+
+  function submit(userId: string) {
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) return;
+    onCollect({ userId, amount: value });
+    cancel();
+  }
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200">
+      <div className="hidden md:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+              <th scope="col" className="px-4 py-2.5 text-left font-semibold">
+                Member
+              </th>
+              <th scope="col" className="px-3 py-2.5 text-right font-semibold">
+                Share
+              </th>
+              <th scope="col" className="px-3 py-2.5 text-right font-semibold">
+                Paid
+              </th>
+              <th scope="col" className="px-3 py-2.5 text-right font-semibold">
+                Due
+              </th>
+              <th scope="col" className="px-3 py-2.5 text-left font-semibold">
+                Status
+              </th>
+              {canManage && (
+                <th scope="col" className="px-4 py-2.5 text-right font-semibold">
+                  Record payment
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {rows.map((share) => {
+              const isMe = share.userId === currentUserId;
+              return (
+                <tr key={share.userId} className={isMe ? 'bg-brand-50/40' : 'bg-white'}>
+                  <td className="px-4 py-3 align-top">
+                    <div className="font-medium text-slate-900">
+                      {share.userName}
+                      {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
+                    </div>
+                    {share.advance > 0 && (
+                      <p className="mt-0.5 text-xs text-blue-600">
+                        Covered {taka(share.advance)} for others — refunded at settlement
+                      </p>
+                    )}
+                    <CollectionHistory share={share} canManage={canManage} onReverse={onReverseCollection} />
+                  </td>
+                  <td className="px-3 py-3 text-right align-top tabular-nums text-slate-600">{taka(share.amount)}</td>
+                  <td className="px-3 py-3 text-right align-top tabular-nums font-medium text-slate-900">
+                    {share.paid > 0 ? taka(share.paid) : <span className="text-slate-300">—</span>}
+                  </td>
+                  <td className="px-3 py-3 text-right align-top tabular-nums">
+                    {share.outstanding > 0 ? (
+                      <span className="font-semibold text-rose-600">{taka(share.outstanding)}</span>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3 align-top">
+                    <StatusPill share={share} />
+                  </td>
+                  {canManage && (
+                    <td className="px-4 py-3 align-top">
+                      <div className="flex justify-end">
+                        <MemberActions
+                          compact
+                          share={share}
+                          editing={editingFor === share.userId}
+                          amount={amount}
+                          setAmount={setAmount}
+                          onStart={() => start(share.userId)}
+                          onCancel={cancel}
+                          onSubmit={() => submit(share.userId)}
+                          onSettle={() => onCollect({ userId: share.userId, settle: true })}
+                        />
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <ul className="divide-y divide-slate-100 md:hidden">
+        {rows.map((share) => {
+          const isMe = share.userId === currentUserId;
+          const progress =
+            share.amount > 0 ? Math.min(100, Math.round((share.paid / share.amount) * 100)) : 100;
+
+          return (
+            <li key={share.userId} className={`p-3.5 ${isMe ? 'bg-brand-50/50' : 'bg-white'}`}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-slate-900">
+                    {share.userName}
+                    {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
+                  </p>
+                  <p className="mt-0.5 text-xs text-slate-500">
+                    Share {taka(share.amount)} · paid {taka(share.paid)}
+                  </p>
+                </div>
+                <StatusPill share={share} />
+              </div>
+
+              <div className="mt-2.5 flex items-center gap-2.5">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className={`h-full rounded-full ${share.outstanding > 0 ? 'bg-amber-500' : 'bg-green-500'}`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+                {share.outstanding > 0 ? (
+                  <span className="shrink-0 text-sm font-bold tabular-nums text-rose-600">
+                    {taka(share.outstanding)} due
+                  </span>
+                ) : (
+                  <span className="shrink-0 text-sm font-semibold text-green-700">Settled</span>
+                )}
+              </div>
+
+              {share.advance > 0 && (
+                <p className="mt-1.5 text-xs text-blue-600">
+                  Covered {taka(share.advance)} for others — refunded at settlement
+                </p>
+              )}
+
+              <CollectionHistory share={share} canManage={canManage} onReverse={onReverseCollection} />
+
+              {canManage && (
+                <div className="mt-2.5">
+                  <MemberActions
+                    share={share}
+                    editing={editingFor === share.userId}
+                    amount={amount}
+                    setAmount={setAmount}
+                    onStart={() => start(share.userId)}
+                    onCancel={cancel}
+                    onSubmit={() => submit(share.userId)}
+                    onSettle={() => onCollect({ userId: share.userId, settle: true })}
+                  />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -328,29 +698,60 @@ function BillRow({
   label,
   currentUserId,
   canManage,
+  isOpen,
+  onToggleOpen,
+  onClose,
   onEdit,
   onToggle,
   onDelete,
   onCollect,
-  onUndoCollection
+  onReverseCollection
 }: {
   bill: Bill;
   label: string;
   currentUserId: string;
   canManage: boolean;
+  isOpen: boolean;
+  onToggleOpen: () => void;
+  onClose: () => void;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
   onCollect: (body: Record<string, unknown>) => void;
-  onUndoCollection: (collectionId: string) => void;
+  onReverseCollection: (collectionId: string) => void;
 }) {
-  const [showShares, setShowShares] = useState(false);
-  const [collectingFor, setCollectingFor] = useState<string | null>(null);
-  const [collectAmount, setCollectAmount] = useState('');
+  const containerRef = useRef<HTMLLIElement>(null);
   const myShare = bill.shares.find((s) => s.userId === currentUserId);
+  const percent = bill.amount > 0 ? Math.min(100, Math.round((bill.collected / bill.amount) * 100)) : 0;
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handlePointerDown(event: MouseEvent | TouchEvent) {
+      const node = containerRef.current;
+      if (node && !node.contains(event.target as Node)) onClose();
+    }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   return (
-    <li className="rounded-2xl border border-slate-200 p-4">
+    <li
+      ref={containerRef}
+      className={`rounded-2xl border p-4 transition-colors ${
+        isOpen ? 'border-brand-300 bg-white shadow-sm' : 'border-slate-200 bg-white'
+      }`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -375,190 +776,92 @@ function BillRow({
         </div>
 
         <div className="text-right">
-          <p className="text-lg font-semibold">{taka(bill.amount)}</p>
+          <p className="text-lg font-semibold tabular-nums">{taka(bill.amount)}</p>
           {myShare && (
             <p className="text-xs text-slate-500">
               your share {taka(myShare.amount)}
               {myShare.outstanding > 0 ? (
-                <span className="ml-1 font-medium text-amber-600">· {taka(myShare.outstanding)} due</span>
+                <span className="ml-1 font-semibold text-rose-600">· {taka(myShare.outstanding)} due</span>
               ) : (
-                <span className="ml-1 font-medium text-green-600">· paid</span>
+                <span className="ml-1 font-semibold text-green-600">· paid</span>
               )}
             </p>
           )}
         </div>
       </div>
 
-      <div className="mt-3 rounded-xl bg-slate-50 px-3 py-2">
+      <button
+        type="button"
+        onClick={onToggleOpen}
+        aria-expanded={isOpen}
+        className="mt-3 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-left transition-colors hover:bg-slate-100"
+      >
         <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">
           <span className="text-slate-600">
             Collected <span className="font-semibold text-slate-900">{taka(bill.collected)}</span> of{' '}
             {taka(bill.amount)}
           </span>
-          {bill.unpaidMemberCount > 0 ? (
-            <span className="font-medium text-amber-600">
-              {bill.unpaidMemberCount} {bill.unpaidMemberCount === 1 ? 'member' : 'members'} still owe{' '}
-              {taka(bill.uncollected)}
+          <span className="flex items-center gap-2">
+            {bill.unpaidMemberCount > 0 ? (
+              <span className="font-semibold text-amber-600">
+                {bill.unpaidMemberCount} {bill.unpaidMemberCount === 1 ? 'member owes' : 'members owe'}{' '}
+                {taka(bill.uncollected)}
+              </span>
+            ) : (
+              <span className="font-semibold text-green-600">Everyone has paid</span>
+            )}
+            <span className="text-slate-500">
+              {isOpen ? 'Hide' : 'Show'} split ({bill.shares.length}) {isOpen ? '▲' : '▼'}
             </span>
-          ) : (
-            <span className="font-medium text-green-600">Everyone has paid their share</span>
-          )}
+          </span>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
           <div
-            className={`h-full rounded-full ${bill.isFullyCollected ? 'bg-green-500' : 'bg-brand-600'}`}
-            style={{ width: `${bill.amount > 0 ? Math.min(100, Math.round((bill.collected / bill.amount) * 100)) : 0}%` }}
+            className={`h-full rounded-full transition-all ${bill.isFullyCollected ? 'bg-green-500' : 'bg-brand-600'}`}
+            style={{ width: `${percent}%` }}
           />
         </div>
-      </div>
+      </button>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-        <button
-          type="button"
-          onClick={() => setShowShares((v) => !v)}
-          className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-        >
-          {showShares ? 'Hide' : 'Show'} split ({bill.shares.length})
-        </button>
-        {canManage && (
-          <>
-            <button
-              type="button"
-              onClick={onToggle}
-              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Mark vendor {bill.isReceived ? 'unpaid' : 'paid'}
-            </button>
-            <button
-              type="button"
-              onClick={onEdit}
-              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              onClick={onDelete}
-              className="rounded-full border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
-            >
-              Delete
-            </button>
-          </>
-        )}
-      </div>
+      {isOpen && (
+        <>
+          <SplitPanel
+            bill={bill}
+            currentUserId={currentUserId}
+            canManage={canManage}
+            onCollect={onCollect}
+            onReverseCollection={onReverseCollection}
+          />
 
-      {showShares && (
-        <ul className="mt-3 divide-y divide-slate-100 rounded-xl bg-slate-50 px-3">
-          {bill.shares.map((share) => (
-            <li key={share.userId} className="py-2 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className={share.userId === currentUserId ? 'font-medium' : 'text-slate-600'}>
-                  {share.userName}
-                  {share.userId === currentUserId && <span className="ml-1 text-xs text-green-600">(you)</span>}
-                  <ShareBadge share={share} />
-                </span>
-                <span className="text-right">
-                  <span className={share.outstanding > 0 ? 'text-slate-500' : ''}>{taka(share.amount)}</span>
-                  {share.paid > 0 && (
-                    <span className="ml-2 text-xs text-slate-500">paid {taka(share.paid)}</span>
-                  )}
-                  {share.outstanding > 0 && (
-                    <span className="ml-2 text-xs font-medium text-amber-600">due {taka(share.outstanding)}</span>
-                  )}
-                </span>
-              </div>
-
-              {share.advance > 0 && (
-                <p className="mt-0.5 text-xs text-blue-600">
-                  Paid {taka(share.advance)} more than their share — covering others, refunded at settlement.
-                </p>
-              )}
-
-              {canManage && (
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  {share.outstanding > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => onCollect({ userId: share.userId, settle: true })}
-                      className="rounded-full border border-green-200 px-2.5 py-1 text-xs font-medium text-green-700 hover:bg-green-50"
-                    >
-                      Mark paid ({taka(share.outstanding)})
-                    </button>
-                  )}
-                  {collectingFor === share.userId ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        autoFocus
-                        value={collectAmount}
-                        onChange={(e) => setCollectAmount(e.target.value)}
-                        placeholder="Amount"
-                        className="w-24 rounded-full border border-slate-200 px-2.5 py-1 text-xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const value = Number(collectAmount);
-                          if (!Number.isFinite(value) || value <= 0) return;
-                          onCollect({ userId: share.userId, amount: value });
-                          setCollectingFor(null);
-                          setCollectAmount('');
-                        }}
-                        className="rounded-full bg-brand-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-brand-700"
-                      >
-                        Save
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCollectingFor(null);
-                          setCollectAmount('');
-                        }}
-                        className="rounded-full border border-slate-200 px-2.5 py-1 text-xs text-slate-600 hover:bg-slate-100"
-                      >
-                        Cancel
-                      </button>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setCollectingFor(share.userId);
-                        setCollectAmount('');
-                      }}
-                      className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-white"
-                    >
-                      Part payment
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {share.collections.length > 0 && (
-                <ul className="mt-1 space-y-0.5">
-                  {share.collections.map((c) => (
-                    <li key={c.id} className="flex items-center gap-2 text-xs text-slate-500">
-                      <span>
-                        {taka(c.amount)} on {formatDayKey(c.date, 'dayMonth')}
-                      </span>
-                      {canManage && (
-                        <button
-                          type="button"
-                          onClick={() => onUndoCollection(c.id)}
-                          className="text-red-500 hover:underline"
-                        >
-                          undo
-                        </button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-          ))}
-        </ul>
+          {canManage && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+              <button
+                type="button"
+                onClick={onToggle}
+                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Mark vendor {bill.isReceived ? 'unpaid' : 'paid'}
+              </button>
+              <button
+                type="button"
+                onClick={onEdit}
+                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={onDelete}
+                className="rounded-full border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+              >
+                Delete
+              </button>
+              <span className="ml-auto text-xs text-slate-400">
+                Payment entries cannot be edited or deleted — only reversed.
+              </span>
+            </div>
+          )}
+        </>
       )}
     </li>
   );
