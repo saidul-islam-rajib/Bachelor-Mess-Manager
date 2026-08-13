@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { LineRows, MemberSummaryList } from '@/components/bills/MemberSummaryList';
+import { LineRows, MemberTable } from '@/components/bills/MemberTable';
 import {
   BILL_KINDS,
   BILL_KIND_COPY,
@@ -28,7 +28,8 @@ const PANEL_TITLES: Record<FocusKey, { title: string; subtitle: string }> = {
   },
   owed: {
     title: 'Who still owes',
-    subtitle: 'Members with an unpaid share, largest first. Tap a member to see exactly which bills are unpaid.'
+    subtitle:
+      'Members with an unpaid share on at least one bill. Final nets that against anything they overpaid elsewhere, so it is what they really owe.'
   },
   mine: {
     title: 'Your share, bill by bill',
@@ -57,15 +58,15 @@ function StatButton({
       type="button"
       onClick={onClick}
       aria-expanded={active}
-      className={`rounded-3xl border bg-white p-4 text-left shadow-sm transition-all sm:p-5 ${
+      className={`rounded-3xl border bg-white p-3.5 text-left shadow-sm transition-all sm:p-5 ${
         active
           ? 'border-brand-500 ring-2 ring-brand-100'
           : 'border-slate-200 hover:border-brand-300 hover:shadow-md'
       }`}
     >
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`mt-2 text-xl font-semibold sm:text-2xl ${color}`}>{value}</div>
-      <div className={`mt-1.5 text-[11px] font-medium ${active ? 'text-brand-700' : 'text-slate-400'}`}>
+      <div className="text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">{label}</div>
+      <div className={`mt-1.5 text-lg font-semibold tabular-nums sm:mt-2 sm:text-2xl ${color}`}>{value}</div>
+      <div className={`mt-1 text-[11px] font-medium ${active ? 'text-brand-700' : 'text-slate-400'}`}>
         {active ? 'Hide details ▲' : `${hint} ▼`}
       </div>
     </button>
@@ -83,20 +84,18 @@ function Panel({
 }) {
   const copy = PANEL_TITLES[focus];
   return (
-    <div className="rounded-3xl border border-brand-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-lg font-semibold">{copy.title}</h2>
-          <p className="mt-1 text-sm text-slate-500">{copy.subtitle}</p>
-        </div>
+    <div className="rounded-3xl border border-brand-200 bg-white p-4 shadow-sm sm:p-6">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-lg font-semibold">{copy.title}</h2>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+          className="inline-flex min-h-[2rem] shrink-0 items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
         >
           Close
         </button>
       </div>
+      <p className="mt-1 text-sm text-slate-500">{copy.subtitle}</p>
       {children}
     </div>
   );
@@ -233,7 +232,8 @@ export function BillStats({
   const mine = summaries.find((row) => row.isCurrentUser) ?? null;
   const owing = summaries.filter((row) => row.outstanding > 0);
   const payers = summaries.filter((row) => row.paid > 0);
-  const refunds = summaries.filter((row) => row.advance > 0);
+  const refunds = summaries.filter((row) => row.net > 0);
+  const aheadDespiteDues = owing.filter((row) => row.net >= 0).length;
   const myShare = mine?.share ?? 0;
   const myDue = mine?.outstanding ?? 0;
 
@@ -292,7 +292,7 @@ export function BillStats({
             {taka(totals.total)} is in — {payers.length} {payers.length === 1 ? 'member has' : 'members have'} paid
             something.
           </p>
-          <MemberSummaryList
+          <MemberTable
             summaries={payers}
             labels={labels}
             emptyText="Nothing has been collected yet."
@@ -313,17 +313,23 @@ export function BillStats({
               </>
             )}
           </p>
-          <MemberSummaryList
+          {aheadDespiteDues > 0 && (
+            <p className="mt-1 text-xs text-slate-500">
+              {aheadDespiteDues === 1 ? 'One of them has' : `${aheadDespiteDues} of them have`} overpaid other bills,
+              so the Final column is where they actually land.
+            </p>
+          )}
+          <MemberTable
             summaries={owing}
             labels={labels}
             emptyText="Nobody owes anything right now."
             onOpenBill={onOpenBill}
           />
           {refunds.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-teal-200 bg-teal-50/60 p-4">
-              <h3 className="text-sm font-semibold text-teal-900">Paid more than their share</h3>
+            <div className="mt-4 rounded-2xl border border-teal-200 bg-teal-50/60 p-3.5 sm:p-4">
+              <h3 className="text-sm font-semibold text-teal-900">Gets money back</h3>
               <p className="mt-0.5 text-xs text-teal-800">
-                Funded by the members still due — the mess pays this back once the dues come in.
+                What each of them is owed once their own dues are taken off — funded by the members still short.
               </p>
               <ul className="mt-2 space-y-1 text-sm">
                 {refunds.map((row) => (
@@ -332,7 +338,7 @@ export function BillStats({
                       {row.userName}
                       {row.isCurrentUser && <span className="ml-1.5 text-xs text-teal-700">(you)</span>}
                     </span>
-                    <span className="shrink-0 font-semibold tabular-nums text-teal-800">+{taka(row.advance)}</span>
+                    <span className="shrink-0 font-semibold tabular-nums text-teal-800">+{taka(row.net)}</span>
                   </li>
                 ))}
               </ul>

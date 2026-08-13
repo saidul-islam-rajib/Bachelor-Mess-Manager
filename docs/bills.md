@@ -138,6 +138,14 @@ the gas, so C's line reads **৳300 back** — one number, not two. D and E, who
 paid nothing, read ৳200 each to pay. The nets always add to
 `collected − billed`, which is zero once a month is fully collected.
 
+Net is why the member rows carry **four** figures — share, paid, unpaid on
+bills, and final — instead of the three a single bill needs. Showing only
+"due ৳166.68" for a member who has paid ৳500 against a ৳470.02 share reads as a
+contradiction: that ৳166.68 is real (they have not paid those two shares) but
+they overpaid ৳196.66 on a third bill, so they are ৳29.98 *ahead*. Both numbers
+are shown, with Final the one that decides who hands money to whom, and the
+pill on every member row is driven by net rather than by the per-bill advance.
+
 `settleUp()` then matches the members still short against the members who
 fronted money, largest against largest, so the month clears in as few
 hand-overs as possible (`E pays ৳200 to C`). What a debtor still owes after
@@ -147,6 +155,15 @@ someone's refund.
 
 All of it is integer paisa arithmetic, converted back to taka only for display,
 so a 1000 ÷ 3 split nets to zero rather than to a stray paisa.
+
+One component draws every member list on the page: `MemberTable` in
+`src/components/bills/MemberTable.tsx`, used by the final summary and by the
+Collected and Still owed drill-downs. A row is a single markup path at every
+width — name and position pill on top, then the four figures as a labelled
+2-up grid on phones that becomes 4-up from `sm`. There is deliberately no
+hidden-on-mobile table header and no second mobile-only copy of the row to
+keep in sync; each figure carries its own label, which is also what makes the
+row legible when it is the third level of nesting on a 360px screen.
 
 ## Where the money goes next
 

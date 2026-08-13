@@ -234,7 +234,7 @@ export default function BillsPage() {
                 />
               )}
 
-              <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-lg font-semibold">Bills this month</h2>
                   <div className="flex items-center gap-3">
@@ -242,7 +242,7 @@ export default function BillsPage() {
                       <button
                         type="button"
                         onClick={() => setExpanded(openCount === bills.length ? [] : bills.map((bill) => bill.id))}
-                        className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                        className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
                       >
                         {openCount === bills.length ? 'Collapse all' : 'Expand all'}
                       </button>
@@ -275,7 +275,7 @@ export default function BillsPage() {
                           {billsByType(grouped[kind]).map((group) => (
                             <div
                               key={group.type}
-                              className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3 sm:p-4"
+                              className="rounded-2xl border border-slate-200 bg-slate-50/60 p-2.5 sm:p-4"
                             >
                               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                                 <h4 className="font-semibold text-slate-900">
@@ -778,7 +778,7 @@ function BillRow({
   return (
     <li
       id={`bill-${bill.id}`}
-      className={`scroll-mt-24 rounded-2xl border p-4 transition-colors ${
+      className={`scroll-mt-24 rounded-2xl border p-3.5 transition-colors sm:p-4 ${
         isOpen ? 'border-brand-300 bg-white shadow-sm' : 'border-slate-200 bg-white'
       }`}
     >
