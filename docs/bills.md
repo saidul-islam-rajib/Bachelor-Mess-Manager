@@ -86,6 +86,68 @@ from the amount. Every edit and delete is written to `ExpenseHistory` through
 `recordExpenseUpdated` / `recordExpenseDeleted`, because a bill quietly changing
 size is exactly the kind of thing a mess argues about.
 
+## Reading the page
+
+The page treats a bill's split method as the thing that decides *what kind of
+bill it is*, and never mixes the two kinds in one list:
+
+| Kind | Split method | Meaning |
+| --- | --- | --- |
+| Shared | `EQUAL` | Everyone active pays the same share. A ৳500 bill in a mess of five is ৳100 each; anyone who hands over more than their share is owed the difference back. |
+| Assigned | `CUSTOM` | Only the picked members pay, at the amount set for each. |
+
+`src/lib/bill-view.ts` holds the client-side view model — the API shapes, the
+kind of a bill (`billKind`, `billsByKind`), and `summarizeMembers()`, which
+folds every share a member holds this month into one row: share, paid,
+outstanding, advance, plus the per-bill lines behind it. All of it is derived
+from the same `/api/groups/[id]/bills` payload, so there is nothing new to
+fetch and nothing that can disagree with the split panel of a single bill.
+
+Three things sit on top of it:
+
+- **Stat tiles** (`BillStats`) are buttons, not labels. Total bills opens the
+  month's bills grouped by kind; Collected and Still owed open the members
+  behind that number; Your share opens the member's own bill-by-bill sheet.
+  Choosing a bill in a panel expands it in the list below and scrolls to it.
+- **The list** nests kind → cost type → bill. Two electricity bills a fortnight
+  apart are one **Electricity** block carrying the combined total, what has
+  been collected and what is still owed, with a card per bill inside it. The
+  cards are headed by their date, not by the cost type, because the block above
+  them already says it — repeating the label on every card was what made the
+  page look like it held three unrelated bills. Each card owns its own open
+  state and several can stay open at once. They used to close each other: an
+  open card listened for `mousedown` on the document and collapsed when the
+  click landed outside it, so opening a second card collapsed the first. That
+  listener is gone; only the card's own toggle, or Expand/Collapse all, changes
+  it.
+- **Final summary** (`FinalSummary`) closes the month, below the list.
+
+## The final summary
+
+Per bill, a member is either short or ahead. Across a month they are usually
+both, and the two must cancel before anyone hands over cash. So the summary
+nets them, per member, over every bill of the month:
+
+```
+net = paid − share        // = advance − outstanding, the same number
+```
+
+Gas of ৳500 across five people, paid ৳200 by A and ৳300 by B; electricity of
+৳500 paid in full by C. C is ৳400 ahead on the electricity and ৳100 short on
+the gas, so C's line reads **৳300 back** — one number, not two. D and E, who
+paid nothing, read ৳200 each to pay. The nets always add to
+`collected − billed`, which is zero once a month is fully collected.
+
+`settleUp()` then matches the members still short against the members who
+fronted money, largest against largest, so the month clears in as few
+hand-overs as possible (`E pays ৳200 to C`). What a debtor still owes after
+every creditor is whole is money no member fronted — it belongs to the mess for
+bills nobody has covered, and is called out separately rather than folded into
+someone's refund.
+
+All of it is integer paisa arithmetic, converted back to taka only for display,
+so a 1000 ÷ 3 split nets to zero rather than to a stray paisa.
+
 ## Where the money goes next
 
 The month's bill shares reach a member's dues through `billSharesByUser()`,

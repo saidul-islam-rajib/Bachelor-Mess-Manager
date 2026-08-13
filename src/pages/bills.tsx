@@ -1,82 +1,27 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { useCurrentUser } from '@/components/UserProvider';
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
 import { Listbox, PageTitle } from '@/components/ui';
 import { HistoryList, type HistoryEvent } from '@/components/ChangeHistory';
+import { BillStats } from '@/components/bills/BillStats';
+import { FinalSummary } from '@/components/bills/FinalSummary';
+import { StatusPill } from '@/components/bills/StatusPill';
 import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
+import {
+  BILL_KIND_COPY,
+  KIND_ORDER,
+  billsByKind,
+  billsByType,
+  totalsOf,
+  type Bill,
+  type BillsData,
+  type Category,
+  type Member,
+  type Share
+} from '@/lib/bill-view';
 import { todayKey } from '@/lib/month';
 import { formatCurrency, formatDayKey, formatInstant } from '@/lib/format';
 import { strings } from '@/lib/i18n';
-
-type Collection = {
-  id: string;
-  amount: number;
-  date: string;
-  recordedAt: string;
-  recordedByName: string | null;
-  isReversal: boolean;
-  isReversed: boolean;
-};
-
-type Share = {
-  userId: string;
-  userName: string;
-  amount: number;
-  paid: number;
-  outstanding: number;
-  advance: number;
-  status: string;
-  collections: Collection[];
-};
-
-type Member = { id: string; name: string; email: string };
-
-type Bill = {
-  id: string;
-  type: string;
-  amount: number;
-  date: string;
-  note: string;
-  isReceived: boolean;
-  splitMethod: string;
-  payer: { id: string; name: string } | null;
-  shares: Share[];
-  collected: number;
-  uncollected: number;
-  advance: number;
-  isFullyCollected: boolean;
-  unpaidMemberCount: number;
-};
-
-type Category = {
-  id: string;
-  code: string;
-  label: string;
-  isSystem: boolean;
-  sortOrder: number;
-  archived: boolean;
-  inUse: number;
-};
-
-type BillsData = {
-  canManage: boolean;
-  currentUserId: string;
-  categories: Category[];
-  categoryLabels: Record<string, string>;
-  bills: Bill[];
-  members: Member[];
-  totals: {
-    total: number;
-    settled: number;
-    outstanding: number;
-    collected: number;
-    uncollected: number;
-    byType: Record<string, number>;
-    byMember: Record<string, number>;
-    dueByMember: Record<string, number>;
-  };
-};
 
 const taka = formatCurrency;
 
@@ -104,7 +49,6 @@ function Chevron({ open }: { open: boolean }) {
 }
 
 export default function BillsPage() {
-  const { user } = useCurrentUser();
   const toast = useToast();
   const { groups, groupId, setGroupId, month, setMonth, loadingGroups } = useGroupMonth();
 
@@ -121,6 +65,13 @@ export default function BillsPage() {
 
   const collapse = useCallback((billId: string) => {
     setExpanded((current) => current.filter((id) => id !== billId));
+  }, []);
+
+  const revealBill = useCallback((billId: string) => {
+    setExpanded((current) => (current.includes(billId) ? current : [...current, billId]));
+    window.requestAnimationFrame(() => {
+      document.getElementById(`bill-${billId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
   }, []);
 
   const load = useCallback(
@@ -219,9 +170,10 @@ export default function BillsPage() {
   }
 
   const canManage = data?.canManage ?? false;
-  const myShare = data ? (data.totals.byMember[user?.id ?? ''] ?? 0) : 0;
-  const myDue = data ? (data.totals.dueByMember[user?.id ?? ''] ?? 0) : 0;
   const hasBreakdown = Object.values(data?.totals.byType ?? {}).some((amount) => amount > 0);
+  const bills = useMemo(() => data?.bills ?? [], [data?.bills]);
+  const grouped = useMemo(() => billsByKind(bills), [bills]);
+  const openCount = bills.filter((bill) => expanded.includes(bill.id)).length;
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
@@ -247,16 +199,13 @@ export default function BillsPage() {
             <Card>Loading bills...</Card>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-                <Stat label="Total bills" value={taka(data.totals.total)} />
-                <Stat label="Collected" value={taka(data.totals.collected)} tone="green" />
-                <Stat label="Still owed" value={taka(data.totals.uncollected)} tone="red" />
-                <Stat
-                  label={myDue > 0 ? 'Your share · due' : 'Your share'}
-                  value={myDue > 0 ? `${taka(myShare)} · ${taka(myDue)}` : taka(myShare)}
-                  tone={myDue > 0 ? 'red' : undefined}
-                />
-              </div>
+              <BillStats
+                bills={bills}
+                totals={data.totals}
+                labels={data.categoryLabels}
+                currentUserId={data.currentUserId}
+                onOpenBill={revealBill}
+              />
 
               <div className={`grid gap-4 ${hasBreakdown && canManage ? 'lg:grid-cols-5' : ''}`}>
                 {hasBreakdown && (
@@ -288,50 +237,116 @@ export default function BillsPage() {
               <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-lg font-semibold">Bills this month</h2>
-                  <p className="text-sm text-slate-500">{data.bills.length} recorded</p>
+                  <div className="flex items-center gap-3">
+                    {bills.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setExpanded(openCount === bills.length ? [] : bills.map((bill) => bill.id))}
+                        className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                      >
+                        {openCount === bills.length ? 'Collapse all' : 'Expand all'}
+                      </button>
+                    )}
+                    <p className="text-sm text-slate-500">{bills.length} recorded</p>
+                  </div>
                 </div>
 
-                {data.bills.length === 0 ? (
+                {bills.length === 0 ? (
                   <p className="mt-4 text-slate-500">
                     No bills recorded for this month{canManage ? ' yet — add one above.' : '.'}
                   </p>
                 ) : (
-                  <ul className="mt-4 space-y-3">
-                    {data.bills.map((bill) =>
-                      editing === bill.id ? (
-                        <EditBill
-                          key={bill.id}
-                          bill={bill}
-                          groupId={groupId}
-                          members={data.members}
-                          categories={data.categories}
-                          onCancel={() => setEditing(null)}
-                          onSaved={async () => {
-                            setEditing(null);
-                            await refresh();
-                          }}
-                        />
-                      ) : (
-                        <BillRow
-                          key={bill.id}
-                          bill={bill}
-                          label={data.categoryLabels[bill.type] ?? bill.type}
-                          currentUserId={data.currentUserId}
-                          canManage={canManage}
-                          isOpen={expanded.includes(bill.id)}
-                          onToggleOpen={() => toggleExpanded(bill.id)}
-                          onClose={() => collapse(bill.id)}
-                          onEdit={() => setEditing(bill.id)}
-                          onToggle={() => toggleSettled(bill)}
-                          onDelete={() => remove(bill)}
-                          onCollect={(body) => recordCollection(bill, body)}
-                          onReverseCollection={(collectionId) => reverseCollection(bill, collectionId)}
-                        />
-                      )
-                    )}
-                  </ul>
+                  <div className="mt-5 space-y-6">
+                    {KIND_ORDER.filter((kind) => grouped[kind].length > 0).map((kind) => (
+                      <section key={kind}>
+                        <div className="flex flex-wrap items-baseline justify-between gap-2">
+                          <h3 className="font-semibold text-slate-900">
+                            {BILL_KIND_COPY[kind].title}{' '}
+                            <span className="font-normal text-slate-400">({grouped[kind].length})</span>
+                          </h3>
+                          <span className="text-xs text-slate-500">
+                            {taka(totalsOf(grouped[kind]).total)} ·{' '}
+                            {taka(totalsOf(grouped[kind]).outstanding)} still owed
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-xs text-slate-500">{BILL_KIND_COPY[kind].hint}</p>
+
+                        <div className="mt-3 space-y-4">
+                          {billsByType(grouped[kind]).map((group) => (
+                            <div
+                              key={group.type}
+                              className="rounded-2xl border border-slate-200 bg-slate-50/60 p-3 sm:p-4"
+                            >
+                              <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                                <h4 className="font-semibold text-slate-900">
+                                  {data.categoryLabels[group.type] ?? group.type}
+                                  <span className="ml-2 text-xs font-normal text-slate-500">
+                                    {group.bills.length} {group.bills.length === 1 ? 'bill' : 'bills'}
+                                  </span>
+                                </h4>
+                                <p className="text-xs text-slate-500">
+                                  <span className="font-semibold tabular-nums text-slate-700">
+                                    {taka(group.totals.total)}
+                                  </span>{' '}
+                                  · {taka(group.totals.collected)} collected
+                                  {group.totals.outstanding > 0 && (
+                                    <span className="font-semibold text-rose-600">
+                                      {' '}
+                                      · {taka(group.totals.outstanding)} still owed
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+
+                              <ul className="mt-3 space-y-3">
+                                {group.bills.map((bill) =>
+                                  editing === bill.id ? (
+                                    <EditBill
+                                      key={bill.id}
+                                      bill={bill}
+                                      groupId={groupId}
+                                      members={data.members}
+                                      categories={data.categories}
+                                      onCancel={() => setEditing(null)}
+                                      onSaved={async () => {
+                                        setEditing(null);
+                                        await refresh();
+                                      }}
+                                    />
+                                  ) : (
+                                    <BillRow
+                                      key={bill.id}
+                                      bill={bill}
+                                      currentUserId={data.currentUserId}
+                                      canManage={canManage}
+                                      isOpen={expanded.includes(bill.id)}
+                                      onToggleOpen={() => toggleExpanded(bill.id)}
+                                      onEdit={() => setEditing(bill.id)}
+                                      onToggle={() => toggleSettled(bill)}
+                                      onDelete={() => remove(bill)}
+                                      onCollect={(body) => recordCollection(bill, body)}
+                                      onReverseCollection={(collectionId) => reverseCollection(bill, collectionId)}
+                                    />
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
+                    ))}
+                  </div>
                 )}
               </div>
+
+              {bills.length > 0 && (
+                <FinalSummary
+                  bills={bills}
+                  labels={data.categoryLabels}
+                  currentUserId={data.currentUserId}
+                  onOpenBill={revealBill}
+                />
+              )}
             </>
           )}
         </div>
@@ -380,30 +395,6 @@ function Breakdown({
     </div>
   );
 }
-const STATUS_STYLES: Record<string, { pill: string; label: string; dot: string }> = {
-  PAID: { pill: 'bg-green-100 text-green-800', label: 'Paid', dot: 'bg-green-500' },
-  PARTIAL: { pill: 'bg-amber-100 text-amber-800', label: 'Part paid', dot: 'bg-amber-500' },
-  PENDING: { pill: 'bg-rose-100 text-rose-800', label: 'Due', dot: 'bg-rose-500' },
-  ADVANCE: { pill: 'bg-teal-100 text-teal-800', label: 'Gets back', dot: 'bg-teal-500' }
-};
-
-function statusOf(share: Share) {
-  if (share.advance > 0) return STATUS_STYLES.ADVANCE;
-  return STATUS_STYLES[share.status] ?? STATUS_STYLES.PENDING;
-}
-
-function StatusPill({ share }: { share: Share }) {
-  const style = statusOf(share);
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${style.pill}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} aria-hidden />
-      {style.label}
-    </span>
-  );
-}
-
 function AdvanceNote({ share }: { share: Share }) {
   if (share.advance <= 0) return null;
   return (
@@ -656,7 +647,7 @@ function SplitPanel({
                     )}
                   </td>
                   <td className="px-3 py-3 align-top">
-                    <StatusPill share={share} />
+                    <StatusPill entry={share} />
                   </td>
                   {canManage && (
                     <td className="px-4 py-3 align-top">
@@ -709,7 +700,7 @@ function SplitPanel({
                     Share {taka(share.amount)} · paid {taka(share.paid)}
                   </p>
                 </div>
-                <StatusPill share={share} />
+                <StatusPill entry={share} />
               </div>
 
               <div className="mt-2.5 flex items-center gap-2.5">
@@ -760,12 +751,10 @@ function SplitPanel({
 
 function BillRow({
   bill,
-  label,
   currentUserId,
   canManage,
   isOpen,
   onToggleOpen,
-  onClose,
   onEdit,
   onToggle,
   onDelete,
@@ -773,54 +762,30 @@ function BillRow({
   onReverseCollection
 }: {
   bill: Bill;
-  label: string;
   currentUserId: string;
   canManage: boolean;
   isOpen: boolean;
   onToggleOpen: () => void;
-  onClose: () => void;
   onEdit: () => void;
   onToggle: () => void;
   onDelete: () => void;
   onCollect: (body: Record<string, unknown>) => void;
   onReverseCollection: (collectionId: string) => void;
 }) {
-  const containerRef = useRef<HTMLLIElement>(null);
   const myShare = bill.shares.find((s) => s.userId === currentUserId);
   const percent = bill.amount > 0 ? Math.min(100, Math.round((bill.collected / bill.amount) * 100)) : 0;
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    function handlePointerDown(event: MouseEvent | TouchEvent) {
-      const node = containerRef.current;
-      if (node && !node.contains(event.target as Node)) onClose();
-    }
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
-    }
-
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown);
-    document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown);
-      document.removeEventListener('touchstart', handlePointerDown);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isOpen, onClose]);
-
   return (
     <li
-      ref={containerRef}
-      className={`rounded-2xl border p-4 transition-colors ${
+      id={`bill-${bill.id}`}
+      className={`scroll-mt-24 rounded-2xl border p-4 transition-colors ${
         isOpen ? 'border-brand-300 bg-white shadow-sm' : 'border-slate-200 bg-white'
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-semibold">{label}</h3>
+            <h5 className="font-semibold">{longDate(bill.date)}</h5>
             <span
               title="Whether the bill itself has been settled with the landlord, shop or utility — separate from which members have chipped in."
               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -829,14 +794,8 @@ function BillRow({
             >
               {bill.isReceived ? 'Vendor paid' : 'Vendor unpaid'}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-              {SPLIT_METHOD_LABELS[bill.splitMethod] ?? bill.splitMethod}
-            </span>
           </div>
-          <p className="mt-1 text-sm text-slate-500">
-            {longDate(bill.date)}
-            {bill.payer && ` · paid by ${bill.payer.name}`}
-          </p>
+          {bill.payer && <p className="mt-1 text-sm text-slate-500">paid by {bill.payer.name}</p>}
           {bill.note && <p className="mt-1 text-sm text-slate-600">{bill.note}</p>}
         </div>
 
@@ -1513,16 +1472,6 @@ function EditBill({
       </form>
       <BillChangeHistory groupId={groupId} billId={bill.id} />
     </li>
-  );
-}
-
-function Stat({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' }) {
-  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : 'text-slate-900';
-  return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
-      <div className={`mt-2 text-xl font-semibold sm:text-2xl ${color}`}>{value}</div>
-    </div>
   );
 }
 
