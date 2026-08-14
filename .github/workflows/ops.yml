@@ -1,0 +1,74 @@
+name: Ops
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: What to do
+        required: true
+        default: diagnose-caddy
+        type: choice
+        options:
+          - diagnose-caddy
+          - restart-caddy
+      confirm:
+        description: Type YES to let restart-caddy make changes
+        required: false
+        default: ""
+
+concurrency:
+  group: ops-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ops:
+    runs-on: [self-hosted, bachelor-point]
+    timeout-minutes: 10
+    steps:
+      - name: Diagnose caddy
+        if: inputs.action == 'diagnose-caddy'
+        run: |
+          echo "=== pods (wide) ==="
+          sudo k3s kubectl -n bachelor-point get pods -o wide
+
+          echo
+          echo "=== caddy pod(s) describe ==="
+          for p in $(sudo k3s kubectl -n bachelor-point get pods -l app=caddy -o name); do
+            sudo k3s kubectl -n bachelor-point describe "$p"
+          done
+
+          echo
+          echo "=== recent namespace events ==="
+          sudo k3s kubectl -n bachelor-point get events --sort-by=.lastTimestamp | tail -n 50
+
+          echo
+          echo "=== node status ==="
+          sudo k3s kubectl get nodes -o wide
+
+          echo
+          echo "=== resource quota ==="
+          sudo k3s kubectl -n bachelor-point describe resourcequota bachelor-point-quota || true
+
+      - name: Refuse unconfirmed restart
+        if: inputs.action == 'restart-caddy' && inputs.confirm != 'YES'
+        run: |
+          echo "action=restart-caddy requires confirm=YES. Nothing was changed."
+          exit 1
+
+      - name: Restart caddy
+        if: inputs.action == 'restart-caddy' && inputs.confirm == 'YES'
+        run: |
+          echo "=== before ==="
+          sudo k3s kubectl -n bachelor-point get pods -l app=caddy -o wide
+
+          echo
+          echo "=== force-deleting any stuck/pending caddy pod(s) ==="
+          sudo k3s kubectl -n bachelor-point delete pod -l app=caddy --grace-period=0 --force --ignore-not-found=true
+
+          echo
+          echo "=== waiting for a fresh caddy pod to become ready ==="
+          sudo k3s kubectl -n bachelor-point rollout status deployment/caddy --timeout=120s
+
+          echo
+          echo "=== after ==="
+          sudo k3s kubectl -n bachelor-point get pods -l app=caddy -o wide
