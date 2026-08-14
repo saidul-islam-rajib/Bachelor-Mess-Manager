@@ -1071,7 +1071,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
   const [date, setDate] = useState(initial?.date ?? todayKey());
   const [note, setNote] = useState(initial?.note ?? '');
   const [splitMethod, setSplitMethod] = useState(initial?.splitMethod ?? SPLIT_METHODS.EQUAL);
-  const [isReceived, setIsReceived] = useState(initial?.isReceived ?? false);
+  const [isReceived, setIsReceived] = useState(initial?.isReceived ?? true);
   const [payerId, setPayerId] = useState(initial?.payer?.id ?? '');
   const [custom, setCustom] = useState<Record<string, string>>(() => {
     if (initial?.splitMethod !== SPLIT_METHODS.CUSTOM) return {};
