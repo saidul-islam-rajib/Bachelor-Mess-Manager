@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Composer } from '@/components/community/Composer';
+import { ComposerTrigger } from '@/components/community/ComposerTrigger';
+import { PeopleRail } from '@/components/community/PeopleRail';
 import { PostCard, type CommunityMessage } from '@/components/community/PostCard';
 import { useInfiniteScroll } from '@/components/community/useInfiniteScroll';
 import type { Member } from '@/components/MentionInput';
@@ -10,8 +12,6 @@ import {
   ActionLink,
   Alert,
   Button,
-  Card,
-  CardHeader,
   EmptyState,
   LoadingCard,
   PageContainer,
@@ -23,12 +23,13 @@ import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { commentsAnchorPath } from '@/lib/routes';
 
+type CommunityMember = Member & { profileImage: string | null };
+
 type FeedResponse = {
   messages: CommunityMessage[];
-  pinned: CommunityMessage[];
   mentionNames: Record<string, string>;
   hasMore: boolean;
-  members?: Member[];
+  members?: CommunityMember[];
   unreadCount: number;
   currentUserId: string;
   canMentionEveryone: boolean;
@@ -37,55 +38,76 @@ type FeedResponse = {
   maxImagesPerPost: number;
 };
 
+type FeedCache = {
+  messages: CommunityMessage[];
+  members: CommunityMember[];
+  mentionNames: Record<string, string>;
+  hasMore: boolean;
+  canMentionEveryone: boolean;
+  canModerate: boolean;
+  maxLength: number;
+  maxImagesPerPost: number;
+};
+
+let feedCache: FeedCache | null = null;
+
 export default function CommunityPage() {
   const toast = useToast();
   const confirm = useConfirm();
   const { user } = useCurrentUser();
   const { markRead, setUnreadCount } = useCommunity();
 
-  const [messages, setMessages] = useState<CommunityMessage[]>([]);
-  const [pinned, setPinned] = useState<CommunityMessage[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [mentionNames, setMentionNames] = useState<Record<string, string>>({});
-  const [hasMore, setHasMore] = useState(false);
-  const [canMentionEveryone, setCanMentionEveryone] = useState(false);
-  const [canModerate, setCanModerate] = useState(false);
-  const [maxLength, setMaxLength] = useState(communityConfig.maxMessageLength);
-  const [maxImagesPerPost, setMaxImagesPerPost] = useState(communityConfig.maxImagesPerPost);
+  const [messages, setMessages] = useState<CommunityMessage[]>(feedCache?.messages ?? []);
+  const [members, setMembers] = useState<CommunityMember[]>(feedCache?.members ?? []);
+  const [mentionNames, setMentionNames] = useState<Record<string, string>>(feedCache?.mentionNames ?? {});
+  const [hasMore, setHasMore] = useState(feedCache?.hasMore ?? false);
+  const [canMentionEveryone, setCanMentionEveryone] = useState(feedCache?.canMentionEveryone ?? false);
+  const [canModerate, setCanModerate] = useState(feedCache?.canModerate ?? false);
+  const [maxLength, setMaxLength] = useState(feedCache?.maxLength ?? communityConfig.maxMessageLength);
+  const [maxImagesPerPost, setMaxImagesPerPost] = useState(feedCache?.maxImagesPerPost ?? communityConfig.maxImagesPerPost);
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!feedCache);
   const [loadingMore, setLoadingMore] = useState(false);
   const [newPostsPending, setNewPostsPending] = useState(0);
+  const [composerOpen, setComposerOpen] = useState(false);
 
-  const latestSeenAt = useRef<string | null>(null);
+  const latestSeenAt = useRef<string | null>(feedCache?.messages[0]?.createdAt ?? null);
   const sentinel = useRef<HTMLDivElement>(null);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      const data = await api.get<FeedResponse>('/api/community/messages');
-      setMessages(data.messages);
-      setPinned(data.pinned);
-      setMembers(data.members ?? []);
-      setMentionNames(data.mentionNames);
-      setHasMore(data.hasMore);
-      setCanMentionEveryone(data.canMentionEveryone);
-      setCanModerate(data.canModerate);
-      setMaxLength(data.maxLength);
-      setMaxImagesPerPost(data.maxImagesPerPost);
-      latestSeenAt.current = data.messages[0]?.createdAt ?? latestSeenAt.current;
-      setNewPostsPending(0);
-      markRead();
-    } catch (error) {
-      toast.error(errorMessage(error, strings.errors.loadFailed(strings.community.title)));
-    } finally {
-      setLoading(false);
-    }
-  }, [markRead, toast]);
+  const hadCacheOnMount = useRef(Boolean(feedCache)).current;
 
   useEffect(() => {
-    if (user) load();
-  }, [load, user]);
+    feedCache = { messages, members, mentionNames, hasMore, canMentionEveryone, canModerate, maxLength, maxImagesPerPost };
+  }, [messages, members, mentionNames, hasMore, canMentionEveryone, canModerate, maxLength, maxImagesPerPost]);
+
+  const load = useCallback(
+    async (options: { silent?: boolean } = {}) => {
+      if (!options.silent) setLoading(true);
+      try {
+        const data = await api.get<FeedResponse>('/api/community/messages');
+        setMessages(data.messages);
+        setMembers(data.members ?? []);
+        setMentionNames(data.mentionNames);
+        setHasMore(data.hasMore);
+        setCanMentionEveryone(data.canMentionEveryone);
+        setCanModerate(data.canModerate);
+        setMaxLength(data.maxLength);
+        setMaxImagesPerPost(data.maxImagesPerPost);
+        latestSeenAt.current = data.messages[0]?.createdAt ?? latestSeenAt.current;
+        setNewPostsPending(0);
+        markRead();
+      } catch (error) {
+        if (!options.silent) toast.error(errorMessage(error, strings.errors.loadFailed(strings.community.title)));
+      } finally {
+        if (!options.silent) setLoading(false);
+      }
+    },
+    [markRead, toast]
+  );
+
+  useEffect(() => {
+    if (!user) return;
+    void load({ silent: hadCacheOnMount });
+  }, [load, user, hadCacheOnMount]);
 
   const pull = useCallback(async () => {
     if (!user || !latestSeenAt.current) return;
@@ -137,7 +159,7 @@ export default function CommunityPage() {
     }
   }
 
-  useInfiniteScroll({ target: sentinel, onIntersect: loadMore, enabled: !loading && hasMore });
+  useInfiniteScroll({ target: sentinel, onIntersect: loadMore, enabled: !loading && hasMore, rootMargin: '800px' });
 
   function onPosted(message: CommunityMessage) {
     setMessages((current) => [message, ...current]);
@@ -157,7 +179,6 @@ export default function CommunityPage() {
     try {
       await api.delete(`/api/community/messages/${message.id}`);
       setMessages((current) => current.filter((item) => item.id !== message.id));
-      setPinned((current) => current.filter((item) => item.id !== message.id));
       toast.success(strings.community.deleted);
     } catch (error) {
       toast.error(errorMessage(error));
@@ -184,68 +205,62 @@ export default function CommunityPage() {
         action={<ActionLink href={commentsAnchorPath()}>{strings.community.elsewhereLink}</ActionLink>}
       />
 
+      <div className="grid gap-4 lg:grid-cols-[65fr_35fr]">
+        <div className="min-w-0 space-y-4">
+          <ComposerTrigger
+            userName={user.name}
+            userImage={user.profileImage ?? null}
+            onOpen={() => setComposerOpen(true)}
+          />
+
+          {newPostsPending > 0 && (
+            <div className="flex justify-center">
+              <Button size="sm" variant="secondary" onClick={() => load()}>
+                {strings.community.newMessages(newPostsPending)} · {strings.community.jumpToLatest}
+              </Button>
+            </div>
+          )}
+
+          {loading ? (
+            <LoadingCard />
+          ) : messages.length === 0 ? (
+            <EmptyState title={strings.community.empty} />
+          ) : (
+            <>
+              <ul className="space-y-3">
+                {messages.map((message) => (
+                  <PostCard
+                    key={message.id}
+                    message={message}
+                    members={members}
+                    mentionNames={mentionNames}
+                    canDelete={canDelete(message)}
+                    onDelete={remove}
+                  />
+                ))}
+              </ul>
+
+              <div ref={sentinel} className="py-6 text-center text-sm text-slate-400">
+                {loadingMore ? strings.community.loadingOlder : !hasMore ? strings.community.endOfFeed : null}
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="hidden lg:block">
+          <PeopleRail members={members} />
+        </div>
+      </div>
+
       <Composer
+        open={composerOpen}
+        onClose={() => setComposerOpen(false)}
         members={members}
         maxLength={maxLength}
         maxImagesPerPost={maxImagesPerPost}
         allowEveryone={canMentionEveryone}
         onPosted={onPosted}
       />
-
-      {newPostsPending > 0 && (
-        <div className="mt-4 flex justify-center">
-          <Button size="sm" variant="secondary" onClick={load}>
-            {strings.community.newMessages(newPostsPending)} · {strings.community.jumpToLatest}
-          </Button>
-        </div>
-      )}
-
-      {pinned.length > 0 && (
-        <Card className="mt-4">
-          <CardHeader title={strings.community.pinned} />
-          <ul className="mt-3 space-y-2">
-            {pinned.map((message) => (
-              <PostCard
-                key={message.id}
-                message={message}
-                members={members}
-                mentionNames={mentionNames}
-                isOwn={message.authorId === user.id}
-                canDelete={canDelete(message)}
-                onDelete={remove}
-              />
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      <div className="mt-4">
-        {loading ? (
-          <LoadingCard />
-        ) : messages.length === 0 ? (
-          <EmptyState title={strings.community.empty} />
-        ) : (
-          <>
-            <ul className="space-y-2">
-              {messages.map((message) => (
-                <PostCard
-                  key={message.id}
-                  message={message}
-                  members={members}
-                  mentionNames={mentionNames}
-                  isOwn={message.authorId === user.id}
-                  canDelete={canDelete(message)}
-                  onDelete={remove}
-                />
-              ))}
-            </ul>
-
-            <div ref={sentinel} className="py-6 text-center text-sm text-slate-400">
-              {loadingMore ? strings.community.loadingOlder : !hasMore ? strings.community.endOfFeed : null}
-            </div>
-          </>
-        )}
-      </div>
     </PageContainer>
   );
 }

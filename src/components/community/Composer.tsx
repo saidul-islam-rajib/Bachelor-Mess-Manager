@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import type { CommunityMessage } from '@/components/community/PostCard';
 import { MentionInput, type Member } from '@/components/MentionInput';
 import { useToast } from '@/components/ToastProvider';
-import { Button, Card } from '@/components/ui';
+import { Button, Modal } from '@/components/ui';
 import { uploadConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
@@ -20,12 +20,16 @@ function readAsDataUrl(file: File): Promise<string> {
 }
 
 export function Composer({
+  open,
+  onClose,
   members,
   maxLength,
   maxImagesPerPost,
   allowEveryone,
   onPosted
 }: {
+  open: boolean;
+  onClose: () => void;
   members: Member[];
   maxLength: number;
   maxImagesPerPost: number;
@@ -108,6 +112,7 @@ export function Composer({
       setText('');
       setImages([]);
       toast.success(strings.community.posted);
+      onClose();
     } catch (error) {
       toast.error(errorMessage(error));
     } finally {
@@ -116,71 +121,70 @@ export function Composer({
   }
 
   return (
-    <Card>
-      <form
-        onSubmit={(event: FormEvent<HTMLFormElement>) => {
-          event.preventDefault();
-          void post();
-        }}
-      >
-        <MentionInput
-          value={text}
-          onChange={setText}
-          members={members}
-          rows={3}
-          maxLength={maxLength}
-          allowEveryone={allowEveryone}
-          hint={allowEveryone ? strings.comments.mentionHint : strings.community.mentionHint}
-          placeholder={strings.community.placeholder}
-          onSubmit={() => void post()}
-        />
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={strings.community.composerTitle}
+      size="lg"
+      footer={
+        <Button onClick={() => void post()} disabled={!text.trim() && images.length === 0} loading={posting}>
+          {strings.community.post}
+        </Button>
+      }
+    >
+      <MentionInput
+        value={text}
+        onChange={setText}
+        members={members}
+        rows={4}
+        maxLength={maxLength}
+        allowEveryone={allowEveryone}
+        hint={allowEveryone ? strings.comments.mentionHint : strings.community.mentionHint}
+        placeholder={strings.community.placeholder}
+        onSubmit={() => void post()}
+      />
 
-        {images.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {images.map((src, index) => (
-              <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200">
-                <img src={src} alt="" className="h-full w-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeImage(index)}
-                  aria-label={strings.community.imageRemove}
-                  title={strings.community.imageRemove}
-                  className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors hover:bg-red-600"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-3 flex items-center justify-between">
-          <input
-            ref={fileInput}
-            type="file"
-            accept={ACCEPTED_IMAGE_MIMES.join(',')}
-            multiple
-            className="hidden"
-            onChange={addFiles}
-          />
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={images.length >= maxImagesPerPost}
-            onClick={() => fileInput.current?.click()}
-          >
-            {strings.community.addPhotos}
-          </Button>
-
-          <Button type="submit" disabled={!text.trim() && images.length === 0} loading={posting}>
-            {strings.community.post}
-          </Button>
+      {images.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {images.map((src, index) => (
+            <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200">
+              <img src={src} alt="" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeImage(index)}
+                aria-label={strings.community.imageRemove}
+                title={strings.community.imageRemove}
+                className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors hover:bg-red-600"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          ))}
         </div>
-      </form>
-    </Card>
+      )}
+
+      <div className="mt-3">
+        <input
+          ref={fileInput}
+          type="file"
+          accept={ACCEPTED_IMAGE_MIMES.join(',')}
+          multiple
+          className="hidden"
+          onChange={addFiles}
+        />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={images.length >= maxImagesPerPost}
+          onClick={() => fileInput.current?.click()}
+        >
+          {strings.community.addPhotos}
+        </Button>
+      </div>
+    </Modal>
   );
 }
 

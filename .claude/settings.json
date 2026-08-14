@@ -2,8 +2,12 @@
   "permissions": {
     "allow": [
       "Bash(git merge *)",
-      "Bash(*)",
-      "Bash(timeout 60 bash -c ' *)"
+      "Bash(timeout 60 bash -c ' *)",
+      "Bash(git branch *)",
+      "Bash(echo \"TSC_EXIT=$?\")",
+      "Bash(npx eslint *)",
+      "Bash(time curl -s -o /dev/null -w \"HTTP %{http_code} in %{time_total}s\\\\n\" -H \"Cookie: bachelor_point_session=test\" \"http://localhost:3001/api/community/messages\")",
+      "Bash(echo \"TSC=$?\")"
     ]
   }
 }

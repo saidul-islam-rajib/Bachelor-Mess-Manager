@@ -23,7 +23,7 @@ export function ImageGrid({ images, authorName }: { images: string[]; authorName
   if (images.length === 0) return null;
 
   return (
-    <div className={`mt-2 grid gap-1 overflow-hidden rounded-2xl ${LAYOUT[images.length] ?? 'grid-cols-2'}`}>
+    <div className={`grid gap-px bg-slate-100 ${LAYOUT[images.length] ?? 'grid-cols-2'}`}>
       {images.map((src, index) => (
         <ImageViewer
           key={src}

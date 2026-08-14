@@ -28,11 +28,10 @@ export type CommunityMessageView = {
   createdAt: string;
 };
 
-export type CommunityMember = { id: string; name: string };
+export type CommunityMember = { id: string; name: string; profileImage: string | null };
 
 export type CommunityFeed = {
   messages: CommunityMessageView[];
-  pinned: CommunityMessageView[];
   mentionNames: Record<string, string>;
   hasMore: boolean;
 };
@@ -63,7 +62,11 @@ const MESSAGE_SELECT = {
   images: { select: { url: true }, orderBy: { sortOrder: 'asc' } }
 } satisfies Prisma.CommunityMessageSelect;
 
-const VISIBLE: Prisma.CommunityMessageWhereInput = { deletedAt: null, isPublished: true };
+const VISIBLE: Prisma.CommunityMessageWhereInput = {
+  deletedAt: null,
+  isPublished: true,
+  type: { not: COMMUNITY_MESSAGE_TYPES.WELCOME }
+};
 
 export function isSystemMessage(type: string): boolean {
   return type !== COMMUNITY_MESSAGE_TYPES.MEMBER;
@@ -131,21 +134,9 @@ export async function readFeed(options: { before?: string; after?: string; limit
   const page = hasMore ? rows.slice(0, take) : rows;
   const messages = page.map(serialize);
 
-  const pinnedRows = after
-    ? []
-    : await prisma.communityMessage.findMany({
-        where: { ...VISIBLE, pinned: true },
-        select: MESSAGE_SELECT,
-        orderBy: { createdAt: 'desc' },
-        take
-      });
-
-  const pinned = pinnedRows.map(serialize);
-
   return {
     messages,
-    pinned,
-    mentionNames: await mentionNamesFor([...messages, ...pinned]),
+    mentionNames: await mentionNamesFor(messages),
     hasMore: after ? false : hasMore
   };
 }
@@ -311,7 +302,7 @@ export async function markRead(userId: string): Promise<void> {
 export async function directory(): Promise<CommunityMember[]> {
   const users = await prisma.user.findMany({
     where: { status: USER_STATUS.APPROVED },
-    select: { id: true, name: true },
+    select: { id: true, name: true, profileImage: true },
     orderBy: { name: 'asc' },
     take: communityConfig.directorySize
   });
