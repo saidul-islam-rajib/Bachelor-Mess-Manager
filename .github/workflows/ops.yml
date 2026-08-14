@@ -11,6 +11,7 @@ on:
         options:
           - diagnose-caddy
           - restart-caddy
+          - remove-k3s-traefik
       confirm:
         description: Type YES to let restart-caddy make changes
         required: false
@@ -79,6 +80,49 @@ jobs:
         run: |
           echo "action=restart-caddy requires confirm=YES. Nothing was changed."
           exit 1
+
+      - name: Refuse unconfirmed traefik removal
+        if: inputs.action == 'remove-k3s-traefik' && inputs.confirm != 'YES'
+        run: |
+          echo "action=remove-k3s-traefik requires confirm=YES. Nothing was changed."
+          exit 1
+
+      - name: Remove k3s's bundled Traefik
+        if: inputs.action == 'remove-k3s-traefik' && inputs.confirm == 'YES'
+        run: |
+          echo "=== kube-system before ==="
+          sudo k3s kubectl -n kube-system get pods -o wide
+          sudo k3s kubectl -n kube-system get helmchart
+
+          echo
+          echo "=== deleting the traefik HelmChart resources (this app has never used k3s's bundled Traefik) ==="
+          sudo k3s kubectl -n kube-system delete helmchart traefik --ignore-not-found=true
+          sudo k3s kubectl -n kube-system delete helmchart traefik-crd --ignore-not-found=true
+
+          echo
+          echo "=== waiting for traefik/svclb pods to disappear (up to 90s) ==="
+          for i in $(seq 1 18); do
+            remaining=$(sudo k3s kubectl -n kube-system get pods --no-headers 2>/dev/null | grep -c -E 'traefik|svclb' || true)
+            if [ "$remaining" = "0" ]; then break; fi
+            sleep 5
+          done
+          sudo k3s kubectl -n kube-system get pods -o wide
+
+          echo
+          echo "=== host ports 80/443 now ==="
+          sudo ss -tlnp | grep -E ':80 |:443 ' || echo "(nothing bound - good)"
+
+          echo
+          echo "=== deleting any stuck/pending caddy pod so it reschedules now that ports are free ==="
+          sudo k3s kubectl -n bachelor-point delete pod -l app=caddy --grace-period=0 --force --ignore-not-found=true
+
+          echo
+          echo "=== waiting for caddy to become ready ==="
+          sudo k3s kubectl -n bachelor-point rollout status deployment/caddy --timeout=120s
+
+          echo
+          echo "=== caddy after ==="
+          sudo k3s kubectl -n bachelor-point get pods -l app=caddy -o wide
 
       - name: Restart caddy
         if: inputs.action == 'restart-caddy' && inputs.confirm == 'YES'
