@@ -57,6 +57,23 @@ jobs:
           echo "=== all containerd containers matching caddy, including ones kubectl can't see ==="
           sudo crictl ps -a | grep -i caddy || echo "(none found)"
 
+          echo
+          echo "=== every pod across every namespace, any node, any status ==="
+          sudo k3s kubectl get pods -A -o wide
+
+          echo
+          echo "=== anything else declaring hostPort 80 or 443 cluster-wide ==="
+          sudo k3s kubectl get pods -A -o json | grep -B30 '"hostPort": *\(80\|443\)' | grep -E '"name"|"hostPort"|"namespace"' || echo "(none found)"
+
+          echo
+          echo "=== full port listing on the host (all ports, not just 80/443) ==="
+          sudo ss -tlnp
+
+          echo
+          echo "=== scheduler pod status/logs (last 40 lines) ==="
+          sudo k3s kubectl -n kube-system get pods | grep -i sched || echo "(no separate scheduler pod - likely running in-process as part of k3s server)"
+          sudo journalctl -u k3s --no-pager -n 40 | grep -i -E "port|caddy|schedul" || echo "(no matching journal lines)"
+
       - name: Refuse unconfirmed restart
         if: inputs.action == 'restart-caddy' && inputs.confirm != 'YES'
         run: |
