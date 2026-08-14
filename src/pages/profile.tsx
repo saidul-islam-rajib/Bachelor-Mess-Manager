@@ -145,9 +145,10 @@ type EditWindowState = {
   requiresApproval: boolean;
 };
 
-function DefaultMealPlanSection() {
-  const { can } = useCurrentUser();
-  const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
+type OwnGroup = { id: string; name: string };
+
+function useOwnGroup(excludeSupervisorId?: string): { group: OwnGroup | null; loading: boolean } {
+  const [group, setGroup] = useState<OwnGroup | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -155,10 +156,11 @@ function DefaultMealPlanSection() {
 
     async function load() {
       try {
-        const groupsRes = await fetch('/api/groups');
-        const groupsBody = await groupsRes.json().catch(() => ({}));
-        const first = (groupsBody.groups ?? [])[0];
-        if (!cancelled) setGroup(first ? { id: first.id, name: first.name } : null);
+        const res = await fetch('/api/groups');
+        const body = await res.json().catch(() => ({}));
+        const groups: Array<{ id: string; name: string; supervisor?: { id: string } }> = body.groups ?? [];
+        const match = excludeSupervisorId ? groups.find((g) => g.supervisor?.id !== excludeSupervisorId) : groups[0];
+        if (!cancelled) setGroup(match ? { id: match.id, name: match.name } : null);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -168,7 +170,14 @@ function DefaultMealPlanSection() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [excludeSupervisorId]);
+
+  return { group, loading };
+}
+
+function DefaultMealPlanSection() {
+  const { can } = useCurrentUser();
+  const { group, loading } = useOwnGroup();
 
   if (loading || !group || !can(PERMISSIONS.MEAL_PLAN_MANAGE)) return null;
 
@@ -178,42 +187,38 @@ function DefaultMealPlanSection() {
 function PastMealEditingSection() {
   const toast = useToast();
   const { user } = useCurrentUser();
-  const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
+  const { group, loading: groupLoading } = useOwnGroup(user?.id);
   const [state, setState] = useState<EditWindowState | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [windowLoading, setWindowLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const loading = groupLoading || windowLoading;
 
   useEffect(() => {
+    if (groupLoading) return;
+    if (!group) {
+      setWindowLoading(false);
+      return;
+    }
+
     let cancelled = false;
+    setWindowLoading(true);
+    const groupId = group.id;
 
-    async function load() {
+    async function loadWindow() {
       try {
-        const groupsRes = await fetch('/api/groups');
-        const groupsBody = await groupsRes.json().catch(() => ({}));
-        const first = (groupsBody.groups ?? []).find(
-          (candidate: { supervisor?: { id: string } }) => candidate.supervisor?.id !== user?.id
-        );
-        if (!first) {
-          if (!cancelled) setLoading(false);
-          return;
-        }
-
-        const windowRes = await fetch(`/api/groups/${first.id}/meal-edit-window`);
-        const windowBody = await windowRes.json().catch(() => ({}));
-        if (cancelled) return;
-
-        setGroup({ id: first.id, name: first.name });
-        if (windowRes.ok) setState(windowBody.window);
+        const res = await fetch(`/api/groups/${groupId}/meal-edit-window`);
+        const body = await res.json().catch(() => ({}));
+        if (!cancelled && res.ok) setState(body.window);
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setWindowLoading(false);
       }
     }
 
-    load();
+    loadWindow();
     return () => {
       cancelled = true;
     };
-  }, [user?.id]);
+  }, [group, groupLoading]);
 
   useEffect(() => {
     if (!state?.open || !state.expiresAt) return;
