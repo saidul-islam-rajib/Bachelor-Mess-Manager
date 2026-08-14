@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AnnouncementsRail } from '@/components/community/AnnouncementsRail';
 import { Composer } from '@/components/community/Composer';
 import { ComposerTrigger } from '@/components/community/ComposerTrigger';
 import { PeopleRail } from '@/components/community/PeopleRail';
@@ -248,7 +249,10 @@ export default function CommunityPage() {
         </div>
 
         <div className="hidden lg:block">
-          <PeopleRail members={members} />
+          <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pb-4">
+            <AnnouncementsRail messages={messages} />
+            <PeopleRail members={members} />
+          </div>
         </div>
       </div>
 

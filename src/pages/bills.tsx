@@ -176,6 +176,7 @@ export default function BillsPage() {
   const canManage = data?.canManage ?? false;
   const canRecordOwn = data?.canRecordOwn ?? false;
   const hasBreakdown = Object.values(data?.totals.byType ?? {}).some((amount) => amount > 0);
+  const pairBreakdownWithAdvances = hasBreakdown && !canManage;
   const bills = useMemo(() => data?.bills ?? [], [data?.bills]);
   const grouped = useMemo(() => billsByKind(bills), [bills]);
   const openCount = bills.filter((bill) => expanded.includes(bill.id)).length;
@@ -212,7 +213,11 @@ export default function BillsPage() {
                 onOpenBill={revealBill}
               />
 
-              <div className={`grid gap-4 ${hasBreakdown && canManage ? 'lg:grid-cols-5' : ''}`}>
+              <div
+                className={`grid gap-4 ${
+                  hasBreakdown && canManage ? 'lg:grid-cols-5' : pairBreakdownWithAdvances ? 'lg:grid-cols-2' : ''
+                }`}
+              >
                 {hasBreakdown && (
                   <div className={canManage ? 'lg:col-span-3' : ''}>
                     <Breakdown
@@ -226,6 +231,9 @@ export default function BillsPage() {
                   <div className={hasBreakdown ? 'lg:col-span-2' : ''}>
                     <CategoryManager groupId={groupId} categories={data.categories} onChanged={refresh} />
                   </div>
+                )}
+                {pairBreakdownWithAdvances && (
+                  <AdvancesSection groupId={groupId} canManage={canManage} refreshToken={advanceVersion} />
                 )}
               </div>
 
@@ -242,7 +250,9 @@ export default function BillsPage() {
                 />
               )}
 
-              <AdvancesSection groupId={groupId} canManage={canManage} refreshToken={advanceVersion} />
+              {!pairBreakdownWithAdvances && (
+                <AdvancesSection groupId={groupId} canManage={canManage} refreshToken={advanceVersion} />
+              )}
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">

@@ -922,6 +922,7 @@ const en = {
     composerTitle: 'Create post',
     people: 'People',
     viewAllMembers: 'View all members',
+    announcementsTitle: 'Announcements',
     posted: 'Posted to the community.',
     deleteAction: 'Delete message',
     deleteConfirmTitle: 'Delete this message?',

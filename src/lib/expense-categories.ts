@@ -58,7 +58,8 @@ export async function ensureCategories(groupId: string): Promise<Category[]> {
       isSystem: true,
       sortOrder: index,
       publishedAt: now
-    }))
+    })),
+    skipDuplicates: true
   });
 
   const seeded = await prisma.expenseCategory.findMany({
