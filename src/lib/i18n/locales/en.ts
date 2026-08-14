@@ -52,7 +52,12 @@ const en = {
     selected: 'Selected',
     skipToContent: 'Skip to main content',
     viewImage: 'View full image',
-    viewImageHint: 'Tap outside the image to close it.'
+    viewImageHint: 'Tap outside the image to close it.',
+    pager: {
+      previous: 'Previous',
+      next: 'Next',
+      pageOf: (current: number, total: number) => `Page ${current} of ${total}`
+    }
   },
   nav: {
     dashboard: 'Dashboard',
@@ -321,9 +326,33 @@ const en = {
     system: 'System',
     yourGroups: 'Your groups',
     manage: 'Manage',
-    noGroupsYet: "You haven't created a group yet. Head to Groups to create your first mess.",
+    noGroupsYet: "You haven't created a group yet. Head to Members to create your first mess.",
     spentThisMonth: 'Spent this month',
+    spentThisMonthAllGroups: 'Spent this month (all groups)',
+    totalAmount: (amount: string) => `${amount} total`,
     outstandingDues: 'Outstanding dues',
+    highestGroupRate: 'Highest group rate',
+    lowestGroupRate: 'Lowest group rate',
+    expandAll: 'Expand all',
+    collapseAll: 'Collapse all',
+    noMembersYet: 'No members yet.',
+    groupCardSubtitle: (memberCount: number, rate: string) =>
+      `${memberCount} member${memberCount === 1 ? '' : 's'} · ${rate} / meal`,
+    outstandingSuffix: (amount: string) => ` · ${amount} outstanding`,
+    openGroup: 'Open group',
+    mealCostBazar: 'Meal cost (bazar)',
+    frontedByMembers: 'Fronted by members',
+    yetToRecover: 'Yet to recover',
+    billsRentUtilities: 'Bills (rent, utilities & more)',
+    additional: 'Additional',
+    collected: 'Collected',
+    thisMonthShort: 'This month',
+    highestDay: 'Highest day',
+    lowestDay: 'Lowest day',
+    everyoneThisMonth: 'Everyone this month',
+    yourCost: 'Your cost',
+    refund: 'Refund',
+    memberCountHere: (count: number, stay: string) => `${count} member${count === 1 ? '' : 's'} · here ${stay}`,
     whoOwes: 'Who still owes',
     allSettled: 'Everyone is settled up this month.',
     recordPayment: 'Record a payment',
@@ -357,7 +386,9 @@ const en = {
     cost: 'Cost',
     due: 'Due',
     spent: 'Spent',
-    outstanding: 'Outstanding'
+    outstanding: 'Outstanding',
+    signInPrompt: 'Please sign in.',
+    nothingToShow: 'Nothing to show yet.'
   },
   groups: {
     title: 'Groups',
@@ -595,6 +626,8 @@ const en = {
     hideEveryone: 'Hide everyone else',
     editingFor: (name: string) => `Editing ${name}`,
     averageRateHint: 'The average of the daily rates so far. Each day is charged at its own rate.',
+    dailyCostNote:
+      "This group prices each day on its own bazar, so your cost is the sum of what each day you ate actually cost — not your meals times the month's average rate above. A quiet day can cost more per meal than a busy one, because the same bazar fed fewer people. Open the day-by-day breakdown further down the page to see exactly how your total adds up.",
     ratedThrough: (day: string) =>
       `The meal rate and everyone's cost are worked out from bazar and meals up to ${day}. Later days show planned meals only and are not priced yet.`,
     notStartedYet: 'This month has not started. The numbers below are planned meals only — nothing is priced yet.',
@@ -662,7 +695,10 @@ const en = {
     itemAmountInvalid: 'Every item needs an amount greater than zero.',
     shoppingReport: 'Shopping report',
     changeHistory: 'Change history',
-    label: 'purchase'
+    label: 'purchase',
+    byMember: 'Bazar by member',
+    monthTotal: (amount: string) => `Month total ${amount}`,
+    purchaseCount: (count: number) => `${count} purchase${count === 1 ? '' : 's'}`
   },
   bills: {
     title: 'Bills & fixed costs',
@@ -718,7 +754,47 @@ const en = {
     manageCostTypes: (count: number) => `Manage cost types (${count})`,
     recordOpen: 'Close',
     recordCollapsedHint: 'Add rent, gas, electricity or any other fixed cost.',
-    noCostTypes: 'No cost types yet.'
+    noCostTypes: 'No cost types yet.',
+    partPayment: 'Part',
+    ledger: {
+      reverse: 'reverse',
+      reversed: '· reversed',
+      recordedBy: (name: string) => `by ${name}`
+    },
+    transfer: {
+      intoCollection: 'Paid into the collection',
+      paidTo: (name: string) => `Paid to ${name}`,
+      getsBack: (amount: string) => `(gets back ${amount})`,
+      amountFrom: (name: string) => `Amount received from ${name}`,
+      whoDidPay: (name: string) => `Who did ${name} pay?`
+    },
+    paymentHistory: {
+      title: 'Payment history',
+      subtitle: (count: number) => `${count} payment${count === 1 ? '' : 's'} recorded this month`,
+      fromAdvance: '· from advance'
+    },
+    advances: {
+      title: 'Advances',
+      balanceSummary: (amount: string, count: number) =>
+        `${amount} on hand across ${count} member${count === 1 ? '' : 's'}`,
+      noneYet: 'No advance collected yet',
+      explanation:
+        "Money members hand over ahead of a bill. New bills automatically pull from whatever balance a member has on file, so rent, wifi and electricity can be paid the moment they're due.",
+      selectMember: 'Select member',
+      noteLabel: 'Note (optional)',
+      notePlaceholder: 'e.g. August advance',
+      collectCta: 'Collect advance',
+      historyTitle: 'History',
+      appliedToBill: '· applied to a bill',
+      reversalEntry: '· reversal',
+      depositEntry: '· deposit',
+      confirmReverse: 'Reverse this advance deposit?',
+      recorded: 'Advance recorded.',
+      reversedToast: 'Advance reversed.',
+      loadFailed: 'Could not load advances.',
+      recordFailed: 'Could not record that advance.',
+      reverseFailed: 'Could not reverse that entry.'
+    }
   },
   payments: {
     title: 'Payments',

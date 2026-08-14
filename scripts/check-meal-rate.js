@@ -10,6 +10,22 @@ const prisma = new PrismaClient();
 const scrypt = promisify(crypto.scrypt);
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:3000';
 
+const APP_TIME_ZONE = process.env.APP_TIME_ZONE || 'Asia/Dhaka';
+const zonedDayFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: APP_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+});
+function zonedDayKey(instant = new Date()) {
+  const parts = zonedDayFormatter.formatToParts(instant);
+  const value = (type) => parts.find((part) => part.type === type)?.value ?? '';
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+function shiftDayKey(dayKey, days) {
+  return new Date(new Date(`${dayKey}T00:00:00.000Z`).getTime() + days * 86_400_000).toISOString().slice(0, 10);
+}
+
 const tag = crypto.randomBytes(4).toString('hex');
 const password = 'RateCheck!9xZ';
 const created = { userIds: [], groupIds: [] };
@@ -274,22 +290,17 @@ async function run() {
 }
 
 async function futureMealsScenario(sup, supervisor) {
-  const now = new Date();
-  const lastDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)).getUTCDate();
+  const today = zonedDayKey();
+  const month = today.slice(0, 7);
+  const tomorrow = shiftDayKey(today, 1);
 
   report('');
   report('Scenario: 300 bazar today, 3 meals today, 3 more already planned for tomorrow');
 
-  if (now.getUTCDate() >= lastDate) {
+  if (tomorrow.slice(0, 7) !== month) {
     report('  skipped — today is the last day of the month, there is no future day to test with');
     return;
   }
-
-  const month = now.toISOString().slice(0, 7);
-  const today = now.toISOString().slice(0, 10);
-  const tomorrow = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1))
-    .toISOString()
-    .slice(0, 10);
 
   const group = await sup.request('POST', '/api/groups', { name: `Future check ${tag}` });
   const groupId = group.body.group.id;

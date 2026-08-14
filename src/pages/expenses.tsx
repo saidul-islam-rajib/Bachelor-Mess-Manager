@@ -102,6 +102,19 @@ export default function ExpensesPage() {
 
   const monthTotal = expenses.reduce((sum, e) => sum + e.amount, 0);
 
+  const byPayer = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; amount: number; count: number }>();
+    for (const e of expenses) {
+      const id = e.payer?.id ?? 'unknown';
+      const name = e.payer?.name ?? 'Unknown';
+      const row = map.get(id) ?? { id, name, amount: 0, count: 0 };
+      row.amount += e.amount;
+      row.count += 1;
+      map.set(id, row);
+    }
+    return [...map.values()].sort((a, b) => b.amount - a.amount);
+  }, [expenses]);
+
   function toPayload(list: Draft[]) {
     return list
       .filter((r) => r.name.trim() || r.amount)
@@ -271,10 +284,43 @@ export default function ExpensesPage() {
             )}
           </div>
 
+          {byPayer.length > 0 && (
+            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-lg font-semibold">{strings.expenses.byMember}</h2>
+                <p className="text-sm text-slate-500">{strings.expenses.monthTotal(taka(monthTotal))}</p>
+              </div>
+              <ul className="mt-4 space-y-3">
+                {byPayer.map((row) => {
+                  const percent = monthTotal > 0 ? Math.round((row.amount / monthTotal) * 100) : 0;
+                  return (
+                    <li key={row.id}>
+                      <div className="flex items-baseline justify-between gap-3 text-sm">
+                        <span className="min-w-0 truncate font-medium">
+                          {row.name}
+                          {row.id === user?.id && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                          <span className="ml-1.5 text-xs font-normal text-slate-400">
+                            {strings.expenses.purchaseCount(row.count)}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-slate-600">
+                          {taka(row.amount)} <span className="text-xs text-slate-400">({percent}%)</span>
+                        </span>
+                      </div>
+                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="text-lg font-semibold">Shopping report</h2>
-              <p className="text-sm text-slate-500">Month total {taka(monthTotal)}</p>
+              <h2 className="text-lg font-semibold">{strings.expenses.shoppingReport}</h2>
+              <p className="text-sm text-slate-500">{strings.expenses.monthTotal(taka(monthTotal))}</p>
             </div>
 
             {loading ? (

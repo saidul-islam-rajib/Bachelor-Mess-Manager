@@ -175,11 +175,11 @@ export default function DashboardPage() {
       )}
 
       {userLoading || loading ? (
-        <Panel>Loading...</Panel>
+        <Panel>{strings.common.loading}</Panel>
       ) : error ? (
         <Panel>{error}</Panel>
       ) : !data ? (
-        <Panel>Please sign in.</Panel>
+        <Panel>{dashboardStrings.signInPrompt}</Panel>
       ) : data.admin ? (
         <AdminDashboard report={data.admin} />
       ) : data.supervisor ? (
@@ -187,7 +187,7 @@ export default function DashboardPage() {
       ) : data.member ? (
         <MemberDashboard report={data.member} currentUserId={user?.id} />
       ) : (
-        <Panel>Nothing to show yet.</Panel>
+        <Panel>{dashboardStrings.nothingToShow}</Panel>
       )}
     </section>
   );
@@ -197,33 +197,37 @@ function AdminDashboard({ report }: { report: AdminReport }) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Pending approvals" value={report.pendingApprovals} tone={report.pendingApprovals > 0 ? 'amber' : undefined} />
-        <Stat label="Approved members" value={report.members} />
-        <Stat label="Supervisors" value={report.supervisors} />
-        <Stat label="Active groups" value={report.activeGroups} />
+        <Stat
+          label={dashboardStrings.pendingApprovals}
+          value={report.pendingApprovals}
+          tone={report.pendingApprovals > 0 ? 'amber' : undefined}
+        />
+        <Stat label={dashboardStrings.approvedMembers} value={report.members} />
+        <Stat label={dashboardStrings.supervisors} value={report.supervisors} />
+        <Stat label={dashboardStrings.activeGroups} value={report.activeGroups} />
       </div>
 
       <Card>
-        <h2 className="text-lg font-semibold">Admin tools</h2>
+        <h2 className="text-lg font-semibold">{dashboardStrings.adminTools}</h2>
         <p className="mt-1 text-sm text-slate-500">
           {report.pendingApprovals > 0
-            ? `${report.pendingApprovals} registration${report.pendingApprovals === 1 ? '' : 's'} waiting for a decision.`
-            : 'Approve registrations, manage users and groups, and edit site settings.'}
+            ? dashboardStrings.pendingRegistrations(report.pendingApprovals)
+            : dashboardStrings.adminToolsHint}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <LinkButton href={ROUTES.admin}>Open admin dashboard</LinkButton>
+          <LinkButton href={ROUTES.admin}>{dashboardStrings.openAdmin}</LinkButton>
           <LinkButton href={ROUTES.members} variant="secondary">
-            All groups
+            {dashboardStrings.allGroups}
           </LinkButton>
         </div>
       </Card>
 
       <Card>
-        <h2 className="text-lg font-semibold">System</h2>
+        <h2 className="text-lg font-semibold">{dashboardStrings.system}</h2>
         <dl className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Field label="Inactive groups" value={String(report.inactiveGroups)} />
-          <Field label="Active memberships" value={String(report.activeMemberships)} />
-          <Field label="Total accounts" value={String(report.members + report.supervisors)} />
+          <Field label={dashboardStrings.inactiveGroups} value={String(report.inactiveGroups)} />
+          <Field label={dashboardStrings.activeMemberships} value={String(report.activeMemberships)} />
+          <Field label={dashboardStrings.totalAccounts} value={String(report.members + report.supervisors)} />
         </dl>
       </Card>
     </div>
@@ -248,18 +252,18 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="grid grid-cols-2 gap-3 lg:col-span-2 sm:gap-4">
-          <Stat label="Your groups" value={`${totals.groups} / 10`} />
-          <Stat label="Members" value={totals.members} />
-          <Stat label="Meal rate" value={taka(totals.mealRate)} />
+          <Stat label={dashboardStrings.yourGroups} value={`${totals.groups} / 10`} />
+          <Stat label={strings.common.members} value={totals.members} />
+          <Stat label={dashboardStrings.mealRate} value={taka(totals.mealRate)} />
           <Stat
-            label="Outstanding dues"
+            label={dashboardStrings.outstandingDues}
             value={taka(totals.outstanding)}
             tone={totals.outstanding > 0 ? 'red' : 'green'}
           />
           {totals.groups > 1 && (
             <>
-              <Stat label="Highest group rate" value={taka(totals.highestGroupRate)} />
-              <Stat label="Lowest group rate" value={taka(totals.lowestGroupRate)} />
+              <Stat label={dashboardStrings.highestGroupRate} value={taka(totals.highestGroupRate)} />
+              <Stat label={dashboardStrings.lowestGroupRate} value={taka(totals.lowestGroupRate)} />
             </>
           )}
         </div>
@@ -295,7 +299,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
       </div>
 
       <MoneyOverview
-        label="Spent this month (all groups)"
+        label={dashboardStrings.spentThisMonthAllGroups}
         expense={totals.expense}
         bazar={totals.bazar}
         bazarPaid={totals.bazarPaid}
@@ -311,7 +315,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
 
       <div>
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-semibold">Your groups</h2>
+          <h2 className="text-lg font-semibold">{dashboardStrings.yourGroups}</h2>
           <div className="flex items-center gap-3">
             {report.groups.length > 1 && (
               <button
@@ -319,18 +323,16 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
                 onClick={() => setOpenIds(allExpanded ? new Set() : new Set(report.groups.map((group) => group.id)))}
                 className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
               >
-                {allExpanded ? 'Collapse all' : 'Expand all'}
+                {allExpanded ? dashboardStrings.collapseAll : dashboardStrings.expandAll}
               </button>
             )}
-            <ActionLink href={ROUTES.members}>Manage</ActionLink>
+            <ActionLink href={ROUTES.members}>{dashboardStrings.manage}</ActionLink>
           </div>
         </div>
 
         {report.groups.length === 0 ? (
           <Card>
-            <p className="text-sm text-slate-500">
-              You haven&apos;t created a group yet. Head to Members to create your first mess.
-            </p>
+            <p className="text-sm text-slate-500">{dashboardStrings.noGroupsYet}</p>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -348,9 +350,9 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-lg font-semibold">Who still owes</h2>
+          <h2 className="text-lg font-semibold">{dashboardStrings.whoOwes}</h2>
           {report.unpaid.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">Everyone is settled up this month.</p>
+            <p className="mt-3 text-sm text-slate-500">{dashboardStrings.allSettled}</p>
           ) : (
             <PagedList
               items={report.unpaid}
@@ -368,14 +370,14 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
             />
           )}
           <ActionLink href={ROUTES.payments} className="mt-4">
-            Record a payment
+            {dashboardStrings.recordPayment}
           </ActionLink>
         </Card>
 
         <Card>
-          <h2 className="text-lg font-semibold">Longest staying members</h2>
+          <h2 className="text-lg font-semibold">{dashboardStrings.longestStaying}</h2>
           {report.longestStaying.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">No members yet.</p>
+            <p className="mt-3 text-sm text-slate-500">{dashboardStrings.noMembersYet}</p>
           ) : (
             <ul className="mt-4 divide-y divide-slate-100">
               {report.longestStaying.map((row) => (
@@ -416,12 +418,16 @@ function SupervisorGroupCard({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-lg font-semibold">{card.name}</h3>
             {card.status === 'INACTIVE' && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">inactive</span>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                {strings.status.INACTIVE}
+              </span>
             )}
           </div>
           <p className="mt-1 truncate text-sm text-slate-500">
-            {card.memberCount} member{card.memberCount === 1 ? '' : 's'} · {taka(card.mealRate)} / meal
-            {card.outstanding > 0 && <span className="text-red-600"> · {taka(card.outstanding)} outstanding</span>}
+            {dashboardStrings.groupCardSubtitle(card.memberCount, taka(card.mealRate))}
+            {card.outstanding > 0 && (
+              <span className="text-red-600">{dashboardStrings.outstandingSuffix(taka(card.outstanding))}</span>
+            )}
           </p>
         </div>
         <Chevron open={open} />
@@ -430,7 +436,7 @@ function SupervisorGroupCard({
       {open && (
         <div className="space-y-5 border-t border-slate-100 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
           <GroupStatsPanel card={card} />
-          <ActionLink href={groupPath(card.id)}>Open group</ActionLink>
+          <ActionLink href={groupPath(card.id)}>{dashboardStrings.openGroup}</ActionLink>
         </div>
       )}
     </div>
@@ -497,22 +503,32 @@ function MoneyRows({
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Meal cost (bazar)</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{dashboardStrings.mealCostBazar}</h4>
         <div className="mt-2 grid grid-cols-3 gap-2.5">
-          <MiniStat label="Total" value={taka(bazar)} />
-          <MiniStat label="Fronted by members" value={taka(bazarPaid)} tone="green" />
-          <MiniStat label="Yet to recover" value={taka(bazarOutstanding)} tone={bazarOutstanding > 0 ? 'amber' : 'green'} />
+          <MiniStat label={strings.common.total} value={taka(bazar)} />
+          <MiniStat label={dashboardStrings.frontedByMembers} value={taka(bazarPaid)} tone="green" />
+          <MiniStat
+            label={dashboardStrings.yetToRecover}
+            value={taka(bazarOutstanding)}
+            tone={bazarOutstanding > 0 ? 'amber' : 'green'}
+          />
         </div>
       </div>
 
       <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Bills (rent, utilities &amp; more)</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {dashboardStrings.billsRentUtilities}
+        </h4>
         <div className="mt-2 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          <MiniStat label="Rent" value={taka(rent)} />
-          <MiniStat label="Additional" value={taka(additional)} />
-          <MiniStat label="Total bills" value={taka(bills)} />
-          <MiniStat label="Collected" value={taka(billsCollected)} tone="green" />
-          <MiniStat label="Outstanding" value={taka(billsOutstanding)} tone={billsOutstanding > 0 ? 'red' : 'green'} />
+          <MiniStat label={strings.expenseTypes.RENT} value={taka(rent)} />
+          <MiniStat label={dashboardStrings.additional} value={taka(additional)} />
+          <MiniStat label={strings.bills.totalBills} value={taka(bills)} />
+          <MiniStat label={dashboardStrings.collected} value={taka(billsCollected)} tone="green" />
+          <MiniStat
+            label={dashboardStrings.outstanding}
+            value={taka(billsOutstanding)}
+            tone={billsOutstanding > 0 ? 'red' : 'green'}
+          />
         </div>
       </div>
     </div>
@@ -524,7 +540,7 @@ function MoneyOverview({ label, expense, ...rows }: { label: string; expense: nu
     <Card>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">{label}</h2>
-        <span className="text-sm font-semibold text-slate-600">{taka(expense)} total</span>
+        <span className="text-sm font-semibold text-slate-600">{dashboardStrings.totalAmount(taka(expense))}</span>
       </div>
       <div className="mt-4">
         <MoneyRows {...rows} />
@@ -568,11 +584,11 @@ function GroupStatsPanel({ card }: { card: GroupCard }) {
   return (
     <div className="space-y-5">
       <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Meal rate</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{dashboardStrings.mealRate}</h4>
         <div className="mt-2 grid grid-cols-3 gap-2.5">
-          <MiniStat label="This month" value={taka(card.mealRate)} />
-          <MiniStat label="Highest day" value={taka(card.highestDayRate)} />
-          <MiniStat label="Lowest day" value={taka(card.lowestDayRate)} />
+          <MiniStat label={dashboardStrings.thisMonthShort} value={taka(card.mealRate)} />
+          <MiniStat label={dashboardStrings.highestDay} value={taka(card.highestDayRate)} />
+          <MiniStat label={dashboardStrings.lowestDay} value={taka(card.lowestDayRate)} />
         </div>
         <div className="mt-3">
           <MealRateChart days={card.days} />
@@ -592,7 +608,7 @@ function GroupStatsPanel({ card }: { card: GroupCard }) {
 
       {hasBreakdown && (
         <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Cost breakdown</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{strings.bills.costBreakdown}</h4>
           <div className="mt-2">
             <BreakdownBars byType={{ ...card.byType, BAZAR: card.bazar }} total={card.expense} />
           </div>
@@ -633,18 +649,16 @@ function PagedList<T>({
             disabled={currentPage === 0}
             className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Previous
+            {strings.common.pager.previous}
           </button>
-          <span className="text-xs text-slate-500">
-            Page {currentPage + 1} of {pageCount}
-          </span>
+          <span className="text-xs text-slate-500">{strings.common.pager.pageOf(currentPage + 1, pageCount)}</span>
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
             disabled={currentPage === pageCount - 1}
             className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Next
+            {strings.common.pager.next}
           </button>
         </div>
       )}
@@ -659,10 +673,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
     return (
       <div className="space-y-6">
         {report.pendingInvitations > 0 && <InvitationBanner count={report.pendingInvitations} />}
-        <Panel>
-          You&apos;re not in a group yet. Once a supervisor invites you and you accept, your meals, costs, and dues
-          will show up here.
-        </Panel>
+        <Panel>{dashboardStrings.noGroupYet}</Panel>
       </div>
     );
   }
@@ -687,9 +698,9 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
             value={current.dailyRate ? `${taka(current.dailyRate.rate)}` : '—'}
           />
           <Stat label={strings.meals.rate.monthLabel} value={taka(current.mealRate)} />
-          <Stat label="Your meals" value={current.meals} />
+          <Stat label={dashboardStrings.yourMeals} value={current.meals} />
           <Stat
-            label={current.due < 0 ? 'Mess owes you' : 'You owe'}
+            label={current.due < 0 ? dashboardStrings.messOwesYou : dashboardStrings.youOwe}
             value={taka(Math.abs(current.due))}
             tone={current.due > 0.01 ? 'red' : 'green'}
           />
@@ -727,25 +738,25 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
 
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h2 className="text-lg font-semibold">Your balance</h2>
+          <h2 className="text-lg font-semibold">{dashboardStrings.yourBalance}</h2>
           <StatusBadge status={current.status} />
         </div>
         <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label="Meal share (bazar)" value={taka(current.mealCost)} />
-          <Field label="Bills share" value={taka(current.billShare)} />
-          <Field label="Total cost" value={taka(current.totalCost)} />
-          <Field label="Groceries you bought" value={taka(current.bazarPaid)} />
-          <Field label="Cash you paid" value={taka(current.collected)} />
+          <Field label={dashboardStrings.mealShare} value={taka(current.mealCost)} />
+          <Field label={dashboardStrings.billsShare} value={taka(current.billShare)} />
+          <Field label={dashboardStrings.totalCost} value={taka(current.totalCost)} />
+          <Field label={dashboardStrings.groceriesYouBought} value={taka(current.bazarPaid)} />
+          <Field label={dashboardStrings.cashYouPaid} value={taka(current.collected)} />
           <Field
-            label={current.due < 0 ? 'Refund owed to you' : 'Still due'}
+            label={current.due < 0 ? dashboardStrings.refundOwed : dashboardStrings.stillDue}
             value={taka(Math.abs(current.due))}
             tone={current.due > 0.01 ? 'red' : 'green'}
           />
         </dl>
         <div className="mt-5 flex flex-wrap gap-2">
-          <LinkButton href={ROUTES.meals}>Enter meals</LinkButton>
+          <LinkButton href={ROUTES.meals}>{dashboardStrings.enterMeals}</LinkButton>
           <LinkButton href={ROUTES.payments} variant="secondary">
-            Payments
+            {strings.nav.payments}
           </LinkButton>
         </div>
       </Card>
@@ -758,16 +769,16 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
             aria-expanded={showLastMonth}
             className="flex w-full items-center justify-between gap-3 p-5 text-left sm:p-6"
           >
-            <h2 className="text-lg font-semibold">Last month ({monthLabel(previous.month)})</h2>
+            <h2 className="text-lg font-semibold">{dashboardStrings.lastMonth(monthLabel(previous.month))}</h2>
             <Chevron open={showLastMonth} />
           </button>
           {showLastMonth && (
             <dl className="grid gap-4 border-t border-slate-100 px-5 pb-5 pt-4 sm:grid-cols-4 sm:px-6 sm:pb-6">
-              <Field label="Meals" value={String(previous.meals)} />
-              <Field label="Meal rate" value={taka(previous.mealRate)} />
-              <Field label="Your cost" value={taka(previous.totalCost)} />
+              <Field label={dashboardStrings.meals} value={String(previous.meals)} />
+              <Field label={dashboardStrings.mealRate} value={taka(previous.mealRate)} />
+              <Field label={dashboardStrings.yourCost} value={taka(previous.totalCost)} />
               <Field
-                label={previous.due < 0 ? 'Refund' : 'Due'}
+                label={previous.due < 0 ? dashboardStrings.refund : dashboardStrings.due}
                 value={taka(Math.abs(previous.due))}
                 tone={previous.due > 0.01 ? 'red' : undefined}
               />
@@ -779,17 +790,19 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-lg font-semibold">{group.name}</h2>
-          <ActionLink href={groupPath(group.id)}>Group page</ActionLink>
+          <ActionLink href={groupPath(group.id)}>{dashboardStrings.groupPage}</ActionLink>
         </div>
         <p className="mt-1 text-sm text-slate-500">
-          {group.memberCount} member{group.memberCount === 1 ? '' : 's'} · here {formatStay(group.stayDays)}
+          {dashboardStrings.memberCountHere(group.memberCount, formatStay(group.stayDays))}
         </p>
 
         <div className="mt-5">
           <GroupStatsPanel card={group.card} />
         </div>
 
-        <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-400">Everyone this month</h3>
+        <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {dashboardStrings.everyoneThisMonth}
+        </h3>
         <PagedList
           items={current.members}
           pageSize={8}
@@ -799,10 +812,10 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
               <div className="min-w-0">
                 <p className="truncate font-medium">
                   {m.name}
-                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {m.meals} meal{m.meals === 1 ? '' : 's'} · {taka(m.totalCost)}
+                  {strings.meals.mealCount(m.meals)} · {taka(m.totalCost)}
                 </p>
               </div>
               <span className={`shrink-0 font-semibold ${m.due > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
@@ -910,7 +923,7 @@ function CostBreakdown({ byType, total }: { byType: Record<string, number>; tota
 
   return (
     <Card>
-      <h2 className="text-lg font-semibold">Where the money went</h2>
+      <h2 className="text-lg font-semibold">{dashboardStrings.whereMoneyWent}</h2>
       <ul className="mt-4 space-y-3">
         {rows.map(([type, amount]) => {
           const percent = total > 0 ? Math.round((amount / total) * 100) : 0;
@@ -936,11 +949,9 @@ function CostBreakdown({ byType, total }: { byType: Record<string, number>; tota
 function InvitationBanner({ count }: { count: number }) {
   return (
     <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
-      <p className="text-amber-800">
-        You have {count} pending invitation{count === 1 ? '' : 's'}.
-      </p>
+      <p className="text-amber-800">{dashboardStrings.pendingInvitations(count)}</p>
       <LinkButton href={ROUTES.invitations} size="sm" className="mt-3">
-        View invitations
+        {dashboardStrings.viewInvitations}
       </LinkButton>
     </div>
   );
@@ -957,12 +968,12 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function formatStay(days: number) {
-  if (days < 31) return `${days} day${days === 1 ? '' : 's'}`;
+  if (days < 31) return strings.units.days(days);
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months} month${months === 1 ? '' : 's'}`;
+  if (months < 12) return strings.units.months(months);
   const years = Math.floor(months / 12);
   const rest = months % 12;
-  return rest === 0 ? `${years} year${years === 1 ? '' : 's'}` : `${years}y ${rest}m`;
+  return rest === 0 ? strings.units.years(years) : strings.units.yearsMonths(years, rest);
 }
 
 function shortDate(day: string) {

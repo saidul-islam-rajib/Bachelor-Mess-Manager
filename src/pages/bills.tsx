@@ -452,10 +452,8 @@ function PaymentHistorySection({
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <div>
-          <h2 className="text-lg font-semibold">Payment history</h2>
-          <p className="mt-0.5 text-sm text-slate-500">
-            {entries.length} payment{entries.length === 1 ? '' : 's'} recorded this month
-          </p>
+          <h2 className="text-lg font-semibold">{strings.bills.paymentHistory.title}</h2>
+          <p className="mt-0.5 text-sm text-slate-500">{strings.bills.paymentHistory.subtitle(entries.length)}</p>
         </div>
         <Chevron open={open} />
       </button>
@@ -489,18 +487,22 @@ function PaymentHistorySection({
                   {entry.recordedByName && (
                     <>
                       <span aria-hidden>·</span>
-                      <span>by {entry.recordedByName}</span>
+                      <span>{strings.bills.ledger.recordedBy(entry.recordedByName)}</span>
                     </>
                   )}
-                  {entry.fromAdvance && <span className="font-medium text-teal-700">· from advance</span>}
-                  {entry.isReversed && <span className="font-medium text-amber-600">· reversed</span>}
+                  {entry.fromAdvance && (
+                    <span className="font-medium text-teal-700">{strings.bills.paymentHistory.fromAdvance}</span>
+                  )}
+                  {entry.isReversed && (
+                    <span className="font-medium text-amber-600">{strings.bills.ledger.reversed}</span>
+                  )}
                   {canManage && !entry.isReversed && (
                     <button
                       type="button"
                       onClick={() => onReverse(entry.billId, entry.id)}
                       className="text-rose-500 underline-offset-2 hover:underline"
                     >
-                      reverse
+                      {strings.bills.ledger.reverse}
                     </button>
                   )}
                 </p>
@@ -516,18 +518,16 @@ function PaymentHistorySection({
                 disabled={currentPage === 0}
                 className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Previous
+                {strings.common.pager.previous}
               </button>
-              <span className="text-xs text-slate-500">
-                Page {currentPage + 1} of {pageCount}
-              </span>
+              <span className="text-xs text-slate-500">{strings.common.pager.pageOf(currentPage + 1, pageCount)}</span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
                 disabled={currentPage === pageCount - 1}
                 className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Next
+                {strings.common.pager.next}
               </button>
             </div>
           )}
@@ -585,7 +585,7 @@ function AdvancesSection({
     try {
       const res = await fetch(`/api/groups/${groupId}/advances`);
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not load advances.');
+      if (!res.ok) throw new Error(body?.error ?? strings.bills.advances.loadFailed);
       setData(body);
     } catch (err) {
       toast.error((err as Error).message);
@@ -611,8 +611,8 @@ function AdvancesSection({
         body: JSON.stringify({ userId: collectFor, amount: value, note: note.trim() || undefined })
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not record that advance.');
-      toast.success('Advance recorded.');
+      if (!res.ok) throw new Error(body?.error ?? strings.bills.advances.recordFailed);
+      toast.success(strings.bills.advances.recorded);
       setAmount('');
       setNote('');
       setCollectFor('');
@@ -625,12 +625,12 @@ function AdvancesSection({
   }
 
   async function reverse(advanceId: string) {
-    if (!window.confirm('Reverse this advance deposit?')) return;
+    if (!window.confirm(strings.bills.advances.confirmReverse)) return;
     try {
       const res = await fetch(`/api/groups/${groupId}/advances?advanceId=${advanceId}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not reverse that entry.');
-      toast.success('Advance reversed.');
+      if (!res.ok) throw new Error(body?.error ?? strings.bills.advances.reverseFailed);
+      toast.success(strings.bills.advances.reversedToast);
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -656,11 +656,11 @@ function AdvancesSection({
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <div>
-          <h2 className="text-lg font-semibold">Advances</h2>
+          <h2 className="text-lg font-semibold">{strings.bills.advances.title}</h2>
           <p className="mt-0.5 text-sm text-slate-500">
             {totalBalance > 0
-              ? `${taka(totalBalance)} on hand across ${data.members.length} member${data.members.length === 1 ? '' : 's'}`
-              : 'No advance collected yet'}
+              ? strings.bills.advances.balanceSummary(taka(totalBalance), data.members.length)
+              : strings.bills.advances.noneYet}
           </p>
         </div>
         <Chevron open={open} />
@@ -668,17 +668,16 @@ function AdvancesSection({
 
       {open && (
         <div className="mt-4 space-y-5">
-          <p className="text-xs text-slate-500">
-            Money members hand over ahead of a bill. New bills automatically pull from whatever balance a member
-            has on file, so rent, wifi and electricity can be paid the moment they&apos;re due.
-          </p>
+          <p className="text-xs text-slate-500">{strings.bills.advances.explanation}</p>
 
           <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-100">
             {data.members.map((m) => (
               <li key={m.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
                 <span className="truncate font-medium">
                   {m.name}
-                  {m.id === data.currentUserId && <span className="ml-1 text-xs font-normal text-brand-700">(you)</span>}
+                  {m.id === data.currentUserId && (
+                    <span className="ml-1 text-xs font-normal text-brand-700">{strings.common.you}</span>
+                  )}
                 </span>
                 <span className={`shrink-0 font-semibold tabular-nums ${m.balance > 0 ? 'text-teal-700' : 'text-slate-300'}`}>
                   {taka(m.balance)}
@@ -690,14 +689,14 @@ function AdvancesSection({
           {canManage && (
             <form onSubmit={submitCollect} className="flex flex-wrap items-end gap-2 rounded-2xl bg-slate-50 p-3">
               <div className="min-w-[9rem] flex-1">
-                <label className="mb-1 block text-xs font-medium text-slate-500">Member</label>
+                <label className="mb-1 block text-xs font-medium text-slate-500">{strings.common.member}</label>
                 <select
                   value={collectFor}
                   onChange={(event) => setCollectFor(event.target.value)}
                   required
                   className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
                 >
-                  <option value="">Select member</option>
+                  <option value="">{strings.bills.advances.selectMember}</option>
                   {data.members.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name}
@@ -706,7 +705,7 @@ function AdvancesSection({
                 </select>
               </div>
               <div className="w-28">
-                <label className="mb-1 block text-xs font-medium text-slate-500">Amount</label>
+                <label className="mb-1 block text-xs font-medium text-slate-500">{strings.common.amount}</label>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -719,12 +718,12 @@ function AdvancesSection({
                 />
               </div>
               <div className="min-w-[9rem] flex-1">
-                <label className="mb-1 block text-xs font-medium text-slate-500">Note (optional)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-500">{strings.bills.advances.noteLabel}</label>
                 <input
                   type="text"
                   value={note}
                   onChange={(event) => setNote(event.target.value)}
-                  placeholder="e.g. August advance"
+                  placeholder={strings.bills.advances.notePlaceholder}
                   className="w-full rounded-full border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
                 />
               </div>
@@ -733,14 +732,16 @@ function AdvancesSection({
                 disabled={submitting}
                 className="min-h-[2.5rem] rounded-full bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
               >
-                {submitting ? 'Saving...' : 'Collect advance'}
+                {submitting ? strings.common.saving : strings.bills.advances.collectCta}
               </button>
             </form>
           )}
 
           {data.history.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">History</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                {strings.bills.advances.historyTitle}
+              </h3>
               <ul className="mt-2 divide-y divide-slate-100">
                 {pageItems.map((entry) => {
                   const isDeposit = !entry.expenseId && !entry.reversalOfId;
@@ -749,7 +750,11 @@ function AdvancesSection({
                       <div className="flex items-start justify-between gap-3">
                         <p className="min-w-0 truncate font-medium text-slate-900">
                           {entry.userName}
-                          {entry.expenseId ? ' · applied to a bill' : entry.reversalOfId ? ' · reversal' : ' · deposit'}
+                          {entry.expenseId
+                            ? ` ${strings.bills.advances.appliedToBill}`
+                            : entry.reversalOfId
+                              ? ` ${strings.bills.advances.reversalEntry}`
+                              : ` ${strings.bills.advances.depositEntry}`}
                         </p>
                         <span
                           className={`shrink-0 text-sm font-semibold tabular-nums ${
@@ -769,7 +774,7 @@ function AdvancesSection({
                         {entry.recordedByName && (
                           <>
                             <span aria-hidden>·</span>
-                            <span>by {entry.recordedByName}</span>
+                            <span>{strings.bills.ledger.recordedBy(entry.recordedByName)}</span>
                           </>
                         )}
                         {entry.note && (
@@ -778,14 +783,16 @@ function AdvancesSection({
                             <span>{entry.note}</span>
                           </>
                         )}
-                        {entry.isReversed && <span className="font-medium text-amber-600">· reversed</span>}
+                        {entry.isReversed && (
+                          <span className="font-medium text-amber-600">{strings.bills.ledger.reversed}</span>
+                        )}
                         {canManage && isDeposit && entry.amount > 0 && !entry.isReversed && (
                           <button
                             type="button"
                             onClick={() => reverse(entry.id)}
                             className="text-rose-500 underline-offset-2 hover:underline"
                           >
-                            reverse
+                            {strings.bills.ledger.reverse}
                           </button>
                         )}
                       </p>
@@ -802,10 +809,10 @@ function AdvancesSection({
                     disabled={currentPage === 0}
                     className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Previous
+                    {strings.common.pager.previous}
                   </button>
                   <span className="text-xs text-slate-500">
-                    Page {currentPage + 1} of {pageCount}
+                    {strings.common.pager.pageOf(currentPage + 1, pageCount)}
                   </span>
                   <button
                     type="button"
@@ -813,7 +820,7 @@ function AdvancesSection({
                     disabled={currentPage === pageCount - 1}
                     className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    Next
+                    {strings.common.pager.next}
                   </button>
                 </div>
               )}
@@ -918,21 +925,21 @@ function MemberActions({
             if (event.key === 'Enter') onSubmit();
             if (event.key === 'Escape') onCancel();
           }}
-          placeholder="Amount"
-          aria-label={`Amount received from ${share.userName}`}
+          placeholder={strings.common.amount}
+          aria-label={strings.bills.transfer.amountFrom(share.userName)}
           className={`w-24 rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
         />
         <select
           value={toUserId}
           onChange={(event) => setToUserId(event.target.value)}
-          aria-label={`Who did ${share.userName} pay?`}
+          aria-label={strings.bills.transfer.whoDidPay(share.userName)}
           className={`rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
         >
-          <option value="">Paid into the collection</option>
+          <option value="">{strings.bills.transfer.intoCollection}</option>
           {recipients.map((recipient) => (
             <option key={recipient.id} value={recipient.id}>
-              Paid to {recipient.name}
-              {recipient.advance > 0 ? ` (gets back ${taka(recipient.advance)})` : ''}
+              {strings.bills.transfer.paidTo(recipient.name)}
+              {recipient.advance > 0 ? ` ${strings.bills.transfer.getsBack(taka(recipient.advance))}` : ''}
             </option>
           ))}
         </select>
@@ -941,14 +948,14 @@ function MemberActions({
           onClick={onSubmit}
           className={`rounded-full bg-brand-600 font-semibold text-white hover:bg-brand-700 ${size}`}
         >
-          Save
+          {strings.common.save}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className={`rounded-full border border-slate-200 font-medium text-slate-600 hover:bg-slate-100 ${size}`}
         >
-          Cancel
+          {strings.common.cancel}
         </button>
       </div>
     );
@@ -962,7 +969,7 @@ function MemberActions({
           onClick={() => onStart(true)}
           className={`rounded-full bg-green-600 font-semibold text-white hover:bg-green-700 ${size}`}
         >
-          Mark paid · {taka(share.outstanding)}
+          {strings.bills.markPaid} · {taka(share.outstanding)}
         </button>
       )}
       <button
@@ -970,7 +977,7 @@ function MemberActions({
         onClick={() => onStart(false)}
         className={`rounded-full border border-slate-300 font-medium text-slate-700 hover:bg-slate-50 ${size}`}
       >
-        {share.outstanding > 0 ? 'Part' : 'Add'}
+        {share.outstanding > 0 ? strings.bills.partPayment : strings.common.add}
       </button>
     </div>
   );

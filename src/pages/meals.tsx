@@ -366,6 +366,12 @@ export default function MealsPage() {
                   />
                 </div>
               )}
+
+              {me && summary?.rateMode === 'DAILY' && (
+                <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                  {strings.meals.dailyCostNote}
+                </p>
+              )}
               <DayRangeBar
                 visibleDays={visibleDays}
                 totalDays={days.length}

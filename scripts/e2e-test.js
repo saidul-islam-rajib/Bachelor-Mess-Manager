@@ -44,6 +44,22 @@ function near(a, b, tolerance = 0.011) {
   return Math.abs(a - b) <= tolerance;
 }
 
+const APP_TIME_ZONE = process.env.APP_TIME_ZONE || 'Asia/Dhaka';
+const zonedDayFormatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone: APP_TIME_ZONE,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+});
+function todayKey() {
+  const parts = zonedDayFormatter.formatToParts(new Date());
+  const value = (type) => parts.find((part) => part.type === type)?.value ?? '';
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+function shiftDayKey(dayKey, days) {
+  return new Date(new Date(`${dayKey}T00:00:00.000Z`).getTime() + days * 86_400_000).toISOString().slice(0, 10);
+}
+
 class Session {
   constructor(label) {
     this.label = label;
@@ -299,17 +315,17 @@ async function run() {
     check('member cannot change group settings (403)', outsider.status === 403, `got ${outsider.status}`);
   }
 
-  const month = new Date().toISOString().slice(0, 7);
-  const daysAgo = (n) => new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+  const month = todayKey().slice(0, 7);
+  const daysAgo = (n) => shiftDayKey(todayKey(), -n);
   const pastDay = daysAgo(1);
   const pastDay2 = daysAgo(2);
   const pastDay3 = daysAgo(3);
   const pastMonth = pastDay.slice(0, 7);
-  report(`  (server today is ${new Date().toISOString().slice(0, 10)} UTC; using ${pastDay} as a past day)`);
+  report(`  (server today is ${todayKey()} in ${APP_TIME_ZONE}; using ${pastDay} as a past day)`);
 
   section('Meals');
   {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKey();
     const mine = await memberA.session.put(`/api/groups/${groupId}/meals`, {
       date: today,
       breakfast: 1,
@@ -448,7 +464,7 @@ async function run() {
 
   section('Bazar and bills');
   {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKey();
 
     const bazar = await supervisor.session.post(`/api/groups/${groupId}/expenses`, {
       date: today,
@@ -573,7 +589,7 @@ async function run() {
 
   section('Payments');
   {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKey();
     const before = (payments?.members ?? []).find((m) => m.id === memberA.userId);
 
     const pay = await supervisor.session.post(`/api/groups/${groupId}/payments`, {
@@ -650,7 +666,7 @@ async function run() {
     const deactivate = await supervisor.session.patch(`/api/groups/${groupId}`, { status: 'INACTIVE' });
     check('supervisor closes the group', deactivate.status === 200, `got ${deactivate.status}`);
 
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayKey();
     const write = await supervisor.session.post(`/api/groups/${groupId}/expenses`, {
       date: today,
       items: [{ name: 'Late', amount: 10 }]
@@ -692,7 +708,7 @@ async function run() {
     check('non-member cannot read meals (403)', meals.status === 403, `got ${meals.status}`);
 
     const write = await outsider.session.put(`/api/groups/${groupId}/meals`, {
-      date: new Date().toISOString().slice(0, 10),
+      date: todayKey(),
       breakfast: 1
     });
     check('non-member cannot write meals (403)', write.status === 403, `got ${write.status}`);
