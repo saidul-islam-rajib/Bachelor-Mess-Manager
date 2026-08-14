@@ -39,6 +39,7 @@ export const PERMISSIONS = {
   BILL_MANAGE: 'bill.manage',
   PAYMENT_VIEW: 'payment.view',
   PAYMENT_RECORD: 'payment.record',
+  PAYMENT_RECORD_OWN: 'payment.record_own',
   COMMENT_VIEW: 'comment.view',
   COMMENT_CREATE: 'comment.create',
   COMMENT_DELETE_OWN: 'comment.delete_own',
@@ -91,7 +92,8 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
   { code: PERMISSIONS.BILL_MANAGE, name: 'Manage bills', description: 'Record, edit and split bills', category: PERMISSION_CATEGORIES.BILLS },
 
   { code: PERMISSIONS.PAYMENT_VIEW, name: 'View payments', description: 'See balances and payments received', category: PERMISSION_CATEGORIES.PAYMENTS },
-  { code: PERMISSIONS.PAYMENT_RECORD, name: 'Record payments', description: 'Record money received from a member', category: PERMISSION_CATEGORIES.PAYMENTS },
+  { code: PERMISSIONS.PAYMENT_RECORD, name: 'Record payments', description: 'Record money received from any member', category: PERMISSION_CATEGORIES.PAYMENTS },
+  { code: PERMISSIONS.PAYMENT_RECORD_OWN, name: 'Record own bill payments', description: 'Mark your own bill share as paid, optionally noting who you paid directly', category: PERMISSION_CATEGORIES.PAYMENTS },
 
   { code: PERMISSIONS.COMMENT_VIEW, name: 'View comments', description: 'Read group messages', category: PERMISSION_CATEGORIES.COMMENTS },
   { code: PERMISSIONS.COMMENT_CREATE, name: 'Post comments', description: 'Post messages and replies', category: PERMISSION_CATEGORIES.COMMENTS },
@@ -119,6 +121,7 @@ const MEMBER_PERMISSIONS: PermissionCode[] = [
   PERMISSIONS.EXPENSE_UPDATE_OWN,
   PERMISSIONS.BILL_VIEW,
   PERMISSIONS.PAYMENT_VIEW,
+  PERMISSIONS.PAYMENT_RECORD_OWN,
   PERMISSIONS.COMMENT_VIEW,
   PERMISSIONS.COMMENT_CREATE,
   PERMISSIONS.COMMENT_DELETE_OWN,

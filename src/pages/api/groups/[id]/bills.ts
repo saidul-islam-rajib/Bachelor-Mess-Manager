@@ -91,7 +91,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
             recordedAt: c.recordedAt.toISOString(),
             recordedByName: c.recordedByName,
             isReversal: Boolean(c.reversalOfId),
-            isReversed: c.isReversed
+            isReversed: c.isReversed,
+            toUserName: c.toUserName,
+            fromUserName: c.fromUserName
           }))
         })),
         collected: state.collected,
@@ -117,6 +119,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     return ok(res, {
       canManage,
+      canRecordOwn: hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD_OWN),
       currentUserId: sessionUser.id,
       categories,
       categoryLabels: labels,

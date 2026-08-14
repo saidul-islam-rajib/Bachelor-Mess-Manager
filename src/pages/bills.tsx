@@ -170,6 +170,7 @@ export default function BillsPage() {
   }
 
   const canManage = data?.canManage ?? false;
+  const canRecordOwn = data?.canRecordOwn ?? false;
   const hasBreakdown = Object.values(data?.totals.byType ?? {}).some((amount) => amount > 0);
   const bills = useMemo(() => data?.bills ?? [], [data?.bills]);
   const grouped = useMemo(() => billsByKind(bills), [bills]);
@@ -317,8 +318,10 @@ export default function BillsPage() {
                                     <BillRow
                                       key={bill.id}
                                       bill={bill}
+                                      members={data.members}
                                       currentUserId={data.currentUserId}
                                       canManage={canManage}
+                                      canRecordOwn={canRecordOwn}
                                       isOpen={expanded.includes(bill.id)}
                                       onToggleOpen={() => toggleExpanded(bill.id)}
                                       onEdit={() => setEditing(bill.id)}
@@ -347,11 +350,111 @@ export default function BillsPage() {
                   onOpenBill={revealBill}
                 />
               )}
+
+              <PaymentHistorySection bills={bills} labels={data.categoryLabels} onOpenBill={revealBill} />
             </>
           )}
         </div>
       )}
     </section>
+  );
+}
+
+type PaymentHistoryEntry = {
+  id: string;
+  billId: string;
+  billLabel: string;
+  billDate: string;
+  memberName: string;
+  amount: number;
+  isReversal: boolean;
+  isReversed: boolean;
+  isOffset: boolean;
+  toUserName: string | null;
+  fromUserName: string | null;
+  recordedByName: string | null;
+  recordedAt: string;
+};
+
+function PaymentHistorySection({
+  bills,
+  labels,
+  onOpenBill
+}: {
+  bills: Bill[];
+  labels: Record<string, string>;
+  onOpenBill: (billId: string) => void;
+}) {
+  const entries = useMemo(() => {
+    const rows: PaymentHistoryEntry[] = [];
+    for (const bill of bills) {
+      for (const share of bill.shares) {
+        for (const entry of share.collections) {
+          rows.push({
+            id: entry.id,
+            billId: bill.id,
+            billLabel: labels[bill.type] ?? bill.type,
+            billDate: bill.date,
+            memberName: share.userName,
+            amount: entry.amount,
+            isReversal: entry.isReversal,
+            isReversed: entry.isReversed,
+            isOffset: Boolean(entry.fromUserName),
+            toUserName: entry.toUserName,
+            fromUserName: entry.fromUserName,
+            recordedByName: entry.recordedByName,
+            recordedAt: entry.recordedAt
+          });
+        }
+      }
+    }
+    return rows.sort((a, b) => b.recordedAt.localeCompare(a.recordedAt));
+  }, [bills, labels]);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+      <h2 className="text-lg font-semibold">Payment history</h2>
+      <p className="mt-1 text-sm text-slate-500">
+        Every payment recorded against a bill this month, most recent first.
+      </p>
+      <ul className="mt-4 divide-y divide-slate-100">
+        {entries.map((entry) => (
+          <li key={entry.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5 text-sm">
+            <div className="min-w-0">
+              <button
+                type="button"
+                onClick={() => onOpenBill(entry.billId)}
+                className="truncate font-medium text-slate-900 hover:underline"
+              >
+                {entry.memberName}
+              </button>
+              <p className="truncate text-xs text-slate-500">
+                {entry.billLabel} · {longDate(entry.billDate)}
+                {entry.toUserName && <> · paid to {entry.toUserName}</>}
+                {entry.fromUserName && <> · reimbursed by {entry.fromUserName}</>}
+                {entry.recordedByName && <> · recorded by {entry.recordedByName}</>}
+              </p>
+            </div>
+            <span
+              className={`shrink-0 font-semibold tabular-nums ${
+                entry.isReversal
+                  ? 'text-rose-600'
+                  : entry.isReversed
+                    ? 'text-slate-400 line-through'
+                    : entry.isOffset
+                      ? 'text-teal-700'
+                      : 'text-slate-900'
+              }`}
+            >
+              {entry.isReversal || entry.isOffset ? '−' : ''}
+              {taka(Math.abs(entry.amount))}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -417,62 +520,75 @@ function CollectionHistory({
 
   return (
     <ul className="mt-2 space-y-1 border-l-2 border-slate-200 pl-3">
-      {share.collections.map((entry) => (
-        <li key={entry.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-          <span
-            className={
-              entry.isReversal
-                ? 'font-medium text-rose-600'
-                : entry.isReversed
-                  ? 'text-slate-400 line-through'
-                  : 'font-medium text-slate-700'
-            }
-          >
-            {entry.isReversal ? '−' : ''}
-            {taka(Math.abs(entry.amount))}
-          </span>
-          <span className="text-slate-400">
-            {entry.isReversal ? 'correction' : formatDayKey(entry.date, 'dayMonth')}
-          </span>
-          {entry.recordedByName && <span className="text-slate-400">· by {entry.recordedByName}</span>}
-          <span className="text-slate-300" title={formatInstant(entry.recordedAt, 'dateTime')}>
-            · {formatInstant(entry.recordedAt, 'dayMonthTime')}
-          </span>
-          {entry.isReversed && <span className="text-slate-400">· reversed</span>}
-          {canManage && !entry.isReversal && !entry.isReversed && (
-            <button
-              type="button"
-              onClick={() => onReverse(entry.id)}
-              className="rounded px-1 text-rose-500 underline-offset-2 hover:underline"
+      {share.collections.map((entry) => {
+        const isOffset = Boolean(entry.fromUserName);
+        return (
+          <li key={entry.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+            <span
+              className={
+                entry.isReversal
+                  ? 'font-medium text-rose-600'
+                  : entry.isReversed
+                    ? 'text-slate-400 line-through'
+                    : isOffset
+                      ? 'font-medium text-teal-700'
+                      : 'font-medium text-slate-700'
+              }
             >
-              reverse
-            </button>
-          )}
-        </li>
-      ))}
+              {entry.isReversal || isOffset ? '−' : ''}
+              {taka(Math.abs(entry.amount))}
+            </span>
+            <span className="text-slate-400">
+              {entry.isReversal ? 'correction' : formatDayKey(entry.date, 'dayMonth')}
+            </span>
+            {entry.toUserName && <span className="text-slate-500">→ paid to {entry.toUserName}</span>}
+            {entry.fromUserName && <span className="text-teal-600">reimbursed by {entry.fromUserName}</span>}
+            {entry.recordedByName && <span className="text-slate-400">· by {entry.recordedByName}</span>}
+            <span className="text-slate-300" title={formatInstant(entry.recordedAt, 'dateTime')}>
+              · {formatInstant(entry.recordedAt, 'dayMonthTime')}
+            </span>
+            {entry.isReversed && <span className="text-slate-400">· reversed</span>}
+            {canManage && !entry.isReversal && !entry.isReversed && !isOffset && (
+              <button
+                type="button"
+                onClick={() => onReverse(entry.id)}
+                className="rounded px-1 text-rose-500 underline-offset-2 hover:underline"
+              >
+                reverse
+              </button>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
+type RecipientOption = { id: string; name: string; advance: number };
+
 function MemberActions({
   share,
+  recipients,
   editing,
   amount,
   setAmount,
+  toUserId,
+  setToUserId,
   onStart,
   onCancel,
   onSubmit,
-  onSettle,
   compact
 }: {
   share: Share;
+  recipients: RecipientOption[];
   editing: boolean;
   amount: string;
   setAmount: (value: string) => void;
-  onStart: () => void;
+  toUserId: string;
+  setToUserId: (value: string) => void;
+  onStart: (prefillFull: boolean) => void;
   onCancel: () => void;
   onSubmit: () => void;
-  onSettle: () => void;
   compact?: boolean;
 }) {
   const size = compact ? 'min-h-[2rem] px-3 text-xs' : 'min-h-[2.5rem] px-3.5 text-sm';
@@ -494,8 +610,22 @@ function MemberActions({
           }}
           placeholder="Amount"
           aria-label={`Amount received from ${share.userName}`}
-          className={`w-28 rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+          className={`w-24 rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
         />
+        <select
+          value={toUserId}
+          onChange={(event) => setToUserId(event.target.value)}
+          aria-label={`Who did ${share.userName} pay?`}
+          className={`rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+        >
+          <option value="">Paid into the collection</option>
+          {recipients.map((recipient) => (
+            <option key={recipient.id} value={recipient.id}>
+              Paid to {recipient.name}
+              {recipient.advance > 0 ? ` (gets back ${taka(recipient.advance)})` : ''}
+            </option>
+          ))}
+        </select>
         <button
           type="button"
           onClick={onSubmit}
@@ -519,7 +649,7 @@ function MemberActions({
       {share.outstanding > 0 && (
         <button
           type="button"
-          onClick={onSettle}
+          onClick={() => onStart(true)}
           className={`rounded-full bg-green-600 font-semibold text-white hover:bg-green-700 ${size}`}
         >
           Mark paid · {taka(share.outstanding)}
@@ -527,7 +657,7 @@ function MemberActions({
       )}
       <button
         type="button"
-        onClick={onStart}
+        onClick={() => onStart(false)}
         className={`rounded-full border border-slate-300 font-medium text-slate-700 hover:bg-slate-50 ${size}`}
       >
         {share.outstanding > 0 ? 'Part' : 'Add'}
@@ -538,19 +668,24 @@ function MemberActions({
 
 function SplitPanel({
   bill,
+  members,
   currentUserId,
   canManage,
+  canRecordOwn,
   onCollect,
   onReverseCollection
 }: {
   bill: Bill;
+  members: Member[];
   currentUserId: string;
   canManage: boolean;
+  canRecordOwn: boolean;
   onCollect: (body: Record<string, unknown>) => void;
   onReverseCollection: (collectionId: string) => void;
 }) {
   const [editingFor, setEditingFor] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
+  const [toUserId, setToUserId] = useState('');
 
   const rows = useMemo(() => {
     const copy = [...bill.shares];
@@ -563,20 +698,40 @@ function SplitPanel({
     return copy;
   }, [bill.shares, currentUserId]);
 
-  function start(userId: string) {
+  const advanceByUser = useMemo(() => new Map(bill.shares.map((s) => [s.userId, s.advance])), [bill.shares]);
+
+  const recipientsFor = useCallback(
+    (userId: string): RecipientOption[] =>
+      members
+        .filter((m) => m.id !== userId)
+        .map((m) => ({ id: m.id, name: m.name, advance: advanceByUser.get(m.id) ?? 0 }))
+        .sort((a, b) => (a.advance !== b.advance ? b.advance - a.advance : a.name.localeCompare(b.name))),
+    [members, advanceByUser]
+  );
+
+  const showActionsColumn = canManage || canRecordOwn;
+
+  function canActFor(userId: string) {
+    return canManage || (canRecordOwn && userId === currentUserId);
+  }
+
+  function start(userId: string, prefillFull: boolean) {
     setEditingFor(userId);
-    setAmount('');
+    const share = bill.shares.find((s) => s.userId === userId);
+    setAmount(prefillFull && share ? String(share.outstanding) : '');
+    setToUserId('');
   }
 
   function cancel() {
     setEditingFor(null);
     setAmount('');
+    setToUserId('');
   }
 
   function submit(userId: string) {
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) return;
-    onCollect({ userId, amount: value });
+    onCollect({ userId, amount: value, ...(toUserId ? { toUserId } : {}) });
     cancel();
   }
 
@@ -601,7 +756,7 @@ function SplitPanel({
               <th scope="col" className="px-3 py-2.5 text-left font-semibold">
                 Status
               </th>
-              {canManage && (
+              {showActionsColumn && (
                 <th scope="col" className="px-4 py-2.5 text-right font-semibold">
                   Record payment
                 </th>
@@ -649,21 +804,25 @@ function SplitPanel({
                   <td className="px-3 py-3 align-top">
                     <StatusPill entry={share} />
                   </td>
-                  {canManage && (
+                  {showActionsColumn && (
                     <td className="px-4 py-3 align-top">
-                      <div className="flex justify-end">
-                        <MemberActions
-                          compact
-                          share={share}
-                          editing={editingFor === share.userId}
-                          amount={amount}
-                          setAmount={setAmount}
-                          onStart={() => start(share.userId)}
-                          onCancel={cancel}
-                          onSubmit={() => submit(share.userId)}
-                          onSettle={() => onCollect({ userId: share.userId, settle: true })}
-                        />
-                      </div>
+                      {canActFor(share.userId) && (
+                        <div className="flex justify-end">
+                          <MemberActions
+                            compact
+                            share={share}
+                            recipients={recipientsFor(share.userId)}
+                            editing={editingFor === share.userId}
+                            amount={amount}
+                            setAmount={setAmount}
+                            toUserId={toUserId}
+                            setToUserId={setToUserId}
+                            onStart={(prefillFull) => start(share.userId, prefillFull)}
+                            onCancel={cancel}
+                            onSubmit={() => submit(share.userId)}
+                          />
+                        </div>
+                      )}
                     </td>
                   )}
                 </tr>
@@ -727,17 +886,19 @@ function SplitPanel({
 
               <CollectionHistory share={share} canManage={canManage} onReverse={onReverseCollection} />
 
-              {canManage && (
+              {canActFor(share.userId) && (
                 <div className="mt-2.5">
                   <MemberActions
                     share={share}
+                    recipients={recipientsFor(share.userId)}
                     editing={editingFor === share.userId}
                     amount={amount}
                     setAmount={setAmount}
-                    onStart={() => start(share.userId)}
+                    toUserId={toUserId}
+                    setToUserId={setToUserId}
+                    onStart={(prefillFull) => start(share.userId, prefillFull)}
                     onCancel={cancel}
                     onSubmit={() => submit(share.userId)}
-                    onSettle={() => onCollect({ userId: share.userId, settle: true })}
                   />
                 </div>
               )}
@@ -751,8 +912,10 @@ function SplitPanel({
 
 function BillRow({
   bill,
+  members,
   currentUserId,
   canManage,
+  canRecordOwn,
   isOpen,
   onToggleOpen,
   onEdit,
@@ -762,8 +925,10 @@ function BillRow({
   onReverseCollection
 }: {
   bill: Bill;
+  members: Member[];
   currentUserId: string;
   canManage: boolean;
+  canRecordOwn: boolean;
   isOpen: boolean;
   onToggleOpen: () => void;
   onEdit: () => void;
@@ -856,8 +1021,10 @@ function BillRow({
         <>
           <SplitPanel
             bill={bill}
+            members={members}
             currentUserId={currentUserId}
             canManage={canManage}
+            canRecordOwn={canRecordOwn}
             onCollect={onCollect}
             onReverseCollection={onReverseCollection}
           />

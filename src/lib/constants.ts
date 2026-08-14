@@ -140,7 +140,8 @@ export const PAYMENT_STATUS = {
   PAID: 'PAID',
   PENDING: 'PENDING',
   PARTIAL: 'PARTIAL',
-  REFUND: 'REFUND'
+  REFUND: 'REFUND',
+  OFFSET: 'OFFSET'
 } as const;
 
 export const MEAL_RATE_MODES = {

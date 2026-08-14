@@ -17,6 +17,10 @@ export type CollectionRow = {
   recordedByName: string | null;
   reversalOfId: string | null;
   isReversed: boolean;
+  toUserId: string | null;
+  toUserName: string | null;
+  fromUserId: string | null;
+  fromUserName: string | null;
 };
 
 export type CollectionEntry = {
@@ -27,6 +31,8 @@ export type CollectionEntry = {
   recordedByName: string | null;
   isReversal: boolean;
   isReversed: boolean;
+  toUserName: string | null;
+  fromUserName: string | null;
 };
 
 export type ShareState = {
@@ -135,12 +141,18 @@ export async function reversePayment(params: {
 
   const original = await prisma.paymentStatus.findUnique({
     where: { id: paymentId },
-    include: { reversedBy: { select: { id: true } } }
+    include: {
+      reversedBy: { select: { id: true } },
+      offsetBy: { include: { reversedBy: { select: { id: true } } } }
+    }
   });
 
   if (!original) return { ok: false, error: 'That entry does not exist.' };
   if (groupId && original.groupId !== groupId) {
     return { ok: false, error: 'That entry belongs to another mess.' };
+  }
+  if (original.offsetOfId) {
+    return { ok: false, error: 'Reverse the original payment entry instead — this one updates automatically.' };
   }
   if (original.reversalOfId) {
     return { ok: false, error: 'That entry is already a correction, so it cannot be reversed again.' };
@@ -149,18 +161,38 @@ export async function reversePayment(params: {
     return { ok: false, error: 'That entry has already been reversed.' };
   }
 
-  await prisma.paymentStatus.create({
-    data: {
-      userId: original.userId,
-      groupId: original.groupId,
-      expenseId: original.expenseId,
-      reversalOfId: original.id,
-      recordedById: actorId,
-      amountDue: original.amountDue,
-      amountPaid: -original.amountPaid,
-      status: PAYMENT_STATUS.REFUND,
-      dueDate: original.dueDate,
-      publishedAt: new Date()
+  await prisma.$transaction(async (tx) => {
+    await tx.paymentStatus.create({
+      data: {
+        userId: original.userId,
+        groupId: original.groupId,
+        expenseId: original.expenseId,
+        reversalOfId: original.id,
+        recordedById: actorId,
+        amountDue: original.amountDue,
+        amountPaid: -original.amountPaid,
+        status: PAYMENT_STATUS.REFUND,
+        dueDate: original.dueDate,
+        publishedAt: new Date()
+      }
+    });
+
+    const offset = original.offsetBy;
+    if (offset && !offset.reversedBy) {
+      await tx.paymentStatus.create({
+        data: {
+          userId: offset.userId,
+          groupId: offset.groupId,
+          expenseId: offset.expenseId,
+          reversalOfId: offset.id,
+          recordedById: actorId,
+          amountDue: offset.amountDue,
+          amountPaid: -offset.amountPaid,
+          status: PAYMENT_STATUS.REFUND,
+          dueDate: offset.dueDate,
+          publishedAt: new Date()
+        }
+      });
     }
   });
 
@@ -176,7 +208,9 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
     include: {
       user: { select: { name: true } },
       recordedBy: { select: { name: true } },
-      reversedBy: { select: { id: true } }
+      reversedBy: { select: { id: true } },
+      toUser: { select: { name: true } },
+      offsetOf: { select: { userId: true, user: { select: { name: true } } } }
     },
     orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }]
   });
@@ -193,7 +227,11 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
       recordedAt: row.createdAt,
       recordedByName: row.recordedBy?.name ?? null,
       reversalOfId: row.reversalOfId,
-      isReversed: Boolean(row.reversedBy)
+      isReversed: Boolean(row.reversedBy),
+      toUserId: row.toUserId,
+      toUserName: row.toUser?.name ?? null,
+      fromUserId: row.offsetOf?.userId ?? null,
+      fromUserName: row.offsetOf?.user.name ?? null
     });
     byBill.set(row.expenseId, list);
   }

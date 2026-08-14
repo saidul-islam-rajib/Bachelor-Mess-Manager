@@ -9,6 +9,8 @@ export type Collection = {
   recordedByName: string | null;
   isReversal: boolean;
   isReversed: boolean;
+  toUserName: string | null;
+  fromUserName: string | null;
 };
 
 export type Share = {
@@ -53,6 +55,7 @@ export type Category = {
 
 export type BillsData = {
   canManage: boolean;
+  canRecordOwn: boolean;
   currentUserId: string;
   categories: Category[];
   categoryLabels: Record<string, string>;

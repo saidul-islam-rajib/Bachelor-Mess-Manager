@@ -36,17 +36,20 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return notFound(res, 'Bill not found.');
   }
 
-  if (!(await canManageGroup(bill.groupId, sessionUser))) {
-    return forbidden(res, "Only this group's supervisor can record who paid a bill.");
-  }
-  if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD)) {
-    return forbidden(res, strings.errors.permissionDenied);
-  }
+  const manages = await canManageGroup(bill.groupId, sessionUser);
+
   if (!isGroupWritable(bill.group)) {
     return forbidden(res, GROUP_CLOSED_MESSAGE);
   }
 
   if (req.method === 'DELETE') {
+    if (!manages) {
+      return forbidden(res, "Only this group's supervisor can reverse a payment entry.");
+    }
+    if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+
     const collectionId = Array.isArray(req.query.collectionId)
       ? req.query.collectionId[0]
       : req.query.collectionId;
@@ -71,13 +74,41 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, { reversed: true, amount: reversed.amount });
   }
 
-  const { userId, amount, date, settle } = req.body as Record<string, unknown>;
+  const { userId, amount, date, settle, toUserId } = req.body as Record<string, unknown>;
 
   if (typeof userId !== 'string' || !userId) {
     return badRequest(res, 'Select the member who paid.');
   }
+
+  if (manages) {
+    if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
+  } else {
+    if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD_OWN)) {
+      return forbidden(res, "Only this group's supervisor can record who paid a bill.");
+    }
+    if (userId !== sessionUser.id) {
+      return forbidden(res, 'You can only record your own payment.');
+    }
+    if (!(await isGroupMember(bill.groupId, sessionUser.id))) {
+      return forbidden(res, 'You are not a member of this group.');
+    }
+  }
+
   if (!(await isGroupMember(bill.groupId, userId))) {
     return badRequest(res, 'That member does not belong to this group.');
+  }
+
+  let recipientId: string | null = null;
+  if (typeof toUserId === 'string' && toUserId) {
+    if (toUserId === userId) {
+      return badRequest(res, 'Choose someone else to receive the payment.');
+    }
+    if (!(await isGroupMember(bill.groupId, toUserId))) {
+      return badRequest(res, 'The recipient must be a member of this group.');
+    }
+    recipientId = toUserId;
   }
 
   const shares = bill.shares.map((s) => ({ userId: s.userId, userName: s.user.name, amount: s.amount }));
@@ -107,43 +138,90 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const owed = round2(current?.share ?? 0);
   const paidAfter = round2((current?.paid ?? 0) + paid);
 
-  const collection = await prisma.paymentStatus.create({
-    data: {
-      userId,
-      groupId: bill.groupId,
-      expenseId: billId,
-      recordedById: sessionUser.id,
-      amountDue: owed,
-      amountPaid: paid,
-      status: owed > 0 ? shareStatus(Math.round(owed * 100), Math.round(paidAfter * 100)) : PAYMENT_STATUS.PAID,
-      dueDate: dayToUtcDate(day),
-      publishedAt: new Date()
-    },
-    include: { user: { select: { name: true } } }
+  const { payerRow, recipientName } = await prisma.$transaction(async (tx) => {
+    const row = await tx.paymentStatus.create({
+      data: {
+        userId,
+        groupId: bill.groupId,
+        expenseId: billId,
+        recordedById: sessionUser.id,
+        toUserId: recipientId,
+        amountDue: owed,
+        amountPaid: paid,
+        status: owed > 0 ? shareStatus(Math.round(owed * 100), Math.round(paidAfter * 100)) : PAYMENT_STATUS.PAID,
+        dueDate: dayToUtcDate(day),
+        publishedAt: new Date()
+      },
+      include: { user: { select: { name: true } }, toUser: { select: { name: true } } }
+    });
+
+    if (recipientId) {
+      const recipientCurrent = state.shares.find((s) => s.userId === recipientId);
+      await tx.paymentStatus.create({
+        data: {
+          userId: recipientId,
+          groupId: bill.groupId,
+          expenseId: billId,
+          recordedById: sessionUser.id,
+          offsetOfId: row.id,
+          amountDue: round2(recipientCurrent?.share ?? 0),
+          amountPaid: -paid,
+          status: PAYMENT_STATUS.OFFSET,
+          dueDate: dayToUtcDate(day),
+          publishedAt: new Date()
+        }
+      });
+    }
+
+    return { payerRow: row, recipientName: row.toUser?.name ?? null };
   });
 
-  const refreshed = buildCollectionState(shares, [
+  const refreshedRows = [
     ...existingRows,
     {
-      id: collection.id,
-      userId: collection.userId,
-      userName: collection.user.name,
-      amount: collection.amountPaid,
-      date: collection.dueDate,
-      recordedAt: collection.createdAt,
+      id: payerRow.id,
+      userId: payerRow.userId,
+      userName: payerRow.user.name,
+      amount: payerRow.amountPaid,
+      date: payerRow.dueDate,
+      recordedAt: payerRow.createdAt,
       recordedByName: sessionUser.name,
       reversalOfId: null,
-      isReversed: false
+      isReversed: false,
+      toUserId: payerRow.toUserId,
+      toUserName: recipientName,
+      fromUserId: null,
+      fromUserName: null
     }
-  ]);
+  ];
+  if (recipientId) {
+    refreshedRows.push({
+      id: `${payerRow.id}-offset`,
+      userId: recipientId,
+      userName: recipientName ?? '',
+      amount: -paid,
+      date: payerRow.dueDate,
+      recordedAt: payerRow.createdAt,
+      recordedByName: sessionUser.name,
+      reversalOfId: null,
+      isReversed: false,
+      toUserId: null,
+      toUserName: null,
+      fromUserId: userId,
+      fromUserName: payerRow.user.name
+    });
+  }
+  const refreshed = buildCollectionState(shares, refreshedRows);
 
   return created(res, {
     collection: {
-      id: collection.id,
-      userId: collection.userId,
-      userName: collection.user.name,
-      amount: round2(collection.amountPaid),
-      date: utcDateToDay(collection.dueDate)
+      id: payerRow.id,
+      userId: payerRow.userId,
+      userName: payerRow.user.name,
+      amount: round2(payerRow.amountPaid),
+      date: utcDateToDay(payerRow.dueDate),
+      toUserId: payerRow.toUserId,
+      toUserName: recipientName
     },
     totals: {
       collected: refreshed.collected,

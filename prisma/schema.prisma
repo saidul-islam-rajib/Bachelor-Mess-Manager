@@ -112,6 +112,7 @@ model User {
   groupOrders         GroupOrder[]
   payments            PaymentStatus[]
   paymentsRecorded    PaymentStatus[]     @relation("PaymentRecorder")
+  paymentsReceived    PaymentStatus[]     @relation("PaymentRecipient")
   groupsSupervised    Group[]             @relation("GroupSupervisor")
   groupsCoSupervised  GroupSupervisor[]   @relation("GroupCoSupervisor")
   coSupervisorsAdded  GroupSupervisor[]   @relation("GroupCoSupervisorGrantor")
@@ -704,6 +705,11 @@ model PaymentStatus {
   reversedBy    PaymentStatus?  @relation("PaymentReversal")
   recordedBy    User?           @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   recordedById  String?
+  toUser        User?           @relation("PaymentRecipient", fields: [toUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  toUserId      String?
+  offsetOf      PaymentStatus?  @relation("PaymentOffset", fields: [offsetOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  offsetOfId    String?         @unique
+  offsetBy      PaymentStatus?  @relation("PaymentOffset")
   amountDue     Float
   amountPaid    Float           @default(0)
   status        String
@@ -719,6 +725,7 @@ model PaymentStatus {
   @@index([groupId, dueDate])
   @@index([userId, dueDate])
   @@index([expenseId])
+  @@index([toUserId])
 }
 
 model GroupOrder {
