@@ -13,6 +13,7 @@ on:
           - restart-caddy
           - remove-k3s-traefik
           - check-k3s-config
+          - harden-k3s-config
       confirm:
         description: Type YES to let restart-caddy make changes
         required: false
@@ -138,6 +139,27 @@ jobs:
           echo
           echo "=== k3s service uptime (has it restarted recently?) ==="
           sudo systemctl show k3s -p ActiveEnterTimestamp
+
+      - name: Refuse unconfirmed hardening
+        if: inputs.action == 'harden-k3s-config' && inputs.confirm != 'YES'
+        run: |
+          echo "action=harden-k3s-config requires confirm=YES. Nothing was changed."
+          exit 1
+
+      - name: Persist traefik/servicelb disable so a k3s restart can't undo the fix
+        if: inputs.action == 'harden-k3s-config' && inputs.confirm == 'YES'
+        run: |
+          echo "=== before ==="
+          sudo cat /etc/rancher/k3s/config.yaml 2>/dev/null || echo "(file does not exist yet)"
+
+          echo
+          echo "=== writing /etc/rancher/k3s/config.yaml ==="
+          echo -e "disable:\n  - traefik\n  - servicelb" | sudo tee /etc/rancher/k3s/config.yaml
+          sudo chmod 644 /etc/rancher/k3s/config.yaml
+
+          echo
+          echo "=== after (this takes effect on the NEXT k3s restart - nothing is restarted now) ==="
+          sudo cat /etc/rancher/k3s/config.yaml
 
       - name: Restart caddy
         if: inputs.action == 'restart-caddy' && inputs.confirm == 'YES'
