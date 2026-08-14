@@ -49,6 +49,14 @@ jobs:
           echo "=== resource quota ==="
           sudo k3s kubectl -n bachelor-point describe resourcequota bachelor-point-quota || true
 
+          echo
+          echo "=== what actually holds ports 80/443 on the host ==="
+          sudo ss -tlnp | grep -E ':80 |:443 ' || echo "(nothing bound)"
+
+          echo
+          echo "=== all containerd containers matching caddy, including ones kubectl can't see ==="
+          sudo crictl ps -a | grep -i caddy || echo "(none found)"
+
       - name: Refuse unconfirmed restart
         if: inputs.action == 'restart-caddy' && inputs.confirm != 'YES'
         run: |
