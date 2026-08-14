@@ -27,9 +27,29 @@ const taka = formatCurrency;
 const dayLabel = (date: string) => formatDayKey(date, 'weekdayDayMonth');
 const shortDayLabel = (date: string) => formatDayKey(date, 'weekdayDay');
 
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
 export default function MealRateCard({ days, today, monthRate, rateMode, myMeals, myCost }: Props) {
   const copy = strings.meals.rate;
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [expandedDays, setExpandedDays] = useState(false);
 
   const priced = useMemo(
     () => days.filter((day) => day.rate > 0).sort((a, b) => b.date.localeCompare(a.date)),
@@ -40,102 +60,122 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
   const headline = todayRow ?? priced[0] ?? null;
   const isToday = Boolean(todayRow);
 
-  const visible = expanded ? priced : priced.slice(0, COLLAPSED_ROWS);
+  const visible = expandedDays ? priced : priced.slice(0, COLLAPSED_ROWS);
   const isDaily = rateMode === MEAL_RATE_MODES.DAILY;
 
   return (
     <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-      <div className="bg-gradient-to-br from-brand-600 to-brand-700 px-5 py-6 text-white sm:px-6">
-        <p className="text-xs font-medium uppercase tracking-wide text-white/70">
-          {headline ? (isToday ? copy.todayLabel : copy.latestLabel(dayLabel(headline.date))) : copy.title}
-        </p>
-
-        {headline ? (
-          <>
-            <p className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-semibold tabular-nums sm:text-5xl">{taka(headline.rate)}</span>
-              <span className="text-sm text-white/80">{copy.perMealUnit}</span>
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-4 bg-gradient-to-br from-brand-50 to-white px-5 py-4 text-left transition-colors hover:from-brand-100 sm:px-6 sm:py-5"
+      >
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium uppercase tracking-wide text-brand-700/80">
+            {headline ? (isToday ? copy.todayLabel : copy.latestLabel(dayLabel(headline.date))) : copy.title}
+          </p>
+          {headline ? (
+            <p className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-3xl font-bold tabular-nums text-slate-900 sm:text-4xl">{taka(headline.rate)}</span>
+              <span className="text-sm text-slate-500">{copy.perMealUnit}</span>
             </p>
-            <p className="mt-2 text-sm text-white/85">
-              {copy.yourMealsToday(headline.myMeals)} · {copy.yourCostToday} {taka(headline.myCost)}
-            </p>
-          </>
-        ) : (
-          <>
-            <p className="mt-2 text-2xl font-semibold sm:text-3xl">{copy.noRateYet}</p>
-            <p className="mt-2 text-sm text-white/85">{copy.noRateYetHint}</p>
-          </>
-        )}
-      </div>
+          ) : (
+            <p className="mt-1 text-xl font-semibold text-slate-900">{copy.noRateYet}</p>
+          )}
+        </div>
 
-      <dl className="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100">
-        <Tile label={copy.monthLabel} value={monthRate > 0 ? taka(monthRate) : '—'} />
-        <Tile label={copy.yourMealsMonth} value={String(myMeals)} />
-        <Tile label={copy.yourCostMonth} value={taka(myCost)} />
-      </dl>
+        <div className="flex shrink-0 items-center gap-4">
+          <div className="hidden text-right sm:block">
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{copy.monthLabel}</p>
+            <p className="text-lg font-semibold tabular-nums text-slate-900">{monthRate > 0 ? taka(monthRate) : '—'}</p>
+          </div>
+          <Chevron open={open} />
+        </div>
+      </button>
 
-      <p className="px-5 pt-3 text-xs text-slate-500 sm:px-6">
-        {isDaily ? copy.modeDaily : copy.modeMonthly}. {isDaily ? copy.monthHintDaily : copy.monthHintMonthly}
-      </p>
-
-      <div className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.dayByDay}</h3>
-
-        {priced.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">{copy.noPricedDays}</p>
-        ) : (
-          <>
-            <ul className="mt-2 divide-y divide-slate-100">
-              <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 pb-1.5 text-[11px] uppercase tracking-wide text-slate-400 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
-                <span>{copy.colDay}</span>
-                <span className="hidden text-right sm:block">{copy.colGroupMeals}</span>
-                <span className="text-right">{copy.colRate}</span>
-                <span className="text-right">{copy.colYourCost}</span>
-              </li>
-
-              {visible.map((day) => (
-                <li
-                  key={day.date}
-                  className={`grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2.5 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] ${
-                    day.date === today ? 'font-medium text-brand-800' : ''
-                  }`}
-                >
-                  <span className="truncate">
-                    <span className="sm:hidden">{shortDayLabel(day.date)}</span>
-                    <span className="hidden sm:inline">{dayLabel(day.date)}</span>
-                    <span className="ml-2 text-xs font-normal text-slate-400">
-                      {copy.colYourMeals} {day.myMeals}
-                    </span>
-                  </span>
-                  <span className="hidden text-right tabular-nums text-slate-500 sm:block">{day.groupMeals}</span>
-                  <span className="text-right tabular-nums text-slate-600">{taka(day.rate)}</span>
-                  <span className="text-right tabular-nums font-medium">{taka(day.myCost)}</span>
-                </li>
-              ))}
-            </ul>
-
-            {priced.length > COLLAPSED_ROWS && (
-              <button
-                type="button"
-                onClick={() => setExpanded((value) => !value)}
-                aria-expanded={expanded}
-                className="mt-3 min-h-[2.25rem] w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
-              >
-                {expanded ? copy.showLess : copy.showAll(priced.length)}
-              </button>
+      {open && (
+        <div className="border-t border-slate-100 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+          <p className="text-sm text-slate-500">
+            {headline ? (
+              <>
+                {copy.yourMealsToday(headline.myMeals)} · {copy.yourCostToday} {taka(headline.myCost)}
+              </>
+            ) : (
+              copy.noRateYetHint
             )}
-          </>
-        )}
-      </div>
+          </p>
+
+          <div className="mt-4 grid grid-cols-3 gap-2.5">
+            <Tile label={copy.monthLabel} value={monthRate > 0 ? taka(monthRate) : '—'} />
+            <Tile label={copy.yourMealsMonth} value={String(myMeals)} />
+            <Tile label={copy.yourCostMonth} value={taka(myCost)} />
+          </div>
+
+          <p className="mt-4 text-xs text-slate-500">
+            {isDaily ? copy.modeDaily : copy.modeMonthly}. {isDaily ? copy.monthHintDaily : copy.monthHintMonthly}
+          </p>
+
+          <div className="mt-5">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.dayByDay}</h3>
+
+            {priced.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">{copy.noPricedDays}</p>
+            ) : (
+              <>
+                <ul className="mt-2 divide-y divide-slate-100">
+                  <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 pb-1.5 text-[11px] uppercase tracking-wide text-slate-400 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+                    <span>{copy.colDay}</span>
+                    <span className="hidden text-right sm:block">{copy.colGroupMeals}</span>
+                    <span className="text-right">{copy.colRate}</span>
+                    <span className="text-right">{copy.colYourCost}</span>
+                  </li>
+
+                  {visible.map((day) => (
+                    <li
+                      key={day.date}
+                      className={`grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2.5 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] ${
+                        day.date === today ? 'font-medium text-brand-800' : ''
+                      }`}
+                    >
+                      <span className="truncate">
+                        <span className="sm:hidden">{shortDayLabel(day.date)}</span>
+                        <span className="hidden sm:inline">{dayLabel(day.date)}</span>
+                        <span className="ml-2 text-xs font-normal text-slate-400">
+                          {copy.colYourMeals} {day.myMeals}
+                        </span>
+                      </span>
+                      <span className="hidden text-right tabular-nums text-slate-500 sm:block">{day.groupMeals}</span>
+                      <span className="text-right tabular-nums text-slate-600">{taka(day.rate)}</span>
+                      <span className="text-right tabular-nums font-medium">{taka(day.myCost)}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {priced.length > COLLAPSED_ROWS && (
+                  <button
+                    type="button"
+                    onClick={() => setExpandedDays((value) => !value)}
+                    aria-expanded={expandedDays}
+                    className="mt-3 min-h-[2.25rem] w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
+                  >
+                    {expandedDays ? copy.showLess : copy.showAll(priced.length)}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
 
 function Tile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="px-3 py-3 text-center sm:px-4">
-      <dt className="text-[11px] uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className="mt-1 text-base font-semibold tabular-nums sm:text-lg">{value}</dd>
+    <div className="min-w-0 rounded-xl bg-slate-50 px-3 py-2.5 text-center">
+      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-slate-900 sm:text-base">{value}</p>
     </div>
   );
 }
