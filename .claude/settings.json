@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(git merge *)",
-      "Bash(*)"
+      "Bash(*)",
+      "Bash(timeout 60 bash -c ' *)"
     ]
   }
 }
