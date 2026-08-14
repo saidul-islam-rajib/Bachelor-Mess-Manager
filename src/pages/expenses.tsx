@@ -297,9 +297,7 @@ export default function ExpensesPage() {
 
                     {byDate.map(([day, list]) => {
                       const editingHere = list.some((e) => e.id === editId);
-                      const dateRowCount = list.reduce((n, e) => n + itemsOf(e).length, 0);
                       const dayTotal = list.reduce((sum, e) => sum + e.amount, 0);
-                      let dateCellPlaced = false;
 
                       return (
                         <tbody key={day} className="border-b-4 border-slate-100">
@@ -320,69 +318,65 @@ export default function ExpensesPage() {
                               </td>
                             </tr>
                           ) : (
-                            list.flatMap((expense) => {
-                              const items = itemsOf(expense);
-                              return items.map((item, index) => {
-                                const showDate = !dateCellPlaced;
-                                if (showDate) dateCellPlaced = true;
-                                return (
-                                  <tr key={item.id} className="border-t border-slate-100 align-top">
-                                    {showDate && (
-                                      <td
-                                        rowSpan={dateRowCount}
-                                        className="bg-slate-50/60 px-3 py-3 text-center align-middle font-medium"
-                                      >
-                                        {longDate(day)}
-                                        <span className="mt-1 block text-xs font-normal text-slate-500">
-                                          Day total {taka(dayTotal)}
-                                        </span>
-                                      </td>
-                                    )}
+                            list.map((expense, index) => (
+                              <tr key={expense.id} className="border-t border-slate-100 align-top">
+                                {index === 0 && (
+                                  <td
+                                    rowSpan={list.length}
+                                    className="bg-slate-50/60 px-3 py-3 text-center align-middle font-medium"
+                                  >
+                                    {longDate(day)}
+                                    <span className="mt-1 block text-xs font-normal text-slate-500">
+                                      Day total {taka(dayTotal)}
+                                    </span>
+                                  </td>
+                                )}
 
-                                    {index === 0 && (
-                                      <td rowSpan={items.length} className="px-3 py-3">
-                                        <span className="font-medium">{expense.payer?.name ?? 'Unknown'}</span>
-                                        {expense.payer?.id === user?.id && (
-                                          <span className="ml-1 text-xs text-green-600">(you)</span>
-                                        )}
-                                        <span className="mt-1 block text-xs text-slate-500">
-                                          Paid {taka(expense.amount)}
-                                        </span>
-                                        {expense.note && (
-                                          <span className="mt-1 block text-xs italic text-slate-400">{expense.note}</span>
-                                        )}
-                                        {canEditExpense(expense) && (
-                                          <span className="mt-2 flex gap-1.5">
-                                            <EditButton onClick={() => startEdit(expense)} />
-                                            <DeleteButton onClick={() => removeExpense(expense.id)} />
-                                          </span>
-                                        )}
-                                      </td>
-                                    )}
+                                <td className="px-3 py-3">
+                                  <span className="font-medium">{expense.payer?.name ?? 'Unknown'}</span>
+                                  {expense.payer?.id === user?.id && (
+                                    <span className="ml-1 text-xs text-green-600">(you)</span>
+                                  )}
+                                  {expense.note && (
+                                    <span className="mt-1 block text-xs italic text-slate-400">{expense.note}</span>
+                                  )}
+                                  {canEditExpense(expense) && (
+                                    <span className="mt-2 flex gap-1.5">
+                                      <EditButton onClick={() => startEdit(expense)} />
+                                      <DeleteButton onClick={() => removeExpense(expense.id)} />
+                                    </span>
+                                  )}
+                                </td>
 
-                                    <td className="break-words px-3 py-2 text-slate-700">{item.name}</td>
-                                    <td className="px-3 py-2 text-right tabular-nums text-slate-700">
-                                      {taka(item.amount)}
-                                    </td>
+                                <td className="px-3 py-3">
+                                  <ul className="space-y-1">
+                                    {itemsOf(expense).map((item) => (
+                                      <li key={item.id} className="flex justify-between gap-2 text-slate-700">
+                                        <span className="truncate break-words">{item.name}</span>
+                                        <span className="shrink-0 tabular-nums text-slate-500">{taka(item.amount)}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </td>
 
-                                    {index === 0 && (
-                                      <td rowSpan={items.length} className="px-3 py-3">
-                                        <CommentBox
-                                          comments={expense.comments}
-                                          currentUserId={user?.id}
-                                          canDelete={isSupervisor}
-                                          members={members}
-                                          mentionNames={mentionNames}
-                                          onAdd={(text) => addComment(expense.id, text)}
-                                          onDelete={removeComment}
-                                          onError={(m) => toast.error(m)}
-                                        />
-                                      </td>
-                                    )}
-                                  </tr>
-                                );
-                              });
-                            })
+                                <td className="px-3 py-3 text-right tabular-nums font-medium text-slate-900">
+                                  {taka(expense.amount)}
+                                </td>
+
+                                <td className="px-3 py-3">
+                                  <CommentBox
+                                    comments={expense.comments}
+                                    currentUserId={user?.id}
+                                    canDelete={isSupervisor}
+                                    members={members}
+                                    mentionNames={mentionNames}
+                                    onAdd={(text) => addComment(expense.id, text)}
+                                    onDelete={removeComment}
+                                    onError={(m) => toast.error(m)}
+                                  />
+                                </td>
+                              </tr>
+                            ))
                           )}
                         </tbody>
                       );
