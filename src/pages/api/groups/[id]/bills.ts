@@ -12,6 +12,9 @@ import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
+import { cached, invalidatePrefix } from '@/lib/cache';
+import { billsListGroupPrefix, billsListKey } from '@/lib/cache-keys';
+import { cacheConfig } from '@/config';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req, res);
@@ -41,100 +44,106 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
-    const { start, nextStart } = parseMonth(monthKey);
+    const { key: month, start, nextStart } = parseMonth(monthKey);
 
-    const [rows, memberships] = await Promise.all([
-      prisma.expenseEntry.findMany({
-        where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
-        include: {
-          payer: { select: { id: true, name: true } },
-          shares: { include: { user: { select: { id: true, name: true } } } }
-        },
-        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }]
-      }),
-      prisma.membership.findMany({
-        where: { groupId, isActive: true },
-        include: { user: { select: { id: true, name: true, email: true } } },
-        orderBy: { joinedAt: 'asc' }
-      })
-    ]);
+    const shared = await cached(billsListKey(groupId, month), cacheConfig.billsListMs, async () => {
+      const [rows, memberships] = await Promise.all([
+        prisma.expenseEntry.findMany({
+          where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
+          include: {
+            payer: { select: { id: true, name: true } },
+            shares: { include: { user: { select: { id: true, name: true } } } }
+          },
+          orderBy: [{ date: 'desc' }, { createdAt: 'desc' }]
+        }),
+        prisma.membership.findMany({
+          where: { groupId, isActive: true },
+          include: { user: { select: { id: true, name: true, email: true } } },
+          orderBy: { joinedAt: 'asc' }
+        })
+      ]);
 
-    const collections = await collectionsByBill(rows.map((row) => row.id));
+      const collections = await collectionsByBill(rows.map((row) => row.id));
 
-    const bills = rows.map((row) => {
-      const state = buildCollectionState(
-        row.shares.map((s) => ({ userId: s.userId, userName: s.user.name, amount: s.amount })),
-        collections.get(row.id) ?? []
-      );
+      const bills = rows.map((row) => {
+        const state = buildCollectionState(
+          row.shares.map((s) => ({ userId: s.userId, userName: s.user.name, amount: s.amount })),
+          collections.get(row.id) ?? []
+        );
+
+        return {
+          id: row.id,
+          type: row.type,
+          amount: round2(row.amount),
+          date: utcDateToDay(row.date),
+          note: row.note ?? '',
+          isReceived: row.isReceived,
+          splitMethod: row.splitMethod,
+          payer: row.payer ? { id: row.payer.id, name: row.payer.name } : null,
+          shares: state.shares.map((s) => ({
+            userId: s.userId,
+            userName: s.userName,
+            amount: s.share,
+            paid: s.paid,
+            outstanding: s.outstanding,
+            advance: s.advance,
+            status: s.status,
+            collections: s.collections.map((c) => ({
+              id: c.id,
+              amount: round2(c.amount),
+              date: utcDateToDay(c.date),
+              recordedAt: c.recordedAt.toISOString(),
+              recordedByName: c.recordedByName,
+              isReversal: Boolean(c.reversalOfId),
+              isReversed: c.isReversed,
+              toUserName: c.toUserName,
+              fromUserName: c.fromUserName
+            }))
+          })),
+          collected: state.collected,
+          uncollected: state.outstanding,
+          advance: state.advance,
+          isFullyCollected: state.isFullyCollected,
+          unpaidMemberCount: state.unpaidMemberCount
+        };
+      });
+
+      const byType: Record<string, number> = {};
+      const byMember = new Map<string, number>();
+      const dueByMember = new Map<string, number>();
+      for (const bill of bills) {
+        byType[bill.type] = round2((byType[bill.type] ?? 0) + bill.amount);
+        for (const share of bill.shares) {
+          byMember.set(share.userId, round2((byMember.get(share.userId) ?? 0) + share.amount));
+          dueByMember.set(share.userId, round2((dueByMember.get(share.userId) ?? 0) + share.outstanding));
+        }
+      }
+
+      const [categories, labels] = await Promise.all([listCategories(groupId), categoryLabels(groupId)]);
 
       return {
-        id: row.id,
-        type: row.type,
-        amount: round2(row.amount),
-        date: utcDateToDay(row.date),
-        note: row.note ?? '',
-        isReceived: row.isReceived,
-        splitMethod: row.splitMethod,
-        payer: row.payer ? { id: row.payer.id, name: row.payer.name } : null,
-        shares: state.shares.map((s) => ({
-          userId: s.userId,
-          userName: s.userName,
-          amount: s.share,
-          paid: s.paid,
-          outstanding: s.outstanding,
-          advance: s.advance,
-          status: s.status,
-          collections: s.collections.map((c) => ({
-            id: c.id,
-            amount: round2(c.amount),
-            date: utcDateToDay(c.date),
-            recordedAt: c.recordedAt.toISOString(),
-            recordedByName: c.recordedByName,
-            isReversal: Boolean(c.reversalOfId),
-            isReversed: c.isReversed,
-            toUserName: c.toUserName,
-            fromUserName: c.fromUserName
-          }))
-        })),
-        collected: state.collected,
-        uncollected: state.outstanding,
-        advance: state.advance,
-        isFullyCollected: state.isFullyCollected,
-        unpaidMemberCount: state.unpaidMemberCount
+        categories,
+        categoryLabels: labels,
+        bills,
+        members: memberships.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email })),
+        totals: {
+          total: round2(bills.reduce((a, b) => a + b.amount, 0)),
+          settled: round2(bills.filter((b) => b.isReceived).reduce((a, b) => a + b.amount, 0)),
+          outstanding: round2(bills.filter((b) => !b.isReceived).reduce((a, b) => a + b.amount, 0)),
+          collected: round2(bills.reduce((a, b) => a + b.collected, 0)),
+          uncollected: round2(bills.reduce((a, b) => a + b.uncollected, 0)),
+          byType,
+          byMember: Object.fromEntries(byMember),
+          dueByMember: Object.fromEntries(dueByMember)
+        }
       };
     });
-
-    const byType: Record<string, number> = {};
-    const byMember = new Map<string, number>();
-    const dueByMember = new Map<string, number>();
-    for (const bill of bills) {
-      byType[bill.type] = round2((byType[bill.type] ?? 0) + bill.amount);
-      for (const share of bill.shares) {
-        byMember.set(share.userId, round2((byMember.get(share.userId) ?? 0) + share.amount));
-        dueByMember.set(share.userId, round2((dueByMember.get(share.userId) ?? 0) + share.outstanding));
-      }
-    }
-
-    const [categories, labels] = await Promise.all([listCategories(groupId), categoryLabels(groupId)]);
 
     return ok(res, {
       canManage,
       canRecordOwn: hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD_OWN),
       currentUserId: sessionUser.id,
-      categories,
-      categoryLabels: labels,
-      bills,
-      members: memberships.map((m) => ({ id: m.user.id, name: m.user.name, email: m.user.email })),
-      totals: {
-        total: round2(bills.reduce((a, b) => a + b.amount, 0)),
-        settled: round2(bills.filter((b) => b.isReceived).reduce((a, b) => a + b.amount, 0)),
-        outstanding: round2(bills.filter((b) => !b.isReceived).reduce((a, b) => a + b.amount, 0)),
-        collected: round2(bills.reduce((a, b) => a + b.collected, 0)),
-        uncollected: round2(bills.reduce((a, b) => a + b.uncollected, 0)),
-        byType,
-        byMember: Object.fromEntries(byMember),
-        dueByMember: Object.fromEntries(dueByMember)
-      }
+      ...shared
     });
   }
 
@@ -204,6 +213,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       actorId: sessionUser.id,
       next: { amount: bill.amount, date: bill.date, note: bill.note }
     });
+
+    invalidatePrefix(billsListGroupPrefix(groupId));
 
     return created(res, {
       bill: {

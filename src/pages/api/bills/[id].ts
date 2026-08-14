@@ -8,6 +8,8 @@ import { isValidBillType } from '@/lib/expense-categories';
 import { dayToUtcDate, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
 import { withAudit } from '@/lib/with-audit';
+import { invalidatePrefix } from '@/lib/cache';
+import { billsListGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH' && req.method !== 'DELETE') {
@@ -44,6 +46,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       actorId: sessionUser.id,
       previous: { amount: bill.amount, date: bill.date, note: bill.note }
     });
+
+    invalidatePrefix(billsListGroupPrefix(bill.groupId));
 
     return ok(res, { deleted: true });
   }
@@ -148,6 +152,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     previous: { amount: bill.amount, date: bill.date, note: bill.note },
     next: { amount: updated.amount, date: updated.date, note: updated.note }
   });
+
+  invalidatePrefix(billsListGroupPrefix(bill.groupId));
 
   return ok(res, {
     bill: {

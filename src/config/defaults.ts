@@ -106,7 +106,8 @@ export const UI_DEFAULTS = {
 export const CACHE_DEFAULTS = {
   siteSettingsMs: 300_000,
   groupListMs: 60_000,
-  sessionUserMs: 5_000
+  sessionUserMs: 5_000,
+  billsListMs: 15_000
 } as const;
 
 export const COMMUNITY_DEFAULTS = {

@@ -20,7 +20,7 @@ import {
   type Share
 } from '@/lib/bill-view';
 import { todayKey } from '@/lib/month';
-import { formatCurrency, formatDayKey, formatInstant } from '@/lib/format';
+import { formatCurrency, formatDayKey } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 
 const taka = formatCurrency;
@@ -328,7 +328,6 @@ export default function BillsPage() {
                                       onToggle={() => toggleSettled(bill)}
                                       onDelete={() => remove(bill)}
                                       onCollect={(body) => recordCollection(bill, body)}
-                                      onReverseCollection={(collectionId) => reverseCollection(bill, collectionId)}
                                     />
                                   )
                                 )}
@@ -351,7 +350,16 @@ export default function BillsPage() {
                 />
               )}
 
-              <PaymentHistorySection bills={bills} labels={data.categoryLabels} onOpenBill={revealBill} />
+              <PaymentHistorySection
+                bills={bills}
+                labels={data.categoryLabels}
+                canManage={canManage}
+                onOpenBill={revealBill}
+                onReverse={(billId, collectionId) => {
+                  const bill = bills.find((b) => b.id === billId);
+                  if (bill) reverseCollection(bill, collectionId);
+                }}
+              />
             </>
           )}
         </div>
@@ -367,29 +375,39 @@ type PaymentHistoryEntry = {
   billDate: string;
   memberName: string;
   amount: number;
-  isReversal: boolean;
   isReversed: boolean;
-  isOffset: boolean;
   toUserName: string | null;
-  fromUserName: string | null;
   recordedByName: string | null;
   recordedAt: string;
 };
 
+const HISTORY_PAGE_SIZE = 8;
+
 function PaymentHistorySection({
   bills,
   labels,
-  onOpenBill
+  canManage,
+  onOpenBill,
+  onReverse
 }: {
   bills: Bill[];
   labels: Record<string, string>;
+  canManage: boolean;
   onOpenBill: (billId: string) => void;
+  onReverse: (billId: string, collectionId: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+  const [page, setPage] = useState(0);
+
+  // Only the payer-initiated entry is shown — the auto-generated offset on the
+  // recipient's side and reversal corrections are folded into this same row
+  // (via toUserName / isReversed) so each real-world action is one line, not three.
   const entries = useMemo(() => {
     const rows: PaymentHistoryEntry[] = [];
     for (const bill of bills) {
       for (const share of bill.shares) {
         for (const entry of share.collections) {
+          if (entry.isReversal || entry.fromUserName) continue;
           rows.push({
             id: entry.id,
             billId: bill.id,
@@ -397,11 +415,8 @@ function PaymentHistorySection({
             billDate: bill.date,
             memberName: share.userName,
             amount: entry.amount,
-            isReversal: entry.isReversal,
             isReversed: entry.isReversed,
-            isOffset: Boolean(entry.fromUserName),
             toUserName: entry.toUserName,
-            fromUserName: entry.fromUserName,
             recordedByName: entry.recordedByName,
             recordedAt: entry.recordedAt
           });
@@ -413,47 +428,99 @@ function PaymentHistorySection({
 
   if (entries.length === 0) return null;
 
+  const pageCount = Math.max(1, Math.ceil(entries.length / HISTORY_PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount - 1);
+  const pageItems = entries.slice(currentPage * HISTORY_PAGE_SIZE, currentPage * HISTORY_PAGE_SIZE + HISTORY_PAGE_SIZE);
+
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">Payment history</h2>
-      <p className="mt-1 text-sm text-slate-500">
-        Every payment recorded against a bill this month, most recent first.
-      </p>
-      <ul className="mt-4 divide-y divide-slate-100">
-        {entries.map((entry) => (
-          <li key={entry.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5 text-sm">
-            <div className="min-w-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 text-left"
+      >
+        <div>
+          <h2 className="text-lg font-semibold">Payment history</h2>
+          <p className="mt-0.5 text-sm text-slate-500">
+            {entries.length} payment{entries.length === 1 ? '' : 's'} recorded this month
+          </p>
+        </div>
+        <Chevron open={open} />
+      </button>
+
+      {open && (
+        <>
+          <ul className="mt-4 divide-y divide-slate-100">
+            {pageItems.map((entry) => (
+              <li key={entry.id} className="py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => onOpenBill(entry.billId)}
+                    className="min-w-0 truncate text-left text-sm font-medium text-slate-900 hover:underline"
+                  >
+                    {entry.memberName}
+                    {entry.toUserName && <span className="font-normal text-slate-500"> → {entry.toUserName}</span>}
+                  </button>
+                  <span
+                    className={`shrink-0 text-sm font-semibold tabular-nums ${
+                      entry.isReversed ? 'text-slate-400 line-through' : 'text-slate-900'
+                    }`}
+                  >
+                    {taka(entry.amount)}
+                  </span>
+                </div>
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500">
+                  <span>{entry.billLabel}</span>
+                  <span aria-hidden>·</span>
+                  <span>{formatDayKey(entry.billDate, 'dayMonth')}</span>
+                  {entry.recordedByName && (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span>by {entry.recordedByName}</span>
+                    </>
+                  )}
+                  {entry.isReversed && <span className="font-medium text-amber-600">· reversed</span>}
+                  {canManage && !entry.isReversed && (
+                    <button
+                      type="button"
+                      onClick={() => onReverse(entry.billId, entry.id)}
+                      className="text-rose-500 underline-offset-2 hover:underline"
+                    >
+                      reverse
+                    </button>
+                  )}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          {pageCount > 1 && (
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
               <button
                 type="button"
-                onClick={() => onOpenBill(entry.billId)}
-                className="truncate font-medium text-slate-900 hover:underline"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                {entry.memberName}
+                Previous
               </button>
-              <p className="truncate text-xs text-slate-500">
-                {entry.billLabel} · {longDate(entry.billDate)}
-                {entry.toUserName && <> · paid to {entry.toUserName}</>}
-                {entry.fromUserName && <> · reimbursed by {entry.fromUserName}</>}
-                {entry.recordedByName && <> · recorded by {entry.recordedByName}</>}
-              </p>
+              <span className="text-xs text-slate-500">
+                Page {currentPage + 1} of {pageCount}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                disabled={currentPage === pageCount - 1}
+                className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Next
+              </button>
             </div>
-            <span
-              className={`shrink-0 font-semibold tabular-nums ${
-                entry.isReversal
-                  ? 'text-rose-600'
-                  : entry.isReversed
-                    ? 'text-slate-400 line-through'
-                    : entry.isOffset
-                      ? 'text-teal-700'
-                      : 'text-slate-900'
-              }`}
-            >
-              {entry.isReversal || entry.isOffset ? '−' : ''}
-              {taka(Math.abs(entry.amount))}
-            </span>
-          </li>
-        ))}
-      </ul>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -504,63 +571,6 @@ function AdvanceNote({ share }: { share: Share }) {
     <p className="mt-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800">
       Paid {taka(share.advance)} over their share — the mess owes this back, funded by the members still due.
     </p>
-  );
-}
-
-function CollectionHistory({
-  share,
-  canManage,
-  onReverse
-}: {
-  share: Share;
-  canManage: boolean;
-  onReverse: (collectionId: string) => void;
-}) {
-  if (share.collections.length === 0) return null;
-
-  return (
-    <ul className="mt-2 space-y-1 border-l-2 border-slate-200 pl-3">
-      {share.collections.map((entry) => {
-        const isOffset = Boolean(entry.fromUserName);
-        return (
-          <li key={entry.id} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-            <span
-              className={
-                entry.isReversal
-                  ? 'font-medium text-rose-600'
-                  : entry.isReversed
-                    ? 'text-slate-400 line-through'
-                    : isOffset
-                      ? 'font-medium text-teal-700'
-                      : 'font-medium text-slate-700'
-              }
-            >
-              {entry.isReversal || isOffset ? '−' : ''}
-              {taka(Math.abs(entry.amount))}
-            </span>
-            <span className="text-slate-400">
-              {entry.isReversal ? 'correction' : formatDayKey(entry.date, 'dayMonth')}
-            </span>
-            {entry.toUserName && <span className="text-slate-500">→ paid to {entry.toUserName}</span>}
-            {entry.fromUserName && <span className="text-teal-600">reimbursed by {entry.fromUserName}</span>}
-            {entry.recordedByName && <span className="text-slate-400">· by {entry.recordedByName}</span>}
-            <span className="text-slate-300" title={formatInstant(entry.recordedAt, 'dateTime')}>
-              · {formatInstant(entry.recordedAt, 'dayMonthTime')}
-            </span>
-            {entry.isReversed && <span className="text-slate-400">· reversed</span>}
-            {canManage && !entry.isReversal && !entry.isReversed && !isOffset && (
-              <button
-                type="button"
-                onClick={() => onReverse(entry.id)}
-                className="rounded px-1 text-rose-500 underline-offset-2 hover:underline"
-              >
-                reverse
-              </button>
-            )}
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 
@@ -672,8 +682,7 @@ function SplitPanel({
   currentUserId,
   canManage,
   canRecordOwn,
-  onCollect,
-  onReverseCollection
+  onCollect
 }: {
   bill: Bill;
   members: Member[];
@@ -681,7 +690,6 @@ function SplitPanel({
   canManage: boolean;
   canRecordOwn: boolean;
   onCollect: (body: Record<string, unknown>) => void;
-  onReverseCollection: (collectionId: string) => void;
 }) {
   const [editingFor, setEditingFor] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
@@ -783,7 +791,6 @@ function SplitPanel({
                       {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
                     </div>
                     <AdvanceNote share={share} />
-                    <CollectionHistory share={share} canManage={canManage} onReverse={onReverseCollection} />
                   </td>
                   <td className="px-3 py-3 text-right align-top tabular-nums text-slate-600">{taka(share.amount)}</td>
                   <td className="px-3 py-3 text-right align-top tabular-nums font-medium text-slate-900">
@@ -884,8 +891,6 @@ function SplitPanel({
 
               <AdvanceNote share={share} />
 
-              <CollectionHistory share={share} canManage={canManage} onReverse={onReverseCollection} />
-
               {canActFor(share.userId) && (
                 <div className="mt-2.5">
                   <MemberActions
@@ -921,8 +926,7 @@ function BillRow({
   onEdit,
   onToggle,
   onDelete,
-  onCollect,
-  onReverseCollection
+  onCollect
 }: {
   bill: Bill;
   members: Member[];
@@ -935,7 +939,6 @@ function BillRow({
   onToggle: () => void;
   onDelete: () => void;
   onCollect: (body: Record<string, unknown>) => void;
-  onReverseCollection: (collectionId: string) => void;
 }) {
   const myShare = bill.shares.find((s) => s.userId === currentUserId);
   const percent = bill.amount > 0 ? Math.min(100, Math.round((bill.collected / bill.amount) * 100)) : 0;
@@ -1026,7 +1029,6 @@ function BillRow({
             canManage={canManage}
             canRecordOwn={canRecordOwn}
             onCollect={onCollect}
-            onReverseCollection={onReverseCollection}
           />
 
           {canManage && (

@@ -9,6 +9,8 @@ import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
+import { invalidatePrefix } from '@/lib/cache';
+import { billsListGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST' && req.method !== 'DELETE') {
@@ -70,6 +72,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!reversed.ok) {
       return conflict(res, reversed.error);
     }
+
+    invalidatePrefix(billsListGroupPrefix(bill.groupId));
 
     return ok(res, { reversed: true, amount: reversed.amount });
   }
@@ -212,6 +216,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
   }
   const refreshed = buildCollectionState(shares, refreshedRows);
+
+  invalidatePrefix(billsListGroupPrefix(bill.groupId));
 
   return created(res, {
     collection: {
