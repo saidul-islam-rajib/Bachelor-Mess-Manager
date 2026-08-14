@@ -30,16 +30,25 @@ of JSON, and two separate caps sat below that:
 - `withAudit` rejected anything over `securityConfig.maxRequestBodyBytes` (1 MB) before the handler ran
 - the profile route's `bodyParser.sizeLimit` was a literal `'4mb'`
 
-Both now derive from the **ceiling**, not the live setting, because neither can consult the database:
+The first now derives from the **ceiling**, not the live setting, because it can't consult the database:
 
 ```
 uploadConfig.maxRequestBodyBytes = ceiling × 4/3 + slack
-uploadConfig.requestBodyLimit    = that, rounded up, as "<n>mb"
 ```
 
 `withAudit` takes an optional `maxRequestBodyBytes`, and only ever raises the global cap for the route that passes it
 — `Math.max` of the two, so a route can never quietly weaken the default. This is why the ceiling costs memory:
 sizing it at 10 MB means the profile route will buffer ~13.4 MB per upload before rejecting anything.
+
+The second — `bodyParser.sizeLimit` in each route's `export const config` — **cannot** derive from `uploadConfig` the
+same way. Next.js extracts that object with a restricted static analyzer before the module is ever executed, and it
+only understands literal strings/numbers; a `MemberExpression` like `uploadConfig.maxRequestBodyBytes` is silently
+ignored and Next falls back to its own 1 MB default. (This was already happening — the field existed and was wired
+up, but was never actually taking effect, so uploads above 1 MB were being rejected by Next before `withAudit` ever
+ran.) The fix is a hardcoded literal (currently `'14mb'`, matching the same ceiling math above) that must be bumped
+by hand if `UPLOAD_MAX_CONFIGURABLE_IMAGE_BYTES` is ever raised meaningfully. `uploadConfig.maxRequestBodyBytes`
+stays the authoritative, fully dynamic check — the literal is just an outer safety valve sized generously enough
+never to be the binding constraint under normal configuration.
 
 ## Units
 

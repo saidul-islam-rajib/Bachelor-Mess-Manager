@@ -849,25 +849,43 @@ model Comment {
 }
 
 model CommunityMessage {
-  id            String    @id @default(uuid())
-  type          String    @default("MEMBER")
-  key           String    @unique
-  author        User?     @relation("CommunityAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String                  @id @default(uuid())
+  type          String                  @default("MEMBER")
+  key           String                  @unique
+  author        User?                   @relation("CommunityAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   authorId      String?
   title         String?
   text          String
-  pinned        Boolean   @default(false)
+  pinned        Boolean                 @default(false)
   deletedAt     DateTime?
-  createdAt     DateTime  @default(now())
+  images        CommunityMessageImage[]
+  createdAt     DateTime                @default(now())
   createdById   String?
-  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedAt     DateTime                @default(now()) @updatedAt
   updatedById   String?
-  isPublished   Boolean   @default(true)
+  isPublished   Boolean                 @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
 
   @@index([createdAt])
   @@index([pinned, createdAt])
+}
+
+model CommunityMessageImage {
+  id            String           @id @default(uuid())
+  message       CommunityMessage @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  messageId     String
+  url           String
+  sortOrder     Int              @default(0)
+  createdAt     DateTime         @default(now())
+  createdById   String?
+  updatedAt     DateTime         @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean          @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([messageId])
 }
 
 model CommunityRead {

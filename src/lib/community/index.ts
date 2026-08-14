@@ -23,6 +23,7 @@ export type CommunityMessageView = {
   authorImage: string | null;
   title: string | null;
   text: string;
+  images: string[];
   pinned: boolean;
   createdAt: string;
 };
@@ -46,6 +47,7 @@ type MessageRow = Prisma.CommunityMessageGetPayload<{
     pinned: true;
     createdAt: true;
     author: { select: { id: true; name: true; profileImage: true } };
+    images: { select: { url: true }; orderBy: { sortOrder: 'asc' } };
   };
 }>;
 
@@ -57,7 +59,8 @@ const MESSAGE_SELECT = {
   text: true,
   pinned: true,
   createdAt: true,
-  author: { select: { id: true, name: true, profileImage: true } }
+  author: { select: { id: true, name: true, profileImage: true } },
+  images: { select: { url: true }, orderBy: { sortOrder: 'asc' } }
 } satisfies Prisma.CommunityMessageSelect;
 
 const VISIBLE: Prisma.CommunityMessageWhereInput = { deletedAt: null, isPublished: true };
@@ -78,6 +81,7 @@ function serialize(row: MessageRow): CommunityMessageView {
     authorImage: row.author?.profileImage ?? null,
     title: row.title,
     text: row.text,
+    images: row.images.map((image) => image.url),
     pinned: row.pinned,
     createdAt: row.createdAt.toISOString()
   };
@@ -119,14 +123,13 @@ export async function readFeed(options: { before?: string; after?: string; limit
   const rows = await prisma.communityMessage.findMany({
     where,
     select: MESSAGE_SELECT,
-    orderBy: { createdAt: after ? 'asc' : 'desc' },
+    orderBy: { createdAt: 'desc' },
     take: take + 1
   });
 
   const hasMore = rows.length > take;
   const page = hasMore ? rows.slice(0, take) : rows;
-  const ordered = after ? page : [...page].reverse();
-  const messages = ordered.map(serialize);
+  const messages = page.map(serialize);
 
   const pinnedRows = after
     ? []
@@ -147,14 +150,28 @@ export async function readFeed(options: { before?: string; after?: string; limit
   };
 }
 
-export async function postMessage(params: { authorId: string; text: string }): Promise<CommunityMessageView> {
+export async function postMessage(params: {
+  authorId: string;
+  text: string;
+  images?: string[];
+}): Promise<CommunityMessageView> {
   const row = await prisma.communityMessage.create({
     data: {
       key: `${MEMBER_KEY_PREFIX}${randomUUID()}`,
       type: COMMUNITY_MESSAGE_TYPES.MEMBER,
       authorId: params.authorId,
       text: params.text,
-      publishedAt: new Date()
+      publishedAt: new Date(),
+      images: params.images?.length
+        ? {
+            create: params.images.map((url, index) => ({
+              url,
+              sortOrder: index,
+              createdById: params.authorId,
+              updatedById: params.authorId
+            }))
+          }
+        : undefined
     },
     select: MESSAGE_SELECT
   });

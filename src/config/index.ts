@@ -59,6 +59,7 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   COMMUNITY_PAGE_SIZE: process.env.COMMUNITY_PAGE_SIZE,
   COMMUNITY_MESSAGE_MAX_LENGTH: process.env.COMMUNITY_MESSAGE_MAX_LENGTH,
   COMMUNITY_POLL_INTERVAL_MS: process.env.COMMUNITY_POLL_INTERVAL_MS,
+  COMMUNITY_MAX_IMAGES_PER_POST: process.env.COMMUNITY_MAX_IMAGES_PER_POST,
   MEAL_PROMPT_DEFAULT_BREAKFAST: process.env.MEAL_PROMPT_DEFAULT_BREAKFAST,
   MEAL_PROMPT_DEFAULT_LUNCH: process.env.MEAL_PROMPT_DEFAULT_LUNCH,
   MEAL_PROMPT_DEFAULT_DINNER: process.env.MEAL_PROMPT_DEFAULT_DINNER,
@@ -222,7 +223,6 @@ export const uploadConfig = {
   ),
   maxConfigurableImageBytes,
   maxRequestBodyBytes: uploadRequestBodyBytes,
-  requestBodyLimit: `${Math.ceil(uploadRequestBodyBytes / (1024 * 1024))}mb`,
   routePrefix: UPLOAD_DEFAULTS.routePrefix,
   cacheMaxAgeSeconds: readInt('UPLOAD_CACHE_MAX_AGE_SECONDS', UPLOAD_DEFAULTS.cacheMaxAgeSeconds)
 } as const;
@@ -262,13 +262,18 @@ export const databaseConfig = {
   poolTimeoutSeconds: readOptionalInt('DATABASE_POOL_TIMEOUT_SECONDS')
 } as const;
 
+const communityMaxImagesPerPost = readInt('COMMUNITY_MAX_IMAGES_PER_POST', COMMUNITY_DEFAULTS.maxImagesPerPost);
+const communityPostRequestBodyBytes = uploadConfig.maxRequestBodyBytes * communityMaxImagesPerPost;
+
 export const communityConfig = {
   pageSize: readInt('COMMUNITY_PAGE_SIZE', COMMUNITY_DEFAULTS.pageSize),
   maxMessageLength: readInt('COMMUNITY_MESSAGE_MAX_LENGTH', COMMUNITY_DEFAULTS.maxMessageLength),
   pollIntervalMs: readInt('COMMUNITY_POLL_INTERVAL_MS', COMMUNITY_DEFAULTS.pollIntervalMs),
   directorySize: readInt('COMMUNITY_DIRECTORY_SIZE', COMMUNITY_DEFAULTS.directorySize),
   mentionRecipientCap: readInt('COMMUNITY_MENTION_CAP', COMMUNITY_DEFAULTS.mentionRecipientCap),
-  everyoneRecipientCap: readInt('COMMUNITY_EVERYONE_CAP', COMMUNITY_DEFAULTS.everyoneRecipientCap)
+  everyoneRecipientCap: readInt('COMMUNITY_EVERYONE_CAP', COMMUNITY_DEFAULTS.everyoneRecipientCap),
+  maxImagesPerPost: communityMaxImagesPerPost,
+  postMaxRequestBodyBytes: communityPostRequestBodyBytes
 } as const;
 
 export const mealPromptConfig = {

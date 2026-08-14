@@ -39,50 +39,50 @@ const FILE_NAME_PATTERN = new RegExp(
 
 type SaveResult = { ok: true; url: string } | { ok: false; error: string };
 
-export async function saveProfileImage(dataUrl: string, userId: string): Promise<SaveResult> {
+export async function saveImage(dataUrl: string, ownerId: string): Promise<SaveResult> {
   const match = /^data:([a-zA-Z0-9/+.-]+);base64,(.+)$/s.exec(dataUrl.trim());
   if (!match) {
-    return { ok: false, error: strings.profile.imageNotDataUrl };
+    return { ok: false, error: strings.uploads.imageNotDataUrl };
   }
 
   const [, declaredMime, base64] = match;
   if (!ACCEPTED_IMAGE_MIMES.includes(declaredMime)) {
-    return { ok: false, error: strings.profile.imageWrongType };
+    return { ok: false, error: strings.uploads.imageWrongType };
   }
 
   const { maxImageBytes } = await getUploadPolicy();
   const limitLabel = formatBytes(maxImageBytes);
 
   if (Math.floor((base64.length * 3) / 4) > maxImageBytes) {
-    return { ok: false, error: strings.profile.imageTooLarge(limitLabel) };
+    return { ok: false, error: strings.uploads.imageTooLarge(limitLabel) };
   }
 
   let buffer: Buffer;
   try {
     buffer = Buffer.from(base64, 'base64');
   } catch {
-    return { ok: false, error: strings.profile.imageUndecodable };
+    return { ok: false, error: strings.uploads.imageUndecodable };
   }
 
-  if (buffer.length === 0) return { ok: false, error: strings.profile.imageEmpty };
+  if (buffer.length === 0) return { ok: false, error: strings.uploads.imageEmpty };
   if (buffer.length > maxImageBytes) {
-    return { ok: false, error: strings.profile.imageTooLarge(limitLabel) };
+    return { ok: false, error: strings.uploads.imageTooLarge(limitLabel) };
   }
 
   const detected = IMAGE_TYPES.find((type) => type.matches(buffer));
   if (!detected || detected.mime !== declaredMime) {
-    return { ok: false, error: strings.profile.imageInvalid };
+    return { ok: false, error: strings.uploads.imageInvalid };
   }
 
   await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
-  const fileName = `${userId}-${crypto.randomBytes(8).toString('hex')}.${detected.ext}`;
+  const fileName = `${ownerId}-${crypto.randomBytes(8).toString('hex')}.${detected.ext}`;
   await fs.writeFile(path.join(UPLOAD_DIR, fileName), buffer);
 
   return { ok: true, url: `${uploadConfig.routePrefix}${fileName}` };
 }
 
-export async function deleteProfileImage(url: string | null | undefined) {
+export async function deleteImage(url: string | null | undefined) {
   if (!url || !url.startsWith(uploadConfig.routePrefix)) return;
 
   const fileName = safeFileName(url.slice(uploadConfig.routePrefix.length));
@@ -95,7 +95,7 @@ export async function deleteProfileImage(url: string | null | undefined) {
   }
 }
 
-export async function profileImageExists(name: string): Promise<boolean> {
+export async function imageExists(name: string): Promise<boolean> {
   const fileName = safeFileName(name);
   if (!fileName) return false;
 
@@ -107,7 +107,7 @@ export async function profileImageExists(name: string): Promise<boolean> {
   }
 }
 
-export async function readProfileImage(name: string): Promise<{ body: Buffer; contentType: string } | null> {
+export async function readImage(name: string): Promise<{ body: Buffer; contentType: string } | null> {
   const fileName = safeFileName(name);
   if (!fileName) return null;
 

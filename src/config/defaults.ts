@@ -118,7 +118,8 @@ export const COMMUNITY_DEFAULTS = {
   pollIntervalMs: 45_000,
   directorySize: 200,
   mentionRecipientCap: 25,
-  everyoneRecipientCap: 500
+  everyoneRecipientCap: 500,
+  maxImagesPerPost: 4
 } as const;
 
 export const MEAL_PROMPT_DEFAULTS = {

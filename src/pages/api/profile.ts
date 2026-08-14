@@ -4,14 +4,14 @@ import { getSessionUser } from '@/lib/auth-utils';
 import { setSessionCookie } from '@/lib/auth';
 import { hashPassword, validatePassword, verifyPassword } from '@/lib/password';
 import { badRequest, methodNotAllowed, ok, unauthorized } from '@/lib/http';
-import { deleteProfileImage, saveProfileImage } from '@/lib/uploads';
+import { deleteImage, saveImage } from '@/lib/uploads';
 import { validateName, validatePhone } from '@/lib/validation';
 import { uploadConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
 export const config = {
   api: {
-    bodyParser: { sizeLimit: uploadConfig.requestBodyLimit }
+    bodyParser: { sizeLimit: '14mb' }
   }
 };
 
@@ -73,7 +73,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     previousImage = sessionUser.profileImage;
     data.profileImage = null;
   } else if (typeof image === 'string' && image.trim()) {
-    const saved = await saveProfileImage(image, sessionUser.id);
+    const saved = await saveImage(image, sessionUser.id);
     if (!saved.ok) return badRequest(res, saved.error);
     previousImage = sessionUser.profileImage;
     data.profileImage = saved.url;
@@ -98,7 +98,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   });
 
   if (previousImage && previousImage !== user.profileImage) {
-    await deleteProfileImage(previousImage);
+    await deleteImage(previousImage);
   }
 
   if (data.tokenVersion) {

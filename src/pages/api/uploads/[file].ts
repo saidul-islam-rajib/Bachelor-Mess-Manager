@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser } from '@/lib/auth-utils';
 import { methodNotAllowed, notFound, unauthorized } from '@/lib/http';
-import { profileImageExists, readProfileImage } from '@/lib/uploads';
+import { imageExists, readImage } from '@/lib/uploads';
 import { uploadConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
@@ -36,7 +36,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const cacheControl = `private, max-age=${uploadConfig.cacheMaxAgeSeconds}, immutable`;
 
   if (matchesEtag(req.headers['if-none-match'], etag)) {
-    if (!(await profileImageExists(name))) {
+    if (!(await imageExists(name))) {
       return notFound(res, 'Not found.');
     }
 
@@ -46,7 +46,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(304).end();
   }
 
-  const file = await readProfileImage(name);
+  const file = await readImage(name);
   if (!file) {
     return notFound(res, 'Not found.');
   }

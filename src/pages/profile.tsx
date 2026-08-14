@@ -325,11 +325,11 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
     if (!file) return;
 
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      toast.error(strings.profile.imageWrongType);
+      toast.error(strings.uploads.imageWrongType);
       return;
     }
     if (file.size > maxBytes) {
-      toast.error(strings.profile.imageTooLarge(formatBytes(maxBytes)));
+      toast.error(strings.uploads.imageTooLarge(formatBytes(maxBytes)));
       return;
     }
 
@@ -338,7 +338,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
       const dataUrl = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error(strings.profile.imageUnreadable));
+        reader.onerror = () => reject(new Error(strings.uploads.imageUnreadable));
         reader.readAsDataURL(file);
       });
 
