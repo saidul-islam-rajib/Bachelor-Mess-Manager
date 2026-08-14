@@ -12,6 +12,7 @@ on:
           - diagnose-caddy
           - restart-caddy
           - remove-k3s-traefik
+          - check-k3s-config
       confirm:
         description: Type YES to let restart-caddy make changes
         required: false
@@ -123,6 +124,20 @@ jobs:
           echo
           echo "=== caddy after ==="
           sudo k3s kubectl -n bachelor-point get pods -l app=caddy -o wide
+
+      - name: Check k3s persisted config (read-only)
+        if: inputs.action == 'check-k3s-config'
+        run: |
+          echo "=== /etc/rancher/k3s/config.yaml ==="
+          sudo cat /etc/rancher/k3s/config.yaml 2>/dev/null || echo "(file does not exist)"
+
+          echo
+          echo "=== k3s systemd unit ExecStart ==="
+          sudo systemctl cat k3s 2>/dev/null | grep -A2 ExecStart || echo "(could not read unit)"
+
+          echo
+          echo "=== k3s service uptime (has it restarted recently?) ==="
+          sudo systemctl show k3s -p ActiveEnterTimestamp
 
       - name: Restart caddy
         if: inputs.action == 'restart-caddy' && inputs.confirm == 'YES'
