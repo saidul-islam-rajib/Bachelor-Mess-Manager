@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { getActiveMembership, getSessionUser, requireAdmin, requireSupervisorOrAdmin } from '@/lib/auth-utils';
 import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport, type ReportMember } from '@/lib/group-report';
+import { buildGroupDashboardCard } from '@/lib/dashboard-report';
 import { INVITATION_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { currentMonthKey, parseMonth, round2, todayKey } from '@/lib/month';
 import { stayDays } from '@/lib/groups';
@@ -65,15 +66,20 @@ async function adminReport() {
 
 async function supervisorReport(supervisorId: string, month: string) {
   const groups = await prisma.group.findMany({
-    where: { supervisorId },
+    where: { OR: [{ supervisorId }, { coSupervisors: { some: { userId: supervisorId } } }] },
     orderBy: { createdAt: 'desc' }
   });
 
-  const reports = await Promise.all(groups.map((group) => buildGroupReport(group, month)));
+  const cards = await Promise.all(groups.map((group) => buildGroupDashboardCard(group, month)));
 
   const byType: Record<string, number> = {};
   let totalBazar = 0;
+  let totalBazarPaid = 0;
   let totalBills = 0;
+  let totalBillsCollected = 0;
+  let totalBillsOutstanding = 0;
+  let totalRent = 0;
+  let totalAdditional = 0;
   let totalCollected = 0;
   let totalOutstanding = 0;
   let totalMeals = 0;
@@ -82,61 +88,65 @@ async function supervisorReport(supervisorId: string, month: string) {
   const unpaid: { groupId: string; groupName: string; id: string; name: string; due: number; status: string }[] = [];
   const longestStaying: { id: string; name: string; groupName: string; days: number }[] = [];
 
-  reports.forEach((report, index) => {
-    const group = groups[index];
-    totalBazar = round2(totalBazar + report.totals.bazar);
-    totalBills = round2(totalBills + report.totals.bills);
-    totalCollected = round2(totalCollected + report.totals.collected);
-    totalOutstanding = round2(totalOutstanding + report.totals.outstanding);
-    totalMeals = round2(totalMeals + report.totals.meals);
-    totalMembers += report.totals.memberCount;
+  cards.forEach((card) => {
+    totalBazar = round2(totalBazar + card.bazar);
+    totalBazarPaid = round2(totalBazarPaid + card.bazarPaid);
+    totalBills = round2(totalBills + card.bills);
+    totalBillsCollected = round2(totalBillsCollected + card.billsCollected);
+    totalBillsOutstanding = round2(totalBillsOutstanding + card.billsOutstanding);
+    totalRent = round2(totalRent + card.rent);
+    totalAdditional = round2(totalAdditional + card.additional);
+    totalCollected = round2(totalCollected + card.collected);
+    totalOutstanding = round2(totalOutstanding + card.outstanding);
+    totalMeals = round2(totalMeals + card.meals);
+    totalMembers += card.memberCount;
 
-    for (const [type, amount] of Object.entries(report.byType)) {
+    for (const [type, amount] of Object.entries(card.byType)) {
       byType[type] = round2((byType[type] ?? 0) + amount);
     }
 
-    for (const member of report.members) {
+    for (const member of card.members) {
       if (member.due > 0.01) {
         unpaid.push({
-          groupId: group.id,
-          groupName: group.name,
+          groupId: card.id,
+          groupName: card.name,
           id: member.id,
           name: member.name,
           due: member.due,
           status: member.status
         });
       }
-      longestStaying.push({ id: member.id, name: member.name, groupName: group.name, days: member.stayDays });
+      longestStaying.push({ id: member.id, name: member.name, groupName: card.name, days: member.stayDays });
     }
   });
 
   byType.BAZAR = totalBazar;
 
+  const rates = cards.filter((card) => card.meals > 0).map((card) => card.mealRate);
+
   return {
-    groups: reports.map((report, index) => ({
-      id: groups[index].id,
-      name: groups[index].name,
-      status: groups[index].status,
-      memberCount: report.totals.memberCount,
-      meals: report.totals.meals,
-      mealRate: report.totals.mealRate,
-      expense: report.totals.expense,
-      collected: report.totals.collected,
-      outstanding: report.totals.outstanding
-    })),
+    groups: cards,
     totals: {
       groups: groups.length,
       members: totalMembers,
       meals: totalMeals,
       mealRate: totalMeals > 0 ? round2(totalBazar / totalMeals) : 0,
+      highestGroupRate: rates.length > 0 ? Math.max(...rates) : 0,
+      lowestGroupRate: rates.length > 0 ? Math.min(...rates) : 0,
       bazar: totalBazar,
+      bazarPaid: totalBazarPaid,
+      bazarOutstanding: Math.max(0, round2(totalBazar - totalBazarPaid)),
       bills: totalBills,
+      billsCollected: totalBillsCollected,
+      billsOutstanding: totalBillsOutstanding,
+      rent: totalRent,
+      additional: totalAdditional,
       expense: round2(totalBazar + totalBills),
       collected: totalCollected,
       outstanding: totalOutstanding
     },
     byType,
-    unpaid: unpaid.sort((a, b) => b.due - a.due).slice(0, 10),
+    unpaid: unpaid.sort((a, b) => b.due - a.due).slice(0, 40),
     longestStaying: longestStaying.sort((a, b) => b.days - a.days).slice(0, 5)
   };
 }
@@ -157,9 +167,10 @@ async function memberReport(userId: string, month: string) {
   }
 
   const previous = previousMonthKey(month);
-  const [thisMonth, lastMonth] = await Promise.all([
+  const [thisMonth, lastMonth, card] = await Promise.all([
     buildGroupReport(group, month),
-    buildGroupReport(group, previous)
+    buildGroupReport(group, previous),
+    buildGroupDashboardCard(group, month)
   ]);
 
   const me = mine(thisMonth.members, userId);
@@ -176,7 +187,8 @@ async function memberReport(userId: string, month: string) {
       supervisorId: group.supervisorId,
       memberCount: thisMonth.totals.memberCount,
       joinedAt: membership.joinedAt.toISOString(),
-      stayDays: stayDays(membership.joinedAt, membership.leftAt)
+      stayDays: stayDays(membership.joinedAt, membership.leftAt),
+      card
     },
     pendingInvitations,
     current: {

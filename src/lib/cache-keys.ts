@@ -13,3 +13,9 @@ export function billsListGroupPrefix(groupId: string): string {
 export function billsListKey(groupId: string, month: string): string {
   return `${billsListGroupPrefix(groupId)}${month}`;
 }
+
+export const DASHBOARD_GROUP_CACHE_PREFIX = 'dashboard-group:';
+
+export function dashboardGroupKey(groupId: string, month: string): string {
+  return `${DASHBOARD_GROUP_CACHE_PREFIX}${groupId}:${month}`;
+}

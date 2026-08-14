@@ -41,6 +41,7 @@ export type GroupReport = {
     pricedDays: number;
     mealCost: number;
     carryIn: number;
+    bazarPaid: number;
     collected: number;
     outstanding: number;
     refunds: number;
@@ -103,6 +104,7 @@ export async function buildGroupReport(
       pricedDays: settlement.totals.pricedDays,
       mealCost: settlement.totals.mealCost,
       carryIn: settlement.totals.carryIn,
+      bazarPaid: settlement.totals.bazarPaid,
       collected: settlement.totals.cashPaid,
       outstanding: settlement.totals.outstanding,
       refunds: settlement.totals.refunds,
