@@ -1,6 +1,9 @@
 require('dotenv').config();
 
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const zlib = require('zlib');
 const { promisify } = require('util');
 const { PrismaClient } = require('@prisma/client');
 const { syncRolesAndPermissions, USER_ROLES } = require('./reference-data');
@@ -41,6 +44,11 @@ const PAYMENT_STATUS = { PAID: 'PAID', PARTIAL: 'PARTIAL', PENDING: 'PENDING' };
 const EXPENSE_ACTIONS = { CREATED: 'CREATED', UPDATED: 'UPDATED', DELETED: 'DELETED' };
 const SPLIT_METHODS = { MEAL: 'MEAL', EQUAL: 'EQUAL', CUSTOM: 'CUSTOM' };
 const EXPENSE_TYPES = { BAZAR: 'BAZAR' };
+const COMMUNITY_MESSAGE_TYPES = { MEMBER: 'MEMBER' };
+
+const UPLOAD_DIR = process.env.UPLOAD_DIR
+  ? path.resolve(process.env.UPLOAD_DIR)
+  : path.join(process.cwd(), 'uploads');
 
 const CHUNK_SIZE = 400;
 
@@ -149,6 +157,82 @@ async function insertMany(model, rows) {
 const utcDay = (year, month, day) => new Date(Date.UTC(year, month, day));
 const at = (date, hour, minute) => new Date(date.getTime() + hour * 3600000 + minute * 60000);
 
+const CRC_TABLE = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n += 1) {
+    let c = n;
+    for (let k = 0; k < 8; k += 1) {
+      c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    }
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+function crc32(buffer) {
+  let crc = 0xffffffff;
+  for (let i = 0; i < buffer.length; i += 1) {
+    crc = CRC_TABLE[(crc ^ buffer[i]) & 0xff] ^ (crc >>> 8);
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function pngChunk(type, data) {
+  const typeBuffer = Buffer.from(type, 'ascii');
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  const crc = Buffer.alloc(4);
+  crc.writeUInt32BE(crc32(Buffer.concat([typeBuffer, data])), 0);
+  return Buffer.concat([length, typeBuffer, data, crc]);
+}
+
+function buildSolidPng(width, height, [r, g, b]) {
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+  const ihdrData = Buffer.alloc(13);
+  ihdrData.writeUInt32BE(width, 0);
+  ihdrData.writeUInt32BE(height, 4);
+  ihdrData[8] = 8;
+  ihdrData[9] = 2;
+  ihdrData[10] = 0;
+  ihdrData[11] = 0;
+  ihdrData[12] = 0;
+  const ihdr = pngChunk('IHDR', ihdrData);
+
+  const row = Buffer.alloc(1 + width * 3);
+  for (let x = 0; x < width; x += 1) {
+    row[1 + x * 3] = r;
+    row[1 + x * 3 + 1] = g;
+    row[1 + x * 3 + 2] = b;
+  }
+  const raw = Buffer.concat(Array.from({ length: height }, () => row));
+  const idat = pngChunk('IDAT', zlib.deflateSync(raw));
+
+  const iend = pngChunk('IEND', Buffer.alloc(0));
+
+  return Buffer.concat([signature, ihdr, idat, iend]);
+}
+
+function saveSeedImage(ownerId, buffer) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  const fileName = `${ownerId}-${crypto.randomBytes(8).toString('hex')}.png`;
+  fs.writeFileSync(path.join(UPLOAD_DIR, fileName), buffer);
+  return `/api/uploads/${fileName}`;
+}
+
+async function unlinkCommunityImages() {
+  const images = await prisma.communityMessageImage.findMany({ select: { url: true } });
+  const prefix = '/api/uploads/';
+  for (const image of images) {
+    if (!image.url.startsWith(prefix)) continue;
+    try {
+      fs.unlinkSync(path.join(UPLOAD_DIR, image.url.slice(prefix.length)));
+    } catch {
+      continue;
+    }
+  }
+}
+
 function splitEqually(total, userIds) {
   const paisa = Math.round(total * 100);
   const base = Math.floor(paisa / userIds.length);
@@ -161,6 +245,11 @@ function splitEqually(total, userIds) {
 }
 
 async function wipeSampleData() {
+  await unlinkCommunityImages();
+  await prisma.communityMessageImage.deleteMany();
+  await prisma.communityMessage.deleteMany();
+  await prisma.communityRead.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.mealPlanDay.deleteMany();
   await prisma.mealPlan.deleteMany();
   await prisma.mealEntry.deleteMany();
@@ -729,6 +818,66 @@ async function main() {
   await insertMany(prisma.comment, comments);
   await insertMany(prisma.commentReply, replies);
   report(`comments            : ${comments.length}  (${replies.length} replies)`);
+
+  const COMMUNITY_POST_TEXTS = [
+    'Does anyone have a spare mattress to sell? Moving into a new place next week.',
+    'Recommend a good electrician near Mirpur? Our fan keeps tripping the breaker.',
+    'Heads up: the WASA line in Dhanmondi is off tomorrow morning for maintenance.',
+    'Looking for a flatmate for a 2-bed in Uttara, budget around 8000 BDT.',
+    'Anyone know a reliable AC servicing guy before the summer heat kicks in?',
+    'Selling a barely-used rice cooker, message me if interested.',
+    'Is there a decent gym near Bashundhara that does monthly passes?',
+    'Our building is switching gas cylinder vendors, anyone had a good experience with one?'
+  ];
+
+  const toLetAuthor = pick(members);
+  const toLetImages = [
+    [214, 188, 152],
+    [176, 196, 172],
+    [190, 176, 214]
+  ].map((rgb) => saveSeedImage(toLetAuthor.id, buildSolidPng(640, 360, rgb)));
+
+  const toLetMessage = {
+    id: uuid(),
+    key: `message:${uuid()}`,
+    type: COMMUNITY_MESSAGE_TYPES.MEMBER,
+    authorId: toLetAuthor.id,
+    text: `TO-LET: 2 furnished rooms available in a 3-bed flat, ${pick(AREAS)}. Attached bath, WASA water, backup generator. 12,000 BDT/room including utilities. Message me for a visit.`,
+    pinned: false,
+    createdAt: at(utcDay(year, month, Math.max(1, today - 1)), 11, 20),
+    createdById: toLetAuthor.id,
+    publishedAt: now
+  };
+
+  const otherCommunityMessages = COMMUNITY_POST_TEXTS.map((text, index) => {
+    const author = pick(members);
+    return {
+      id: uuid(),
+      key: `message:${uuid()}`,
+      type: COMMUNITY_MESSAGE_TYPES.MEMBER,
+      authorId: author.id,
+      text,
+      pinned: false,
+      createdAt: at(utcDay(year, month, Math.max(1, today - (index % 7))), int(8, 21), int(0, 59)),
+      createdById: author.id,
+      publishedAt: now
+    };
+  });
+
+  const communityMessages = [toLetMessage, ...otherCommunityMessages];
+  await insertMany(prisma.communityMessage, communityMessages);
+  await insertMany(
+    prisma.communityMessageImage,
+    toLetImages.map((url, index) => ({
+      id: uuid(),
+      messageId: toLetMessage.id,
+      url,
+      sortOrder: index,
+      createdById: toLetAuthor.id,
+      publishedAt: now
+    }))
+  );
+  report(`community posts     : ${communityMessages.length}  (1 to-let post with ${toLetImages.length} photos)`);
 
   const loginAttempts = [];
   members.slice(0, 6).forEach((member, index) => {

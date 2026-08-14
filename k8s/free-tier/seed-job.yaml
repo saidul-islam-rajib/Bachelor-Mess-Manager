@@ -54,8 +54,13 @@ spec:
             capabilities:
               drop: ["ALL"]
           volumeMounts:
+            - name: uploads
+              mountPath: /data/uploads
             - name: tmp
               mountPath: /tmp
       volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: bachelor-point-uploads
         - name: tmp
           emptyDir: {}
