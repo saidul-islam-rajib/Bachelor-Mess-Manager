@@ -607,6 +607,8 @@ const en = {
   },
   meals: {
     title: 'Meals',
+    subtitle: 'Log your daily meals.',
+    subtitleManage: 'Log meals for the mess. You can change any past day — everyone gets told when you do.',
     breakfast: 'Breakfast',
     lunch: 'Lunch',
     dinner: 'Dinner',

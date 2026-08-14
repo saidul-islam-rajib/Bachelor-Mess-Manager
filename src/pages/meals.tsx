@@ -86,7 +86,6 @@ export default function MealsPage() {
   const [canManage, setCanManage] = useState(false);
   const [editWindow, setEditWindow] = useState<EditWindow | null>(null);
   const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
-  const [windowBusy, setWindowBusy] = useState(false);
   const [openDay, setOpenDay] = useState('');
   const [showWholeMonth, setShowWholeMonth] = useState(false);
 
@@ -149,28 +148,6 @@ export default function MealsPage() {
 
     return () => window.clearInterval(timer);
   }, [editWindow?.open, editWindow?.expiresAt]);
-
-  async function toggleEditWindow(next: boolean) {
-    if (!groupId) return;
-    setWindowBusy(true);
-    try {
-      const res = await fetch(`/api/groups/${groupId}/meal-edit-window`, { method: next ? 'POST' : 'DELETE' });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not change the edit window.');
-      setEditWindow(data.window);
-      if (next) {
-        toast.success(
-          data.window?.unlimited
-            ? 'Past meals unlocked.'
-            : `Past meals unlocked for ${data.window?.windowMinutes ?? 5} minutes.`
-        );
-      }
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setWindowBusy(false);
-    }
-  }
 
   async function decideChange(id: string, status: 'APPROVED' | 'REJECTED') {
     try {
@@ -311,9 +288,7 @@ export default function MealsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">Meals</h1>
         <p className="mt-1 text-slate-600">
-          {canManage
-            ? 'Log meals for the mess. You can change any past day — everyone gets told when you do.'
-            : 'Log your daily meals. Past days are locked until you unlock them below.'}
+          {canManage ? strings.meals.subtitleManage : strings.meals.subtitle}
         </p>
       </div>
 
@@ -331,10 +306,6 @@ export default function MealsPage() {
               </p>
             )}
           </Card>
-
-          {belongsToGroup && !canManage && canRecordOwn && editWindow && (
-            <EditWindowCard window={editWindow} busy={windowBusy} onToggle={toggleEditWindow} />
-          )}
 
           {canManage && groupId && <MealPromptDispatch groupId={groupId} />}
 
@@ -703,62 +674,6 @@ function DayRangeBar({
           {showWholeMonth ? copy.showAroundToday : copy.showWholeMonth(totalDays)}
         </button>
       )}
-    </div>
-  );
-}
-
-function formatRemaining(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const rest = seconds % 60;
-  return `${minutes}:${String(rest).padStart(2, '0')}`;
-}
-
-function EditWindowCard({
-  window: editWindow,
-  busy,
-  onToggle
-}: {
-  window: EditWindow;
-  busy: boolean;
-  onToggle: (next: boolean) => void;
-}) {
-  const remaining = editWindow.secondsRemaining;
-
-  return (
-    <div
-      className={`rounded-3xl border p-5 shadow-sm sm:p-6 ${
-        editWindow.open ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'
-      }`}
-    >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0">
-          <label className="flex cursor-pointer items-center gap-3">
-            <input
-              type="checkbox"
-              checked={editWindow.open}
-              disabled={busy}
-              onChange={(e) => onToggle(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
-            />
-            <span className="text-base font-semibold">Edit my past meals</span>
-          </label>
-          <p className="mt-2 max-w-xl text-sm text-slate-600">
-            {editWindow.open
-              ? editWindow.requiresApproval
-                ? 'Past days are open. Anything you change there goes to your supervisor for approval before it counts.'
-                : 'Past days are open. Changes apply straight away and the whole mess is notified.'
-              : editWindow.unlimited
-                ? 'Turn this on to correct meals on days that have already passed.'
-                : `Turn this on to correct meals on days that have already passed. It stays open for ${editWindow.windowMinutes} minutes, then locks itself again.`}
-          </p>
-        </div>
-
-        {editWindow.open && (
-          <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-sm font-semibold tabular-nums text-amber-700 ring-1 ring-amber-300">
-            {editWindow.unlimited || remaining === null ? 'No time limit' : `${formatRemaining(remaining)} left`}
-          </span>
-        )}
-      </div>
     </div>
   );
 }
