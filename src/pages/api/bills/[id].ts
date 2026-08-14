@@ -7,9 +7,10 @@ import { computeShares, isBillType } from '@/lib/bills';
 import { isValidBillType } from '@/lib/expense-categories';
 import { dayToUtcDate, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
+import { refundAdvanceForBill } from '@/lib/advances';
 import { withAudit } from '@/lib/with-audit';
 import { invalidatePrefix } from '@/lib/cache';
-import { billsListGroupPrefix } from '@/lib/cache-keys';
+import { advancesKey, billsListGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH' && req.method !== 'DELETE') {
@@ -38,7 +39,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === 'DELETE') {
 
-    await prisma.expenseEntry.delete({ where: { id: billId } });
+    await prisma.$transaction(async (tx) => {
+      await refundAdvanceForBill(tx, { expenseId: billId, actorId: sessionUser.id });
+      await tx.expenseEntry.delete({ where: { id: billId } });
+    });
 
     await recordExpenseDeleted({
       expenseId: billId,
@@ -48,6 +52,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     invalidatePrefix(billsListGroupPrefix(bill.groupId));
+    invalidatePrefix(advancesKey(bill.groupId));
 
     return ok(res, { deleted: true });
   }

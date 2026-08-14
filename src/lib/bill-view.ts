@@ -11,6 +11,7 @@ export type Collection = {
   isReversed: boolean;
   toUserName: string | null;
   fromUserName: string | null;
+  fromAdvance: boolean;
 };
 
 export type Share = {

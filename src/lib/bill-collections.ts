@@ -21,6 +21,7 @@ export type CollectionRow = {
   toUserName: string | null;
   fromUserId: string | null;
   fromUserName: string | null;
+  fromAdvance: boolean;
 };
 
 export type CollectionEntry = {
@@ -33,6 +34,7 @@ export type CollectionEntry = {
   isReversed: boolean;
   toUserName: string | null;
   fromUserName: string | null;
+  fromAdvance: boolean;
 };
 
 export type ShareState = {
@@ -194,6 +196,20 @@ export async function reversePayment(params: {
         }
       });
     }
+
+    if (original.fromAdvance && original.amountPaid > 0) {
+      await tx.memberAdvance.create({
+        data: {
+          userId: original.userId,
+          groupId: original.groupId,
+          expenseId: original.expenseId,
+          amount: original.amountPaid,
+          note: 'Refunded — bill payment reversed',
+          recordedById: actorId,
+          publishedAt: new Date()
+        }
+      });
+    }
   });
 
   return { ok: true, amount: round2(original.amountPaid), userId: original.userId };
@@ -231,7 +247,8 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
       toUserId: row.toUserId,
       toUserName: row.toUser?.name ?? null,
       fromUserId: row.offsetOf?.userId ?? null,
-      fromUserName: row.offsetOf?.user.name ?? null
+      fromUserName: row.offsetOf?.user.name ?? null,
+      fromAdvance: row.fromAdvance
     });
     byBill.set(row.expenseId, list);
   }

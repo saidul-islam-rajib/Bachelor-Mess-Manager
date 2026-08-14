@@ -253,7 +253,8 @@ export const cacheConfig = {
   groupListMs: readInt('CACHE_GROUP_LIST_MS', CACHE_DEFAULTS.groupListMs, 0),
   sessionUserMs: readInt('CACHE_SESSION_USER_MS', CACHE_DEFAULTS.sessionUserMs, 0),
   billsListMs: readInt('CACHE_BILLS_LIST_MS', CACHE_DEFAULTS.billsListMs, 0),
-  dashboardGroupMs: readInt('CACHE_DASHBOARD_GROUP_MS', CACHE_DEFAULTS.dashboardGroupMs, 0)
+  dashboardGroupMs: readInt('CACHE_DASHBOARD_GROUP_MS', CACHE_DEFAULTS.dashboardGroupMs, 0),
+  advancesMs: readInt('CACHE_ADVANCES_MS', CACHE_DEFAULTS.advancesMs, 0)
 } as const;
 
 export const databaseConfig = {

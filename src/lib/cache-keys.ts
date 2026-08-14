@@ -19,3 +19,9 @@ export const DASHBOARD_GROUP_CACHE_PREFIX = 'dashboard-group:';
 export function dashboardGroupKey(groupId: string, month: string): string {
   return `${DASHBOARD_GROUP_CACHE_PREFIX}${groupId}:${month}`;
 }
+
+export const ADVANCES_CACHE_PREFIX = 'advances:';
+
+export function advancesKey(groupId: string): string {
+  return `${ADVANCES_CACHE_PREFIX}${groupId}`;
+}

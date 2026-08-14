@@ -108,7 +108,8 @@ export const CACHE_DEFAULTS = {
   groupListMs: 60_000,
   sessionUserMs: 5_000,
   billsListMs: 15_000,
-  dashboardGroupMs: 20_000
+  dashboardGroupMs: 20_000,
+  advancesMs: 15_000
 } as const;
 
 export const COMMUNITY_DEFAULTS = {

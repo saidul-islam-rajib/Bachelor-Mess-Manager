@@ -4,6 +4,7 @@ import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/l
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { BILL_TYPE_FILTER, SPLIT_METHODS } from '@/lib/constants';
 import { buildCollectionState, collectionsByBill } from '@/lib/bill-collections';
+import { applyAdvanceToShares } from '@/lib/advances';
 import { computeShares, isBillType } from '@/lib/bills';
 import { categoryLabels, isValidBillType, listCategories } from '@/lib/expense-categories';
 import { dayToUtcDate, parseMonth, round2, utcDateToDay } from '@/lib/month';
@@ -13,7 +14,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 import { cached, invalidatePrefix } from '@/lib/cache';
-import { billsListGroupPrefix, billsListKey } from '@/lib/cache-keys';
+import { advancesKey, billsListGroupPrefix, billsListKey } from '@/lib/cache-keys';
 import { cacheConfig } from '@/config';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -97,7 +98,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
               isReversal: Boolean(c.reversalOfId),
               isReversed: c.isReversed,
               toUserName: c.toUserName,
-              fromUserName: c.fromUserName
+              fromUserName: c.fromUserName,
+              fromAdvance: c.fromAdvance
             }))
           })),
           collected: state.collected,
@@ -191,20 +193,34 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
     }
 
-    const bill = await prisma.expenseEntry.create({
-      data: {
+    const billDate = dayToUtcDate(date);
+
+    const bill = await prisma.$transaction(async (tx) => {
+      const created = await tx.expenseEntry.create({
+        data: {
+          groupId,
+          type,
+          amount: total,
+          date: billDate,
+          payerId: typeof payerId === 'string' && payerId ? payerId : null,
+          isReceived: isReceived === true,
+          splitMethod: method,
+          note: typeof note === 'string' ? note.trim() : '',
+          publishedAt: new Date(),
+          shares: { create: computed.shares.map((s) => ({ userId: s.userId, amount: s.amount })) }
+        },
+        include: { shares: true }
+      });
+
+      await applyAdvanceToShares(tx, {
         groupId,
-        type,
-        amount: total,
-        date: dayToUtcDate(date),
-        payerId: typeof payerId === 'string' && payerId ? payerId : null,
-        isReceived: isReceived === true,
-        splitMethod: method,
-        note: typeof note === 'string' ? note.trim() : '',
-        publishedAt: new Date(),
-        shares: { create: computed.shares.map((s) => ({ userId: s.userId, amount: s.amount })) }
-      },
-      include: { shares: true }
+        expenseId: created.id,
+        shares: computed.shares,
+        dueDate: billDate,
+        recordedById: sessionUser.id
+      });
+
+      return created;
     });
 
     await recordExpenseCreated({
@@ -215,6 +231,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     });
 
     invalidatePrefix(billsListGroupPrefix(groupId));
+    invalidatePrefix(advancesKey(groupId));
 
     return created(res, {
       bill: {

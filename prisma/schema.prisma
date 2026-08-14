@@ -113,6 +113,8 @@ model User {
   payments            PaymentStatus[]
   paymentsRecorded    PaymentStatus[]     @relation("PaymentRecorder")
   paymentsReceived    PaymentStatus[]     @relation("PaymentRecipient")
+  advances            MemberAdvance[]
+  advancesRecorded    MemberAdvance[]     @relation("AdvanceRecorder")
   groupsSupervised    Group[]             @relation("GroupSupervisor")
   groupsCoSupervised  GroupSupervisor[]   @relation("GroupCoSupervisor")
   coSupervisorsAdded  GroupSupervisor[]   @relation("GroupCoSupervisorGrantor")
@@ -260,6 +262,7 @@ model Group {
   expenseHistory           ExpenseHistory[]
   orders                   GroupOrder[]
   payments                 PaymentStatus[]
+  advances                 MemberAdvance[]
   comments                 Comment[]
   invitations              Invitation[]
   categories               ExpenseCategory[]
@@ -624,6 +627,7 @@ model ExpenseEntry {
   publishedAt   DateTime?
   unpublishedAt DateTime?
   payments      PaymentStatus[]
+  advances      MemberAdvance[]
   items         ExpenseItem[]
   comments      ExpenseComment[]
   shares        ExpenseShare[]
@@ -710,6 +714,7 @@ model PaymentStatus {
   offsetOf      PaymentStatus?  @relation("PaymentOffset", fields: [offsetOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   offsetOfId    String?         @unique
   offsetBy      PaymentStatus?  @relation("PaymentOffset")
+  fromAdvance   Boolean         @default(false)
   amountDue     Float
   amountPaid    Float           @default(0)
   status        String
@@ -726,6 +731,38 @@ model PaymentStatus {
   @@index([userId, dueDate])
   @@index([expenseId])
   @@index([toUserId])
+}
+
+/// A member's running advance wallet for a group — money handed to the supervisor
+/// ahead of any specific bill so utilities can be paid the moment they're due.
+/// A deposit is a positive row; a bill auto-consuming it writes a negative row
+/// tagged with that bill's expenseId. The balance is just the signed sum, so it
+/// naturally carries forward month to month until spent.
+model MemberAdvance {
+  id            String          @id @default(uuid())
+  user          User            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group           @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  expense       ExpenseEntry?   @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  expenseId     String?
+  amount        Float
+  note          String?
+  recordedBy    User?           @relation("AdvanceRecorder", fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recordedById  String?
+  reversalOf    MemberAdvance?  @relation("AdvanceReversal", fields: [reversalOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reversalOfId  String?         @unique
+  reversedBy    MemberAdvance?  @relation("AdvanceReversal")
+  createdAt     DateTime        @default(now())
+  createdById   String?
+  updatedAt     DateTime        @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean         @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([groupId, userId])
+  @@index([expenseId])
 }
 
 model GroupOrder {

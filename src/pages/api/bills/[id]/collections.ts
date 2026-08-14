@@ -10,7 +10,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 import { invalidatePrefix } from '@/lib/cache';
-import { billsListGroupPrefix } from '@/lib/cache-keys';
+import { advancesKey, billsListGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST' && req.method !== 'DELETE') {
@@ -74,6 +74,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     invalidatePrefix(billsListGroupPrefix(bill.groupId));
+    if (existing.fromAdvance) invalidatePrefix(advancesKey(bill.groupId));
 
     return ok(res, { reversed: true, amount: reversed.amount });
   }
@@ -195,7 +196,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       toUserId: payerRow.toUserId,
       toUserName: recipientName,
       fromUserId: null,
-      fromUserName: null
+      fromUserName: null,
+      fromAdvance: false
     }
   ];
   if (recipientId) {
@@ -212,7 +214,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       toUserId: null,
       toUserName: null,
       fromUserId: userId,
-      fromUserName: payerRow.user.name
+      fromUserName: payerRow.user.name,
+      fromAdvance: false
     });
   }
   const refreshed = buildCollectionState(shares, refreshedRows);
