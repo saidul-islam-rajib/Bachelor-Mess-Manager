@@ -128,6 +128,7 @@ async function supervisorReport(supervisorId: string, month: string) {
       groups: groups.length,
       members: totalMembers,
       meals: totalMeals,
+      mealRate: totalMeals > 0 ? round2(totalBazar / totalMeals) : 0,
       bazar: totalBazar,
       bills: totalBills,
       expense: round2(totalBazar + totalBills),

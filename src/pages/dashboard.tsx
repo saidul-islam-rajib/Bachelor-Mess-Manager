@@ -38,6 +38,7 @@ type SupervisorReport = {
     groups: number;
     members: number;
     meals: number;
+    mealRate: number;
     bazar: number;
     bills: number;
     expense: number;
@@ -214,6 +215,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">
           <Stat label="Your groups" value={`${totals.groups} / 10`} />
           <Stat label="Members" value={totals.members} />
+          <Stat label="Meal rate" value={taka(totals.mealRate)} />
           <Stat label="Spent this month" value={taka(totals.expense)} />
           <Stat
             label="Outstanding dues"
