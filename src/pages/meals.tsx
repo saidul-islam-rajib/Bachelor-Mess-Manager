@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthControls';
-import MealPlanCard from '@/components/MealPlanCard';
 import MealPromptDispatch from '@/components/MealPromptDispatch';
 import MealRateCard, { type DailyRate } from '@/components/MealRateCard';
 import { PageTitle } from '@/components/ui';
@@ -315,10 +314,6 @@ export default function MealsPage() {
 
           {!canManage && myPending.length > 0 && (
             <MyPendingChanges changes={myPending} onWithdraw={withdrawChange} />
-          )}
-
-          {groupId && belongsToGroup && can(PERMISSIONS.MEAL_PLAN_MANAGE) && (
-            <MealPlanCard groupId={groupId} onApplied={load} />
           )}
 
           {loading ? (

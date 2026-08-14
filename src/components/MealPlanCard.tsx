@@ -9,7 +9,15 @@ const FIELD_SHORT: Record<MealField, string> = { breakfast: 'B', lunch: 'L', din
 
 const emptyDays = (): PlanDay[] =>
   WEEKDAYS.map((d) => ({ weekday: d.value, enabled: false, breakfast: 0, lunch: 0, dinner: 0 }));
-export default function MealPlanCard({ groupId, onApplied }: { groupId: string; onApplied: () => void }) {
+export default function MealPlanCard({
+  groupId,
+  groupName,
+  onApplied
+}: {
+  groupId: string;
+  groupName?: string;
+  onApplied: () => void;
+}) {
   const toast = useToast();
 
   const [open, setOpen] = useState(false);
@@ -123,7 +131,7 @@ export default function MealPlanCard({ groupId, onApplied }: { groupId: string; 
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold">Default meal plan</h2>
+          <h2 className="text-lg font-semibold">Default meal plan{groupName ? ` · ${groupName}` : ''}</h2>
           <p className="mt-1 text-sm text-slate-500">
             Set your usual week once and it repeats — like an alarm. Applies to today and upcoming days only; past days
             never change.

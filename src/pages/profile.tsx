@@ -7,12 +7,14 @@ import RoleRequestPanel from '@/components/RoleRequestPanel';
 import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
 import { Badge, Collapsible, EmptyState, ImageViewer, PageTitle } from '@/components/ui';
+import MealPlanCard from '@/components/MealPlanCard';
 import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 import { validateName, validatePhone } from '@/lib/validation';
 import { ACCEPTED_IMAGE_MIMES, evictCachedUpload } from '@/lib/uploads.client';
 import { formatBytes } from '@/lib/format';
 import { uploadConfig } from '@/config';
+import { PERMISSIONS } from '@/lib/permissions';
 
 const ACCEPTED_IMAGE_TYPES = ACCEPTED_IMAGE_MIMES;
 
@@ -122,6 +124,7 @@ export default function ProfilePage() {
             </form>
           </div>
 
+          <DefaultMealPlanSection />
           <PastMealEditingSection />
           <PasswordSection />
 
@@ -141,6 +144,36 @@ type EditWindowState = {
   windowMinutes: number;
   requiresApproval: boolean;
 };
+
+function DefaultMealPlanSection() {
+  const { can } = useCurrentUser();
+  const [group, setGroup] = useState<{ id: string; name: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const groupsRes = await fetch('/api/groups');
+        const groupsBody = await groupsRes.json().catch(() => ({}));
+        const first = (groupsBody.groups ?? [])[0];
+        if (!cancelled) setGroup(first ? { id: first.id, name: first.name } : null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (loading || !group || !can(PERMISSIONS.MEAL_PLAN_MANAGE)) return null;
+
+  return <MealPlanCard groupId={group.id} groupName={group.name} onApplied={() => undefined} />;
+}
 
 function PastMealEditingSection() {
   const toast = useToast();
