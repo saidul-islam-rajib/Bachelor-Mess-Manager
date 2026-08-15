@@ -17,9 +17,11 @@ export type ModalProps = {
   footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg';
   closeOnBackdrop?: boolean;
+  bodyClassName?: string;
 };
 
 const SIZE_CLASSES = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' } as const;
+const DEFAULT_BODY_CLASSNAME = 'px-5 pb-5 sm:px-6 sm:pb-6';
 
 export function Modal({
   open,
@@ -29,7 +31,8 @@ export function Modal({
   children,
   footer,
   size = 'md',
-  closeOnBackdrop = true
+  closeOnBackdrop = true,
+  bodyClassName = DEFAULT_BODY_CLASSNAME
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
@@ -133,7 +136,7 @@ export function Modal({
         </div>
 
         {children && (
-          <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5 sm:px-6 sm:pb-6">{children}</div>
+          <div className={`flex-1 overflow-y-auto overscroll-contain ${bodyClassName}`}>{children}</div>
         )}
         {footer && (
           <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-100 bg-white p-5 sm:px-6 sm:py-4">

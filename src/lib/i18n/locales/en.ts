@@ -52,7 +52,6 @@ const en = {
     selected: 'Selected',
     skipToContent: 'Skip to main content',
     viewImage: 'View full image',
-    viewImageHint: 'Tap outside the image to close it.',
     pager: {
       previous: 'Previous',
       next: 'Next',

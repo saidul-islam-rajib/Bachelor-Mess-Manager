@@ -144,28 +144,7 @@ export function Composer({
         onSubmit={() => void post()}
       />
 
-      {images.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {images.map((src, index) => (
-            <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200">
-              <img src={src} alt="" className="h-full w-full object-cover" />
-              <button
-                type="button"
-                onClick={() => removeImage(index)}
-                aria-label={strings.community.imageRemove}
-                title={strings.community.imageRemove}
-                className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors hover:bg-red-600"
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M18 6L6 18M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <input
           ref={fileInput}
           type="file"
@@ -174,15 +153,37 @@ export function Composer({
           className="hidden"
           onChange={addFiles}
         />
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          disabled={images.length >= maxImagesPerPost}
-          onClick={() => fileInput.current?.click()}
-        >
-          {strings.community.addPhotos}
-        </Button>
+
+        {images.map((src, index) => (
+          <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200">
+            <img src={src} alt="" className="h-full w-full object-cover" />
+            <button
+              type="button"
+              onClick={() => removeImage(index)}
+              aria-label={strings.community.imageRemove}
+              title={strings.community.imageRemove}
+              className="absolute right-1 top-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-900/70 text-white transition-colors hover:bg-red-600"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        ))}
+
+        {images.length < maxImagesPerPost && (
+          <button
+            type="button"
+            onClick={() => fileInput.current?.click()}
+            aria-label={strings.community.addPhotos}
+            title={strings.community.addPhotos}
+            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-brand-400 hover:text-brand-500"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+        )}
       </div>
     </Modal>
   );
