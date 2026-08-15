@@ -1,4 +1,4 @@
-import { buildSettlement, type SettlementGroup } from '@/lib/settlement';
+import { buildSettlement, type SettlementBuyer, type SettlementGroup } from '@/lib/settlement';
 import { round2 } from '@/lib/month';
 
 export type SummaryMember = {
@@ -15,7 +15,14 @@ export type SummaryMember = {
   isActive: boolean;
 };
 
-export type SummaryDay = { date: string; meals: number; expense: number; perMealPrice: number; runningRate: number };
+export type SummaryDay = {
+  date: string;
+  meals: number;
+  expense: number;
+  perMealPrice: number;
+  runningRate: number;
+  buyers: SettlementBuyer[];
+};
 
 export type MealSummary = {
   rateMode: string;
@@ -46,7 +53,8 @@ export async function buildMealSummary(group: SettlementGroup, monthKey?: string
       meals: day.meals,
       expense: day.bazar,
       perMealPrice: day.rate,
-      runningRate: day.runningRate
+      runningRate: day.runningRate,
+      buyers: day.buyers
     })),
     members: settlement.members.map((member) => ({
       id: member.id,

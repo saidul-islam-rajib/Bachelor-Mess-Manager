@@ -5,7 +5,6 @@ import { formatCurrency, formatDayKey } from '@/lib/format';
 
 export type DailyRate = {
   date: string;
-  rate: number;
   runningRate: number;
   groupMeals: number;
   myMeals: number;
@@ -53,7 +52,7 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
   const [expandedDays, setExpandedDays] = useState(false);
 
   const priced = useMemo(
-    () => days.filter((day) => day.rate > 0).sort((a, b) => b.date.localeCompare(a.date)),
+    () => days.filter((day) => day.runningRate > 0).sort((a, b) => b.date.localeCompare(a.date)),
     [days]
   );
 
@@ -78,7 +77,9 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
           </p>
           {headline ? (
             <p className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold tabular-nums text-slate-900 sm:text-4xl">{taka(headline.rate)}</span>
+              <span className="text-3xl font-bold tabular-nums text-slate-900 sm:text-4xl">
+                {taka(headline.runningRate)}
+              </span>
               <span className="text-sm text-slate-500">{copy.perMealUnit}</span>
             </p>
           ) : (
@@ -125,11 +126,10 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
             ) : (
               <>
                 <ul className="mt-2 divide-y divide-slate-100">
-                  <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 pb-1.5 text-[11px] uppercase tracking-wide text-slate-400 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto]">
+                  <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 pb-1.5 text-[11px] uppercase tracking-wide text-slate-400 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
                     <span>{copy.colDay}</span>
                     <span className="hidden text-right sm:block">{copy.colGroupMeals}</span>
-                    <span className="text-right">{copy.colRate}</span>
-                    <span className="hidden text-right sm:block" title={copy.runningRateHint}>
+                    <span className="text-right" title={copy.runningRateHint}>
                       {copy.colRunningRate}
                     </span>
                     <span className="text-right">{copy.colYourCost}</span>
@@ -138,7 +138,7 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
                   {visible.map((day) => (
                     <li
                       key={day.date}
-                      className={`grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2.5 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto_auto_auto] ${
+                      className={`grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-2.5 text-sm sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] ${
                         day.date === today ? 'font-medium text-brand-800' : ''
                       }`}
                     >
@@ -150,10 +150,7 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
                         </span>
                       </span>
                       <span className="hidden text-right tabular-nums text-slate-500 sm:block">{day.groupMeals}</span>
-                      <span className="text-right tabular-nums text-slate-600">{taka(day.rate)}</span>
-                      <span className="hidden text-right tabular-nums text-slate-500 sm:block">
-                        {taka(day.runningRate)}
-                      </span>
+                      <span className="text-right tabular-nums text-slate-600">{taka(day.runningRate)}</span>
                       <span className="text-right tabular-nums font-medium">{taka(day.myCost)}</span>
                     </li>
                   ))}

@@ -626,7 +626,6 @@ const en = {
     everyoneOnDay: (count: number) => `Everyone else (${count})`,
     hideEveryone: 'Hide everyone else',
     editingFor: (name: string) => `Editing ${name}`,
-    averageRateHint: 'The average of the daily rates so far. Each day is charged at its own rate.',
     dailyCostNote:
       "This group prices each day on its own bazar, so your cost is the sum of what each day you ate actually cost — not your meals times the month's average rate above. A quiet day can cost more per meal than a busy one, because the same bazar fed fewer people. Open the day-by-day breakdown further down the page to see exactly how your total adds up.",
     ratedThrough: (day: string) =>
@@ -647,7 +646,7 @@ const en = {
       noRateYet: 'No rate yet',
       noRateYetHint: 'A rate appears for a day once bazar has been recorded and someone has eaten.',
       monthLabel: 'This month so far',
-      monthHintDaily: 'Average of every priced day this month.',
+      monthHintDaily: 'The rate shown is the running total — bazar so far ÷ meals so far.',
       monthHintMonthly: 'Total bazar divided by every meal eaten this month.',
       yourMealsToday: (count: number) => `You ate ${count} meal${count === 1 ? '' : 's'} today`,
       yourCostToday: 'Your cost today',
@@ -657,19 +656,31 @@ const en = {
       showAll: (count: number) => `Show all ${count} days`,
       showLess: 'Show fewer days',
       colDay: 'Day',
-      colRate: 'Rate',
       colYourMeals: 'You',
       colYourCost: 'Your cost',
       colGroupMeals: 'Mess',
       colRunningRate: 'Running',
       noPricedDays: 'No day has been priced yet this month.',
-      modeDaily: 'Priced day by day — a quiet day can cost more per meal than a busy one',
-      modeMonthly: 'One rate for the whole month',
-      dayRateHint:
-        "This day is priced on the bazar covering it, split by that day's own meals — a quiet day can cost more per meal than a busy one, because the same bazar fed fewer people.",
+      modeDaily: 'Charged day by day, from the bazar that fed each day',
+      modeMonthly: 'Charged one flat rate for the whole month',
       runningRateColumn: 'Running rate',
       runningRateHint:
         "Total bazar spent so far ÷ total meals eaten so far, up to and including this day. It settles down as the month goes on and is for reference only — it is not what anyone is actually charged."
+    },
+    trend: {
+      title: 'Daily meal rate trend',
+      subtitle: 'The running rate, day by day this month',
+      empty: 'Not enough priced days yet to show a trend.',
+      highest: 'Highest',
+      lowest: 'Lowest',
+      highestWeekLabel: (range: string) => `Highest week: ${range}`,
+      highestWeekRate: (rate: string) => `Average ${rate}/meal that week`,
+      boughtBy: (list: string) => `Bazar bought by ${list}`,
+      noBuyersThatWeek: 'No bazar was recorded that week — it rode on an earlier shopping trip.',
+      firstPricedDay: 'First priced day this month',
+      moreThanPriorDay: (amount: string) => `▲ ${amount} more than the day before`,
+      lessThanPriorDay: (amount: string) => `▼ ${amount} less than the day before`,
+      samePriorDay: 'Same as the day before'
     }
   },
   history: {

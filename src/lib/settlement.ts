@@ -29,6 +29,8 @@ export type SettlementMember = {
   activeDays: number;
 };
 
+export type SettlementBuyer = { id: string; name: string; amount: number };
+
 export type SettlementDay = {
   date: string;
   meals: number;
@@ -37,6 +39,7 @@ export type SettlementDay = {
   rate: number;
   runningRate: number;
   cost: number;
+  buyers: SettlementBuyer[];
 };
 
 export type Settlement = {
@@ -321,6 +324,7 @@ export async function buildSettlement(
 
   const bazarByDay = new Map<string, number>();
   const bazarPaidByMember = new Int32Array(memberIds.length);
+  const buyersByDay = new Map<string, Map<number, number>>();
   let totalBazarPaisa = 0;
 
   for (const row of bazarRows) {
@@ -329,7 +333,12 @@ export async function buildSettlement(
     const day = utcDateToDay(row.date);
     bazarByDay.set(day, (bazarByDay.get(day) ?? 0) + paisa);
     const index = row.payerId ? indexOf.get(row.payerId) : undefined;
-    if (index !== undefined) bazarPaidByMember[index] += paisa;
+    if (index !== undefined) {
+      bazarPaidByMember[index] += paisa;
+      if (!buyersByDay.has(day)) buyersByDay.set(day, new Map());
+      const dayBuyers = buyersByDay.get(day)!;
+      dayBuyers.set(index, (dayBuyers.get(index) ?? 0) + paisa);
+    }
   }
 
   const mealCostByMember = new Int32Array(memberIds.length);
@@ -466,6 +475,13 @@ export async function buildSettlement(
     const runningRate =
       cumulativeUnits > 0 ? round2((cumulativeBazarPaisa / cumulativeUnits) * (WEIGHT_SCALE / 100)) : 0;
 
+    const dayBuyers = buyersByDay.get(day);
+    const buyers: SettlementBuyer[] = dayBuyers
+      ? [...dayBuyers.entries()]
+          .map(([index, paisa]) => ({ id: memberIds[index], name: roster.get(memberIds[index])!.name, amount: fromPaisa(paisa) }))
+          .sort((a, b) => b.amount - a.amount)
+      : [];
+
     return {
       date: day,
       meals: round2(meals / WEIGHT_SCALE),
@@ -473,7 +489,8 @@ export async function buildSettlement(
       charged: fromPaisa(chargedPaisa),
       rate,
       runningRate,
-      cost: fromPaisa(Math.round(ratePaisaPerUnit * meals))
+      cost: fromPaisa(Math.round(ratePaisaPerUnit * meals)),
+      buyers
     };
   });
 
