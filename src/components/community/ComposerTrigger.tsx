@@ -12,7 +12,7 @@ export function ComposerTrigger({
 }) {
   return (
     <Card>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
         <Avatar name={userName} image={userImage} size="md" />
         <button
           type="button"
@@ -21,20 +21,18 @@ export function ComposerTrigger({
         >
           {strings.community.placeholder}
         </button>
-      </div>
-
-      <div className="mt-3 border-t border-slate-100 pt-3">
         <button
           type="button"
           onClick={onOpen}
-          className="flex w-full items-center justify-center gap-2 rounded-xl py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50"
+          aria-label={strings.community.addPhotos}
+          title={strings.community.addPhotos}
+          className="shrink-0 rounded-full p-2.5 text-emerald-600 transition-colors hover:bg-emerald-50"
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="5" width="18" height="14" rx="2" />
             <circle cx="9" cy="10" r="2" />
             <path d="m21 15-4.5-4.5a2 2 0 0 0-2.83 0L5 19" />
           </svg>
-          {strings.community.addPhotos}
         </button>
       </div>
     </Card>

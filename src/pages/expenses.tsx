@@ -400,7 +400,7 @@ export default function ExpensesPage() {
                                   <ul className="space-y-1">
                                     {itemsOf(expense).map((item) => (
                                       <li key={item.id} className="flex justify-between gap-2 text-slate-700">
-                                        <span className="truncate break-words">{item.name}</span>
+                                        <span className="min-w-0 line-clamp-2 break-words">{item.name}</span>
                                         <span className="shrink-0 tabular-nums text-slate-500">{taka(item.amount)}</span>
                                       </li>
                                     ))}
