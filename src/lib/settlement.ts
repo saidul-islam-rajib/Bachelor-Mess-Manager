@@ -35,6 +35,7 @@ export type SettlementDay = {
   bazar: number;
   charged: number;
   rate: number;
+  runningRate: number;
   cost: number;
 };
 
@@ -445,6 +446,9 @@ export async function buildSettlement(
   const monthRatePaisaPerUnit = totalUnits > 0 ? totalBazarPaisa / totalUnits : 0;
   const dayRates: number[] = [];
 
+  let cumulativeBazarPaisa = 0;
+  let cumulativeUnits = 0;
+
   const days: SettlementDay[] = [...new Set([...unitsByDay.keys(), ...bazarByDay.keys()])].sort().map((day) => {
     const dayUnits = unitsByDay.get(day);
     const meals = dayUnits ? [...dayUnits.values()].reduce((a, b) => a + b, 0) : 0;
@@ -457,12 +461,18 @@ export async function buildSettlement(
 
     if (meals > 0) dayRates.push(rate);
 
+    cumulativeBazarPaisa += bazarPaisa;
+    cumulativeUnits += meals;
+    const runningRate =
+      cumulativeUnits > 0 ? round2((cumulativeBazarPaisa / cumulativeUnits) * (WEIGHT_SCALE / 100)) : 0;
+
     return {
       date: day,
       meals: round2(meals / WEIGHT_SCALE),
       bazar: fromPaisa(bazarPaisa),
       charged: fromPaisa(chargedPaisa),
       rate,
+      runningRate,
       cost: fromPaisa(Math.round(ratePaisaPerUnit * meals))
     };
   });

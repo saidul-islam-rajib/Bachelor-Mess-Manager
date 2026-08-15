@@ -17,7 +17,7 @@ type Member = { id: string; name: string; email: string };
 type Weights = { breakfast: number; lunch: number; dinner: number };
 type Entry = { userId: string; date: string; breakfast: number; lunch: number; dinner: number };
 type SummaryMember = { id: string; name: string; meals: number; cost: number; paid: number; balance: number };
-type SummaryDay = { date: string; meals: number; expense: number; perMealPrice: number };
+type SummaryDay = { date: string; meals: number; expense: number; perMealPrice: number; runningRate: number };
 type Summary = {
   rateMode?: string;
   through?: string;
@@ -247,6 +247,7 @@ export default function MealsPage() {
       return {
         date: day.date,
         rate: day.perMealPrice,
+        runningRate: day.runningRate,
         groupMeals: day.meals,
         myMeals,
         myCost: round2(myMeals * day.perMealPrice)
@@ -506,7 +507,16 @@ export default function MealsPage() {
                         </th>
                       ))}
                       <th rowSpan={2} className="px-4 py-3 font-semibold">Meals</th>
-                      <th rowSpan={2} className="px-4 py-3 font-semibold">৳/meal</th>
+                      <th
+                        rowSpan={2}
+                        className="px-4 py-3 font-semibold"
+                        title={summary?.rateMode === 'DAILY' ? strings.meals.rate.dayRateHint : undefined}
+                      >
+                        ৳/meal
+                      </th>
+                      <th rowSpan={2} className="px-4 py-3 font-semibold" title={strings.meals.rate.runningRateHint}>
+                        {strings.meals.rate.runningRateColumn}
+                      </th>
                     </tr>
                     <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
                       {members.flatMap((m) =>
@@ -578,8 +588,14 @@ export default function MealsPage() {
                             });
                           })}
                           <td className="px-4 py-2 font-semibold">{round2(logged.byDay[date] ?? 0)}</td>
-                          <td className="px-4 py-2 text-slate-600">
+                          <td
+                            className="px-4 py-2 text-slate-600"
+                            title={summary?.rateMode === 'DAILY' ? strings.meals.rate.dayRateHint : undefined}
+                          >
                             {info && info.perMealPrice ? info.perMealPrice.toFixed(2) : '—'}
+                          </td>
+                          <td className="px-4 py-2 text-slate-600" title={strings.meals.rate.runningRateHint}>
+                            {info && info.runningRate ? info.runningRate.toFixed(2) : '—'}
                           </td>
                         </tr>
                       );
@@ -597,6 +613,11 @@ export default function MealsPage() {
                         <td className="px-4 py-3">{logged.total}</td>
                         <td className="px-4 py-3 text-slate-600" title={strings.meals.averageRateHint}>
                           {summary.totals.mealRate > 0 ? summary.totals.mealRate.toFixed(2) : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600" title={strings.meals.rate.runningRateHint}>
+                          {summary.days.length > 0 && summary.days[summary.days.length - 1].runningRate > 0
+                            ? summary.days[summary.days.length - 1].runningRate.toFixed(2)
+                            : '—'}
                         </td>
                       </tr>
                     </tfoot>

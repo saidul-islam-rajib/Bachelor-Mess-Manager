@@ -36,7 +36,15 @@ type Payment = {
   isReversed: boolean;
 };
 
-type DayRate = { date: string; meals: number; bazar: number; charged: number; rate: number; cost: number };
+type DayRate = {
+  date: string;
+  meals: number;
+  bazar: number;
+  charged: number;
+  rate: number;
+  runningRate: number;
+  cost: number;
+};
 
 type Totals = {
   bazar: number;
@@ -866,6 +874,12 @@ function MealRateBreakdown({
                 <th className="px-3 py-2 text-right">Bazar spent</th>
                 {daily && <th className="px-3 py-2 text-right">Bazar used</th>}
                 <th className="px-3 py-2 text-right">Rate that day</th>
+                <th
+                  className="px-3 py-2 text-right"
+                  title="Total bazar so far ÷ total meals so far, up to this day. Reference only — not what anyone is charged."
+                >
+                  Running rate
+                </th>
                 <th className="px-3 py-2 text-right">Charged that day</th>
               </tr>
             </thead>
@@ -881,6 +895,9 @@ function MealRateBreakdown({
                   <td className="px-3 py-2 text-right font-medium text-slate-900">
                     {day.meals > 0 ? taka(day.rate) : '—'}
                   </td>
+                  <td className="px-3 py-2 text-right text-slate-600">
+                    {day.runningRate > 0 ? taka(day.runningRate) : '—'}
+                  </td>
                   <td className="px-3 py-2 text-right font-medium">{day.meals > 0 ? taka(day.cost) : '—'}</td>
                 </tr>
               ))}
@@ -892,6 +909,9 @@ function MealRateBreakdown({
                 <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>
                 {daily && <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>}
                 <td className="px-3 py-2 text-right">{taka(totals.mealRate)}</td>
+                <td className="px-3 py-2 text-right">
+                  {days.length > 0 ? taka(days[days.length - 1].runningRate) : '—'}
+                </td>
                 <td className="px-3 py-2 text-right">{taka(days.reduce((a, d) => a + d.cost, 0))}</td>
               </tr>
             </tfoot>

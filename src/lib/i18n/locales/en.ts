@@ -661,9 +661,15 @@ const en = {
       colYourMeals: 'You',
       colYourCost: 'Your cost',
       colGroupMeals: 'Mess',
+      colRunningRate: 'Running',
       noPricedDays: 'No day has been priced yet this month.',
-      modeDaily: 'Each day is priced on its own bazar',
-      modeMonthly: 'One rate for the whole month'
+      modeDaily: 'Priced day by day — a quiet day can cost more per meal than a busy one',
+      modeMonthly: 'One rate for the whole month',
+      dayRateHint:
+        "This day is priced on the bazar covering it, split by that day's own meals — a quiet day can cost more per meal than a busy one, because the same bazar fed fewer people.",
+      runningRateColumn: 'Running rate',
+      runningRateHint:
+        "Total bazar spent so far ÷ total meals eaten so far, up to and including this day. It settles down as the month goes on and is for reference only — it is not what anyone is actually charged."
     }
   },
   history: {

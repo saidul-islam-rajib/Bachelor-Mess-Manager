@@ -15,7 +15,7 @@ export type SummaryMember = {
   isActive: boolean;
 };
 
-export type SummaryDay = { date: string; meals: number; expense: number; perMealPrice: number };
+export type SummaryDay = { date: string; meals: number; expense: number; perMealPrice: number; runningRate: number };
 
 export type MealSummary = {
   rateMode: string;
@@ -45,7 +45,8 @@ export async function buildMealSummary(group: SettlementGroup, monthKey?: string
       date: day.date,
       meals: day.meals,
       expense: day.bazar,
-      perMealPrice: day.rate
+      perMealPrice: day.rate,
+      runningRate: day.runningRate
     })),
     members: settlement.members.map((member) => ({
       id: member.id,
