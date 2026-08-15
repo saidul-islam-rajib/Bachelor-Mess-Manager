@@ -1604,7 +1604,7 @@ function CategoryManager({
   onChanged: () => Promise<void>;
 }) {
   const toast = useToast();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [label, setLabel] = useState('');
   const [busy, setBusy] = useState(false);
 

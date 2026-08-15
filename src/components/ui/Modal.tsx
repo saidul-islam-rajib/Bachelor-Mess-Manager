@@ -15,12 +15,17 @@ export type ModalProps = {
   description?: ReactNode;
   children?: ReactNode;
   footer?: ReactNode;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'fit';
   closeOnBackdrop?: boolean;
   bodyClassName?: string;
 };
 
-const SIZE_CLASSES = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl' } as const;
+const SIZE_CLASSES = {
+  sm: 'w-full max-w-sm',
+  md: 'w-full max-w-lg',
+  lg: 'w-full max-w-2xl',
+  fit: 'w-fit max-w-[92vw]'
+} as const;
 const DEFAULT_BODY_CLASSNAME = 'px-5 pb-5 sm:px-6 sm:pb-6';
 
 export function Modal({
@@ -116,10 +121,10 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative flex max-h-full w-full ${SIZE_CLASSES[size]} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl outline-none`}
+        className={`relative flex max-h-full ${SIZE_CLASSES[size]} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl outline-none`}
       >
-        <div className="flex shrink-0 items-start justify-between gap-4 p-5 pb-4 sm:p-6 sm:pb-4">
-          <div className="min-w-0">
+        <div className="relative shrink-0 p-5 pb-4 sm:p-6 sm:pb-4">
+          <div className="min-w-0 px-8 text-center">
             <h2 id={titleId} className="text-lg font-semibold">
               {title}
             </h2>
@@ -129,7 +134,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label={strings.common.close}
-            className="-mr-1 -mt-1 rounded-full p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+            className="absolute right-4 top-4 rounded-full p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:right-5 sm:top-5"
           >
             &times;
           </button>

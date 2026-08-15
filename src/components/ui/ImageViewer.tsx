@@ -14,8 +14,8 @@ export function ImageViewer({ src, alt, title, children }: ImageViewerProps) {
   return (
     <>
       {children(() => setOpen(true))}
-      <Modal open={open} onClose={() => setOpen(false)} title={title} size="lg" bodyClassName="">
-        <img src={src} alt={alt} className="max-h-[80vh] w-full bg-slate-100 object-contain" />
+      <Modal open={open} onClose={() => setOpen(false)} title={title} size="fit" bodyClassName="">
+        <img src={src} alt={alt} className="block max-h-[75vh] w-auto max-w-full object-contain" />
       </Modal>
     </>
   );
