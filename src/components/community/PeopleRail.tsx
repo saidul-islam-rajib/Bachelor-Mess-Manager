@@ -3,7 +3,7 @@ import { ActionLink, Avatar, Card, CardHeader } from '@/components/ui';
 import { strings } from '@/lib/i18n';
 import { ROUTES } from '@/lib/routes';
 
-const VISIBLE_COUNT = 8;
+const VISIBLE_COUNT = 5;
 
 export function PeopleRail({ members }: { members: (Member & { profileImage?: string | null })[] }) {
   if (members.length === 0) return null;

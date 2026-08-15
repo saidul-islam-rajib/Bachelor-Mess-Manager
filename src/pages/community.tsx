@@ -249,7 +249,7 @@ export default function CommunityPage() {
         </div>
 
         <div className="hidden lg:block">
-          <div className="sticky top-24 max-h-[calc(100vh-7rem)] space-y-4 overflow-y-auto pb-4">
+          <div className="sticky top-24 space-y-4 pb-4">
             <AnnouncementsRail messages={messages} />
             <PeopleRail members={members} />
           </div>
