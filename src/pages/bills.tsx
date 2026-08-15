@@ -699,48 +699,45 @@ function AdvancesSection({
           {canManage && (
             <form onSubmit={submitCollect} className="flex flex-wrap items-end gap-2 rounded-2xl bg-slate-50 p-3">
               <div className="min-w-[9rem] flex-1">
-                <label className="mb-1 block text-xs font-medium text-slate-500">{strings.common.member}</label>
-                <select
+                <Listbox
+                  label={strings.common.member}
                   value={collectFor}
-                  onChange={(event) => setCollectFor(event.target.value)}
-                  required
-                  className="w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-                >
-                  <option value="">{strings.bills.advances.selectMember}</option>
-                  {data.members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setCollectFor}
+                  placeholder={strings.bills.advances.selectMember}
+                  options={data.members.map((m) => ({ value: m.id, label: m.name }))}
+                />
               </div>
               <div className="w-28">
-                <label className="mb-1 block text-xs font-medium text-slate-500">{strings.common.amount}</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  value={amount}
-                  onChange={(event) => setAmount(event.target.value)}
-                  required
-                  className="w-full rounded-full border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-                />
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.amount}</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    value={amount}
+                    onChange={(event) => setAmount(event.target.value)}
+                    required
+                    className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+                  />
+                </label>
               </div>
               <div className="min-w-[9rem] flex-1">
-                <label className="mb-1 block text-xs font-medium text-slate-500">{strings.bills.advances.noteLabel}</label>
-                <input
-                  type="text"
-                  value={note}
-                  onChange={(event) => setNote(event.target.value)}
-                  placeholder={strings.bills.advances.notePlaceholder}
-                  className="w-full rounded-full border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
-                />
+                <label className="block">
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.bills.advances.noteLabel}</span>
+                  <input
+                    type="text"
+                    value={note}
+                    onChange={(event) => setNote(event.target.value)}
+                    placeholder={strings.bills.advances.notePlaceholder}
+                    className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+                  />
+                </label>
               </div>
               <button
                 type="submit"
                 disabled={submitting}
-                className="min-h-[2.5rem] rounded-full bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+                className="min-h-[2.75rem] rounded-2xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
               >
                 {submitting ? strings.common.saving : strings.bills.advances.collectCta}
               </button>

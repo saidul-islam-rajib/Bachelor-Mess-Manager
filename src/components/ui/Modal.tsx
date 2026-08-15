@@ -24,7 +24,7 @@ const SIZE_CLASSES = {
   sm: 'w-full max-w-sm',
   md: 'w-full max-w-lg',
   lg: 'w-full max-w-2xl',
-  fit: 'w-fit max-w-[92vw]'
+  fit: 'w-fit max-w-[min(92vw,48rem)]'
 } as const;
 const DEFAULT_BODY_CLASSNAME = 'px-5 pb-5 sm:px-6 sm:pb-6';
 
