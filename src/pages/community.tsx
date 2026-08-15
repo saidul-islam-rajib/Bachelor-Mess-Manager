@@ -17,9 +17,10 @@ import {
   LoadingCard,
   PageContainer,
   PageHeader,
+  PageTitle,
   useConfirm
 } from '@/components/ui';
-import { appConfig, communityConfig } from '@/config';
+import { communityConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { commentsAnchorPath } from '@/lib/routes';
@@ -200,11 +201,10 @@ export default function CommunityPage() {
 
   return (
     <PageContainer>
-      <PageHeader
-        title={strings.community.title}
-        description={strings.community.subtitle(appConfig.name)}
-        action={<ActionLink href={commentsAnchorPath()}>{strings.community.elsewhereLink}</ActionLink>}
-      />
+      <PageTitle title={strings.community.title} />
+      <div className="mb-4 flex justify-end">
+        <ActionLink href={commentsAnchorPath()}>{strings.community.elsewhereLink}</ActionLink>
+      </div>
 
       <div className="grid gap-4 lg:grid-cols-[65fr_35fr]">
         <div className="min-w-0 space-y-4">

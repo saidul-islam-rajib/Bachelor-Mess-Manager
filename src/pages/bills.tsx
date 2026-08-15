@@ -250,10 +250,6 @@ export default function BillsPage() {
                 />
               )}
 
-              {!pairBreakdownWithAdvances && (
-                <AdvancesSection groupId={groupId} canManage={canManage} refreshToken={advanceVersion} />
-              )}
-
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-lg font-semibold">Bills this month</h2>
@@ -359,6 +355,10 @@ export default function BillsPage() {
                   </div>
                 )}
               </div>
+
+              {!pairBreakdownWithAdvances && (
+                <AdvancesSection groupId={groupId} canManage={canManage} refreshToken={advanceVersion} />
+              )}
 
               {bills.length > 0 && (
                 <FinalSummary
@@ -583,7 +583,7 @@ function AdvancesSection({
 }) {
   const toast = useToast();
   const [data, setData] = useState<AdvancesData | null>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [collectFor, setCollectFor] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
@@ -1700,10 +1700,6 @@ function CategoryManager({
           Done
         </button>
       </div>
-      <p className="mt-1 text-sm text-slate-500">
-        These are the options in the &quot;Record a bill&quot; dropdown for this mess. A type already used by a bill is
-        hidden rather than deleted, so past bills keep their label.
-      </p>
 
       <ul className="mt-4 flex flex-wrap gap-2">
         {categories.map((category) => (
