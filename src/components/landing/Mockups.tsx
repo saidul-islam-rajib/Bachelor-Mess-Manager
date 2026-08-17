@@ -1,7 +1,10 @@
 import { Fragment, type ReactNode } from 'react';
 import { Avatar } from '@/components/ui';
+import { appConfig } from '@/config';
+import { USER_ROLES } from '@/lib/constants';
 import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
+import { PERMISSION_DEFINITIONS, PERMISSIONS, roleHasPermission } from '@/lib/permissions';
 
 const MEMBERS = ['Rakib Hasan', 'Tanvir Ahmed', 'Nayeem Islam', 'Sabbir Rahman'] as const;
 
@@ -383,7 +386,7 @@ const COMMUNITY_POSTS = [
     name: 'Team Sober',
     date: '3 Aug',
     badge: strings.community.types.ANNOUNCEMENT,
-    body: strings.community.announcementsTitle + ': the community room is open to the whole app.'
+    body: 'The community room is open to the whole app — welcome, everybody.'
   },
   { name: MEMBERS[1], date: '5 Aug', body: 'Anyone know a good fish market near Mirpur 10?' }
 ];
@@ -416,6 +419,178 @@ export function CommunityPreview() {
           </li>
         ))}
       </ul>
+    </AppFrame>
+  );
+}
+
+export function AccountPreview() {
+  return (
+    <AppFrame path="bachelor-point.app/profile" label={strings.profile.title}>
+      <PreviewHeading title={strings.profile.title} />
+      <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <Avatar name={MEMBERS[0]} size="md" />
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-xs font-medium text-slate-900">{MEMBERS[0]}</div>
+          <div className="text-[11px] text-brand-700">{strings.profile.changePhoto}</div>
+        </div>
+      </div>
+      <div className="mt-3 space-y-3">
+        <FieldMock label={strings.auth.register.name} value={MEMBERS[0]} />
+        <FieldMock label={strings.auth.register.phone} value={strings.auth.register.phonePlaceholder} />
+      </div>
+      <div className="mt-4 flex justify-end">
+        <SubmitMock label={strings.common.save} />
+      </div>
+    </AppFrame>
+  );
+}
+
+export function QuickReplyPreview() {
+  return (
+    <AppFrame path="bachelor-point.app" label={strings.mealPrompt.title}>
+      <PreviewHeading title={strings.mealPrompt.title} />
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+        <p className="text-xs leading-relaxed text-slate-700">{strings.mealPrompt.cardTitle}</p>
+        <div className="mt-3 flex gap-2">
+          <span className="flex-1 rounded-full bg-brand-600 px-3 py-2 text-center text-xs font-semibold text-white">
+            {strings.mealPrompt.yes}
+          </span>
+          <span className="flex-1 rounded-full border border-slate-300 px-3 py-2 text-center text-xs font-semibold text-slate-600">
+            {strings.mealPrompt.no}
+          </span>
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] text-slate-400">
+        {strings.mealPrompt.usualHint} {strings.mealPrompt.saved}
+      </p>
+    </AppFrame>
+  );
+}
+
+const MESS_MESSAGES = [
+  { name: MEMBERS[0], body: 'Bazar tomorrow morning — anyone want anything extra?' },
+  { name: MEMBERS[1], body: 'Some eggs and milk, please!' }
+];
+
+export function TalkingPreview() {
+  return (
+    <AppFrame path="bachelor-point.app/members" label={strings.comments.title}>
+      <PreviewHeading title={strings.comments.title} />
+      <p className="mb-3 text-[11px] leading-relaxed text-slate-500">{strings.comments.sectionDescription}</p>
+      <ul className="space-y-2.5">
+        {MESS_MESSAGES.map((message) => (
+          <li key={message.name} className="flex items-start gap-2">
+            <Avatar name={message.name} size="sm" />
+            <div className="min-w-0 flex-1 rounded-2xl bg-slate-50 px-3 py-2">
+              <p className="text-xs font-medium text-slate-900">{message.name}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">{message.body}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 rounded-full border border-slate-200 px-3 py-2 text-[11px] text-slate-400">
+        {strings.comments.placeholder}
+      </div>
+    </AppFrame>
+  );
+}
+
+const NOTIFICATION_ROWS = [
+  { name: MEMBERS[1], text: strings.notifications.actions.MENTION_COMMENT, time: '2m' },
+  { name: MEMBERS[2], text: strings.notifications.actions.SUPERVISOR_CHANGED, time: '1h' }
+];
+
+export function NotificationsPreview() {
+  return (
+    <AppFrame path="bachelor-point.app" label={strings.notifications.panelTitle}>
+      <PreviewHeading title={strings.notifications.panelTitle} meta={strings.notifications.newCount(2)} />
+      <ul className="divide-y divide-slate-100">
+        {NOTIFICATION_ROWS.map((row) => (
+          <li key={row.name} className="flex items-center gap-3 py-2.5">
+            <Avatar name={row.name} size="sm" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs text-slate-700">
+                <span className="font-medium text-slate-900">{row.name}</span> {row.text}
+              </p>
+              <p className="text-[10px] text-slate-400">{row.time}</p>
+            </div>
+            <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
+          </li>
+        ))}
+      </ul>
+      <div className="mt-2 text-center">
+        <span className="text-[11px] font-medium text-brand-700">{strings.notifications.markAllRead}</span>
+      </div>
+    </AppFrame>
+  );
+}
+
+const PERMISSION_SAMPLE_CODES = [
+  PERMISSIONS.MEAL_VIEW,
+  PERMISSIONS.MEAL_RECORD_OWN,
+  PERMISSIONS.EXPENSE_CREATE,
+  PERMISSIONS.BILL_MANAGE,
+  PERMISSIONS.PAYMENT_RECORD,
+  PERMISSIONS.COMMENT_CREATE
+] as const;
+
+const PERMISSION_ROWS = PERMISSION_SAMPLE_CODES.map((code) => {
+  const definition = PERMISSION_DEFINITIONS.find((item) => item.code === code)!;
+  return { name: definition.name, allowed: roleHasPermission(USER_ROLES.MEMBER, code) };
+});
+
+export function PermissionsPreview() {
+  const permissions = strings.admin.permissions;
+
+  return (
+    <AppFrame path="bachelor-point.app/members" label={permissions.action}>
+      <PreviewHeading title={permissions.modalTitle(MEMBERS[1])} meta={permissions.roleBaseline(strings.roles.MEMBER)} />
+      <ul className="divide-y divide-slate-100">
+        {PERMISSION_ROWS.map((row) => (
+          <li key={row.name} className="flex items-center justify-between gap-3 py-2">
+            <span className="truncate text-xs text-slate-700">{row.name}</span>
+            <span
+              className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium ${
+                row.allowed ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'
+              }`}
+            >
+              {row.allowed ? permissions.effectiveAllowed : permissions.effectiveBlocked}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex justify-end">
+        <span className="rounded-full border border-slate-300 px-3 py-1.5 text-[11px] text-slate-600">
+          {permissions.presetReset}
+        </span>
+      </div>
+    </AppFrame>
+  );
+}
+
+export function PhonePreview() {
+  const install = strings.landing.install;
+
+  return (
+    <AppFrame path="bachelor-point.app" label={install.heading}>
+      <PreviewHeading title={install.heading} />
+      <div className="flex items-center gap-3 rounded-2xl bg-slate-900 p-3 text-white">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
+          <span className="h-4 w-3 rounded-sm border-2 border-white" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs font-semibold">{install.action(appConfig.name)}</p>
+          <p className="truncate text-[11px] text-slate-300">{install.body}</p>
+        </div>
+        <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-900">
+          {install.button}
+        </span>
+      </div>
+      <ol className="mt-3 space-y-1.5 text-[11px] text-slate-500">
+        <li>1. {install.step1}</li>
+        <li>2. {install.step2}</li>
+        <li>3. {install.step3}</li>
+      </ol>
     </AppFrame>
   );
 }

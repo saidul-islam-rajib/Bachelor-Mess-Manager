@@ -6,6 +6,7 @@ import { Collapsible, LinkButton } from '@/components/ui';
 import { LandingIcon, type LandingIconName } from '@/components/landing/Icons';
 import Reveal from '@/components/landing/Reveal';
 import FaqIllustration from '@/components/landing/FaqIllustration';
+import ExplainerVideo from '@/components/landing/ExplainerVideo';
 import {
   BalancesPreview,
   BazarPreview,
@@ -519,6 +520,7 @@ function FinalCta() {
 
 export default function Home() {
   const title = landing.meta.title(appConfig.name);
+  const { user } = useCurrentUser();
 
   return (
     <>
@@ -535,6 +537,7 @@ export default function Home() {
         <meta name="twitter:image" content="/og-image.png" />
       </Head>
 
+      {!user && <ExplainerVideo />}
       <Hero />
       <Problem />
       <Features />

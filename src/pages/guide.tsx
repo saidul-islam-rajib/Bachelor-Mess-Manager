@@ -15,11 +15,18 @@ import {
   SplitFigure
 } from '@/components/guide/Figures';
 import {
+  AccountPreview,
+  BazarPreview,
   CommunityPreview,
   DashboardPreview,
   LoginPreview,
   MealsPreview,
-  RegisterPreview
+  NotificationsPreview,
+  PermissionsPreview,
+  PhonePreview,
+  QuickReplyPreview,
+  RegisterPreview,
+  TalkingPreview
 } from '@/components/landing/Mockups';
 
 type Section = { id: string; title: string };
@@ -212,6 +219,9 @@ export default function GuidePage() {
               real check happens on the server every time, so nothing gets through by going straight to the address.
               Anyone with a personal exception is flagged <strong>Custom</strong> in the users table.
             </Callout>
+            <Figure title="Toggling one permission" caption="Role default follows the role automatically; Allow or Block is a personal exception for this one account only.">
+              <PermissionsPreview />
+            </Figure>
           </Section>
 
           <Section id="dashboard" title="What you see when you sign in">
@@ -307,8 +317,13 @@ export default function GuidePage() {
             </P>
             <Callout>
               Photos can be PNG, JPEG, WebP or GIF. The size limit is set by your admin — the profile page always shows
-              the current one next to the upload button, so what you read there is what will actually be accepted.
+              the current one next to the upload button, so what you read there is what will actually be accepted. Pick a
+              photo and a cropper opens straight away — drag to reposition and use the zoom slider to frame it, so the
+              circle everyone sees is exactly the part of the photo you chose.
             </Callout>
+            <Figure title="Your profile" caption="Name, phone, photo and password, all in one place.">
+              <AccountPreview />
+            </Figure>
           </Section>
 
           <Section id="meals" title="Meals and meal plans">
@@ -354,6 +369,9 @@ export default function GuidePage() {
               notifications, so you can answer wherever you happen to be. Supervisors can send the ask to everyone from
               the <Route href={ROUTES.meals}>Meals</Route> page.
             </Callout>
+            <Figure title="One tap, no app to open" caption="The same yes/no ask shows up as a message, on the Dashboard, and in your notifications.">
+              <QuickReplyPreview />
+            </Figure>
           </Section>
 
           <Section id="talking" title="Talking to your mess">
@@ -372,6 +390,9 @@ export default function GuidePage() {
               A posted comment cannot be edited, by anyone. If something needs to go, the supervisor removes it. That
               rule exists so nobody can quietly reword what they agreed to last week.
             </Callout>
+            <Figure title="Your mess's own thread" caption="Private to your mess — nobody outside it can read this one.">
+              <TalkingPreview />
+            </Figure>
           </Section>
 
           <Section id="community" title="The community room">
@@ -434,6 +455,9 @@ export default function GuidePage() {
               Announcements about new features are deliberately <em>not</em> notifications. They are pinned in the
               community room and raise the badge there instead, so a release never fills seven hundred bells at once.
             </Callout>
+            <Figure title="The bell dropdown" caption="A short list of what needs you, newest first, with the full history one click away.">
+              <NotificationsPreview />
+            </Figure>
           </Section>
 
           <Section id="rate" title="How the meal rate works">
@@ -500,6 +524,9 @@ export default function GuidePage() {
               mentioned people get a notification. Every edit to an entry is kept in its history, so a changed amount is
               never silent.
             </P>
+            <Figure title="A shopping trip, itemised" caption="Whoever paid is credited immediately — the mess settles up with them, not the other way round.">
+              <BazarPreview />
+            </Figure>
           </Section>
 
           <Section id="bills" title="Bills and fixed costs">
@@ -620,6 +647,9 @@ export default function GuidePage() {
               When your phone supports it, a bar appears at the top offering to install. Dismiss it and it stays
               dismissed. If you want it later, use your browser instead:
             </P>
+            <Figure title="The install bar" caption="Shows up automatically when your browser supports it — dismiss it once and it stays dismissed.">
+              <PhonePreview />
+            </Figure>
             <Definitions
               items={[
                 {

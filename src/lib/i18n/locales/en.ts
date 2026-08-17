@@ -1455,6 +1455,77 @@ const en = {
         body: 'Announcements, questions and welcomes for new faces, in a single feed across every mess on the app. Anyone can read it without an account — sign in only when you want to post.'
       }
     },
+    install: {
+      heading: 'Add it to your home screen',
+      action: (appName: string) => `Install ${appName}`,
+      body: 'Opens full-screen, just like a normal app.',
+      button: 'Install',
+      step1: 'Tap the Share button',
+      step2: 'Choose Add to Home Screen',
+      step3: 'Tap Add — done'
+    },
+    explainer: {
+      eyebrow: 'New here?',
+      title: 'Watch how it works',
+      subtitle: 'A guided, narrated walkthrough — read aloud in your browser, captioned the whole way through.',
+      play: 'Play the walkthrough',
+      pause: 'Pause',
+      resume: 'Resume',
+      restart: 'Watch again',
+      mute: 'Mute narration',
+      unmute: 'Turn narration on',
+      previous: 'Previous',
+      next: 'Next',
+      sceneOf: (current: number, total: number) => `Scene ${current} of ${total}`,
+      noSpeechNote: "Your browser can't read this aloud, so captions are shown on their own instead.",
+      scenes: [
+        {
+          title: 'Welcome',
+          script: (appName: string) =>
+            `Hi, I'm Rakib, and this is Tanvir. If you share a mess, a hostel, or a flat, you already know the arguments: who ate how many meals this month, who bought the groceries on the ninth, and whether last month's electricity bill was ever actually settled. ${appName} ends all of that. One app, one shared record, and the maths is done the same way for everybody, automatically, down to the last paisa. Over the next few minutes, we'll walk you through exactly how it works, from creating your account all the way to settling up at the end of the month. Let's get started.`
+        },
+        {
+          title: 'Creating your account',
+          script: () =>
+            "First things first: registering. Head to the Register page and enter your name, email and phone number, that's it, no long forms. We'll email you a link to choose your password. Depending on how your admin has set things up, your account is either ready to use straight away, or it waits briefly for an admin to approve it, just to keep the app free of spam accounts. Once you're in, you'll land on your Dashboard, though it'll look pretty empty until you join a mess, which is exactly what we cover next."
+        },
+        {
+          title: 'Joining a mess, or running your own',
+          script: () =>
+            "Now you need a mess to join. Usually, a supervisor, the person running the house, invites you by email, and the invitation shows up in your notification bell. Accept it, and you're a member from that moment. Want to run your own mess instead of joining someone else's? Open Your role on your Profile page, request supervisor access, and once it's granted, create your own group in a few taps. As supervisor, you'll invite your housemates, record bills, and decide how the meal rate is worked out, everything a member can do, plus running the house."
+        },
+        {
+          title: 'Logging your meals',
+          script: () =>
+            "Every day, each member logs their own meals on the Meals page: breakfast, lunch and dinner, with one tap each. Today and any upcoming day are always open to edit; once a day passes, it locks, so history can't quietly change. If you eat roughly the same way every week, set a meal plan once, say, lunch and dinner on weekdays, and the app fills your days in for you automatically. Forgot to log a day? A short window lets you unlock and fix past meals, with your supervisor approving the change."
+        },
+        {
+          title: 'Recording the bazar',
+          script: () =>
+            "Whoever goes to the market records the shopping on the Bazar page: the items, what each one cost, and who paid for it. That part really matters, whoever paid is credited immediately, so at settlement time the mess simply pays them back instead of arguing over old receipts. Anyone in the mess can comment on an entry to ask about a price or add context, and mention a housemate directly with an at symbol. Every edit is kept in a visible history too, so a changed amount is never a quiet mystery a month later."
+        },
+        {
+          title: 'Adding a bill',
+          script: () =>
+            "Rent, electricity, water, wifi, the cook's salary, anything that isn't day-to-day food goes on the Bills page. A supervisor records each one and chooses how it's split: evenly across everyone currently in the mess, or assigned to specific people, which is perfect for a shared room paying a bit more rent than a single. However a bill is split, that split is saved permanently with the bill, so somebody joining halfway through the month never reopens an argument that was already settled."
+        },
+        {
+          title: 'Your dashboard',
+          script: () =>
+            "Sign in, and your Dashboard becomes your home base. As a member, it leads with today's meal rate, your meals so far, and exactly what you owe, big enough to read at a glance on your phone. Right below that, there's a whole-mess total of today's meals, so whoever's cooking always knows exactly how many plates to prepare, without opening the meals page and adding it up by hand. Supervisors see a different view entirely: every mess they run, its spend so far, and who still owes money."
+        },
+        {
+          title: 'Payments and settling up',
+          script: () =>
+            "And finally, Payments, the page where the month adds up. Every member gets one row that reads like a sentence: this is what you owe, this is what you've already put in, this is what's left. A negative number means the mess actually owes that person money back. When everyone's settled, the supervisor closes the month, freezing every figure so an old bill can never be quietly rewritten later, and anything still unpaid simply carries forward as next month's opening balance."
+        },
+        {
+          title: "That's Bachelor Point",
+          script: (appName: string) =>
+            `That's the whole month, start to finish, meals, bazar, bills and payments, all working out the same way, every single time. There's also a Community room where every mess on the app shares news and questions, and a full written Guide if you ever want the details in black and white. We're Rakib and Tanvir, and on behalf of every mess that's tired of doing this maths by hand, welcome to ${appName}. Ready to stop arguing about the electricity bill? Create your account below and invite your housemates today.`
+        }
+      ]
+    },
     math: {
       title: 'The maths is not hidden from you',
       subtitle:
