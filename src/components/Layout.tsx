@@ -51,7 +51,7 @@ function MobileNavLink({
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${FOCUS_RING} ${
-        active ? 'bg-brand-600 font-semibold text-white' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
+        active ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
       }`}
     >
       {link.label}
@@ -66,7 +66,7 @@ function DesktopNavLink({ link, active }: { link: NavLink; active: boolean }) {
       href={link.href}
       aria-current={active ? 'page' : undefined}
       className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-2 transition-colors xl:px-3 ${FOCUS_RING} ${
-        active ? 'bg-brand-600 font-semibold text-white' : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700'
+        active ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700'
       }`}
     >
       {link.label}
