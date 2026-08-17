@@ -89,6 +89,7 @@ type MemberReport = {
     mealRate: number;
     rateMode: string;
     dailyRate: { date: string; rate: number; isToday: boolean } | null;
+    todayMeals: { breakfast: number; lunch: number; dinner: number; total: number };
     groupMeals: number;
     groupExpense: number;
     groupBazar: number;
@@ -735,6 +736,17 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
           ]}
         />
       </div>
+
+      <Card>
+        <h2 className="text-lg font-semibold">{dashboardStrings.todayMealsTitle}</h2>
+        <p className="mt-1 text-sm text-slate-500">{dashboardStrings.todayMealsHint}</p>
+        <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <MiniStat label={strings.meals.breakfast} value={String(current.todayMeals.breakfast)} />
+          <MiniStat label={strings.meals.lunch} value={String(current.todayMeals.lunch)} />
+          <MiniStat label={strings.meals.dinner} value={String(current.todayMeals.dinner)} />
+          <MiniStat label={strings.common.total} value={String(current.todayMeals.total)} />
+        </div>
+      </Card>
 
       <Card>
         <div className="flex flex-wrap items-baseline justify-between gap-2">

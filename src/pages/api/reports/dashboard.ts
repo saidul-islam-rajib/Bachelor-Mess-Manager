@@ -5,7 +5,7 @@ import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport, type ReportMember } from '@/lib/group-report';
 import { buildGroupDashboardCard } from '@/lib/dashboard-report';
 import { INVITATION_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
-import { currentMonthKey, parseMonth, round2, todayKey } from '@/lib/month';
+import { currentMonthKey, dayToUtcDate, parseMonth, round2, todayKey } from '@/lib/month';
 import { stayDays } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
@@ -167,16 +167,30 @@ async function memberReport(userId: string, month: string) {
   }
 
   const previous = previousMonthKey(month);
-  const [thisMonth, lastMonth, card] = await Promise.all([
+  const day = todayKey();
+  const [thisMonth, lastMonth, card, todayMealRows] = await Promise.all([
     buildGroupReport(group, month),
     buildGroupReport(group, previous),
-    buildGroupDashboardCard(group, month)
+    buildGroupDashboardCard(group, month),
+    prisma.mealEntry.findMany({
+      where: { groupId: group.id, date: dayToUtcDate(day) },
+      select: { breakfastCount: true, lunchCount: true, dinnerCount: true }
+    })
   ]);
 
   const me = mine(thisMonth.members, userId);
   const meLast = mine(lastMonth.members, userId);
 
-  const day = todayKey();
+  const todayMeals = todayMealRows.reduce(
+    (acc, row) => ({
+      breakfast: acc.breakfast + row.breakfastCount,
+      lunch: acc.lunch + row.lunchCount,
+      dinner: acc.dinner + row.dinnerCount,
+      total: acc.total + row.breakfastCount + row.lunchCount + row.dinnerCount
+    }),
+    { breakfast: 0, lunch: 0, dinner: 0, total: 0 }
+  );
+
   const pricedDays = thisMonth.days.filter((row) => row.runningRate > 0);
   const latestPriced = pricedDays.find((row) => row.date === day) ?? pricedDays[pricedDays.length - 1] ?? null;
 
@@ -205,6 +219,7 @@ async function memberReport(userId: string, month: string) {
       dailyRate: latestPriced
         ? { date: latestPriced.date, rate: latestPriced.runningRate, isToday: latestPriced.date === day }
         : null,
+      todayMeals,
       groupMeals: thisMonth.totals.meals,
       groupExpense: thisMonth.totals.expense,
       groupBazar: thisMonth.totals.bazar,

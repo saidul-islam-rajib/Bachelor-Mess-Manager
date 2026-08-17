@@ -349,6 +349,8 @@ const en = {
     highestDay: 'Highest day',
     lowestDay: 'Lowest day',
     everyoneThisMonth: 'Everyone this month',
+    todayMealsTitle: "Today's total meals",
+    todayMealsHint: 'What the chef needs to cook today, across every member.',
     yourCost: 'Your cost',
     refund: 'Refund',
     memberCountHere: (count: number, stay: string) => `${count} member${count === 1 ? '' : 's'} · here ${stay}`,
