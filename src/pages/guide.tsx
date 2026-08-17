@@ -14,6 +14,13 @@ import {
   RolesFigure,
   SplitFigure
 } from '@/components/guide/Figures';
+import {
+  CommunityPreview,
+  DashboardPreview,
+  LoginPreview,
+  MealsPreview,
+  RegisterPreview
+} from '@/components/landing/Mockups';
 
 type Section = { id: string; title: string };
 
@@ -209,9 +216,10 @@ export default function GuidePage() {
 
           <Section id="dashboard" title="What you see when you sign in">
             <P>
-              Everything on this page is public — you are reading it without an account. What is deliberately{' '}
-              <em>not</em> public is any actual mess data. Signed out, you get the front page, this guide, and the sign
-              in and register forms. No meals, no money, no names.
+              Signed out, you can still read this guide, the front page, the sign-in and register forms, and now the{' '}
+              <Route href={ROUTES.community}>Community</Route> room too — you just cannot post in it. What stays{' '}
+              <em>private to your mess</em> is meals, money and mess comments: none of that is visible without
+              signing in and joining a mess.
             </P>
             <P>
               Sign in and the <Route href={ROUTES.dashboard}>Dashboard</Route> becomes your home. It shows a different
@@ -225,6 +233,11 @@ export default function GuidePage() {
                     "Today's meal rate, the rate for the month so far, your meals, and what you owe — in that order, big enough to read at a glance on a phone. Under it: your full balance broken down, last month for comparison, where the mess's money went, and the whole roster so you can see you are being treated the same as everyone else."
                 },
                 {
+                  term: 'Whoever is cooking asks: how many plates today?',
+                  detail:
+                    "A whole-mess total for today — breakfast, lunch and dinner counts added up across every member, not just your own — sits right below your own numbers so the chef never has to open the meals page and add it up by hand."
+                },
+                {
                   term: 'A supervisor asks: is my mess on track?',
                   detail:
                     'Group count, members, spend so far and total outstanding dues across every mess you run, then a row per mess with its meal rate and what is unpaid, who still owes, and your longest-staying members.'
@@ -236,6 +249,9 @@ export default function GuidePage() {
                 }
               ]}
             />
+            <Figure title="A member's dashboard" caption="Today's rate, the month so far, your meals and what you owe, at a glance.">
+              <DashboardPreview />
+            </Figure>
             <Callout>
               Whatever your role, the month picker at the top of the dashboard rewinds everything below it. Pick last
               March and every figure on the page is March&apos;s.
@@ -264,6 +280,14 @@ export default function GuidePage() {
                 'Want to run your own mess instead? Open Your role on your profile, ask for supervisor access, then create a group once it is granted.'
               ]}
             />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Figure title="Register" caption="Name, email and phone. We email you a link to choose your password next.">
+                <RegisterPreview />
+              </Figure>
+              <Figure title="Sign in" caption="Email and password. Forgot it? There is a link for that right underneath.">
+                <LoginPreview />
+              </Figure>
+            </div>
           </Section>
 
           <Section id="account" title="Your account, password and photo">
@@ -293,6 +317,9 @@ export default function GuidePage() {
               breakfasts, lunches and dinners they had on each day. Today and any upcoming day are always open to edit.
               Days that have already passed are locked — see <A href="#past-meals">changing a past meal</A>.
             </P>
+            <Figure title="The meals grid" caption="One row per member, one tap per meal. A tick counts it, a dash means they skipped it.">
+              <MealsPreview />
+            </Figure>
             <P>
               If you eat roughly the same way every week, set a <strong>meal plan</strong> instead of typing the same
               numbers daily. Say &quot;lunch and dinner on weekdays, nothing on Fridays&quot; once, and the app fills
@@ -362,6 +389,14 @@ export default function GuidePage() {
               <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code> to pull someone into a message —
               they get a notification, exactly like in a mess thread.
             </P>
+            <P>
+              Anyone can read the community room, even without an account — it is one of the few pages, alongside
+              this guide, that does not require signing in. Posting, reacting and getting notified about new
+              messages still need one.
+            </P>
+            <Figure title="Open to everyone, posting for members" caption="Signed-out visitors see the same feed members do — the composer just is not there for them.">
+              <CommunityPreview />
+            </Figure>
           </Section>
 
           <Section id="notifications" title="Notifications and the bell">
@@ -407,38 +442,41 @@ export default function GuidePage() {
               groceries and cooking supplies. Rent and wifi are not part of it, because someone who ate nothing this
               month still lives in the flat.
             </P>
-            <P>Supervisors choose between two ways of working it out.</P>
+            <P>
+              Everyone is charged the same way, no matter what: your cost is always your meals times one flat
+              rate — total bazar so far divided by total meals eaten so far. Supervisors can also switch on a
+              day-by-day breakdown for reference.
+            </P>
             <Definitions
               items={[
                 {
-                  term: 'One rate for the month',
+                  term: 'The rate that charges you',
                   detail:
-                    'All the bazar for the month divided by all the meals eaten in the month. Simple to explain, and it evens out a cheap week against an expensive one.'
+                    'All the bazar so far divided by all the meals eaten so far. This single number is what you are actually charged — your cost is always your meals times this rate, whichever day you ate on.'
                 },
                 {
-                  term: 'A rate for each day',
+                  term: 'A rate for each day, for reference',
                   detail:
-                    'Each day is priced on that day’s own bazar. Fairer when the mess eats very differently from day to day — a biryani Friday costs the people who were there for it, not the ones who were away.'
+                    "Switch this on and the meals table also shows what each day's own bazar worked out to per meal, so you can see which days were expensive. It never changes anyone's bill — it is shown for reference only, right next to the flat rate that does the charging."
                 }
               ]}
             />
             <Figure
-              title="Two ways to price a meal"
-              caption="Whichever mode you pick, every taka of bazar ends up charged to somebody. Bazar bought on a day nobody ate is spread across the month's meals rather than quietly disappearing."
+              title="Two numbers, one bill"
+              caption="The flat rate is what everyone is charged. The day-by-day figures alongside it explain why some days looked pricier — they are shown for reference and never change what anyone owes."
             >
               <MealRateFigure />
             </Figure>
             <P>
               You do not have to hunt for the number. At the top of the{' '}
-              <Route href={ROUTES.meals}>Meals</Route> page, <strong>Your meal rate</strong> leads with today&apos;s
-              rate in the largest type on the screen, with your own meals and what they cost you today underneath, then
-              the month-to-date rate beside them. Below that is a day-by-day list — the rate for each day, your meals on
-              it, and your cost — showing the last week with the rest one tap away.
+              <Route href={ROUTES.meals}>Meals</Route> page, <strong>Your meal rate</strong> leads with the flat
+              rate in the largest type on the screen, with your own meals and what they cost you underneath. Below
+              that is a day-by-day list — for reference only — showing the last week with the rest one tap away.
             </P>
             <P>
-              Today&apos;s rate is on your <Route href={ROUTES.dashboard}>Dashboard</Route> too. If today has no rate
-              yet — nobody has recorded bazar, or nobody has eaten — the card falls back to the most recent priced day
-              and says which one it is showing, rather than a blank.
+              The same rate is on your <Route href={ROUTES.dashboard}>Dashboard</Route> too, labelled{' '}
+              <strong>Today&apos;s rate</strong> and <strong>This month so far</strong>. They are always the same
+              number — the running total, up to and including today.
             </P>
             <Callout>
               A day is only priced once bazar has been recorded against it and somebody has eaten. Days later in the

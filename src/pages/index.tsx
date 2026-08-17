@@ -9,6 +9,7 @@ import FaqIllustration from '@/components/landing/FaqIllustration';
 import {
   BalancesPreview,
   BazarPreview,
+  CommunityPreview,
   DashboardPreview,
   MealRateDiagram,
   MealsPreview
@@ -244,6 +245,13 @@ function Screens() {
             title={landing.screens.balances.title}
             body={landing.screens.balances.body}
             preview={<BalancesPreview />}
+          />
+          <ScreenRow
+            tag={landing.screens.community.tag}
+            title={landing.screens.community.title}
+            body={landing.screens.community.body}
+            preview={<CommunityPreview />}
+            reversed
           />
         </div>
       </div>

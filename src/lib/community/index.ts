@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { appConfig, communityConfig } from '@/config';
 import { ANNOUNCEMENTS } from '@/lib/community/announcements';
-import { COMMUNITY_MESSAGE_TYPES, NOTIFICATION_TYPES, USER_STATUS } from '@/lib/constants';
+import { COMMUNITY_MESSAGE_TYPES, NOTIFICATION_TYPES, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 import { mentionIdsIn, mentionsEveryone } from '@/lib/mentions';
 import { createNotifications } from '@/lib/notifications';
@@ -301,7 +301,7 @@ export async function markRead(userId: string): Promise<void> {
 
 export async function directory(): Promise<CommunityMember[]> {
   const users = await prisma.user.findMany({
-    where: { status: USER_STATUS.APPROVED },
+    where: { status: USER_STATUS.APPROVED, role: { not: USER_ROLES.ADMIN } },
     select: { id: true, name: true, profileImage: true },
     orderBy: { name: 'asc' },
     take: communityConfig.directorySize

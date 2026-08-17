@@ -98,6 +98,25 @@ function Tile({ label, value, tone }: { label: string; value: string; tone?: 'gr
   );
 }
 
+function FieldMock({ label, value }: { label: string; value: string }) {
+  return (
+    <label className="block">
+      <span className="text-[9px] font-medium uppercase tracking-wide text-slate-400 sm:text-[10px]">{label}</span>
+      <span className="mt-1 block truncate rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+        {value}
+      </span>
+    </label>
+  );
+}
+
+function SubmitMock({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center rounded-full bg-brand-600 px-4 py-2 text-xs font-semibold text-white">
+      {label}
+    </span>
+  );
+}
+
 export function DashboardPreview() {
   const maxAmount = Math.max(...SPEND_BREAKDOWN.map((row) => row.amount));
   const viewer = BALANCE_ROWS[0];
@@ -321,6 +340,82 @@ export function BalancesPreview() {
         </table>
       </div>
       <p className="mt-3 text-[11px] text-slate-400">{strings.payments.balanceFormula}</p>
+    </AppFrame>
+  );
+}
+
+export function LoginPreview() {
+  return (
+    <AppFrame path="bachelor-point.app/auth/login" label={strings.auth.login.title}>
+      <PreviewHeading title={strings.auth.login.title} />
+      <p className="mb-3 text-[11px] leading-relaxed text-slate-500">{strings.auth.login.subtitle}</p>
+      <div className="space-y-3">
+        <FieldMock label={strings.auth.login.email} value="rakib@example.com" />
+        <FieldMock label={strings.auth.login.password} value="••••••••" />
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <span className="text-[11px] text-slate-400">{strings.auth.login.forgotLink}</span>
+        <SubmitMock label={strings.auth.login.submit} />
+      </div>
+    </AppFrame>
+  );
+}
+
+export function RegisterPreview() {
+  return (
+    <AppFrame path="bachelor-point.app/auth/register" label={strings.auth.register.title}>
+      <PreviewHeading title={strings.auth.register.title} />
+      <p className="mb-3 text-[11px] leading-relaxed text-slate-500">{strings.auth.register.subtitle}</p>
+      <div className="space-y-3">
+        <FieldMock label={strings.auth.register.name} value={MEMBERS[2]} />
+        <FieldMock label={strings.auth.register.email} value="nayeem@example.com" />
+        <FieldMock label={strings.auth.register.phone} value="+8801XXXXXXXXX" />
+      </div>
+      <div className="mt-4 flex justify-end">
+        <SubmitMock label={strings.auth.register.submit} />
+      </div>
+    </AppFrame>
+  );
+}
+
+const COMMUNITY_POSTS = [
+  {
+    name: 'Team Sober',
+    date: '3 Aug',
+    badge: strings.community.types.ANNOUNCEMENT,
+    body: strings.community.announcementsTitle + ': the community room is open to the whole app.'
+  },
+  { name: MEMBERS[1], date: '5 Aug', body: 'Anyone know a good fish market near Mirpur 10?' }
+];
+
+export function CommunityPreview() {
+  return (
+    <AppFrame path="bachelor-point.app/community" label={strings.community.title}>
+      <PreviewHeading title={strings.community.title} />
+      <div className="mb-3 rounded-full bg-slate-50 px-3 py-2 text-center text-[10px] text-slate-500">
+        {strings.community.signedOutHint}
+      </div>
+      <ul className="space-y-2.5">
+        {COMMUNITY_POSTS.map((post) => (
+          <li key={`${post.name}-${post.date}`} className="rounded-2xl border border-slate-200 p-3">
+            <div className="flex items-center gap-2">
+              <Avatar name={post.name} size="sm" />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="truncate text-xs font-medium text-slate-900">{post.name}</span>
+                  {post.badge && (
+                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-medium text-amber-700">
+                      {post.badge}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-400">{post.date}</span>
+              </div>
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-600">{post.body}</p>
+          </li>
+        ))}
+      </ul>
     </AppFrame>
   );
 }

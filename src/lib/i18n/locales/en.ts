@@ -1433,7 +1433,7 @@ const en = {
     },
     screens: {
       title: 'A look inside',
-      subtitle: 'These are the three screens you will spend your month in.',
+      subtitle: 'These are the screens you will spend your month in.',
       meals: {
         tag: 'Meals',
         title: 'One tap per meal, per person',
@@ -1448,6 +1448,11 @@ const en = {
         tag: 'Payments',
         title: 'One table that ends the debate',
         body: 'Meal share, bills share, groceries bought and cash paid, per member, for the month. A negative figure means the mess owes that person a refund.'
+      },
+      community: {
+        tag: 'Community',
+        title: 'One room every mess shares',
+        body: 'Announcements, questions and welcomes for new faces, in a single feed across every mess on the app. Anyone can read it without an account — sign in only when you want to post.'
       }
     },
     math: {
