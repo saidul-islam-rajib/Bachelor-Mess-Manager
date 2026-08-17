@@ -10,20 +10,17 @@ import { useCommunity } from '@/components/CommunityProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import {
-  ActionLink,
   Alert,
   Button,
   EmptyState,
   LoadingCard,
   PageContainer,
-  PageHeader,
   PageTitle,
   useConfirm
 } from '@/components/ui';
 import { communityConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
-import { commentsAnchorPath } from '@/lib/routes';
 
 type CommunityMember = Member & { profileImage: string | null };
 
@@ -33,7 +30,7 @@ type FeedResponse = {
   hasMore: boolean;
   members?: CommunityMember[];
   unreadCount: number;
-  currentUserId: string;
+  currentUserId: string | null;
   canMentionEveryone: boolean;
   canModerate: boolean;
   maxLength: number;
@@ -107,9 +104,8 @@ export default function CommunityPage() {
   );
 
   useEffect(() => {
-    if (!user) return;
     void load({ silent: hadCacheOnMount });
-  }, [load, user, hadCacheOnMount]);
+  }, [load, hadCacheOnMount]);
 
   const pull = useCallback(async () => {
     if (!user || !latestSeenAt.current) return;
@@ -187,32 +183,23 @@ export default function CommunityPage() {
     }
   }
 
-  if (!user) {
-    return (
-      <PageContainer>
-        <PageHeader title={strings.community.title} />
-        <Alert tone="warning">{strings.community.signedOut}</Alert>
-      </PageContainer>
-    );
-  }
-
   const canDelete = (message: CommunityMessage) =>
-    canModerate || (!message.system && message.authorId === user.id);
+    Boolean(user) && (canModerate || (!message.system && message.authorId === user?.id));
 
   return (
     <PageContainer>
       <PageTitle title={strings.community.title} />
-      <div className="mb-4 flex justify-end">
-        <ActionLink href={commentsAnchorPath()}>{strings.community.elsewhereLink}</ActionLink>
-      </div>
+      {!user && <Alert className="mb-4">{strings.community.signedOutHint}</Alert>}
 
       <div className="grid gap-4 lg:grid-cols-[65fr_35fr]">
         <div className="min-w-0 space-y-4">
-          <ComposerTrigger
-            userName={user.name}
-            userImage={user.profileImage ?? null}
-            onOpen={() => setComposerOpen(true)}
-          />
+          {user && (
+            <ComposerTrigger
+              userName={user.name}
+              userImage={user.profileImage ?? null}
+              onOpen={() => setComposerOpen(true)}
+            />
+          )}
 
           {newPostsPending > 0 && (
             <div className="flex justify-center">
@@ -256,15 +243,17 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      <Composer
-        open={composerOpen}
-        onClose={() => setComposerOpen(false)}
-        members={members}
-        maxLength={maxLength}
-        maxImagesPerPost={maxImagesPerPost}
-        allowEveryone={canMentionEveryone}
-        onPosted={onPosted}
-      />
+      {user && (
+        <Composer
+          open={composerOpen}
+          onClose={() => setComposerOpen(false)}
+          members={members}
+          maxLength={maxLength}
+          maxImagesPerPost={maxImagesPerPost}
+          allowEveryone={canMentionEveryone}
+          onPosted={onPosted}
+        />
+      )}
     </PageContainer>
   );
 }

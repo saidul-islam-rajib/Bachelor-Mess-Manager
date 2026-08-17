@@ -916,8 +916,6 @@ const en = {
     title: 'Community',
     subtitle: (app: string) =>
       `Everyone on ${app} can read this, not just your mess. Ask a question, share news, welcome new faces.`,
-    elsewhere: 'Looking for the thread only your mess can read?',
-    elsewhereLink: 'Open mess comments',
     placeholder: 'Write something for everyone...',
     post: 'Post',
     posting: 'Posting...',
@@ -951,6 +949,7 @@ const en = {
     idRequired: 'Message ID is required.',
     systemNotDeletable: 'System messages cannot be deleted.',
     signedOut: 'Sign in to join the community.',
+    signedOutHint: 'Sign in to post, react, and get notified about new messages.',
     types: {
       MEMBER: 'Member',
       WELCOME: 'Welcome',

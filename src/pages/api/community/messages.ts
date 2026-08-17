@@ -24,18 +24,14 @@ export const config = {
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req, res);
-  if (!sessionUser) {
-    return unauthorized(res, strings.community.signedOut);
-  }
-
-  const canMentionEveryone = requireAdmin(sessionUser);
 
   if (req.method === 'GET') {
     const after = queryString(req, 'after');
     const before = queryString(req, 'before');
     const limit = queryInt(req, 'limit', communityConfig.pageSize, 1, communityConfig.pageSize);
+    const canMentionEveryone = sessionUser ? requireAdmin(sessionUser) : false;
 
-    await ensureWelcomeMessage(sessionUser);
+    if (sessionUser) await ensureWelcomeMessage(sessionUser);
 
     const feed = await readFeed({ after, before, limit });
     const incremental = Boolean(after);
@@ -43,8 +39,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return ok(res, {
       ...feed,
       members: incremental ? undefined : await directory(),
-      unreadCount: await unreadCount(sessionUser.id),
-      currentUserId: sessionUser.id,
+      unreadCount: sessionUser ? await unreadCount(sessionUser.id) : 0,
+      currentUserId: sessionUser?.id ?? null,
       canMentionEveryone,
       canModerate: canMentionEveryone,
       maxLength: communityConfig.maxMessageLength,
@@ -52,6 +48,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       pollIntervalMs: communityConfig.pollIntervalMs
     });
   }
+
+  if (!sessionUser) {
+    return unauthorized(res, strings.community.signedOut);
+  }
+
+  const canMentionEveryone = requireAdmin(sessionUser);
 
   if (req.method === 'POST') {
     const { text, images } = req.body as { text?: string; images?: unknown };

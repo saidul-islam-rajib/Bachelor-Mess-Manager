@@ -110,13 +110,13 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (can(PERMISSIONS.BILL_VIEW)) messLinks.push({ href: ROUTES.bills, label: strings.nav.bills });
     if (can(PERMISSIONS.PAYMENT_VIEW)) messLinks.push({ href: ROUTES.payments, label: strings.nav.payments });
     if (can(PERMISSIONS.MEMBERSHIP_VIEW)) messLinks.push({ href: ROUTES.members, label: strings.nav.members });
-
-    appLinks.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
-    if (user.role === USER_ROLES.ADMIN) {
-      appLinks.push({ href: ROUTES.admin, label: strings.nav.admin });
-    }
-    appLinks.push({ href: ROUTES.guide, label: strings.nav.guide });
   }
+
+  appLinks.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
+  if (user?.role === USER_ROLES.ADMIN) {
+    appLinks.push({ href: ROUTES.admin, label: strings.nav.admin });
+  }
+  appLinks.push({ href: ROUTES.guide, label: strings.nav.guide });
 
   const isActive = (href: string) => router.pathname === href || router.pathname.startsWith(`${href}/`);
 
