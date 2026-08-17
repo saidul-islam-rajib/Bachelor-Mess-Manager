@@ -125,7 +125,10 @@ export default function MealsPage() {
     if (!groupId) return;
     setLoading(true);
     try {
-      const meals = await fetch(`/api/groups/${groupId}/meals?month=${month}`).then((r) => r.json());
+      const [meals] = await Promise.all([
+        fetch(`/api/groups/${groupId}/meals?month=${month}`).then((r) => r.json()),
+        loadSummary()
+      ]);
       setMembers(meals.members || []);
       setWeights(meals.weights || null);
       setCanManage(Boolean(meals.canManage));
@@ -134,7 +137,6 @@ export default function MealsPage() {
       const map: Record<string, Entry> = {};
       for (const e of meals.entries || []) map[`${e.userId}|${e.date}`] = e;
       setCells(map);
-      await loadSummary();
     } finally {
       setLoading(false);
     }
