@@ -349,9 +349,6 @@ export async function buildSettlement(
   const pricedByDay =
     effectiveMode === MEAL_RATE_MODES.DAILY ? spreadBazarOverDays(windowDays, bazarByDay, unitsByDay) : new Map();
 
-  // Day-level pricing (pricedByDay, day.rate, day.runningRate below) is informational only, for the
-  // day-by-day trend view. Everyone is actually charged the same window-wide rate — total bazar this
-  // window ÷ total weighted meals — regardless of which specific days they ate on.
   let unpricedMealUnits = 0;
   let dayPricedPaisa = 0;
   if (effectiveMode === MEAL_RATE_MODES.DAILY) {
@@ -481,8 +478,6 @@ export async function buildSettlement(
 
   const averageDayRate = dayRates.length > 0 ? round2(dayRates.reduce((a, b) => a + b, 0) / dayRates.length) : 0;
   const ratioRate = totalUnits > 0 ? round2(totalBazarPaisa / 100 / (totalUnits / WEIGHT_SCALE)) : 0;
-  // What everyone is actually charged per meal, in both rate modes. `averageDayRate` remains
-  // available separately as an unweighted, informational mean of the daily rates shown in DAILY mode.
   const headlineRate = ratioRate;
 
   const byType: Record<string, number> = {};

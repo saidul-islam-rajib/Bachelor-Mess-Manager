@@ -94,7 +94,7 @@ type MemberReport = {
     groupBazar: number;
     groupBills: number;
     byType: Record<string, number>;
-    members: { id: string; name: string; meals: number; totalCost: number; due: number; status: string }[];
+    members: { id: string; name: string; meals: number; mealCost: number; totalCost: number; due: number; status: string }[];
   } | null;
   previous: {
     month: string;
@@ -815,7 +815,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
                   {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
                 </p>
                 <p className="text-xs text-slate-500">
-                  {strings.meals.mealCount(m.meals)} · {taka(m.totalCost)}
+                  {strings.meals.mealCount(m.meals)} · {taka(m.mealCost)}
                 </p>
               </div>
               <span className={`shrink-0 font-semibold ${m.due > 0.01 ? 'text-red-600' : 'text-green-600'}`}>

@@ -126,14 +126,16 @@ async function run() {
   });
 
   report('');
-  report('Scenario: 1040 bazar on day 1 only, meals spread over days 1-5');
+  report('Scenario: bazar on day 1 only, meals spread over days 1-5');
   report('  (this is the shape from the reported screenshot)');
+
+  const TOTAL_BAZAR = 1040;
 
   await prisma.expenseEntry.create({
     data: {
       groupId,
       type: 'BAZAR',
-      amount: 1040,
+      amount: TOTAL_BAZAR,
       date: new Date(`${day(1)}T00:00:00.000Z`),
       payerId: supervisor.id,
       splitMethod: 'MEAL',
@@ -167,6 +169,39 @@ async function run() {
     }
   }
 
+  const mealsByUser = {};
+  for (const entry of plan) {
+    for (const [userId, meals] of entry.rows) {
+      mealsByUser[userId] = (mealsByUser[userId] ?? 0) + meals;
+    }
+  }
+  const expectedTotalMeals = Object.values(mealsByUser).reduce((a, b) => a + b, 0);
+  const expectedFlatRate = Math.round((TOTAL_BAZAR / expectedTotalMeals) * 100) / 100;
+  const expectedPricedDays = plan.filter((entry) => entry.rows.some(([, meals]) => meals > 0)).length;
+
+  function allocatePaisa(totalPaisa, weights) {
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+    if (totalWeight <= 0) return weights.map(() => 0);
+    const exact = weights.map((w) => (totalPaisa * w) / totalWeight);
+    const shares = exact.map((v) => Math.floor(v));
+    let remainder = totalPaisa - shares.reduce((a, b) => a + b, 0);
+    const order = exact
+      .map((v, i) => ({ i, fraction: v - Math.floor(v) }))
+      .sort((a, b) => b.fraction - a.fraction || a.i - b.i);
+    for (let k = 0; remainder > 0 && k < order.length; k++) {
+      shares[order[k].i] += 1;
+      remainder -= 1;
+    }
+    return shares;
+  }
+
+  const userOrder = [supervisor.id, memberA.id, memberB.id];
+  const expectedShares = allocatePaisa(
+    Math.round(TOTAL_BAZAR * 100),
+    userOrder.map((id) => mealsByUser[id])
+  );
+  const expectedCostByUser = Object.fromEntries(userOrder.map((id, i) => [id, expectedShares[i] / 100]));
+
   const res = await sup.request('GET', `/api/groups/${groupId}/payments?month=${month}`);
   const data = res.body;
   const members = data.members;
@@ -179,30 +214,46 @@ async function run() {
   report(`  rate mode     requested=${data.rateMode} effective=${data.effectiveRateMode}`);
   report('');
 
-  check('total meals counted correctly', near(data.totals.meals, 15), `got ${data.totals.meals}`);
+  check('total meals counted correctly', near(data.totals.meals, expectedTotalMeals), `got ${data.totals.meals}`);
   check(
     'day-by-day pricing stays in force, no fallback',
     data.effectiveRateMode === 'DAILY' && data.rateModeFallbackReason === null,
     `${data.effectiveRateMode}/${data.rateModeFallbackReason}`
   );
-  check('the one shop is spread over the 5 days that ate', data.totals.pricedDays === 5, String(data.totals.pricedDays));
   check(
-    'headline rate is bazar / meals; the day average is tracked separately',
-    near(data.totals.mealRate, 69.33) && near(data.totals.averageDayRate, 77.65),
-    `mealRate ${data.totals.mealRate}, averageDayRate ${data.totals.averageDayRate}`
+    'the one shop is spread over every day that ate',
+    data.totals.pricedDays === expectedPricedDays,
+    String(data.totals.pricedDays)
+  );
+  check(
+    'headline rate is total bazar / total meals for this scenario',
+    near(data.totals.mealRate, expectedFlatRate) && near(data.totals.mealRate, data.totals.ratioRate),
+    `mealRate ${data.totals.mealRate}, expected ${expectedFlatRate}, ratioRate ${data.totals.ratioRate}`
   );
 
   const allocated = members.reduce((acc, m) => acc + m.mealCost, 0);
-  check('every taka of bazar is charged to somebody', near(allocated, 1040), `allocated ${allocated.toFixed(2)}`);
+  check('every taka of bazar is charged to somebody', near(allocated, TOTAL_BAZAR), `allocated ${allocated.toFixed(2)}`);
 
   for (const m of members) {
     check(`${m.name} charged > 0 for their meals`, m.mealCost > 0, `mealCost ${m.mealCost}`);
   }
 
   const byId = Object.fromEntries(members.map((m) => [m.id, m]));
-  check('supervisor ate 4 meals', near(byId[supervisor.id].meals, 4), String(byId[supervisor.id].meals));
-  check('member A ate 6 meals', near(byId[memberA.id].meals, 6), String(byId[memberA.id].meals));
-  check('member B ate 5 meals', near(byId[memberB.id].meals, 5), String(byId[memberB.id].meals));
+  check(
+    'supervisor meal count matches what was logged',
+    near(byId[supervisor.id].meals, mealsByUser[supervisor.id]),
+    String(byId[supervisor.id].meals)
+  );
+  check(
+    'member A meal count matches what was logged',
+    near(byId[memberA.id].meals, mealsByUser[memberA.id]),
+    String(byId[memberA.id].meals)
+  );
+  check(
+    'member B meal count matches what was logged',
+    near(byId[memberB.id].meals, mealsByUser[memberB.id]),
+    String(byId[memberB.id].meals)
+  );
 
   check(
     'cost is proportional to meals eaten (A pays more than B)',
@@ -210,17 +261,16 @@ async function run() {
     `A ${byId[memberA.id].mealCost} vs B ${byId[memberB.id].mealCost}`
   );
   check(
-    'member A is charged meals x the flat month rate, regardless of which days they ate',
-    near(byId[memberA.id].mealCost, 416.0, 0.02),
-    `${byId[memberA.id].mealCost}`
-  );
-  check(
-    'charging meals x the month rate adds back to the total bazar',
-    near(members.reduce((acc, m) => acc + m.meals * data.totals.mealRate, 0), 1040, 0.5),
-    `${members.reduce((acc, m) => acc + m.meals * data.totals.mealRate, 0).toFixed(2)}`
+    'each member is charged exactly their meals x the flat month rate, split to the paisa',
+    userOrder.every((id) => near(byId[id].mealCost, expectedCostByUser[id], 0.01)),
+    userOrder.map((id) => `${byId[id].mealCost} vs ${expectedCostByUser[id]}`).join(', ')
   );
 
-  check('grocery buyer credited the full 1040', near(byId[supervisor.id].bazarPaid, 1040), String(byId[supervisor.id].bazarPaid));
+  check(
+    'grocery buyer credited the full bazar amount',
+    near(byId[supervisor.id].bazarPaid, TOTAL_BAZAR),
+    String(byId[supervisor.id].bazarPaid)
+  );
 
   report('');
   report('  Day table:');
@@ -229,7 +279,7 @@ async function run() {
     dayCostSum += d.cost;
     report(`    ${d.date}  meals ${String(d.meals).padStart(4)}  bazar ${String(d.bazar).padStart(8)}  used ${String(d.charged).padStart(8)}  rate ${String(d.rate).padStart(7)}  charged ${String(d.cost).padStart(8)}`);
   }
-  check('day charges add back to total bazar', near(dayCostSum, 1040, 0.05), `sum ${dayCostSum.toFixed(2)}`);
+  check('day charges add back to total bazar', near(dayCostSum, TOTAL_BAZAR, 0.05), `sum ${dayCostSum.toFixed(2)}`);
   check('no day with meals shows a zero rate', data.days.every((d) => d.meals === 0 || d.rate > 0));
 
   const eatenDays = data.days.filter((d) => d.meals > 0);

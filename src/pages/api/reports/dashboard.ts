@@ -177,7 +177,7 @@ async function memberReport(userId: string, month: string) {
   const meLast = mine(lastMonth.members, userId);
 
   const day = todayKey();
-  const pricedDays = thisMonth.days.filter((row) => row.rate > 0);
+  const pricedDays = thisMonth.days.filter((row) => row.runningRate > 0);
   const latestPriced = pricedDays.find((row) => row.date === day) ?? pricedDays[pricedDays.length - 1] ?? null;
 
   return {
@@ -202,7 +202,9 @@ async function memberReport(userId: string, month: string) {
       status: me?.status ?? 'PENDING',
       mealRate: thisMonth.totals.mealRate,
       rateMode: thisMonth.effectiveRateMode,
-      dailyRate: latestPriced ? { date: latestPriced.date, rate: latestPriced.rate, isToday: latestPriced.date === day } : null,
+      dailyRate: latestPriced
+        ? { date: latestPriced.date, rate: latestPriced.runningRate, isToday: latestPriced.date === day }
+        : null,
       groupMeals: thisMonth.totals.meals,
       groupExpense: thisMonth.totals.expense,
       groupBazar: thisMonth.totals.bazar,
@@ -212,6 +214,7 @@ async function memberReport(userId: string, month: string) {
         id: m.id,
         name: m.name,
         meals: m.meals,
+        mealCost: m.mealCost,
         totalCost: m.totalCost,
         due: m.due,
         status: m.status
