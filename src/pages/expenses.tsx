@@ -380,7 +380,7 @@ export default function ExpensesPage() {
                                   </td>
                                 )}
 
-                                <td className="px-3 py-3">
+                                <td className="px-3 py-3 align-middle">
                                   <span className="font-medium">{expense.payer?.name ?? 'Unknown'}</span>
                                   {expense.payer?.id === user?.id && (
                                     <span className="ml-1 text-xs text-green-600">(you)</span>
@@ -411,7 +411,7 @@ export default function ExpensesPage() {
                                   {taka(expense.amount)}
                                 </td>
 
-                                <td className="px-3 py-3">
+                                <td className="px-3 py-3 align-middle">
                                   <CommentBox
                                     comments={expense.comments}
                                     currentUserId={user?.id}
