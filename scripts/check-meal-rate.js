@@ -174,8 +174,8 @@ async function run() {
   report('');
   report(`  total bazar   ${data.totals.bazar}`);
   report(`  total meals   ${data.totals.meals}`);
-  report(`  average rate  ${data.totals.mealRate}  (mean of ${data.totals.pricedDays} daily rates)`);
-  report(`  ratio rate    ${data.totals.ratioRate}  (bazar / meals, for comparison)`);
+  report(`  month rate    ${data.totals.mealRate}  (bazar / meals — what everyone is charged)`);
+  report(`  day average   ${data.totals.averageDayRate}  (mean of ${data.totals.pricedDays} daily rates, reference only)`);
   report(`  rate mode     requested=${data.rateMode} effective=${data.effectiveRateMode}`);
   report('');
 
@@ -187,9 +187,9 @@ async function run() {
   );
   check('the one shop is spread over the 5 days that ate', data.totals.pricedDays === 5, String(data.totals.pricedDays));
   check(
-    'headline rate is the average of the daily rates, not bazar / meals',
-    near(data.totals.mealRate, 77.65) && near(data.totals.ratioRate, 69.33),
-    `average ${data.totals.mealRate}, ratio ${data.totals.ratioRate}`
+    'headline rate is bazar / meals; the day average is tracked separately',
+    near(data.totals.mealRate, 69.33) && near(data.totals.averageDayRate, 77.65),
+    `mealRate ${data.totals.mealRate}, averageDayRate ${data.totals.averageDayRate}`
   );
 
   const allocated = members.reduce((acc, m) => acc + m.mealCost, 0);
@@ -210,14 +210,14 @@ async function run() {
     `A ${byId[memberA.id].mealCost} vs B ${byId[memberB.id].mealCost}`
   );
   check(
-    'member A is charged the sum of their day shares, not average x meals',
-    near(byId[memberA.id].mealCost, 429.86, 0.02),
+    'member A is charged meals x the flat month rate, regardless of which days they ate',
+    near(byId[memberA.id].mealCost, 416.0, 0.02),
     `${byId[memberA.id].mealCost}`
   );
   check(
-    'charging average x meals would not have added up',
-    Math.abs(members.reduce((acc, m) => acc + m.meals * data.totals.mealRate, 0) - 1040) > 1,
-    'the two methods happen to agree here, so this case no longer proves anything'
+    'charging meals x the month rate adds back to the total bazar',
+    near(members.reduce((acc, m) => acc + m.meals * data.totals.mealRate, 0), 1040, 0.5),
+    `${members.reduce((acc, m) => acc + m.meals * data.totals.mealRate, 0).toFixed(2)}`
   );
 
   check('grocery buyer credited the full 1040', near(byId[supervisor.id].bazarPaid, 1040), String(byId[supervisor.id].bazarPaid));
@@ -244,9 +244,9 @@ async function run() {
     JSON.stringify(eatenDays.map((d) => `${d.meals}m=${d.rate}`))
   );
   check(
-    'the average equals the mean of the day rates shown',
-    near(data.totals.mealRate, eatenDays.reduce((a, d) => a + d.rate, 0) / eatenDays.length, 0.02),
-    `${data.totals.mealRate}`
+    'averageDayRate equals the mean of the day rates shown',
+    near(data.totals.averageDayRate, eatenDays.reduce((a, d) => a + d.rate, 0) / eatenDays.length, 0.02),
+    `${data.totals.averageDayRate}`
   );
 
   report('');

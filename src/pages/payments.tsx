@@ -832,33 +832,25 @@ function MealRateBreakdown({
         </span>
       </div>
 
-      {daily ? (
-        <p className="mt-1 text-sm text-slate-500">
-          Average meal rate ={' '}
-          <span className="font-semibold text-slate-900">{taka(totals.averageDayRate)}</span> per meal — the mean of
-          the {totals.pricedDays} daily rates below. Each day is priced on its own, so what everyone owes comes from
-          the day rates, not from this average.
-        </p>
-      ) : (
-        <p className="mt-1 text-sm text-slate-500">
-          Month rate = {taka(totals.bazar)} bazar ÷ {totals.meals} meals ={' '}
-          <span className="font-semibold text-slate-900">{taka(totals.mealRate)}</span> per meal.
-        </p>
-      )}
+      <p className="mt-1 text-sm text-slate-500">
+        Month rate = {taka(totals.bazar)} bazar ÷ {totals.meals} meals ={' '}
+        <span className="font-semibold text-slate-900">{taka(totals.mealRate)}</span> per meal. This is what everyone
+        is charged, no matter which day they ate.
+      </p>
 
       {daily && (
         <p className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-600">
-          Each shopping trip is spread over the days it fed the mess — from the day it was bought until the next trip.
-          A day&apos;s rate is its share of that bazar divided by the meals eaten that day, so a quiet day costs more
-          per meal than a busy one. Every taka still lands on somebody: the charges below add back to{' '}
-          {taka(totals.bazar)}.
+          Each shopping trip is spread over the days it fed the mess — from the day it was bought until the next trip
+          — so the table below can also show each day&apos;s own price, averaging {taka(totals.averageDayRate)}/meal
+          across the {totals.pricedDays} priced days. A quiet day looks pricier per meal than a busy one, because the
+          same bazar fed fewer people — that&apos;s shown for reference only and never changes anyone&apos;s bill.
         </p>
       )}
 
-      {!daily && totals.unallocatedBazar > 0.005 && (
+      {daily && totals.unallocatedBazar > 0.005 && (
         <p className="mt-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
-          {taka(totals.unallocatedBazar)} of bazar fell on days with no meals. It has been shared across the
-          month&apos;s meals rather than dropped.
+          {taka(totals.unallocatedBazar)} of bazar fell on days with no recorded meals, so the day-by-day table
+          couldn&apos;t price it against a specific day. It&apos;s still included in the month rate above.
         </p>
       )}
 
@@ -880,7 +872,9 @@ function MealRateBreakdown({
                 >
                   Running rate
                 </th>
-                <th className="px-3 py-2 text-right">Charged that day</th>
+                <th className="px-3 py-2 text-right" title="What that day's meals would have cost at that day's own price. Reference only.">
+                  At that day&apos;s price
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -904,7 +898,7 @@ function MealRateBreakdown({
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
-                <td className="px-3 py-2">{daily ? 'Average' : 'Total'}</td>
+                <td className="px-3 py-2">Total</td>
                 <td className="px-3 py-2 text-right">{totals.meals}</td>
                 <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>
                 {daily && <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>}

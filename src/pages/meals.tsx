@@ -246,6 +246,7 @@ export default function MealsPage() {
 
   const myDailyRates = useMemo<DailyRate[]>(() => {
     const weight = weights ?? { breakfast: 1, lunch: 1, dinner: 1 };
+    const flatRate = summary?.totals.mealRate ?? 0;
 
     return (summary?.days ?? []).map((day) => {
       const mine = cells[`${user?.id}|${day.date}`];
@@ -258,12 +259,12 @@ export default function MealsPage() {
         runningRate: day.runningRate,
         groupMeals: day.meals,
         myMeals,
-        myCost: round2(myMeals * day.perMealPrice)
+        myCost: round2(myMeals * flatRate)
       };
     });
-  }, [summary?.days, cells, weights, user?.id]);
+  }, [summary?.days, summary?.totals.mealRate, cells, weights, user?.id]);
 
-  const finalRunningRate = summary && summary.days.length > 0 ? summary.days[summary.days.length - 1].runningRate : 0;
+  const finalRunningRate = summary?.totals.mealRate ?? 0;
 
   const rateNote = useMemo(() => {
     const through = summary?.through;

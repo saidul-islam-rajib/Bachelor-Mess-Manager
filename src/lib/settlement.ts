@@ -343,48 +343,33 @@ export async function buildSettlement(
 
   const mealCostByMember = new Int32Array(memberIds.length);
   const totalUnits = unitsByMember.reduce((a, b) => a + b, 0);
-  let unallocatedPaisa = 0;
 
   const windowDays = daySpanKeys(start, windowEnd);
   const effectiveMode = rateMode;
   const pricedByDay =
     effectiveMode === MEAL_RATE_MODES.DAILY ? spreadBazarOverDays(windowDays, bazarByDay, unitsByDay) : new Map();
 
+  // Day-level pricing (pricedByDay, day.rate, day.runningRate below) is informational only, for the
+  // day-by-day trend view. Everyone is actually charged the same window-wide rate — total bazar this
+  // window ÷ total weighted meals — regardless of which specific days they ate on.
   let unpricedMealUnits = 0;
+  let dayPricedPaisa = 0;
   if (effectiveMode === MEAL_RATE_MODES.DAILY) {
     for (const [day, dayUnits] of unitsByDay) {
       if ((pricedByDay.get(day) ?? 0) <= 0) {
         unpricedMealUnits += [...dayUnits.values()].reduce((a, b) => a + b, 0);
       }
     }
+    for (const paisa of pricedByDay.values()) dayPricedPaisa += paisa;
   }
+  const unallocatedPaisa = totalBazarPaisa - dayPricedPaisa;
 
-  if (effectiveMode === MEAL_RATE_MODES.DAILY) {
-    let spreadPaisa = 0;
-    for (const [day, dayBazarPaisa] of pricedByDay) {
-      const dayUnits = unitsByDay.get(day);
-      if (!dayUnits) continue;
-
-      spreadPaisa += dayBazarPaisa;
-      const entries = [...dayUnits.entries()];
-      const shares = allocate(dayBazarPaisa, entries.map(([, units]) => units));
-      entries.forEach(([index], i) => {
-        mealCostByMember[index] += shares[i];
-      });
-    }
-    unallocatedPaisa = totalBazarPaisa - spreadPaisa;
-  } else {
-    unallocatedPaisa = totalBazarPaisa;
-  }
-
-  if (unallocatedPaisa !== 0) {
-    if (totalUnits > 0) {
-      const shares = allocate(unallocatedPaisa, [...unitsByMember]);
-      for (let i = 0; i < shares.length; i++) mealCostByMember[i] += shares[i];
-    } else if (memberIds.length > 0) {
-      const shares = allocate(unallocatedPaisa, memberIds.map(() => 1));
-      for (let i = 0; i < shares.length; i++) mealCostByMember[i] += shares[i];
-    }
+  if (totalUnits > 0) {
+    const shares = allocate(totalBazarPaisa, [...unitsByMember]);
+    for (let i = 0; i < shares.length; i++) mealCostByMember[i] += shares[i];
+  } else if (memberIds.length > 0 && totalBazarPaisa !== 0) {
+    const shares = allocate(totalBazarPaisa, memberIds.map(() => 1));
+    for (let i = 0; i < shares.length; i++) mealCostByMember[i] += shares[i];
   }
 
   const billShareByMember = new Int32Array(memberIds.length);
@@ -496,7 +481,9 @@ export async function buildSettlement(
 
   const averageDayRate = dayRates.length > 0 ? round2(dayRates.reduce((a, b) => a + b, 0) / dayRates.length) : 0;
   const ratioRate = totalUnits > 0 ? round2(totalBazarPaisa / 100 / (totalUnits / WEIGHT_SCALE)) : 0;
-  const headlineRate = effectiveMode === MEAL_RATE_MODES.DAILY ? averageDayRate : ratioRate;
+  // What everyone is actually charged per meal, in both rate modes. `averageDayRate` remains
+  // available separately as an unweighted, informational mean of the daily rates shown in DAILY mode.
+  const headlineRate = ratioRate;
 
   const byType: Record<string, number> = {};
   for (const row of billTypeRows) byType[row.type] = round2(row._sum.amount ?? 0);

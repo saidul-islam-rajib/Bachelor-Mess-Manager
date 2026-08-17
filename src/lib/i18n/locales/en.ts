@@ -438,11 +438,11 @@ const en = {
       'These two settings decide how the meal rate is priced and what happens to unpaid balances at month end.',
     rateLabel: 'Meal rate',
     rateMonthly: 'One rate for the month (total bazar ÷ total meals)',
-    rateDaily: 'A rate for each day (that day\'s share of bazar ÷ that day\'s meals)',
+    rateDaily: 'Same month rate, plus each day\'s own price shown for reference',
     rateMonthlyHint:
       'One monthly rate is the simplest to explain and evens out days when bazar was unusually cheap or expensive. Every day in the meal table shows the same number.',
     rateDailyHint:
-      'Each shopping trip is spread over the days it fed the mess, so every day gets its own rate and a quiet day costs more per meal than a busy one. The headline rate becomes the average of those daily rates.',
+      'Everyone is still charged one flat rate for the month — total bazar ÷ total meals. This just adds each day\'s own price to the meal table, spread from the shopping trip that fed it, so you can see which days were expensive. A quiet day shows a higher price per meal than a busy one, but it never changes anyone\'s bill.',
     rateSaved: 'Meal rate updated.',
     carryLabel: 'Carry unpaid balances into the next month',
     carryHint:
@@ -627,7 +627,7 @@ const en = {
     hideEveryone: 'Hide everyone else',
     editingFor: (name: string) => `Editing ${name}`,
     dailyCostNote:
-      "This group prices each day on its own bazar, so your cost is the sum of what each day you ate actually cost — not your meals times the month's average rate above. A quiet day can cost more per meal than a busy one, because the same bazar fed fewer people. Open the day-by-day breakdown further down the page to see exactly how your total adds up.",
+      "This group shows each day's own price for reference — a quiet day can look pricier per meal than a busy one, because the same bazar fed fewer people. It doesn't change your bill: your cost is always your meals times the month's rate above.",
     ratedThrough: (day: string) =>
       `The meal rate and everyone's cost are worked out from bazar and meals up to ${day}. Later days show planned meals only and are not priced yet.`,
     notStartedYet: 'This month has not started. The numbers below are planned meals only — nothing is priced yet.',
@@ -661,7 +661,7 @@ const en = {
       colGroupMeals: 'Mess',
       colRunningRate: 'Running',
       noPricedDays: 'No day has been priced yet this month.',
-      modeDaily: 'Charged day by day, from the bazar that fed each day',
+      modeDaily: 'Priced day by day for reference; charged at the month\'s flat rate',
       modeMonthly: 'Charged one flat rate for the whole month',
       runningRateColumn: 'Running rate',
       runningRateHint:
