@@ -206,7 +206,7 @@ function ScreenRow({
   return (
     <div className="grid items-center gap-6 sm:gap-10 lg:grid-cols-2 lg:gap-16">
       <Reveal className={reversed ? 'lg:order-2' : undefined}>
-        <span className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">
+        <span className="inline-flex items-center rounded-full bg-brand-600 px-3 py-1 text-xs font-medium text-white">
           {tag}
         </span>
         <h3 className="mt-4 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">{title}</h3>

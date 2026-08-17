@@ -415,7 +415,7 @@ export default function MembersPage() {
                               {member.name}
                               {member.id === user?.id && <span className="ml-1 text-xs text-green-600">(you)</span>}
                               {member.isSupervisor && (
-                                <span className="ml-2 rounded-full bg-slate-900 px-2 py-0.5 text-xs font-normal text-white">
+                                <span className="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-normal text-white">
                                   supervisor
                                 </span>
                               )}
