@@ -896,7 +896,7 @@ function MealRateBreakdown({
                 </tr>
               ))}
             </tbody>
-            <tfoot>
+            <tfoot className="sticky bottom-0">
               <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
                 <td className="px-3 py-2">Total</td>
                 <td className="px-3 py-2 text-right">{totals.meals}</td>
