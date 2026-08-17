@@ -4,6 +4,7 @@ import { useCurrentUser } from '@/components/UserProvider';
 import { useInvitations } from '@/components/InvitationsProvider';
 import InvitationCard from '@/components/InvitationCard';
 import RoleRequestPanel from '@/components/RoleRequestPanel';
+import { ProfilePhotoCropModal } from '@/components/ProfilePhotoCropModal';
 import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
 import { Badge, Collapsible, EmptyState, ImageViewer, PageTitle } from '@/components/ui';
@@ -301,6 +302,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [maxBytes, setMaxBytes] = useState(uploadConfig.maxImageBytes);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -318,7 +320,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
     };
   }, []);
 
-  async function upload(event: ChangeEvent<HTMLInputElement>) {
+  function selectFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
     event.target.value = '';
@@ -333,15 +335,11 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
       return;
     }
 
-    setBusy(true);
-    try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result));
-        reader.onerror = () => reject(new Error(strings.uploads.imageUnreadable));
-        reader.readAsDataURL(file);
-      });
+    setPendingFile(file);
+  }
 
+  async function saveCropped(dataUrl: string) {
+    try {
       const res = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -353,10 +351,10 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
       evictCachedUpload(image);
       toast.success(strings.profile.photoUpdated);
       onChanged();
+      setPendingFile(null);
     } catch (err) {
       toast.error((err as Error).message);
-    } finally {
-      setBusy(false);
+      throw err;
     }
   }
 
@@ -387,76 +385,80 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
     .join('');
 
   return (
-    <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6">
-      {image ? (
-        <ImageViewer src={image} alt={name} title="Profile photo">
-          {(open) => (
-            <button
-              type="button"
-              onClick={open}
-              aria-label={strings.common.viewImage}
-              title={strings.common.viewImage}
-              className="group relative h-20 w-20 shrink-0 cursor-zoom-in overflow-hidden rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
-            >
-              <img src={image} alt="" className="h-full w-full rounded-full object-cover" />
-              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-900/45 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="m20 20-3.5-3.5" />
-                  <path d="M11 8v6M8 11h6" />
-                </svg>
-              </span>
-            </button>
-          )}
-        </ImageViewer>
-      ) : (
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-xl font-medium text-slate-600">
-          {initials || '?'}
-        </span>
-      )}
+    <>
+      <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6">
+        {image ? (
+          <ImageViewer src={image} alt={name} title="Profile photo">
+            {(open) => (
+              <button
+                type="button"
+                onClick={open}
+                aria-label={strings.common.viewImage}
+                title={strings.common.viewImage}
+                className="group relative h-20 w-20 shrink-0 cursor-zoom-in overflow-hidden rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+              >
+                <img src={image} alt="" className="h-full w-full rounded-full object-cover" />
+                <span className="absolute inset-0 flex items-center justify-center rounded-full bg-slate-900/45 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                  <svg
+                    width="22"
+                    height="22"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" />
+                    <path d="M11 8v6M8 11h6" />
+                  </svg>
+                </span>
+              </button>
+            )}
+          </ImageViewer>
+        ) : (
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-xl font-medium text-slate-600">
+            {initials || '?'}
+          </span>
+        )}
 
-      <div>
-        <p className="text-sm font-medium text-slate-700">{strings.profile.photo}</p>
-        <p className="text-xs text-slate-500">{strings.profile.photoHint(formatBytes(maxBytes))}</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={busy}
-            className="rounded-full border border-slate-300 px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            {busy ? strings.profile.working : image ? strings.profile.changePhoto : strings.profile.uploadPhoto}
-          </button>
-          {image && (
+        <div>
+          <p className="text-sm font-medium text-slate-700">{strings.profile.photo}</p>
+          <p className="text-xs text-slate-500">{strings.profile.photoHint(formatBytes(maxBytes))}</p>
+          <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={remove}
+              onClick={() => inputRef.current?.click()}
               disabled={busy}
-              className="rounded-full border border-red-200 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+              className="rounded-full border border-slate-300 px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
             >
-              {strings.profile.removePhoto}
+              {busy ? strings.profile.working : image ? strings.profile.changePhoto : strings.profile.uploadPhoto}
             </button>
-          )}
+            {image && (
+              <button
+                type="button"
+                onClick={remove}
+                disabled={busy}
+                className="rounded-full border border-red-200 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+              >
+                {strings.profile.removePhoto}
+              </button>
+            )}
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept={ACCEPTED_IMAGE_TYPES.join(',')}
+            onChange={selectFile}
+            className="hidden"
+          />
         </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ACCEPTED_IMAGE_TYPES.join(',')}
-          onChange={upload}
-          className="hidden"
-        />
       </div>
-    </div>
+
+      <ProfilePhotoCropModal file={pendingFile} onCancel={() => setPendingFile(null)} onCropped={saveCropped} />
+    </>
   );
 }
 

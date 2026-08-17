@@ -102,7 +102,10 @@ export default function GuidePage() {
       </div>
 
       <div className="mx-auto max-w-content gap-10 px-4 py-10 lg:flex lg:py-14">
-        <nav aria-label="On this page" className="mb-8 lg:sticky lg:top-24 lg:mb-0 lg:h-fit lg:w-60 lg:shrink-0">
+        <nav
+          aria-label="On this page"
+          className="scrollbar-thin mb-8 lg:sticky lg:top-24 lg:mb-0 lg:h-fit lg:max-h-[calc(100vh-7rem)] lg:w-60 lg:shrink-0 lg:overflow-y-auto"
+        >
           <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">On this page</p>
           <ul className="mt-2 space-y-0.5">
             {SECTIONS.map((section) => (
