@@ -837,6 +837,7 @@ model Comment {
   text          String
   deletedAt     DateTime?
   replies       CommentReply[]
+  images        CommentImage[]
   createdAt     DateTime       @default(now())
   createdById   String?
   updatedAt     DateTime       @default(now()) @updatedAt
@@ -846,6 +847,23 @@ model Comment {
   unpublishedAt DateTime?
 
   @@index([groupId, createdAt])
+}
+
+model CommentImage {
+  id            String    @id @default(uuid())
+  comment       Comment   @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  commentId     String
+  url           String
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  createdById   String?
+  updatedAt     DateTime  @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean   @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([commentId])
 }
 
 model CommunityMessage {

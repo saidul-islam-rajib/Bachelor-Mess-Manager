@@ -75,7 +75,7 @@ export default function MembersPage() {
   const [busy, setBusy] = useState('');
   const [tab, setTab] = useState<Tab>('roster');
   const [profileId, setProfileId] = useState<string | null>(null);
-  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(true);
   const commentsSection = useRef<HTMLDivElement>(null);
 
   const selectedGroup = useMemo(() => groups.find((group) => group.id === groupId), [groups, groupId]);

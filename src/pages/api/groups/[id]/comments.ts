@@ -7,9 +7,17 @@ import { NOTIFICATION_TYPES } from '@/lib/constants';
 import { notifyMentions } from '@/lib/notifications';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
+import { communityConfig } from '@/config';
+import { saveImage } from '@/lib/uploads';
 import { withAudit } from '@/lib/with-audit';
 
 const MAX_LENGTH = 1000;
+
+export const config = {
+  api: {
+    bodyParser: { sizeLimit: '54mb' }
+  }
+};
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req);
@@ -47,6 +55,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         where: { groupId, deletedAt: null },
         include: {
           user: { select: { id: true, name: true } },
+          images: { select: { url: true }, orderBy: { sortOrder: 'asc' } },
           replies: {
             where: { deletedAt: null },
             include: { user: { select: { id: true, name: true } } },
@@ -71,6 +80,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       text: c.text,
       authorId: c.userId,
       authorName: c.user.name,
+      images: c.images.map((image) => image.url),
       createdAt: c.createdAt.toISOString(),
       replies: c.replies.map((r) => ({
         id: r.id,
@@ -110,18 +120,43 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return forbidden(res, strings.errors.permissionDenied);
     }
 
-    const { text } = req.body as { text?: string };
+    const { text, images } = req.body as { text?: string; images?: unknown };
     const value = typeof text === 'string' ? text.trim() : '';
+    const imageInputs = Array.isArray(images) ? images.filter((item): item is string => typeof item === 'string') : [];
 
-    if (!value) {
-      return badRequest(res, 'Write something first.');
+    if (!value && imageInputs.length === 0) {
+      return badRequest(res, strings.comments.textRequired);
     }
     if (value.length > MAX_LENGTH) {
-      return badRequest(res, `Keep it under ${MAX_LENGTH} characters.`);
+      return badRequest(res, strings.comments.tooLong(MAX_LENGTH));
+    }
+    if (imageInputs.length > communityConfig.maxImagesPerPost) {
+      return badRequest(res, strings.comments.tooManyImages(communityConfig.maxImagesPerPost));
+    }
+
+    const savedImages: string[] = [];
+    for (const dataUrl of imageInputs) {
+      const saved = await saveImage(dataUrl, sessionUser.id);
+      if (!saved.ok) return badRequest(res, saved.error);
+      savedImages.push(saved.url);
     }
 
     const comment = await prisma.comment.create({
-      data: { userId: sessionUser.id, groupId, text: value }
+      data: {
+        userId: sessionUser.id,
+        groupId,
+        text: value,
+        images: savedImages.length
+          ? {
+              create: savedImages.map((url, index) => ({
+                url,
+                sortOrder: index,
+                createdById: sessionUser.id,
+                updatedById: sessionUser.id
+              }))
+            }
+          : undefined
+      }
     });
 
     await notifyMentions({
@@ -137,6 +172,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         text: comment.text,
         authorId: sessionUser.id,
         authorName: sessionUser.name,
+        images: savedImages,
         createdAt: comment.createdAt.toISOString(),
         replies: []
       }
@@ -146,4 +182,4 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   return methodNotAllowed(res, ['GET', 'POST']);
 }
 
-export default withAudit(handler);
+export default withAudit(handler, { maxRequestBodyBytes: communityConfig.postMaxRequestBodyBytes });
