@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { ROUTES } from '@/lib/routes';
@@ -80,6 +80,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { unreadCount: communityUnread } = useCommunity();
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const headerRef = useRef<HTMLElement>(null);
 
   const isAuthPage = router.pathname.startsWith('/auth');
 
@@ -96,8 +97,16 @@ export default function Layout({ children }: { children: ReactNode }) {
       if (event.key === 'Escape') setOpen(false);
     }
 
+    function onPointerDown(event: MouseEvent) {
+      if (headerRef.current && !headerRef.current.contains(event.target as Node)) setOpen(false);
+    }
+
     document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
+    document.addEventListener('mousedown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('mousedown', onPointerDown);
+    };
   }, [open]);
 
   const messLinks: NavLink[] = [];
@@ -134,7 +143,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </a>
       <UpdateBanner />
       <InstallAppBanner />
-      <header className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
+      <header ref={headerRef} className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
         {impersonating && (
           <div className="bg-amber-500 text-amber-950">
             <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-sm">
@@ -196,7 +205,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             ) : null}
           </nav>
 
-          {(user || showAuthLinks) && (
+          {(user || showAuthLinks || appLinks.length > 0 || messLinks.length > 0) && (
             <div className="flex items-center gap-1 lg:hidden">
               {user && <NotificationBell />}
               {user && <ProfileMenu />}
@@ -218,7 +227,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         {open && (
           <nav
             id="mobile-nav"
-            className="safe-bottom max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-slate-100 bg-white px-4 pb-4 pt-3 text-sm lg:hidden"
+            className="safe-bottom max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-slate-100 bg-white px-4 pb-6 pt-3 text-sm lg:hidden"
           >
             <div className="mx-auto flex max-w-content flex-col gap-1">
               {messLinks.length > 0 && <MobileNavHeading>{strings.nav.sectionMess}</MobileNavHeading>}

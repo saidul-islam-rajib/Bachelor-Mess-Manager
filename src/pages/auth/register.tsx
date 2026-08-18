@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
+import { AuthShell } from '@/components/auth/AuthShell';
 import { Alert, Button, Input, PageTitle } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
 import { XssWarningModal } from '@/components/XssWarningModal';
@@ -77,106 +78,99 @@ export default function RegisterPage() {
 
   if (done) {
     return (
-      <div className="bg-slate-50 text-slate-900">
+      <AuthShell>
         <PageTitle title={strings.auth.register.title} description={strings.auth.register.subtitle} />
-      <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
-            <h1 className="text-2xl font-semibold">{strings.auth.register.title}</h1>
-            <Alert tone={done.emailSent ? 'success' : 'warning'} className="mt-6">
-              {done.message}
-            </Alert>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{strings.auth.register.title}</h1>
+        <Alert tone={done.emailSent ? 'success' : 'warning'} className="mt-6">
+          {done.message}
+        </Alert>
 
-            {done.setupLink && (
-              <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-xs font-medium text-amber-800">{strings.auth.developmentLink}</p>
-                <Link href={done.setupLink} className="mt-1 block break-all text-xs text-amber-900 underline">
-                  {done.setupLink}
-                </Link>
-              </div>
-            )}
-
-            <p className="mt-6 text-center text-sm text-slate-600">
-              <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
-                {strings.auth.register.loginLink}
-              </Link>
-            </p>
+        {done.setupLink && (
+          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+            <p className="text-xs font-medium text-amber-800">{strings.auth.developmentLink}</p>
+            <Link href={done.setupLink} className="mt-1 block break-all text-xs text-amber-900 underline">
+              {done.setupLink}
+            </Link>
           </div>
-        </section>
-      </div>
+        )}
+
+        <p className="mt-6 text-center text-sm text-slate-600">
+          <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
+            {strings.auth.register.loginLink}
+          </Link>
+        </p>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="bg-slate-50 text-slate-900">
+    <AuthShell>
       <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
       <PageTitle title={strings.auth.register.title} description={strings.auth.register.subtitle} />
-      <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
-          <h1 className="text-2xl font-semibold">{strings.auth.register.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">{strings.auth.checkEmail}</p>
 
-          {formError && (
-            <Alert tone="danger" className="mt-6">
-              {formError}
-            </Alert>
-          )}
+      <h1 className="text-2xl font-semibold sm:text-3xl">{strings.auth.register.title}</h1>
+      <p className="mt-1.5 text-sm text-slate-500">{strings.auth.checkEmail}</p>
 
-          <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
-            <Input
-              label={strings.auth.register.name}
-              name="name"
-              autoComplete="name"
-              value={name}
-              onChange={(value) => {
-                setName(value);
-                clearError('name');
-              }}
-              error={errors.name}
-              autoFocus
-            />
+      {formError && (
+        <Alert tone="danger" className="mt-6">
+          {formError}
+        </Alert>
+      )}
 
-            <Input
-              label={strings.auth.register.email}
-              name="email"
-              type="email"
-              autoComplete="username"
-              value={email}
-              onChange={(value) => {
-                setEmail(value);
-                clearError('email');
-              }}
-              error={errors.email}
-            />
+      <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
+        <Input
+          label={strings.auth.register.name}
+          name="name"
+          autoComplete="name"
+          value={name}
+          onChange={(value) => {
+            setName(value);
+            clearError('name');
+          }}
+          error={errors.name}
+          autoFocus
+        />
 
-            <Input
-              label={strings.auth.register.phone}
-              name="phone"
-              type="tel"
-              autoComplete="tel"
-              placeholder={strings.auth.register.phonePlaceholder}
-              optional
-              required={false}
-              value={phone}
-              onChange={(value) => {
-                setPhone(value);
-                clearError('phone');
-              }}
-              error={errors.phone}
-            />
+        <Input
+          label={strings.auth.register.email}
+          name="email"
+          type="email"
+          autoComplete="username"
+          value={email}
+          onChange={(value) => {
+            setEmail(value);
+            clearError('email');
+          }}
+          error={errors.email}
+        />
 
-            <Button type="submit" loading={loading} fullWidth size="lg">
-              {loading ? strings.auth.register.submitting : strings.auth.register.submit}
-            </Button>
-          </form>
+        <Input
+          label={strings.auth.register.phone}
+          name="phone"
+          type="tel"
+          autoComplete="tel"
+          placeholder={strings.auth.register.phonePlaceholder}
+          optional
+          required={false}
+          value={phone}
+          onChange={(value) => {
+            setPhone(value);
+            clearError('phone');
+          }}
+          error={errors.phone}
+        />
 
-          <p className="mt-6 text-center text-sm text-slate-600">
-            {strings.auth.register.loginPrompt}{' '}
-            <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
-              {strings.auth.register.loginLink}
-            </Link>
-          </p>
-        </div>
-      </section>
-    </div>
+        <Button type="submit" loading={loading} fullWidth size="lg">
+          {loading ? strings.auth.register.submitting : strings.auth.register.submit}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-slate-600">
+        {strings.auth.register.loginPrompt}{' '}
+        <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
+          {strings.auth.register.loginLink}
+        </Link>
+      </p>
+    </AuthShell>
   );
 }
