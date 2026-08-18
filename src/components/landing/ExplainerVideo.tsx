@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { LandingIcon, type LandingIconName } from '@/components/landing/Icons';
+import { TOPIC_SCENES } from '@/components/landing/ExplainerScenes';
 import { appConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 
@@ -153,7 +154,7 @@ export default function ExplainerVideo() {
           <p className="mt-2 text-sm text-slate-600 sm:text-base">{copy.subtitle}</p>
         </div>
 
-        <div className="mx-auto mt-8 max-w-3xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5">
+        <div className="mx-auto mt-8 max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5">
           <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 sm:px-5">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white">
               <LandingIcon name={icon} className="h-4 w-4" />
@@ -162,12 +163,21 @@ export default function ExplainerVideo() {
             <span className="shrink-0 text-xs tabular-nums text-slate-400">{copy.sceneOf(sceneIndex + 1, total)}</span>
           </div>
 
-          <div className="flex flex-col items-center gap-5 px-5 py-8 sm:flex-row sm:items-start sm:gap-6 sm:px-8">
-            <HostCharacter variant={host} talking={playing && !muted} />
-            <p className="text-center text-sm leading-relaxed text-slate-700 sm:text-left sm:text-base">
-              {scriptFor[sceneIndex]}
-            </p>
-          </div>
+          {TOPIC_SCENES[sceneIndex] ? (
+            <div key={sceneIndex} className="flex flex-col items-center gap-5 px-5 py-8 sm:px-8">
+              {TOPIC_SCENES[sceneIndex]()}
+              <p className="max-w-2xl text-center text-sm leading-relaxed text-slate-700 sm:text-base">
+                {scriptFor[sceneIndex]}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-5 px-5 py-8 sm:flex-row sm:items-start sm:gap-6 sm:px-8">
+              <HostCharacter variant={host} talking={playing && !muted} />
+              <p className="text-center text-sm leading-relaxed text-slate-700 sm:text-left sm:text-base">
+                {scriptFor[sceneIndex]}
+              </p>
+            </div>
+          )}
 
           {!speechSupported && (
             <p className="px-5 pb-2 text-center text-xs text-slate-400 sm:px-8">{copy.noSpeechNote}</p>
