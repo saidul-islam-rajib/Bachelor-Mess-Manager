@@ -1953,7 +1953,7 @@ const en = {
         {
           title: 'Welcome',
           script: (appName: string) =>
-            `Hi, I'm Rakib, and this is Tanvir. If you share a mess, a hostel, or a flat, you already know the arguments: who ate how many meals this month, who bought the groceries on the ninth, and whether last month's electricity bill was ever actually settled. ${appName} ends all of that. One app, one shared record, and the maths is done the same way for everybody, automatically, down to the last paisa. Over the next few minutes, we'll walk you through exactly how it works, from creating your account all the way to settling up at the end of the month. Let's get started.`
+            `Hi, We're from Team Sober. If you share a mess, a hostel, or a flat, you already know the arguments: who ate how many meals this month, who bought the groceries on the ninth, and whether last month's electricity bill was ever actually settled. ${appName} ends all of that. One app, one shared record, and the maths is done the same way for everybody, automatically, down to the last paisa. Over the next few minutes, we'll walk you through exactly how it works, from creating your account all the way to settling up at the end of the month. Let's get started.`
         },
         {
           title: 'Creating your account',
