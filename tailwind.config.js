@@ -48,8 +48,8 @@ module.exports = {
         'coin-fly': {
           '0%': { opacity: '0', transform: 'translate(0, 0) scale(0.6)' },
           '15%': { opacity: '1', transform: 'translate(0, -6px) scale(1)' },
-          '85%': { opacity: '1', transform: 'translate(64px, -10px) scale(1)' },
-          '100%': { opacity: '0', transform: 'translate(76px, 0) scale(0.7)' }
+          '85%': { opacity: '1', transform: 'translate(88px, -10px) scale(1)' },
+          '100%': { opacity: '0', transform: 'translate(100px, 0) scale(0.7)' }
         },
         'bar-grow': {
           '0%': { transform: 'scaleY(0)' },

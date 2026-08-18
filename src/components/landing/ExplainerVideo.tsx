@@ -154,7 +154,7 @@ export default function ExplainerVideo() {
           <p className="mt-2 text-sm text-slate-600 sm:text-base">{copy.subtitle}</p>
         </div>
 
-        <div className="mx-auto mt-8 max-w-5xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5">
+        <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5">
           <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 sm:px-5">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white">
               <LandingIcon name={icon} className="h-4 w-4" />
@@ -164,16 +164,19 @@ export default function ExplainerVideo() {
           </div>
 
           {TOPIC_SCENES[sceneIndex] ? (
-            <div key={sceneIndex} className="flex flex-col items-center gap-5 px-5 py-8 sm:px-8">
-              {TOPIC_SCENES[sceneIndex]()}
-              <p className="max-w-2xl text-center text-sm leading-relaxed text-slate-700 sm:text-base">
+            <div
+              key={sceneIndex}
+              className="flex flex-col items-center gap-6 px-5 py-8 sm:flex-row sm:items-center sm:gap-10 sm:px-8 lg:gap-14 lg:px-12"
+            >
+              <div className="flex w-full shrink-0 justify-center sm:w-[45%]">{TOPIC_SCENES[sceneIndex]()}</div>
+              <p className="text-justify text-sm leading-relaxed text-slate-700 sm:text-base">
                 {scriptFor[sceneIndex]}
               </p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5 px-5 py-8 sm:flex-row sm:items-start sm:gap-6 sm:px-8">
               <HostCharacter variant={host} talking={playing && !muted} />
-              <p className="text-center text-sm leading-relaxed text-slate-700 sm:text-left sm:text-base">
+              <p className="text-justify text-sm leading-relaxed text-slate-700 sm:text-base">
                 {scriptFor[sceneIndex]}
               </p>
             </div>
