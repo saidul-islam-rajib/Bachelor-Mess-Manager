@@ -12,30 +12,14 @@ import {
   type BillsData
 } from '@/lib/bill-view';
 import { formatCurrency, formatDayKey } from '@/lib/format';
+import { strings } from '@/lib/i18n';
 
 const taka = formatCurrency;
+const stats = strings.bills.stats;
 
 type FocusKey = 'total' | 'collected' | 'owed' | 'mine';
 
-const PANEL_TITLES: Record<FocusKey, { title: string; subtitle: string }> = {
-  total: {
-    title: 'Every bill this month',
-    subtitle: 'Shared bills are split equally between all members; assigned bills only touch the people picked for them.'
-  },
-  collected: {
-    title: 'Who has paid',
-    subtitle: 'Money already collected from members, per person. Tap a member to see which bills it covered.'
-  },
-  owed: {
-    title: 'Who still owes',
-    subtitle:
-      'Members with an unpaid share on at least one bill. Final nets that against anything they overpaid elsewhere, so it is what they really owe.'
-  },
-  mine: {
-    title: 'Your share, bill by bill',
-    subtitle: 'What each bill costs you, what you have paid and what is left.'
-  }
-};
+const PANEL_TITLES: Record<FocusKey, { title: string; subtitle: string }> = stats.panels;
 
 function StatButton({
   label,
@@ -67,7 +51,7 @@ function StatButton({
       <div className="text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">{label}</div>
       <div className={`mt-1.5 text-lg font-semibold tabular-nums sm:mt-2 sm:text-2xl ${color}`}>{value}</div>
       <div className={`mt-1 text-[11px] font-medium ${active ? 'text-brand-700' : 'text-slate-400'}`}>
-        {active ? 'Hide details ▲' : `${hint} ▼`}
+        {active ? stats.hideDetails : `${hint} ▼`}
       </div>
     </button>
   );
@@ -92,7 +76,7 @@ function Panel({
           onClick={onClose}
           className="inline-flex min-h-[2rem] shrink-0 items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
         >
-          Close
+          {strings.common.close}
         </button>
       </div>
       <p className="mt-1 text-sm text-slate-500">{copy.subtitle}</p>
@@ -135,20 +119,20 @@ function BillLines({
                       </span>
                     </>
                   )}
-                  {bill.payer && <span className="ml-2 text-xs font-normal text-slate-500">paid by {bill.payer.name}</span>}
+                  {bill.payer && <span className="ml-2 text-xs font-normal text-slate-500">{strings.bills.paidByName(bill.payer.name)}</span>}
                 </span>
                 <span className="text-sm font-semibold tabular-nums">{taka(bill.amount)}</span>
               </div>
               <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="text-slate-500">
-                  Collected <span className="font-semibold text-slate-700">{taka(bill.collected)}</span>
+                  {strings.bills.collectedLabel} <span className="font-semibold text-slate-700">{taka(bill.collected)}</span>
                   {bill.uncollected > 0 && (
                     <span className="ml-1.5 font-semibold text-rose-600">
-                      · {taka(bill.uncollected)} still owed by {bill.unpaidMemberCount}
+                      · {stats.stillOwedByCount(taka(bill.uncollected), bill.unpaidMemberCount)}
                     </span>
                   )}
                 </span>
-                <span className="text-slate-400">Open in the list ›</span>
+                <span className="text-slate-400">{stats.openInList}</span>
               </div>
               <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
                 <div
@@ -186,7 +170,7 @@ function KindSection({
           {copy.title} <span className="font-normal text-slate-400">({bills.length})</span>
         </h3>
         <span className="text-xs text-slate-500">
-          {taka(totals.total)} · {taka(totals.collected)} collected
+          {taka(totals.total)} · {strings.bills.collectedAmount(taka(totals.collected))}
         </span>
       </div>
       <p className="mt-0.5 text-xs text-slate-500">{copy.hint}</p>
@@ -198,7 +182,7 @@ function KindSection({
               <span className="font-semibold text-slate-700">
                 {labels[group.type] ?? group.type}
                 {group.bills.length > 1 && (
-                  <span className="ml-1.5 font-normal text-slate-400">{group.bills.length} bills</span>
+                  <span className="ml-1.5 font-normal text-slate-400">{stats.billsCountShort(group.bills.length)}</span>
                 )}
               </span>
               <span className="tabular-nums text-slate-500">{taka(group.totals.total)}</span>
@@ -245,34 +229,34 @@ export function BillStats({
     <>
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <StatButton
-          label="Total bills"
+          label={strings.bills.totalBills}
           value={taka(totals.total)}
           active={focus === 'total'}
-          hint={`${bills.length} ${bills.length === 1 ? 'bill' : 'bills'}`}
+          hint={strings.bills.billCount(bills.length)}
           onClick={() => select('total')}
         />
         <StatButton
-          label="Collected"
+          label={strings.bills.collectedLabel}
           value={taka(totals.collected)}
           tone="green"
           active={focus === 'collected'}
-          hint={`${payers.length} paid`}
+          hint={stats.paidCount(payers.length)}
           onClick={() => select('collected')}
         />
         <StatButton
-          label="Still owed"
+          label={stats.stillOwedStat}
           value={taka(totals.uncollected)}
           tone="red"
           active={focus === 'owed'}
-          hint={owing.length === 0 ? 'All settled' : `${owing.length} ${owing.length === 1 ? 'member' : 'members'}`}
+          hint={owing.length === 0 ? stats.allSettled : stats.memberCount(owing.length)}
           onClick={() => select('owed')}
         />
         <StatButton
-          label={myDue > 0 ? 'Your share · due' : 'Your share'}
+          label={myDue > 0 ? stats.yourShareDueLabel : strings.bills.yourShare}
           value={myDue > 0 ? `${taka(myShare)} · ${taka(myDue)}` : taka(myShare)}
           tone={myDue > 0 ? 'red' : undefined}
           active={focus === 'mine'}
-          hint={`${mine?.billCount ?? 0} ${mine?.billCount === 1 ? 'bill' : 'bills'}`}
+          hint={strings.bills.billCount(mine?.billCount ?? 0)}
           onClick={() => select('mine')}
         />
       </div>
@@ -281,21 +265,19 @@ export function BillStats({
         <Panel focus="total" onClose={() => setFocus(null)}>
           <KindSection kind={BILL_KINDS.SHARED} bills={grouped.SHARED} labels={labels} onOpenBill={onOpenBill} />
           <KindSection kind={BILL_KINDS.ASSIGNED} bills={grouped.ASSIGNED} labels={labels} onOpenBill={onOpenBill} />
-          {bills.length === 0 && <p className="mt-3 text-sm text-slate-500">No bills recorded for this month.</p>}
+          {bills.length === 0 && <p className="mt-3 text-sm text-slate-500">{strings.bills.none}</p>}
         </Panel>
       )}
 
       {focus === 'collected' && (
         <Panel focus="collected" onClose={() => setFocus(null)}>
           <p className="mt-3 text-sm text-slate-600">
-            <span className="font-semibold text-green-600">{taka(totals.collected)}</span> of{' '}
-            {taka(totals.total)} is in — {payers.length} {payers.length === 1 ? 'member has' : 'members have'} paid
-            something.
+            {stats.collectedSummary(taka(totals.collected), taka(totals.total), payers.length)}
           </p>
           <MemberTable
             summaries={payers}
             labels={labels}
-            emptyText="Nothing has been collected yet."
+            emptyText={stats.nothingCollectedYet}
             onOpenBill={onOpenBill}
           />
         </Panel>
@@ -305,38 +287,37 @@ export function BillStats({
         <Panel focus="owed" onClose={() => setFocus(null)}>
           <p className="mt-3 text-sm text-slate-600">
             {owing.length === 0 ? (
-              'Every member has paid their share for this month.'
+              stats.allPaidThisMonth
             ) : (
               <>
-                <span className="font-semibold text-rose-600">{taka(totals.uncollected)}</span> is still to come from{' '}
-                {owing.length} {owing.length === 1 ? 'member' : 'members'}.
+                <span className="font-semibold text-rose-600">{taka(totals.uncollected)}</span>{' '}
+                {stats.stillToComeSuffix(owing.length)}
               </>
             )}
           </p>
           {aheadDespiteDues > 0 && (
             <p className="mt-1 text-xs text-slate-500">
-              {aheadDespiteDues === 1 ? 'One of them has' : `${aheadDespiteDues} of them have`} overpaid other bills,
-              so the Final column is where they actually land.
+              {stats.overpaidNote(aheadDespiteDues)}
             </p>
           )}
           <MemberTable
             summaries={owing}
             labels={labels}
-            emptyText="Nobody owes anything right now."
+            emptyText={stats.nobodyOwesAnything}
             onOpenBill={onOpenBill}
           />
           {refunds.length > 0 && (
             <div className="mt-4 rounded-2xl border border-teal-200 bg-teal-50/60 p-3.5 sm:p-4">
-              <h3 className="text-sm font-semibold text-teal-900">Gets money back</h3>
+              <h3 className="text-sm font-semibold text-teal-900">{stats.getsMoneyBack}</h3>
               <p className="mt-0.5 text-xs text-teal-800">
-                What each of them is owed once their own dues are taken off — funded by the members still short.
+                {stats.getsMoneyBackHint}
               </p>
               <ul className="mt-2 space-y-1 text-sm">
                 {refunds.map((row) => (
                   <li key={row.userId} className="flex items-center justify-between gap-3">
                     <span className="truncate text-teal-900">
                       {row.userName}
-                      {row.isCurrentUser && <span className="ml-1.5 text-xs text-teal-700">(you)</span>}
+                      {row.isCurrentUser && <span className="ml-1.5 text-xs text-teal-700">{strings.common.you}</span>}
                     </span>
                     <span className="shrink-0 font-semibold tabular-nums text-teal-800">+{taka(row.net)}</span>
                   </li>
@@ -350,24 +331,24 @@ export function BillStats({
       {focus === 'mine' && (
         <Panel focus="mine" onClose={() => setFocus(null)}>
           {!mine || mine.billCount === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">You have no share in this month&apos;s bills.</p>
+            <p className="mt-3 text-sm text-slate-500">{stats.noShareThisMonth}</p>
           ) : (
             <>
               <dl className="mt-3 grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm sm:grid-cols-4">
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Your share</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.bills.yourShare}</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums">{taka(mine.share)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Paid</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.bills.paid}</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums text-green-600">{taka(mine.paid)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Still due</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">{stats.stillDueDt}</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums text-rose-600">{taka(mine.outstanding)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">Gets back</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500">{stats.getsBackDt}</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums text-teal-700">{taka(mine.advance)}</dd>
                 </div>
               </dl>

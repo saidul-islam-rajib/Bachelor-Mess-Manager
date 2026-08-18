@@ -1461,15 +1461,7 @@ type SiteSettings = {
 
 const BYTES_PER_KB = 1024;
 
-const MEAL_EDIT_WINDOW_OPTIONS = [
-  { value: 5, label: '5 minutes' },
-  { value: 10, label: '10 minutes' },
-  { value: 15, label: '15 minutes' },
-  { value: 30, label: '30 minutes' },
-  { value: 60, label: '1 hour' },
-  { value: 1440, label: '1 day' },
-  { value: 0, label: 'No time limit' }
-];
+const MEAL_EDIT_WINDOW_OPTIONS = strings.admin.settings.mealEditWindowOptions;
 
 function NotificationEventToggles({
   value,
@@ -1583,7 +1575,7 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
       setExceptions(response.exceptions);
       setMeta(response.meta);
     } catch (error) {
-      toast.error(errorMessage(error, 'Could not load the per-mess supervisor limits.'));
+      toast.error(errorMessage(error, strings.admin.settings.supervisorLimitsLoadFailed));
     } finally {
       setLoading(false);
     }
@@ -1601,12 +1593,12 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
       });
       toast.success(
         value === LIMIT_INHERIT
-          ? `${group.name} now follows the site default.`
-          : `${group.name} may have ${value} supervisor${value === '1' ? '' : 's'}.`
+          ? strings.admin.settings.supervisorLimitFollowsDefault(group.name)
+          : strings.admin.settings.supervisorLimitSet(group.name, value)
       );
       await load();
     } catch (error) {
-      toast.error(errorMessage(error, 'Could not change that limit.'));
+      toast.error(errorMessage(error, strings.admin.settings.supervisorLimitChangeFailed));
     } finally {
       setBusy('');
     }
@@ -1618,22 +1610,22 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
     <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h4 className="text-sm font-semibold">Limits for individual messes</h4>
+          <h4 className="text-sm font-semibold">{strings.admin.settings.limitsForIndividualMesses}</h4>
           <p className="mt-0.5 text-xs text-slate-500">
             {exceptions === 0
-              ? `Every mess follows the default of ${siteMax}.`
-              : `${exceptions} ${exceptions === 1 ? 'mess has' : 'messes have'} their own limit; the rest follow the default of ${siteMax}.`}
+              ? strings.admin.settings.allMessesFollowDefault(siteMax)
+              : strings.admin.settings.messExceptionsSummary(exceptions, siteMax)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SearchInput
             value={searchInput}
             onChange={setSearchInput}
-            placeholder="Find a mess"
+            placeholder={strings.admin.settings.findAMess}
             className="w-48"
           />
           <Checkbox
-            label="Only exceptions"
+            label={strings.admin.settings.onlyExceptions}
             checked={onlyExceptions}
             onChange={setOnlyExceptions}
           />
@@ -1641,10 +1633,10 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
       </div>
 
       {loading ? (
-        <p className="mt-4 text-sm text-slate-500">Loading messes…</p>
+        <p className="mt-4 text-sm text-slate-500">{strings.admin.settings.loadingMesses}</p>
       ) : visible.length === 0 ? (
         <p className="mt-4 text-sm text-slate-500">
-          {onlyExceptions ? 'No mess has its own limit yet.' : 'No messes match that search.'}
+          {onlyExceptions ? strings.admin.settings.noMessHasOwnLimit : strings.admin.settings.noMessesMatch}
         </p>
       ) : (
         <ul className="mt-4 divide-y divide-slate-100">
@@ -1655,12 +1647,12 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
                   {group.name}
                   {group.overridden && (
                     <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand-700">
-                      custom
+                      {strings.admin.settings.customBadge}
                     </span>
                   )}
                 </p>
                 <p className="truncate text-xs text-slate-500">
-                  Using {group.used} of {group.effectiveMax} ·{' '}
+                  {strings.admin.settings.usingOfMax(group.used, group.effectiveMax)} ·{' '}
                   {group.supervisors.map((s) => s.name).join(', ')}
                 </p>
               </div>
@@ -1671,9 +1663,9 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
                 disabled={busy === group.id}
                 onChange={(next) => setLimit(group, next)}
                 options={[
-                  { value: LIMIT_INHERIT, label: `Site default (${siteMax})` },
-                  { value: '1', label: '1 supervisor' },
-                  { value: '2', label: '2 supervisors' }
+                  { value: LIMIT_INHERIT, label: strings.admin.settings.siteDefaultOption(siteMax) },
+                  { value: '1', label: strings.admin.settings.oneSupervisorOption },
+                  { value: '2', label: strings.admin.settings.twoSupervisorsOption }
                 ]}
               />
             </li>
@@ -1758,15 +1750,14 @@ function SettingsPanel() {
       />
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-        <h3 className="text-sm font-semibold">Editing past meals</h3>
+        <h3 className="text-sm font-semibold">{strings.admin.settings.editingPastMeals}</h3>
         <p className="mt-1 text-sm text-slate-600">
-          A member unlocks past days from the meals page. This is how long that unlock lasts before it closes itself
-          again.
+          {strings.admin.settings.editingPastMealsHint}
         </p>
 
         <Listbox
           className="mt-4 block max-w-xs"
-          label="Unlock lasts for"
+          label={strings.admin.settings.unlockLastsFor}
           value={String(settings.mealEditWindowMinutes)}
           onChange={(next) => update('mealEditWindowMinutes', Number(next))}
           options={MEAL_EDIT_WINDOW_OPTIONS.map((option) => ({
@@ -1777,37 +1768,33 @@ function SettingsPanel() {
 
         <Checkbox
           className="mt-4"
-          label="By default, a supervisor must approve a member's past-meal change before it counts"
+          label={strings.admin.settings.approvalRequiredByDefault}
           checked={settings.mealEditRequiresApproval}
           onChange={(checked) => update('mealEditRequiresApproval', checked)}
         />
         <p className="mt-2 max-w-2xl text-xs text-slate-500">
-          This is the starting point for every mess. A supervisor can override it for their own mess in Members →
-          Group settings; messes left on &ldquo;follow the site default&rdquo; move with whatever you set here.
+          {strings.admin.settings.approvalDefaultHint}
         </p>
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-        <h3 className="text-sm font-semibold">Supervisors per mess</h3>
+        <h3 className="text-sm font-semibold">{strings.admin.settings.supervisorsPerMess}</h3>
         <p className="mt-1 text-sm text-slate-600">
-          Every mess has one main supervisor who can hand the mess over. Allowing two lets a second person share the
-          same controls — recording bazar, bills and payments, approving meal edits and managing members — without
-          giving up the first one.
+          {strings.admin.settings.supervisorsPerMessHint}
         </p>
 
         <Listbox
           className="mt-4 block max-w-xs"
-          label="Supervisors allowed"
+          label={strings.admin.settings.supervisorsAllowed}
           value={String(settings.maxSupervisorsPerGroup)}
           onChange={(next) => update('maxSupervisorsPerGroup', Number(next))}
           options={[
-            { value: '1', label: '1 — one supervisor per mess' },
-            { value: '2', label: '2 — allow a second supervisor' }
+            { value: '1', label: strings.admin.settings.oneSupervisorPerMess },
+            { value: '2', label: strings.admin.settings.allowSecondSupervisor }
           ]}
         />
         <p className="mt-2 max-w-2xl text-xs text-slate-500">
-          This is the starting point for every mess. Below you can give individual messes a different limit — the
-          default applies to every mess you do not list. Lowering a limit is refused while a mess is over it.
+          {strings.admin.settings.supervisorLimitHint}
         </p>
 
         <SupervisorLimitManager siteMax={settings.maxSupervisorsPerGroup} />

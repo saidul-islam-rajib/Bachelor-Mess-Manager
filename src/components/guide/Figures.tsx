@@ -1,3 +1,7 @@
+import { strings } from '@/lib/i18n';
+
+const figures = strings.guide.figures;
+
 const INK = '#0f172a';
 const MUTED = '#64748b';
 const LINE = '#cbd5e1';
@@ -79,33 +83,35 @@ function Defs() {
 }
 
 export function RolesFigure() {
+  const t = figures.roles;
   return (
-    <svg viewBox="0 0 720 240" className="h-auto w-full min-w-[560px]" role="img" aria-label="Who does what">
+    <svg viewBox="0 0 720 240" className="h-auto w-full min-w-[560px]" role="img" aria-label={t.ariaLabel}>
       <Defs />
-      <Box x={270} y={10} w={180} h={54} label="Admin" sub="runs the whole site" tone="dark" />
+      <Box x={270} y={10} w={180} h={54} label={t.admin} sub={t.adminSub} tone="dark" />
       <Arrow x1={360} y1={64} x2={360} y2={92} />
-      <Box x={270} y={94} w={180} h={54} label="Supervisor" sub="runs one mess" />
+      <Box x={270} y={94} w={180} h={54} label={t.supervisor} sub={t.supervisorSub} />
       <Arrow x1={310} y1={148} x2={190} y2={176} />
       <Arrow x1={360} y1={148} x2={360} y2={176} />
       <Arrow x1={410} y1={148} x2={530} y2={176} />
-      <Box x={100} y={178} w={180} h={54} label="Member" sub="logs their meals" />
-      <Box x={270} y={178} w={180} h={54} label="Member" sub="logs their meals" />
-      <Box x={440} y={178} w={180} h={54} label="Member" sub="logs their meals" />
+      <Box x={100} y={178} w={180} h={54} label={t.member} sub={t.memberSub} />
+      <Box x={270} y={178} w={180} h={54} label={t.member} sub={t.memberSub} />
+      <Box x={440} y={178} w={180} h={54} label={t.member} sub={t.memberSub} />
     </svg>
   );
 }
 
 export function MonthFlowFigure() {
+  const t = figures.monthFlow;
   const steps = [
-    { label: 'Log meals', sub: 'every member' },
-    { label: 'Record bazar', sub: 'who bought what' },
-    { label: 'Record bills', sub: 'rent, wifi, gas' },
-    { label: 'Take payments', sub: 'cash handed over' },
-    { label: 'Close month', sub: 'freeze + carry over' }
+    { label: t.logMeals, sub: t.logMealsSub },
+    { label: t.recordBazar, sub: t.recordBazarSub },
+    { label: t.recordBills, sub: t.recordBillsSub },
+    { label: t.takePayments, sub: t.takePaymentsSub },
+    { label: t.closeMonth, sub: t.closeMonthSub }
   ];
 
   return (
-    <svg viewBox="0 0 760 120" className="h-auto w-full min-w-[680px]" role="img" aria-label="A month in the mess">
+    <svg viewBox="0 0 760 120" className="h-auto w-full min-w-[680px]" role="img" aria-label={t.ariaLabel}>
       <Defs />
       {steps.map((step, index) => {
         const x = index * 152;
@@ -129,162 +135,167 @@ export function MonthFlowFigure() {
 }
 
 export function MealRateFigure() {
+  const t = figures.mealRate;
   return (
-    <svg viewBox="0 0 720 250" className="h-auto w-full min-w-[600px]" role="img" aria-label="How the meal rate is worked out">
+    <svg viewBox="0 0 720 250" className="h-auto w-full min-w-[600px]" role="img" aria-label={t.ariaLabel}>
       <Defs />
 
       <text x={0} y={16} fill={MUTED} fontSize={12} fontWeight={600}>
-        ONE RATE FOR THE MONTH
+        {t.oneRateHeading}
       </text>
-      <Box x={0} y={28} w={170} h={52} label="৳9,000" sub="bazar this month" />
+      <Box x={0} y={28} w={170} h={52} label={t.bazarThisMonth} sub={t.bazarThisMonthSub} />
       <text x={186} y={60} fill={MUTED} fontSize={20}>
         ÷
       </text>
-      <Box x={210} y={28} w={170} h={52} label="300 meals" sub="everyone together" />
+      <Box x={210} y={28} w={170} h={52} label={t.totalMeals} sub={t.totalMealsSub} />
       <text x={396} y={60} fill={MUTED} fontSize={20}>
         =
       </text>
-      <Box x={420} y={28} w={170} h={52} label="৳30.00" sub="per meal, all month" tone="dark" />
+      <Box x={420} y={28} w={170} h={52} label={t.perMealAllMonth} sub={t.perMealAllMonthSub} tone="dark" />
 
       <line x1={0} y1={110} x2={720} y2={110} stroke={LINE} strokeWidth={1} strokeDasharray="4 4" />
 
       <text x={0} y={140} fill={MUTED} fontSize={12} fontWeight={600}>
-        A RATE FOR EACH DAY
+        {t.dayRateHeading}
       </text>
-      <Box x={0} y={152} w={110} h={52} label="৳420" sub="1 Aug bazar" />
+      <Box x={0} y={152} w={110} h={52} label={t.aug1Bazar} sub={t.aug1BazarSub} />
       <text x={124} y={184} fill={MUTED} fontSize={18}>
         ÷
       </text>
-      <Box x={144} y={152} w={110} h={52} label="12 meals" sub="eaten 1 Aug" />
+      <Box x={144} y={152} w={110} h={52} label={t.aug1Meals} sub={t.aug1MealsSub} />
       <text x={268} y={184} fill={MUTED} fontSize={18}>
         =
       </text>
-      <Box x={288} y={152} w={120} h={52} label="৳35.00" sub="rate for 1 Aug" tone="dark" />
+      <Box x={288} y={152} w={120} h={52} label={t.aug1Rate} sub={t.aug1RateSub} tone="dark" />
 
-      <Box x={430} y={152} w={290} h={52} label="Bazar on a day nobody ate" sub="shared across the month, never dropped" tone="amber" />
+      <Box x={430} y={152} w={290} h={52} label={t.noMealsDayLabel} sub={t.noMealsDaySub} tone="amber" />
     </svg>
   );
 }
 
 export function BalanceFigure() {
+  const t = figures.balance;
   return (
-    <svg viewBox="0 0 720 230" className="h-auto w-full min-w-[620px]" role="img" aria-label="How one member's due is worked out">
+    <svg viewBox="0 0 720 230" className="h-auto w-full min-w-[620px]" role="img" aria-label={t.ariaLabel}>
       <Defs />
 
       <text x={0} y={16} fill={MUTED} fontSize={12} fontWeight={600}>
-        WHAT THEY OWE
+        {t.whatTheyOweHeading}
       </text>
-      <Box x={0} y={28} w={150} h={50} label="৳0" sub="brought forward" />
+      <Box x={0} y={28} w={150} h={50} label={t.broughtForward} sub={t.broughtForwardSub} />
       <text x={160} y={58} fill={MUTED} fontSize={18}>
         +
       </text>
-      <Box x={180} y={28} w={150} h={50} label="৳595" sub="meal share" />
+      <Box x={180} y={28} w={150} h={50} label={t.mealShare} sub={t.mealShareSub} />
       <text x={340} y={58} fill={MUTED} fontSize={18}>
         +
       </text>
-      <Box x={360} y={28} w={150} h={50} label="৳1,300" sub="bills share" />
+      <Box x={360} y={28} w={150} h={50} label={t.billsShare} sub={t.billsShareSub} />
       <text x={520} y={58} fill={MUTED} fontSize={18}>
         =
       </text>
-      <Box x={540} y={28} w={150} h={50} label="৳1,895" sub="total cost" />
+      <Box x={540} y={28} w={150} h={50} label={t.totalCost} sub={t.totalCostSub} />
 
       <text x={0} y={116} fill={MUTED} fontSize={12} fontWeight={600}>
-        WHAT THEY PUT IN
+        {t.whatTheyPutInHeading}
       </text>
-      <Box x={0} y={128} w={230} h={50} label="৳595" sub="groceries they bought" tone="green" />
+      <Box x={0} y={128} w={230} h={50} label={t.groceriesBought} sub={t.groceriesBoughtSub} tone="green" />
       <text x={240} y={158} fill={MUTED} fontSize={18}>
         +
       </text>
-      <Box x={260} y={128} w={230} h={50} label="৳500" sub="cash they handed over" tone="green" />
+      <Box x={260} y={128} w={230} h={50} label={t.cashHandedOver} sub={t.cashHandedOverSub} tone="green" />
 
       <line x1={520} y1={118} x2={520} y2={196} stroke={LINE} strokeWidth={1} />
-      <Box x={540} y={128} w={150} h={50} label="৳800" sub="still due" tone="red" />
+      <Box x={540} y={128} w={150} h={50} label={t.stillDue} sub={t.stillDueSub} tone="red" />
       <text x={615} y={200} textAnchor="middle" fill={MUTED} fontSize={11}>
-        1,895 − 595 − 500
+        {t.formula}
       </text>
     </svg>
   );
 }
 
 export function SplitFigure() {
+  const t = figures.split;
   return (
-    <svg viewBox="0 0 720 200" className="h-auto w-full min-w-[560px]" role="img" aria-label="How a bill is split">
+    <svg viewBox="0 0 720 200" className="h-auto w-full min-w-[560px]" role="img" aria-label={t.ariaLabel}>
       <Defs />
-      <Box x={270} y={8} w={180} h={50} label="৳3,900 rent" sub="one bill" tone="dark" />
+      <Box x={270} y={8} w={180} h={50} label={t.rentLabel} sub={t.rentSub} tone="dark" />
 
       <text x={0} y={92} fill={MUTED} fontSize={12} fontWeight={600}>
-        SPLIT EQUALLY
+        {t.splitEquallyHeading}
       </text>
       <Arrow x1={330} y1={58} x2={140} y2={98} />
-      <Box x={0} y={100} w={100} h={46} label="৳1,300" />
-      <Box x={110} y={100} w={100} h={46} label="৳1,300" />
-      <Box x={220} y={100} w={100} h={46} label="৳1,300" />
+      <Box x={0} y={100} w={100} h={46} label={t.equalShare} />
+      <Box x={110} y={100} w={100} h={46} label={t.equalShare} />
+      <Box x={220} y={100} w={100} h={46} label={t.equalShare} />
 
       <text x={400} y={92} fill={MUTED} fontSize={12} fontWeight={600}>
-        SELECTED MEMBERS
+        {t.selectedMembersHeading}
       </text>
       <Arrow x1={390} y1={58} x2={540} y2={98} />
-      <Box x={400} y={100} w={150} h={46} label="৳2,600" sub="shares a room" />
-      <Box x={560} y={100} w={160} h={46} label="৳1,300" sub="own room" />
+      <Box x={400} y={100} w={150} h={46} label={t.sharedRoom} sub={t.sharedRoomSub} />
+      <Box x={560} y={100} w={160} h={46} label={t.ownRoom} sub={t.ownRoomSub} />
 
       <text x={0} y={186} fill={MUTED} fontSize={11}>
-        Shares are saved with the bill, so a member joining later never changes a bill that was already agreed.
+        {t.footnote}
       </text>
     </svg>
   );
 }
 
 export function MealEditFigure() {
+  const t = figures.mealEdit;
   return (
-    <svg viewBox="0 0 760 210" className="h-auto w-full min-w-[700px]" role="img" aria-label="Changing a meal that has already passed">
+    <svg viewBox="0 0 760 210" className="h-auto w-full min-w-[700px]" role="img" aria-label={t.ariaLabel}>
       <Defs />
 
       <text x={0} y={16} fill={MUTED} fontSize={12} fontWeight={600}>
-        A MEMBER CHANGES A PAST DAY
+        {t.memberChangesHeading}
       </text>
-      <Box x={0} y={28} w={150} h={54} label="Unlock" sub="tick the box" />
+      <Box x={0} y={28} w={150} h={54} label={t.unlock} sub={t.unlockSub} />
       <Arrow x1={152} y1={55} x2={172} y2={55} />
-      <Box x={174} y={28} w={150} h={54} label="Edit the day" sub="within the window" tone="amber" />
+      <Box x={174} y={28} w={150} h={54} label={t.editTheDay} sub={t.editTheDaySub} tone="amber" />
       <Arrow x1={326} y1={55} x2={346} y2={55} />
-      <Box x={348} y={28} w={180} h={54} label="Supervisor approves" sub="nothing counts before" tone="amber" />
+      <Box x={348} y={28} w={180} h={54} label={t.supervisorApproves} sub={t.supervisorApprovesSub} tone="amber" />
       <Arrow x1={530} y1={55} x2={550} y2={55} />
-      <Box x={552} y={28} w={180} h={54} label="Meal table updates" sub="rate recalculates" tone="green" />
+      <Box x={552} y={28} w={180} h={54} label={t.mealTableUpdates} sub={t.mealTableUpdatesSub} tone="green" />
 
       <line x1={0} y1={110} x2={760} y2={110} stroke={LINE} strokeWidth={1} strokeDasharray="4 4" />
 
       <text x={0} y={144} fill={MUTED} fontSize={12} fontWeight={600}>
-        THE SUPERVISOR CHANGES A PAST DAY
+        {t.supervisorChangesHeading}
       </text>
-      <Box x={0} y={156} w={200} h={46} label="Edit the day" sub="applies at once" />
+      <Box x={0} y={156} w={200} h={46} label={t.editTheDayAtOnce} sub={t.editTheDayAtOnceSub} />
       <Arrow x1={202} y1={179} x2={222} y2={179} />
-      <Box x={224} y={156} w={250} h={46} label="Everyone is notified" sub="in the app and by email" tone="green" />
+      <Box x={224} y={156} w={250} h={46} label={t.everyoneNotified} sub={t.everyoneNotifiedSub} tone="green" />
       <Arrow x1={476} y1={179} x2={496} y2={179} />
-      <Box x={498} y={156} w={234} h={46} label="Nothing happens quietly" sub="the change is on the record" />
+      <Box x={498} y={156} w={234} h={46} label={t.nothingQuietly} sub={t.nothingQuietlySub} />
     </svg>
   );
 }
 
 export function ClosingFigure() {
+  const t = figures.closing;
   return (
-    <svg viewBox="0 0 720 190" className="h-auto w-full min-w-[600px]" role="img" aria-label="Closing a month">
+    <svg viewBox="0 0 720 190" className="h-auto w-full min-w-[600px]" role="img" aria-label={t.ariaLabel}>
       <Defs />
-      <Box x={0} y={20} w={200} h={60} label="August" sub="meals, bazar, bills, cash" />
+      <Box x={0} y={20} w={200} h={60} label={t.augustLabel} sub={t.augustSub} />
       <Arrow x1={202} y1={50} x2={242} y2={50} />
-      <Box x={244} y={20} w={200} h={60} label="Close on any date" sub="whole mess or one member" tone="dark" />
+      <Box x={244} y={20} w={200} h={60} label={t.closeOnAnyDate} sub={t.closeOnAnyDateSub} tone="dark" />
       <Arrow x1={446} y1={50} x2={486} y2={50} />
-      <Box x={488} y={20} w={200} h={60} label="Figures frozen" sub="a later edit cannot rewrite it" tone="green" />
+      <Box x={488} y={20} w={200} h={60} label={t.figuresFrozen} sub={t.figuresFrozenSub} tone="green" />
 
       <Arrow x1={588} y1={82} x2={588} y2={110} />
-      <Box x={430} y={112} w={290} h={58} label="September opens with ৳800 brought forward" sub="unpaid balances follow the member" tone="amber" />
+      <Box x={430} y={112} w={290} h={58} label={t.septemberOpens} sub={t.septemberOpensSub} tone="amber" />
 
       <text x={0} y={128} fill={MUTED} fontSize={11}>
-        Closing mid-month is how you settle up
+        {t.footnote1}
       </text>
       <text x={0} y={146} fill={MUTED} fontSize={11}>
-        with someone who is moving out on the 12th,
+        {t.footnote2}
       </text>
       <text x={0} y={164} fill={MUTED} fontSize={11}>
-        without disturbing anybody else&apos;s month.
+        {t.footnote3}
       </text>
     </svg>
   );

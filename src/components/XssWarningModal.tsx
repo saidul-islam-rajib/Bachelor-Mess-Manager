@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
+import { strings } from '@/lib/i18n';
 
 export const XSS_IMAGE_SRC = '/xss-blocked.png';
 
@@ -47,7 +48,7 @@ export function XssWarningModal({ open, field, onClose }: XssWarningModalProps) 
         {!imageBroken ? (
           <Image
             src={XSS_IMAGE_SRC}
-            alt="Blocked"
+            alt={strings.xssWarning.imageAlt}
             width={512}
             height={512}
             className="h-auto w-full"
@@ -60,19 +61,18 @@ export function XssWarningModal({ open, field, onClose }: XssWarningModalProps) 
 
         <div className="p-6">
           <h2 id="xss-warning-title" className="text-lg font-semibold text-white">
-            Nice try.
+            {strings.xssWarning.title}
           </h2>
           <p className="mt-2 text-sm text-slate-300">
-            That input looks like a script injection attempt, so it was blocked before it reached the
-            server.
-            {field ? <span className="block mt-1 text-slate-400">Field: {field}</span> : null}
+            {strings.xssWarning.body}
+            {field ? <span className="block mt-1 text-slate-400">{strings.xssWarning.fieldLabel(field)}</span> : null}
           </p>
           <p className="mt-3 text-xs text-slate-500">
-            Remove any HTML tags or scripts and try again.
+            {strings.xssWarning.hint}
           </p>
 
           <Button className="mt-6 w-full" onClick={onClose}>
-            Understood
+            {strings.xssWarning.understood}
           </Button>
         </div>
       </div>

@@ -78,7 +78,7 @@ function Hero() {
                   {landing.hero.groups}
                 </LinkButton>
                 <LinkButton href={ROUTES.guide} size="lg" variant="secondary">
-                  Read the guide
+                  {landing.hero.readGuide}
                 </LinkButton>
               </div>
             </div>
@@ -110,7 +110,7 @@ function Hero() {
               <p className="mt-4 text-xs text-slate-500">
                 {landing.hero.note}{' '}
                 <Link href={ROUTES.guide} className="font-medium text-slate-700 underline underline-offset-2 hover:text-slate-900">
-                  See how it works
+                  {landing.hero.seeHowItWorks}
                 </Link>
                 .
               </p>

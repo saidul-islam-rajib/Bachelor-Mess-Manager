@@ -2,8 +2,10 @@ import { useState, type ReactNode } from 'react';
 import { PositionPill, StatusPill, positionOf } from '@/components/bills/StatusPill';
 import { BILL_KIND_COPY, KIND_ORDER, type MemberBillLine, type MemberSummary } from '@/lib/bill-view';
 import { formatCurrency, formatDayKey } from '@/lib/format';
+import { strings } from '@/lib/i18n';
 
 const taka = formatCurrency;
+const memberTable = strings.bills.memberTable;
 
 export function Chevron({ open }: { open: boolean }) {
   return (
@@ -72,19 +74,19 @@ function LineList({
             <p className="truncate text-sm font-medium text-slate-900">{labels[line.type] ?? line.type}</p>
             <p className="mt-0.5 text-[11px] text-slate-400">
               {formatDayKey(line.date, 'dayMonth')}
-              {line.payerName && ` · paid by ${line.payerName}`}
+              {line.payerName && ` · ${strings.bills.paidByName(line.payerName)}`}
             </p>
           </div>
 
           <div className="mt-2 grid grid-cols-3 gap-2 sm:mt-0 sm:w-64 sm:shrink-0">
-            <Figure label="Share" value={taka(line.share)} />
-            <Figure label="Paid" value={line.paid > 0 ? taka(line.paid) : '—'} className="text-slate-900" />
+            <Figure label={strings.bills.colShare} value={taka(line.share)} />
+            <Figure label={strings.bills.colPaid} value={line.paid > 0 ? taka(line.paid) : '—'} className="text-slate-900" />
             {line.outstanding > 0 ? (
-              <Figure label="Due" value={taka(line.outstanding)} className="text-rose-600" />
+              <Figure label={strings.bills.colDue} value={taka(line.outstanding)} className="text-rose-600" />
             ) : line.advance > 0 ? (
-              <Figure label="Back" value={`+${taka(line.advance)}`} className="text-teal-700" />
+              <Figure label={memberTable.backDt} value={`+${taka(line.advance)}`} className="text-teal-700" />
             ) : (
-              <Figure label="Due" value="—" className="text-slate-300" />
+              <Figure label={strings.bills.colDue} value="—" className="text-slate-300" />
             )}
           </div>
 
@@ -96,7 +98,7 @@ function LineList({
                 onClick={() => onOpenBill(line.billId)}
                 className="inline-flex min-h-[1.9rem] items-center rounded-full border border-slate-200 px-2.5 text-[11px] font-medium text-slate-600 hover:bg-slate-50"
               >
-                Open
+                {memberTable.open}
               </button>
             )}
           </div>
@@ -158,11 +160,11 @@ export function MemberRow({
           <span className="block min-w-0">
             <span className="block truncate font-semibold text-slate-900">
               {row.userName}
-              {row.isCurrentUser && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
+              {row.isCurrentUser && <span className="ml-1.5 text-xs font-normal text-brand-700">{strings.common.you}</span>}
             </span>
             <span className="mt-0.5 block text-xs text-slate-500">
-              {row.billCount} {row.billCount === 1 ? 'bill' : 'bills'}
-              {row.unpaidCount > 0 && ` · ${row.unpaidCount} not paid yet`}
+              {strings.bills.billCount(row.billCount)}
+              {row.unpaidCount > 0 && ` ${memberTable.notPaidYet(row.unpaidCount)}`}
             </span>
           </span>
           <span className="flex shrink-0 items-center gap-2">
@@ -172,32 +174,32 @@ export function MemberRow({
         </span>
 
         <span className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-xl bg-slate-50/80 px-3 py-2 sm:grid-cols-4 sm:bg-transparent sm:px-0 sm:py-0">
-          <Figure label="Share" value={taka(row.share)} />
-          <Figure label="Paid" value={taka(row.paid)} className="text-slate-900" />
+          <Figure label={strings.bills.colShare} value={taka(row.share)} />
+          <Figure label={strings.bills.colPaid} value={taka(row.paid)} className="text-slate-900" />
           <Figure
-            label="Unpaid on bills"
+            label={memberTable.unpaidOnBills}
             value={row.outstanding > 0 ? taka(row.outstanding) : '—'}
             className={row.outstanding > 0 ? 'text-rose-600' : 'text-slate-300'}
           />
-          <Figure strong label="Final" value={netLabel(row.net)} className={position.text} />
+          <Figure strong label={memberTable.final} value={netLabel(row.net)} className={position.text} />
         </span>
       </button>
 
       {open && (
         <div className="border-t border-slate-100 bg-slate-50/60 px-3.5 py-3 sm:px-4">
           <p className="text-xs text-slate-600">
-            Share {taka(row.share)} − paid {taka(row.paid)} ={' '}
+            {memberTable.shareMinusPaid(taka(row.share), taka(row.paid))}{' '}
             <span className={`font-semibold ${position.text}`}>
               {row.net > 0
-                ? `${taka(row.net)} back to ${row.userName}`
+                ? memberTable.backToName(taka(row.net), row.userName)
                 : row.net < 0
-                  ? `${taka(-row.net)} still to pay`
-                  : 'nothing outstanding'}
+                  ? memberTable.stillToPay(taka(-row.net))
+                  : memberTable.nothingOutstanding}
             </span>
             {row.outstanding > 0 && row.advance > 0 && (
               <span className="text-slate-500">
                 {' '}
-                — {taka(row.outstanding)} unpaid on some bills, {taka(row.advance)} overpaid on others.
+                {memberTable.unpaidOverpaidNote(taka(row.outstanding), taka(row.advance))}
               </span>
             )}
           </p>

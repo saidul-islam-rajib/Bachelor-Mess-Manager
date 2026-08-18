@@ -38,7 +38,7 @@ function when(iso: string) {
 
 function itemsOf(expense: Expense): Item[] {
   if (expense.items.length > 0) return expense.items;
-  return [{ id: `${expense.id}-legacy`, name: expense.note || 'Groceries', amount: expense.amount }];
+  return [{ id: `${expense.id}-legacy`, name: expense.note || strings.expenses.defaultItemName, amount: expense.amount }];
 }
 
 export default function ExpensesPage() {
@@ -106,7 +106,7 @@ export default function ExpensesPage() {
     const map = new Map<string, { id: string; name: string; amount: number; count: number }>();
     for (const e of expenses) {
       const id = e.payer?.id ?? 'unknown';
-      const name = e.payer?.name ?? 'Unknown';
+      const name = e.payer?.name ?? strings.expenses.unknownMember;
       const row = map.get(id) ?? { id, name, amount: 0, count: 0 };
       row.amount += e.amount;
       row.count += 1;
@@ -131,8 +131,8 @@ export default function ExpensesPage() {
         body: JSON.stringify({ date, items: toPayload(rows), note })
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not add purchase.');
-      toast.success('Purchase added.');
+      if (!res.ok) throw new Error(body?.error ?? strings.expenses.addFailed);
+      toast.success(strings.expenses.added);
       setRows([blankRow(), blankRow()]);
       setNote('');
       await load();
@@ -158,8 +158,8 @@ export default function ExpensesPage() {
         body: JSON.stringify({ date: editDate, items: toPayload(editRows), note: editNote })
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not update.');
-      toast.success('Purchase updated.');
+      if (!res.ok) throw new Error(body?.error ?? strings.expenses.updateFailed);
+      toast.success(strings.expenses.updated);
       setEditId(null);
       await load();
     } catch (err) {
@@ -171,8 +171,8 @@ export default function ExpensesPage() {
     try {
       const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not delete.');
-      toast.success('Purchase deleted.');
+      if (!res.ok) throw new Error(body?.error ?? strings.expenses.deleteFailed);
+      toast.success(strings.expenses.deleted);
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -186,7 +186,7 @@ export default function ExpensesPage() {
       body: JSON.stringify({ text })
     });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body?.error ?? 'Could not post comment.');
+    if (!res.ok) throw new Error(body?.error ?? strings.expenses.commentFailed);
     await load();
   }
 
@@ -194,8 +194,8 @@ export default function ExpensesPage() {
     try {
       const res = await fetch(`/api/expense-comments/${id}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not delete comment.');
-      toast.success('Comment removed.');
+      if (!res.ok) throw new Error(body?.error ?? strings.expenses.commentDeleteFailed);
+      toast.success(strings.expenses.commentDeleted);
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -206,18 +206,16 @@ export default function ExpensesPage() {
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
-      <PageTitle title="Groceries (Bazar)" />
+      <PageTitle title={strings.expenses.title} />
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Groceries (Bazar)</h1>
-        <p className="mt-1 text-slate-600">
-          Who shopped, on which date, what they bought, and what the group said about it.
-        </p>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{strings.expenses.title}</h1>
+        <p className="mt-1 text-slate-600">{strings.expenses.subtitle}</p>
       </div>
 
       {loadingGroups ? (
-        <Card>Loading...</Card>
+        <Card>{strings.common.loading}</Card>
       ) : groups.length === 0 ? (
-        <Card>You&apos;re not part of any group yet.</Card>
+        <Card>{strings.emptyState.noGroups}</Card>
       ) : (
         <div className="space-y-6">
           <Card>
@@ -233,9 +231,9 @@ export default function ExpensesPage() {
                 className="flex w-full items-start justify-between gap-3 text-left"
               >
                 <span>
-                  <span className="block text-lg font-semibold">Add a purchase</span>
+                  <span className="block text-lg font-semibold">{strings.expenses.addPurchase}</span>
                   <span className="mt-1 block text-sm text-slate-500">
-                    List each product with its price. The total is added up for you.
+                    {strings.expenses.addPurchaseHint}
                   </span>
                 </span>
                 <span
@@ -250,7 +248,7 @@ export default function ExpensesPage() {
               <form className="mt-5 border-t border-slate-100 pt-5" onSubmit={add}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <label className="sm:w-48">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Date</span>
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.date}</span>
                     <input
                       type="date"
                       value={date}
@@ -260,11 +258,11 @@ export default function ExpensesPage() {
                     />
                   </label>
                   <label className="flex-1">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Note (optional)</span>
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.expenses.noteLabel}</span>
                     <input
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      placeholder="e.g. weekly bazar"
+                      placeholder={strings.expenses.notePlaceholder}
                       className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
                     />
                   </label>
@@ -278,7 +276,7 @@ export default function ExpensesPage() {
                     disabled={adding}
                     className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
                   >
-                    {adding ? 'Adding...' : 'Add purchase'}
+                    {adding ? strings.expenses.adding : strings.expenses.addPurchaseButton}
                   </button>
                 </div>
               </form>
@@ -299,7 +297,7 @@ export default function ExpensesPage() {
                         <div className="flex items-baseline justify-between gap-3 text-sm">
                           <span className="min-w-0 truncate font-medium">
                             {row.name}
-                            {row.id === user?.id && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                            {row.id === user?.id && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
                             <span className="ml-1.5 text-xs font-normal text-slate-400">
                               {strings.expenses.purchaseCount(row.count)}
                             </span>
@@ -326,20 +324,20 @@ export default function ExpensesPage() {
             </div>
 
             {loading ? (
-              <p className="mt-4 text-slate-500">Loading...</p>
+              <p className="mt-4 text-slate-500">{strings.common.loading}</p>
             ) : expenses.length === 0 ? (
-              <p className="mt-4 text-slate-500">No purchases logged this month.</p>
+              <p className="mt-4 text-slate-500">{strings.expenses.noPurchases}</p>
             ) : (
               <>
                 <div className="mt-4 hidden lg:block">
                   <table className="w-full table-fixed border-collapse text-sm">
                     <thead>
                       <tr className="border-y border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-                        <th className="w-[15%] px-3 py-2">Date</th>
-                        <th className="w-[17%] px-3 py-2">Member</th>
-                        <th className="w-[25%] px-3 py-2">Products</th>
-                        <th className="w-[11%] px-3 py-2 text-right">Amount</th>
-                        <th className="w-[32%] px-3 py-2">Comments</th>
+                        <th className="w-[15%] px-3 py-2">{strings.expenses.colDate}</th>
+                        <th className="w-[17%] px-3 py-2">{strings.expenses.colMember}</th>
+                        <th className="w-[25%] px-3 py-2">{strings.expenses.colProducts}</th>
+                        <th className="w-[11%] px-3 py-2 text-right">{strings.expenses.colAmount}</th>
+                        <th className="w-[32%] px-3 py-2">{strings.expenses.colComments}</th>
                       </tr>
                     </thead>
 
@@ -375,15 +373,15 @@ export default function ExpensesPage() {
                                   >
                                     {longDate(day)}
                                     <span className="mt-1 block text-xs font-normal text-slate-500">
-                                      Day total {taka(dayTotal)}
+                                      {strings.expenses.dayTotal(taka(dayTotal))}
                                     </span>
                                   </td>
                                 )}
 
                                 <td className="px-3 py-3 align-middle">
-                                  <span className="font-medium">{expense.payer?.name ?? 'Unknown'}</span>
+                                  <span className="font-medium">{expense.payer?.name ?? strings.expenses.unknownMember}</span>
                                   {expense.payer?.id === user?.id && (
-                                    <span className="ml-1 text-xs text-green-600">(you)</span>
+                                    <span className="ml-1 text-xs text-green-600">{strings.common.you}</span>
                                   )}
                                   {expense.note && (
                                     <span className="mt-1 block text-xs italic text-slate-400">{expense.note}</span>
@@ -463,9 +461,9 @@ export default function ExpensesPage() {
                               <div className="flex items-start justify-between gap-2">
                                 <div>
                                   <p className="font-medium">
-                                    {expense.payer?.name ?? 'Unknown'}
+                                    {expense.payer?.name ?? strings.expenses.unknownMember}
                                     {expense.payer?.id === user?.id && (
-                                      <span className="ml-1 text-xs text-green-600">(you)</span>
+                                      <span className="ml-1 text-xs text-green-600">{strings.common.you}</span>
                                     )}
                                   </p>
                                   {expense.note && <p className="text-xs italic text-slate-400">{expense.note}</p>}
@@ -535,8 +533,8 @@ function ItemRows({
   return (
     <div className="mt-4">
       <div className="hidden gap-3 px-1 pb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:flex">
-        <span className="flex-1">Product</span>
-        <span className="w-32">Price</span>
+        <span className="flex-1">{strings.expenses.colProduct}</span>
+        <span className="w-32">{strings.expenses.colPrice}</span>
         <span className="w-9" />
       </div>
 
@@ -546,7 +544,7 @@ function ItemRows({
             <input
               value={row.name}
               onChange={(e) => setRows((prev) => prev.map((r, i) => (i === index ? { ...r, name: e.target.value } : r)))}
-              placeholder="e.g. 1 kg miniket rice"
+              placeholder={strings.expenses.productPlaceholder}
               className="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
             />
             <input
@@ -563,7 +561,7 @@ function ItemRows({
             <button
               type="button"
               onClick={() => setRows((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)))}
-              aria-label="Remove product"
+              aria-label={strings.expenses.removeProduct}
               className="h-9 w-9 shrink-0 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
             >
               ×
@@ -578,10 +576,10 @@ function ItemRows({
           onClick={() => setRows((prev) => [...prev, blankRow()])}
           className="rounded-full border border-slate-300 px-4 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
         >
-          + Add product
+          {strings.expenses.addProduct}
         </button>
         <p className="text-sm">
-          <span className="text-slate-500">Total </span>
+          <span className="text-slate-500">{strings.common.total} </span>
           <span className="font-semibold">{taka(total)}</span>
         </p>
       </div>
@@ -614,7 +612,7 @@ function EditPanel({
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="sm:w-48">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Date</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.date}</span>
           <input
             type="date"
             value={date}
@@ -623,7 +621,7 @@ function EditPanel({
           />
         </label>
         <label className="flex-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Note</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.note}</span>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -640,14 +638,14 @@ function EditPanel({
           onClick={onSave}
           className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px"
         >
-          Save changes
+          {strings.expenses.saveChanges}
         </button>
         <button
           type="button"
           onClick={onCancel}
           className="rounded-full border border-slate-300 px-5 py-2 text-sm text-slate-600 hover:bg-slate-100"
         >
-          Cancel
+          {strings.common.cancel}
         </button>
       </div>
     </div>
@@ -697,7 +695,7 @@ function CommentBox({
   return (
     <div className="min-w-0">
       {comments.length === 0 ? (
-        <p className="text-xs text-slate-400">No comments yet.</p>
+        <p className="text-xs text-slate-400">{strings.expenses.noComments}</p>
       ) : (
         <ul className="space-y-1.5">
           {comments.map((c) => (
@@ -705,14 +703,14 @@ function CommentBox({
               <div className="flex items-center gap-2">
                 <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600">
                   {c.authorName}
-                  {c.authorId === currentUserId && <span className="ml-1 text-green-600">(you)</span>}
+                  {c.authorId === currentUserId && <span className="ml-1 text-green-600">{strings.common.you}</span>}
                   <span className="ml-2 font-normal text-slate-400">{when(c.createdAt)}</span>
                 </p>
                 {canDelete && (
                   <button
                     onClick={() => onDelete(c.id)}
-                    aria-label="Delete comment"
-                    title="Delete comment"
+                    aria-label={strings.expenses.deleteComment}
+                    title={strings.expenses.deleteComment}
                     className="-mr-1 shrink-0 rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover/comment:text-slate-400"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -740,14 +738,14 @@ function CommentBox({
           onChange={setText}
           members={members}
           variant="inline"
-          placeholder="Add a comment"
+          placeholder={strings.expenses.addComment}
           onSubmit={post}
         />
         <button
           type="submit"
           disabled={busy || !text.trim()}
-          aria-label="Post comment"
-          title="Post comment"
+          aria-label={strings.expenses.postComment}
+          title={strings.expenses.postComment}
           className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 shadow-sm shadow-brand-600/20 text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:bg-slate-200 disabled:text-slate-400"
         >
           {busy ? (
@@ -775,7 +773,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
         <path d="M12 20h9" />
         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
       </svg>
-      Edit
+      {strings.common.edit}
     </button>
   );
 }
@@ -791,7 +789,7 @@ function DeleteButton({ onClick }: { onClick: () => void }) {
         <path d="M8 6V4h8v2" />
         <path d="M19 6l-1 14H6L5 6" />
       </svg>
-      Delete
+      {strings.common.delete}
     </button>
   );
 }

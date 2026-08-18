@@ -54,8 +54,8 @@ export default function ProfilePage() {
         body: JSON.stringify({ name, phone })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not update profile.');
-      toast.success('Profile updated.');
+      if (!res.ok) throw new Error(data?.error ?? strings.profile.updateFailed);
+      toast.success(strings.profile.updated);
       if (data.user?.phone !== undefined) setPhone(data.user.phone ?? '');
       refresh();
     } catch (err) {
@@ -67,22 +67,22 @@ export default function ProfilePage() {
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
-      <PageTitle title="Profile" />
+      <PageTitle title={strings.profile.title} />
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Profile</h1>
-        <p className="mt-1 text-slate-600">Your details and anything waiting for you.</p>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{strings.profile.title}</h1>
+        <p className="mt-1 text-slate-600">{strings.profile.subtitle}</p>
       </div>
 
       {loading ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">Loading...</div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">{strings.common.loading}</div>
       ) : !user ? (
         <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow-sm">
-          Please sign in to view your profile.
+          {strings.profile.signInPrompt}
         </div>
       ) : (
         <div className="space-y-6">
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-semibold">Your details</h2>
+            <h2 className="text-lg font-semibold">{strings.profile.yourDetails}</h2>
             <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
               <span className="rounded-full bg-slate-100 px-3 py-1">{user.email}</span>
               <span className="rounded-full bg-slate-100 px-3 py-1">{user.role}</span>
@@ -92,7 +92,7 @@ export default function ProfilePage() {
 
             <form className="mt-6 space-y-5" onSubmit={handleSubmit} noValidate>
               <TextField
-                label="Name"
+                label={strings.common.name}
                 value={name}
                 onChange={(value) => {
                   setName(value);
@@ -102,7 +102,7 @@ export default function ProfilePage() {
                 error={errors.name}
               />
               <TextField
-                label="Phone"
+                label={strings.common.phone}
                 type="tel"
                 value={phone}
                 onChange={(value) => {
@@ -110,7 +110,7 @@ export default function ProfilePage() {
                   setErrors((e) => ({ ...e, phone: undefined }));
                 }}
                 autoComplete="tel"
-                placeholder="+8801XXXXXXXXX"
+                placeholder={strings.auth.register.phonePlaceholder}
                 optional
                 required={false}
                 error={errors.phone}
@@ -120,7 +120,7 @@ export default function ProfilePage() {
                 disabled={saving}
                 className="w-full rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50 sm:w-auto"
               >
-                {saving ? 'Saving...' : 'Save changes'}
+                {saving ? strings.common.saving : strings.common.saveChanges}
               </button>
             </form>
           </div>
@@ -240,13 +240,13 @@ function PastMealEditingSection() {
     try {
       const res = await fetch(`/api/groups/${group.id}/meal-edit-window`, { method: next ? 'POST' : 'DELETE' });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not change the edit window.');
+      if (!res.ok) throw new Error(body?.error ?? strings.profile.editWindowFailed);
       setState(body.window);
       if (next) {
         toast.success(
           body.window?.unlimited
-            ? 'Past meals unlocked.'
-            : `Past meals unlocked for ${body.window?.windowMinutes ?? 5} minutes.`
+            ? strings.profile.pastMealsUnlocked
+            : strings.profile.pastMealsUnlockedFor(body.window?.windowMinutes ?? 5)
         );
       }
     } catch (err) {
@@ -265,10 +265,10 @@ function PastMealEditingSection() {
   return (
     <div className={`rounded-3xl border p-6 shadow-sm sm:p-8 ${state.open ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold">Editing past meals</h2>
+        <h2 className="text-lg font-semibold">{strings.profile.editingPastMeals}</h2>
         {state.open && (
           <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold tabular-nums text-amber-700 ring-1 ring-amber-300">
-            {state.unlimited || !countdown ? 'No time limit' : `${countdown} left`}
+            {state.unlimited || !countdown ? strings.profile.noTimeLimit : strings.profile.timeLeft(countdown)}
           </span>
         )}
       </div>
@@ -282,14 +282,14 @@ function PastMealEditingSection() {
           className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
         />
         <span>
-          <span className="text-sm font-medium">Let me edit my past meals in {group.name}</span>
+          <span className="text-sm font-medium">{strings.profile.letMeEdit(group.name)}</span>
           <span className="mt-1 block text-sm text-slate-600">
             {state.unlimited
-              ? 'Stays on until you turn it off.'
-              : `Unlocks days that have already passed for ${state.windowMinutes} minutes, then locks itself again.`}
+              ? strings.profile.staysOnUntilOff
+              : strings.profile.unlocksForMinutes(state.windowMinutes)}{' '}
             {state.requiresApproval
-              ? ' Anything you change goes to your supervisor for approval before it counts.'
-              : ' Changes apply straight away and the whole mess is notified.'}
+              ? strings.profile.requiresApprovalNote
+              : strings.profile.appliesImmediatelyNote}
           </span>
         </span>
       </label>
@@ -388,7 +388,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
     <>
       <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6">
         {image ? (
-          <ImageViewer src={image} alt={name} title="Profile photo">
+          <ImageViewer src={image} alt={name} title={strings.profile.photo}>
             {(open) => (
               <button
                 type="button"
@@ -474,11 +474,11 @@ function PasswordSection() {
     event.preventDefault();
 
     const nextErrors: typeof errors = {};
-    if (!current) nextErrors.current = 'Enter your current password.';
+    if (!current) nextErrors.current = strings.profile.enterCurrentPassword;
     if (next.length < PASSWORD_MIN_LENGTH) {
-      nextErrors.next = `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+      nextErrors.next = strings.validation.passwordTooShort(PASSWORD_MIN_LENGTH);
     }
-    if (confirm !== next) nextErrors.confirm = 'Passwords do not match.';
+    if (confirm !== next) nextErrors.confirm = strings.validation.passwordMismatch;
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
@@ -491,9 +491,9 @@ function PasswordSection() {
         body: JSON.stringify({ currentPassword: current, password: next })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not change your password.');
+      if (!res.ok) throw new Error(data?.error ?? strings.profile.passwordChangeFailed);
 
-      toast.success('Password changed. Other devices have been signed out.');
+      toast.success(strings.profile.passwordChanged);
       setCurrent('');
       setNext('');
       setConfirm('');
@@ -506,12 +506,12 @@ function PasswordSection() {
 
   return (
     <Collapsible
-      title="Change password"
-      description="Changing your password signs you out everywhere else. This browser stays signed in."
+      title={strings.profile.changePassword}
+      description={strings.profile.changePasswordHint}
     >
       <form className="space-y-5" onSubmit={submit} noValidate>
         <PasswordField
-          label="Current password"
+          label={strings.profile.currentPassword}
           name="current-password"
           value={current}
           onChange={(value) => {
@@ -522,7 +522,7 @@ function PasswordSection() {
           error={errors.current}
         />
         <PasswordField
-          label="New password"
+          label={strings.profile.newPassword}
           name="new-password"
           value={next}
           onChange={(value) => {
@@ -534,7 +534,7 @@ function PasswordSection() {
           error={errors.next}
         />
         <PasswordField
-          label="Confirm new password"
+          label={strings.profile.confirmNewPassword}
           name="confirm-password"
           value={confirm}
           onChange={(value) => {
@@ -549,7 +549,7 @@ function PasswordSection() {
           disabled={saving}
           className="w-full rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-3 text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50 sm:w-auto"
         >
-          {saving ? 'Changing...' : 'Change password'}
+          {saving ? strings.profile.changing : strings.profile.changePassword}
         </button>
       </form>
     </Collapsible>

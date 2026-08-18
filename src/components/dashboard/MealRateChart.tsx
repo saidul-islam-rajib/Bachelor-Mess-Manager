@@ -1,5 +1,6 @@
 import { useMemo, useState, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { formatCurrency, formatDayKey } from '@/lib/format';
+import { strings } from '@/lib/i18n';
 
 export type MealRateChartDay = {
   date: string;
@@ -75,7 +76,7 @@ export default function MealRateChart({ days }: { days: MealRateChartDay[] }) {
   if (points.length === 0) {
     return (
       <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
-        No priced days yet this month
+        {strings.mealRateChart.empty}
       </div>
     );
   }
@@ -93,7 +94,7 @@ export default function MealRateChart({ days }: { days: MealRateChartDay[] }) {
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setActiveIndex(null)}
         role="img"
-        aria-label={`Meal rate by day, ranging from ${taka(min)} to ${taka(max)}`}
+        aria-label={strings.mealRateChart.ariaLabel(taka(min), taka(max))}
       >
         <defs>
           <linearGradient id="mealRateFill" x1="0" y1="0" x2="0" y2="1">

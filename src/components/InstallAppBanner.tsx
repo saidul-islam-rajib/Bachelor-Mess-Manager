@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { usePwa } from '@/components/PwaProvider';
+import { strings } from '@/lib/i18n';
+import { appConfig } from '@/config';
 
 const DISMISS_KEY = 'bp-install-dismissed';
 
@@ -39,9 +41,9 @@ export default function InstallAppBanner() {
         </span>
 
         <p className="min-w-0 flex-1">
-          <span className="font-semibold">Install Bachelor Point</span>
+          <span className="font-semibold">{strings.installBanner.install(appConfig.name)}</span>
           <span className="ml-2 hidden text-slate-300 sm:inline">
-            Add it to your home screen for a full-screen app.
+            {strings.installBanner.hint}
           </span>
         </p>
 
@@ -51,7 +53,7 @@ export default function InstallAppBanner() {
             onClick={() => setShowIosSteps((v) => !v)}
             className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
           >
-            {showIosSteps ? 'Hide' : 'How'}
+            {showIosSteps ? strings.installBanner.hide : strings.installBanner.how}
           </button>
         ) : (
           <button
@@ -59,14 +61,14 @@ export default function InstallAppBanner() {
             onClick={promptInstall}
             className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
           >
-            Install
+            {strings.installBanner.installCta}
           </button>
         )}
 
         <button
           type="button"
           onClick={dismiss}
-          aria-label="Dismiss install prompt"
+          aria-label={strings.installBanner.dismiss}
           className="-mr-1.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -77,14 +79,13 @@ export default function InstallAppBanner() {
         {showIosSteps && (
           <ol className="w-full list-decimal space-y-1 rounded-xl bg-white/10 px-6 py-3 text-xs text-slate-200">
             <li>
-              Tap the <span className="font-semibold text-white">Share</span> button at the bottom of Safari.
+              {strings.installBanner.step1Pre} <span className="font-semibold text-white">{strings.installBanner.step1Label}</span> {strings.installBanner.step1Post}
             </li>
             <li>
-              Scroll down and choose <span className="font-semibold text-white">Add to Home Screen</span>.
+              {strings.installBanner.step2Pre} <span className="font-semibold text-white">{strings.installBanner.step2Label}</span>{strings.installBanner.step2Post}
             </li>
             <li>
-              Tap <span className="font-semibold text-white">Add</span>. Bachelor Point will open full screen from your
-              home screen.
+              {strings.installBanner.step3Pre} <span className="font-semibold text-white">{strings.installBanner.step3Label}</span>{strings.installBanner.step3Post(appConfig.name)}
             </li>
           </ol>
         )}

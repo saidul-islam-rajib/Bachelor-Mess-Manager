@@ -254,39 +254,38 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
 
       {isAdmin && supervisors && (
         <Card>
-          <h2 className="text-lg font-semibold">Supervisors for this mess</h2>
+          <h2 className="text-lg font-semibold">{strings.groups.supervisorsForThisMess}</h2>
           <p className="mt-1 max-w-2xl text-sm text-slate-500">
-            How many people may run this mess. The main supervisor counts towards the limit, so 2 means one second
-            supervisor alongside them.
+            {strings.groups.supervisorsForThisMessHint}
           </p>
 
           <Listbox
             className="mt-4 block max-w-md"
-            label="Supervisors allowed"
+            label={strings.groups.supervisorsAllowedLabel}
             value={group.maxSupervisors === null || group.maxSupervisors === undefined ? SUPERVISORS_INHERIT : String(group.maxSupervisors)}
             disabled={busy}
             onChange={(next) =>
               patch(
                 { maxSupervisors: next === SUPERVISORS_INHERIT ? null : Number(next) },
-                'Supervisor limit updated.',
+                strings.groups.supervisorLimitUpdated,
                 strings.groups.settingFailed
               )
             }
             options={[
               {
                 value: SUPERVISORS_INHERIT,
-                label: `Follow the site default (${supervisors.siteMaxSupervisors})`
+                label: strings.groups.followSiteDefault(supervisors.siteMaxSupervisors)
               },
-              { value: '1', label: '1 — one supervisor' },
-              { value: '2', label: '2 — allow a second supervisor' }
+              { value: '1', label: strings.groups.oneOneSupervisor },
+              { value: '2', label: strings.groups.twoAllowSecondSupervisor }
             ]}
           />
 
           <p className="mt-2 max-w-2xl text-xs text-slate-500">
-            Using {supervisors.supervisors.length} of {supervisors.maxSupervisors}.{' '}
+            {strings.groups.usingOfMax(supervisors.supervisors.length, supervisors.maxSupervisors)}{' '}
             {supervisors.canAddMore
-              ? 'Add the second supervisor from the Roster tab.'
-              : 'Remove one from the Roster tab before lowering this.'}
+              ? strings.groups.addSecondFromRoster
+              : strings.groups.removeFromRosterFirst}
           </p>
         </Card>
       )}

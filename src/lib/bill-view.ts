@@ -1,5 +1,6 @@
 import { SPLIT_METHODS } from '@/lib/constants';
 import { round2 } from '@/lib/month';
+import { strings } from '@/lib/i18n';
 
 export type Collection = {
   id: string;
@@ -83,18 +84,7 @@ export type BillKind = (typeof BILL_KINDS)[keyof typeof BILL_KINDS];
 
 export const KIND_ORDER: BillKind[] = [BILL_KINDS.SHARED, BILL_KINDS.ASSIGNED];
 
-export const BILL_KIND_COPY: Record<BillKind, { title: string; short: string; hint: string }> = {
-  SHARED: {
-    title: 'Shared bills',
-    short: 'Shared',
-    hint: 'Split equally across every active member. Everyone owes the same share, and anyone who pays more than their share gets the extra back.'
-  },
-  ASSIGNED: {
-    title: 'Assigned bills',
-    short: 'Assigned',
-    hint: 'Split between the selected members only, with an amount set per person.'
-  }
-};
+export const BILL_KIND_COPY: Record<BillKind, { title: string; short: string; hint: string }> = strings.bills.kinds;
 
 const toPaisa = (amount: number) => Math.round(amount * 100);
 const fromPaisa = (paisa: number) => round2(paisa / 100);

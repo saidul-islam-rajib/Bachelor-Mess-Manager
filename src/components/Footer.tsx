@@ -117,35 +117,35 @@ export default function Footer() {
             </p>
           </div>
 
-          <nav aria-label="Footer" className="text-sm text-slate-600 lg:col-span-2">
-            <h3 className="font-semibold text-slate-900">Explore</h3>
+          <nav aria-label={strings.footer.ariaLabel} className="text-sm text-slate-600 lg:col-span-2">
+            <h3 className="font-semibold text-slate-900">{strings.footer.explore}</h3>
             <ul className="mt-3 space-y-2">
               <li>
                 <Link href={ROUTES.guide} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
-                  How it works
+                  {strings.footer.howItWorks}
                 </Link>
               </li>
               <li>
                 <Link href={ROUTES.home} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
-                  Home
+                  {strings.footer.home}
                 </Link>
               </li>
               {user ? (
                 <li>
                   <Link href={ROUTES.dashboard} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
-                    Dashboard
+                    {strings.nav.dashboard}
                   </Link>
                 </li>
               ) : (
                 <>
                   <li>
                     <Link href={ROUTES.auth.login} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
-                      Sign in
+                      {strings.footer.signIn}
                     </Link>
                   </li>
                   <li>
                     <Link href={ROUTES.auth.register} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
-                      Create an account
+                      {strings.footer.createAccount}
                     </Link>
                   </li>
                 </>
@@ -154,7 +154,7 @@ export default function Footer() {
           </nav>
 
           <div className="text-sm text-slate-600 lg:col-span-3">
-            <h3 className="font-semibold text-slate-900">Contact</h3>
+            <h3 className="font-semibold text-slate-900">{strings.footer.contact}</h3>
             <ul className="mt-3 space-y-2">
               {settings?.address && <li>{settings.address}</li>}
               {settings?.contactEmail && (
@@ -166,19 +166,19 @@ export default function Footer() {
               )}
               {settings?.contactPhone && <li>{settings.contactPhone}</li>}
               {!settings?.address && !settings?.contactEmail && !settings?.contactPhone && (
-                <li className="text-slate-400">Contact details coming soon.</li>
+                <li className="text-slate-400">{strings.footer.contactComingSoon}</li>
               )}
             </ul>
             {(settings?.facebookUrl || settings?.twitterUrl) && (
               <div className="mt-4 flex gap-4">
                 {settings?.facebookUrl && (
                   <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
-                    Facebook
+                    {strings.footer.facebook}
                   </a>
                 )}
                 {settings?.twitterUrl && (
                   <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
-                    Twitter / X
+                    {strings.footer.twitter}
                   </a>
                 )}
               </div>

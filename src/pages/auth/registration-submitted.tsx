@@ -1,7 +1,8 @@
 import { LinkButton, PageTitle } from '@/components/ui';
 import { ROUTES } from '@/lib/routes';
+import { strings } from '@/lib/i18n';
 
-const TITLE = 'Registration submitted';
+const TITLE = strings.auth.submitted.title;
 
 export default function RegistrationSubmittedPage() {
   return (
@@ -17,15 +18,15 @@ export default function RegistrationSubmittedPage() {
           </div>
           <h1 className="mt-6 text-2xl font-semibold">{TITLE}</h1>
           <p className="mt-3 text-slate-600">
-            Your account has been created and is <span className="font-medium">awaiting admin approval</span>. You&apos;ll
-            be able to sign in as soon as an admin reviews and approves it.
+            {strings.auth.submitted.bodyPre} <span className="font-medium">{strings.auth.submitted.awaitingApproval}</span>.{' '}
+            {strings.auth.submitted.bodyPost}
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <LinkButton href={ROUTES.auth.login} size="lg">
-              Go to login
+              {strings.auth.submitted.goToLogin}
             </LinkButton>
             <LinkButton href={ROUTES.home} variant="secondary" size="lg">
-              Back to home
+              {strings.auth.submitted.backToHome}
             </LinkButton>
           </div>
         </div>

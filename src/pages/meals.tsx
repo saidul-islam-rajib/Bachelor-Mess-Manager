@@ -67,11 +67,15 @@ type PendingChange = {
 
 const FIELDS = ['breakfast', 'lunch', 'dinner'] as const;
 const FIELD_LABELS: Record<(typeof FIELDS)[number], string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  dinner: 'Dinner'
+  breakfast: strings.meals.breakfast,
+  lunch: strings.meals.lunch,
+  dinner: strings.meals.dinner
 };
-const FIELD_SHORT: Record<(typeof FIELDS)[number], string> = { breakfast: 'B', lunch: 'L', dinner: 'D' };
+const FIELD_SHORT: Record<(typeof FIELDS)[number], string> = {
+  breakfast: strings.meals.breakfastShort,
+  lunch: strings.meals.lunchShort,
+  dinner: strings.meals.dinnerShort
+};
 
 const taka = formatCurrency;
 
@@ -167,8 +171,8 @@ export default function MealsPage() {
         body: JSON.stringify({ status })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not save that decision.');
-      toast.success(status === 'APPROVED' ? 'Change approved and applied.' : 'Change declined.');
+      if (!res.ok) throw new Error(data?.error ?? strings.meals.decisionFailed);
+      toast.success(status === 'APPROVED' ? strings.meals.changeApproved : strings.meals.changeDeclined);
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -179,8 +183,8 @@ export default function MealsPage() {
     try {
       const res = await fetch(`/api/meal-changes/${id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not withdraw that request.');
-      toast.success('Request withdrawn.');
+      if (!res.ok) throw new Error(data?.error ?? strings.meals.withdrawFailed);
+      toast.success(strings.meals.withdrawn);
       await load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -209,10 +213,10 @@ export default function MealsPage() {
         body: JSON.stringify({ date, userId, breakfast: c.breakfast, lunch: c.lunch, dinner: c.dinner })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not save.');
+      if (!res.ok) throw new Error(data?.error ?? strings.meals.saveFailed);
 
       if (data.pending) {
-        toast.success('Sent to your supervisor. The meal table updates once they approve it.');
+        toast.success(strings.meals.sentToSupervisor);
         await load();
         return;
       }
@@ -299,23 +303,23 @@ export default function MealsPage() {
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
       <PageTitle title={strings.meals.title} />
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Meals</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{strings.meals.title}</h1>
         <p className="mt-1 text-slate-600">
           {canManage ? strings.meals.subtitleManage : strings.meals.subtitle}
         </p>
       </div>
 
       {loadingGroups ? (
-        <Card>Loading...</Card>
+        <Card>{strings.common.loading}</Card>
       ) : groups.length === 0 ? (
-        <Card>You&apos;re not part of any group yet.</Card>
+        <Card>{strings.emptyState.noGroups}</Card>
       ) : (
         <div className="space-y-6">
           <Card>
             <GroupMonthControls groups={groups} groupId={groupId} setGroupId={setGroupId} month={month} setMonth={setMonth} />
             {weights && (
               <p className="mt-3 text-xs text-slate-500">
-                Weights — breakfast {weights.breakfast}, lunch {weights.lunch}, dinner {weights.dinner}
+                {strings.meals.weightsNote(weights.breakfast, weights.lunch, weights.dinner)}
               </p>
             )}
           </Card>
@@ -331,16 +335,16 @@ export default function MealsPage() {
           )}
 
           {loading ? (
-            <Card>Loading meals...</Card>
+            <Card>{strings.meals.loadingMeals}</Card>
           ) : (
             <>
               {me && (
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-                  <Stat label="Your meals" value={String(me.meals)} />
-                  <Stat label="Your cost" value={taka(me.cost)} />
-                  <Stat label="You paid" value={taka(me.paid)} />
+                  <Stat label={strings.meals.yourMeals} value={String(me.meals)} />
+                  <Stat label={strings.meals.yourCost} value={taka(me.cost)} />
+                  <Stat label={strings.meals.youPaid} value={taka(me.paid)} />
                   <Stat
-                    label={me.balance >= 0 ? 'Mess owes you' : 'You owe'}
+                    label={me.balance >= 0 ? strings.meals.messOwesYou : strings.meals.youOwe}
                     value={taka(Math.abs(me.balance))}
                     tone={me.balance >= 0 ? 'green' : 'red'}
                   />
@@ -505,7 +509,7 @@ export default function MealsPage() {
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
                       <th rowSpan={2} className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 px-4 py-3 text-left font-semibold">
-                        Date
+                        {strings.common.date}
                       </th>
                       {members.map((m) => (
                         <th
@@ -516,10 +520,10 @@ export default function MealsPage() {
                           }`}
                         >
                           {m.name}
-                          {isMe(m.id) && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                          {isMe(m.id) && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
                         </th>
                       ))}
-                      <th rowSpan={2} className="px-4 py-3 font-semibold">Meals</th>
+                      <th rowSpan={2} className="px-4 py-3 font-semibold">{strings.meals.colMeals}</th>
                       <th rowSpan={2} className="px-4 py-3 font-semibold" title={strings.meals.rate.runningRateHint}>
                         {strings.meals.rate.runningRateColumn}
                       </th>
@@ -573,9 +577,9 @@ export default function MealsPage() {
                                     onBlur={() => saveDay(m.id, date)}
                                     title={
                                       awaiting
-                                        ? 'A change to this day is waiting for approval'
+                                        ? strings.meals.pendingApprovalTooltip
                                         : date < today
-                                          ? 'Past day'
+                                          ? strings.meals.pastDayTooltip
                                           : undefined
                                     }
                                     className={`w-14 rounded-lg border bg-white px-1 py-1.5 text-center focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
@@ -604,7 +608,7 @@ export default function MealsPage() {
                   {summary && (
                     <tfoot>
                       <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
-                        <td className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 px-4 py-3 text-left">Total</td>
+                        <td className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 px-4 py-3 text-left">{strings.common.total}</td>
                         {members.map((m) => (
                           <td key={m.id} colSpan={3} className="border-r border-slate-200 px-3 py-3">
                             {round2(logged.byMember[m.id] ?? 0)}
@@ -714,13 +718,13 @@ function PendingApprovals({
   return (
     <div className="rounded-3xl border border-amber-300 bg-amber-50 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">
-        Meal changes waiting for you
+        {strings.meals.waitingForYouTitle}
         <span className="ml-2 rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-amber-700 ring-1 ring-amber-300">
           {changes.length}
         </span>
       </h2>
       <p className="mt-1 text-sm text-slate-600">
-        Nothing below counts towards the meal rate until you approve it.
+        {strings.meals.waitingForYouHint}
       </p>
 
       <ul className="mt-4 space-y-3">
@@ -736,14 +740,14 @@ function PendingApprovals({
                 onClick={() => onDecide(change.id, 'APPROVED')}
                 className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
               >
-                Approve
+                {strings.meals.approve}
               </button>
               <button
                 type="button"
                 onClick={() => onDecide(change.id, 'REJECTED')}
                 className="rounded-full border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
-                Decline
+                {strings.meals.decline}
               </button>
             </div>
           </li>
@@ -756,9 +760,9 @@ function PendingApprovals({
 function MyPendingChanges({ changes, onWithdraw }: { changes: PendingChange[]; onWithdraw: (id: string) => void }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">Waiting for your supervisor</h2>
+      <h2 className="text-lg font-semibold">{strings.meals.waitingForSupervisorTitle}</h2>
       <p className="mt-1 text-sm text-slate-500">
-        These days still show their old numbers in the table until the change is approved.
+        {strings.meals.waitingForSupervisorHint}
       </p>
       <ul className="mt-4 space-y-3">
         {changes.map((change) => (
@@ -772,7 +776,7 @@ function MyPendingChanges({ changes, onWithdraw }: { changes: PendingChange[]; o
               onClick={() => onWithdraw(change.id)}
               className="shrink-0 rounded-full border border-slate-300 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
             >
-              Withdraw
+              {strings.meals.withdraw}
             </button>
           </li>
         ))}
@@ -786,20 +790,20 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold">Monthly summary</h2>
+        <h2 className="text-lg font-semibold">{strings.meals.monthlySummary}</h2>
         <p className="text-sm text-slate-500">
-          Total spent {taka(summary.totals.expense)} · {summary.totals.meals} meals
+          {strings.meals.totalSpent(taka(summary.totals.expense), summary.totals.meals)}
         </p>
       </div>
       <div className="mt-4 hidden overflow-x-auto sm:block">
         <table className="min-w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-              <th className="px-3 py-2">Member</th>
-              <th className="px-3 py-2 text-right">Meals</th>
-              <th className="px-3 py-2 text-right">Cost</th>
-              <th className="px-3 py-2 text-right">Paid</th>
-              <th className="px-3 py-2 text-right">Balance</th>
+              <th className="px-3 py-2">{strings.common.member}</th>
+              <th className="px-3 py-2 text-right">{strings.meals.colMeals}</th>
+              <th className="px-3 py-2 text-right">{strings.meals.colCost}</th>
+              <th className="px-3 py-2 text-right">{strings.meals.colPaid}</th>
+              <th className="px-3 py-2 text-right">{strings.meals.colBalance}</th>
             </tr>
           </thead>
           <tbody>
@@ -807,7 +811,7 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
               <tr key={m.id} className="border-b border-slate-100 last:border-0">
                 <td className="px-3 py-2 font-medium">
                   {m.name}
-                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
                 </td>
                 <td className="px-3 py-2 text-right">{m.meals}</td>
                 <td className="px-3 py-2 text-right">{taka(m.cost)}</td>
@@ -827,7 +831,7 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
             <div className="flex items-center justify-between">
               <p className="font-medium">
                 {m.name}
-                {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">(you)</span>}
+                {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
               </p>
               <span className={`font-semibold ${m.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {m.balance >= 0 ? '+' : '−'}
@@ -835,13 +839,13 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
               </span>
             </div>
             <p className="mt-2 text-sm text-slate-500">
-              {m.meals} meals · cost {taka(m.cost)} · paid {taka(m.paid)}
+              {strings.meals.mobileSummaryLine(m.meals, taka(m.cost), taka(m.paid))}
             </p>
           </li>
         ))}
       </ul>
 
-      <p className="mt-3 text-xs text-slate-400">Balance = paid − cost. Positive means the mess owes you; negative means you owe.</p>
+      <p className="mt-3 text-xs text-slate-400">{strings.meals.balanceFootnote}</p>
 
       <MealRateTrendChart days={summary.days} currentUserId={currentUserId} />
     </div>

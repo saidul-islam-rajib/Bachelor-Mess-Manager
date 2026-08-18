@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { ROUTES } from '@/lib/routes';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useInvitations } from '@/components/InvitationsProvider';
+import { strings } from '@/lib/i18n';
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).slice(0, 2);
@@ -50,7 +51,7 @@ export default function ProfileMenu() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="Your account"
+        aria-label={strings.nav.yourAccount}
         aria-expanded={open}
         className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all ${
           onProfile || open
@@ -98,7 +99,7 @@ export default function ProfileMenu() {
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
                 </svg>
-                Profile &amp; invitations
+                {strings.nav.profileAndInvitations}
               </span>
               {count > 0 && (
                 <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-semibold text-white">
@@ -122,7 +123,7 @@ export default function ProfileMenu() {
                 <path d="M16 17l5-5-5-5" />
                 <path d="M21 12H9" />
               </svg>
-              Log out
+              {strings.nav.logout}
             </button>
           </div>
         </div>

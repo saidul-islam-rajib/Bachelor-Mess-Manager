@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { strings } from '@/lib/i18n';
 
 type Props = {
   label: string;
@@ -35,7 +36,7 @@ export function TextField({
     <div>
       <label htmlFor={id} className="flex items-baseline justify-between text-sm font-medium text-slate-700">
         <span>{label}</span>
-        {optional && <span className="text-xs font-normal text-slate-400">Optional</span>}
+        {optional && <span className="text-xs font-normal text-slate-400">{strings.common.optional}</span>}
       </label>
       <input
         id={id}

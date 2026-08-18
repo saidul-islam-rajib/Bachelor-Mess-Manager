@@ -37,9 +37,9 @@ export default function LoginPage() {
     }
 
     const nextErrors: typeof errors = {};
-    if (!email.trim()) nextErrors.email = 'Email is required.';
-    else if (!isValidEmail(email)) nextErrors.email = 'Enter a valid email address.';
-    if (!password) nextErrors.password = 'Password is required.';
+    if (!email.trim()) nextErrors.email = i18n.validation.emailRequired;
+    else if (!isValidEmail(email)) nextErrors.email = i18n.validation.emailInvalid;
+    if (!password) nextErrors.password = i18n.validation.passwordRequired;
 
     setErrors(nextErrors);
     setFormError('');
@@ -55,17 +55,17 @@ export default function LoginPage() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        const message = data?.error ?? 'Sign in failed. Please try again.';
+        const message = data?.error ?? i18n.auth.login.signInFailed;
         setFormError(message);
         setPassword('');
         return;
       }
 
       await refresh();
-      toast.success(`Welcome back, ${data.user?.name ?? ''}`.trim() + '.');
+      toast.success(i18n.success.welcomeBack(data.user?.name ?? ''));
       await router.push(safeNextPath(router.query.next) ?? ROUTES.dashboard);
     } catch {
-      setFormError('Could not reach the server. Check your connection and try again.');
+      setFormError(i18n.errors.network);
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ export default function LoginPage() {
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
           <h1 className="text-2xl font-semibold">{strings.title}</h1>
-          <p className="mt-1 text-sm text-slate-500">Sign in to manage your mess.</p>
+          <p className="mt-1 text-sm text-slate-500">{i18n.auth.login.subtitle}</p>
 
           {formError && (
             <div role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">

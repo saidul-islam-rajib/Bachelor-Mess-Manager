@@ -88,7 +88,7 @@ export default function RegisterPage() {
 
             {done.setupLink && (
               <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                <p className="text-xs font-medium text-amber-800">Development link</p>
+                <p className="text-xs font-medium text-amber-800">{strings.auth.developmentLink}</p>
                 <Link href={done.setupLink} className="mt-1 block break-all text-xs text-amber-900 underline">
                   {done.setupLink}
                 </Link>

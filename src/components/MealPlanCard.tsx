@@ -1,11 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { MEAL_FIELDS, WEEKDAYS, type MealField } from '@/lib/constants';
+import { strings } from '@/lib/i18n';
 
 export type PlanDay = { weekday: number; enabled: boolean; breakfast: number; lunch: number; dinner: number };
 
-const FIELD_LABELS: Record<MealField, string> = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
-const FIELD_SHORT: Record<MealField, string> = { breakfast: 'B', lunch: 'L', dinner: 'D' };
+const mealPlan = strings.mealPlan;
+const FIELD_LABELS: Record<MealField, string> = {
+  breakfast: mealPlan.breakfast,
+  lunch: mealPlan.lunch,
+  dinner: mealPlan.dinner
+};
+const FIELD_SHORT: Record<MealField, string> = {
+  breakfast: mealPlan.breakfastShort,
+  lunch: mealPlan.lunchShort,
+  dinner: mealPlan.dinnerShort
+};
 
 const emptyDays = (): PlanDay[] =>
   WEEKDAYS.map((d) => ({ weekday: d.value, enabled: false, breakfast: 0, lunch: 0, dinner: 0 }));
@@ -33,7 +43,7 @@ export default function MealPlanCard({
     try {
       const res = await fetch(`/api/groups/${groupId}/meal-plan`);
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not load your meal plan.');
+      if (!res.ok) throw new Error(body?.error ?? mealPlan.loadFailed);
       setIsActive(Boolean(body.plan?.isActive));
       setDays(body.plan?.days?.length === 7 ? body.plan.days : emptyDays());
     } catch (err) {
@@ -54,7 +64,7 @@ export default function MealPlanCard({
   function copyFirstEnabledToAll() {
     const source = days.find((d) => d.enabled);
     if (!source) {
-      toast.info('Turn on a day first, then copy it to the rest.');
+      toast.info(mealPlan.turnOnDayFirst);
       return;
     }
     setDays((prev) =>
@@ -75,12 +85,12 @@ export default function MealPlanCard({
       body: JSON.stringify(payload)
     });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body?.error ?? 'Could not save your meal plan.');
+    if (!res.ok) throw new Error(body?.error ?? mealPlan.saveFailed);
     return body as { filled?: number };
   }
 
   function filledMessage(filled: number) {
-    return `Plan on — ${filled} upcoming ${filled === 1 ? 'day' : 'days'} filled in.`;
+    return mealPlan.filledMessage(filled);
   }
 
   async function toggleActive(next: boolean) {
@@ -90,9 +100,9 @@ export default function MealPlanCard({
     try {
       const body = await persist({ isActive: next, days, overwriteEdited: false });
       if (!next) {
-        toast.success('Plan off — your upcoming auto-filled days were cleared.');
+        toast.success(mealPlan.planOff);
       } else if (days.every((d) => !d.enabled)) {
-        toast.info('Plan is on, but no days are picked yet — tap Edit to choose them.');
+        toast.info(mealPlan.planOnNoDays);
       } else {
         toast.success(filledMessage(body.filled ?? 0));
       }
@@ -110,7 +120,7 @@ export default function MealPlanCard({
     try {
       const body = await persist({ isActive, days, overwriteEdited });
       toast.success(
-        isActive ? filledMessage(body.filled ?? 0) : 'Plan off — your upcoming auto-filled days were cleared.'
+        isActive ? filledMessage(body.filled ?? 0) : mealPlan.planOff
       );
       onApplied();
     } catch (err) {
@@ -122,36 +132,35 @@ export default function MealPlanCard({
 
   const onDays = days.filter((d) => d.enabled);
   const summary = !isActive
-    ? 'Off'
+    ? mealPlan.off
     : onDays.length === 0
-      ? 'On — but no days selected yet'
+      ? mealPlan.onNoDaysSelected
       : onDays.map((d) => WEEKDAYS[d.weekday].short).join(', ');
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold">Default meal plan{groupName ? ` · ${groupName}` : ''}</h2>
+          <h2 className="text-lg font-semibold">{mealPlan.title(groupName ?? '')}</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Set your usual week once and it repeats — like an alarm. Applies to today and upcoming days only; past days
-            never change.
+            {mealPlan.subtitle}
           </p>
           <p className="mt-2 text-sm">
-            <span className="text-slate-500">Repeats: </span>
+            <span className="text-slate-500">{mealPlan.repeats}</span>
             <span className={`font-medium ${isActive && onDays.length > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
-              {loading ? 'Loading...' : summary}
+              {loading ? mealPlan.loading : summary}
             </span>
           </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
-          <Switch checked={isActive} onChange={toggleActive} disabled={loading || saving} label="Meal plan active" />
+          <Switch checked={isActive} onChange={toggleActive} disabled={loading || saving} label={mealPlan.mealPlanActive} />
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
-            aria-label={open ? 'Close meal plan editor' : 'Edit meal plan'}
-            title={open ? 'Close' : 'Edit meal plan'}
+            aria-label={open ? mealPlan.closeEditor : mealPlan.editPlan}
+            title={open ? mealPlan.close : mealPlan.editPlan}
             className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
           >
             {open ? (
@@ -172,12 +181,12 @@ export default function MealPlanCard({
         <div className="mt-5 border-t border-slate-100 pt-5">
           <div className="mb-4 flex flex-wrap gap-2">
             <QuickButton onClick={() => setDays((p) => p.map((d) => ({ ...d, enabled: true })))}>
-              Turn all days on
+              {mealPlan.turnAllOn}
             </QuickButton>
             <QuickButton onClick={() => setDays((p) => p.map((d) => ({ ...d, enabled: false })))}>
-              Turn all days off
+              {mealPlan.turnAllOff}
             </QuickButton>
-            <QuickButton onClick={copyFirstEnabledToAll}>Copy first day to all</QuickButton>
+            <QuickButton onClick={copyFirstEnabledToAll}>{mealPlan.copyFirstDay}</QuickButton>
           </div>
 
           <ul className="space-y-2">
@@ -195,12 +204,12 @@ export default function MealPlanCard({
                       <Switch
                         checked={d.enabled}
                         onChange={(v) => setDay(d.weekday, { enabled: v })}
-                        label={`${weekday.label} meals`}
+                        label={mealPlan.dayMeals(weekday.label)}
                       />
                       <span className={`font-medium ${d.enabled ? 'text-slate-900' : 'text-slate-400'}`}>
                         {weekday.label}
                       </span>
-                      {!d.enabled && <span className="text-xs text-slate-400">off — no meals</span>}
+                      {!d.enabled && <span className="text-xs text-slate-400">{mealPlan.offNoMeals}</span>}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 sm:w-auto sm:gap-3">
@@ -239,9 +248,9 @@ export default function MealPlanCard({
               className="mt-0.5 h-4 w-4 rounded border-slate-300"
             />
             <span>
-              Also replace upcoming days I already edited by hand.
+              {mealPlan.replaceEditedDays}
               <span className="block text-xs text-slate-400">
-                Off by default — one-off changes you made to a specific day are kept.
+                {mealPlan.replaceEditedDaysHint}
               </span>
             </span>
           </label>
@@ -253,7 +262,7 @@ export default function MealPlanCard({
               disabled={saving}
               className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Save plan'}
+              {saving ? strings.common.saving : mealPlan.savePlan}
             </button>
             <button
               type="button"
@@ -263,7 +272,7 @@ export default function MealPlanCard({
               }}
               className="rounded-full border border-slate-300 px-6 py-2 text-sm text-slate-600 hover:bg-slate-100"
             >
-              Reset
+              {mealPlan.reset}
             </button>
           </div>
         </div>

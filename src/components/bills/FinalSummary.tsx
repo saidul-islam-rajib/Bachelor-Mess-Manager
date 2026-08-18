@@ -10,8 +10,10 @@ import {
 } from '@/lib/bill-view';
 import { formatCurrency } from '@/lib/format';
 import { round2 } from '@/lib/month';
+import { strings } from '@/lib/i18n';
 
 const taka = formatCurrency;
+const finalSummary = strings.bills.finalSummary;
 
 function Total({
   label,
@@ -64,54 +66,49 @@ export function FinalSummary({
   return (
     <div className="rounded-3xl border border-slate-300 bg-white p-4 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-        <h2 className="text-lg font-semibold">Final summary</h2>
+        <h2 className="text-lg font-semibold">{finalSummary.title}</h2>
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-          {billTotals.count} {billTotals.count === 1 ? 'bill' : 'bills'} · {taka(billTotals.total)}
+          {finalSummary.billsAndTotal(billTotals.count, taka(billTotals.total))}
         </span>
       </div>
       <p className="mt-1 text-sm text-slate-500">
-        Every bill of the month netted per member. Being short on one bill and ahead on another cancels out, so each
-        person ends with one number: what they still owe, or what the mess owes them back.
+        {finalSummary.subtitle}
       </p>
 
       <dl className="mt-4 grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 px-4 py-3 sm:grid-cols-4">
-        <Total label="Total shares" value={taka(totals.share)} />
-        <Total label="Paid in" value={taka(totals.paid)} tone="green" />
-        <Total label="Still to pay" value={taka(totals.toPay)} tone="rose" />
-        <Total label="To refund" value={taka(totals.toRefund)} tone="teal" />
+        <Total label={finalSummary.totalShares} value={taka(totals.share)} />
+        <Total label={finalSummary.paidIn} value={taka(totals.paid)} tone="green" />
+        <Total label={finalSummary.stillToPayLabel} value={taka(totals.toPay)} tone="rose" />
+        <Total label={strings.payments.toRefund} value={taka(totals.toRefund)} tone="teal" />
       </dl>
 
       {cancelled > 0 && (
         <p className="mt-2 text-xs text-slate-500">
-          Bill by bill the members are short {taka(billTotals.outstanding)}, but{' '}
-          <span className="font-semibold text-slate-700">{taka(cancelled)}</span> of that cancels against what the same
-          members overpaid elsewhere — only {taka(totals.toPay)} has to change hands.
+          {finalSummary.cancelledPre(taka(billTotals.outstanding))}{' '}
+          <span className="font-semibold text-slate-700">{taka(cancelled)}</span> {finalSummary.cancelledPost(taka(totals.toPay))}
         </p>
       )}
 
       <MemberTable
         summaries={summaries}
         labels={labels}
-        emptyText="No shares recorded this month."
+        emptyText={finalSummary.noShares}
         onOpenBill={onOpenBill}
       />
 
       {summaries.length > 0 && (
         <p className="mt-2 text-xs text-slate-500">
-          {owing.length} {owing.length === 1 ? 'member' : 'members'} still to pay ·{' '}
-          {gettingBack.length} {gettingBack.length === 1 ? 'member gets' : 'members get'} money back. Tap anyone to see
-          it bill by bill.
+          {finalSummary.payGetBackSummary(owing.length, gettingBack.length)}
         </p>
       )}
 
       {settlement.transfers.length > 0 && (
         <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 sm:p-4">
           <h3 className="text-sm font-semibold text-slate-900">
-            Settle up in {settlement.transfers.length}{' '}
-            {settlement.transfers.length === 1 ? 'hand-over' : 'hand-overs'}
+            {finalSummary.settleUpIn(settlement.transfers.length)}
           </h3>
           <p className="mt-0.5 text-xs text-slate-500">
-            The shortest way to clear the month: the members still short pay the members who fronted the money.
+            {finalSummary.settleUpHint}
           </p>
           <ul className="mt-2.5 space-y-1.5">
             {settlement.transfers.map((transfer, index) => (
@@ -133,15 +130,13 @@ export function FinalSummary({
 
       {settlement.unmatched > 0 && (
         <p className="mt-3 rounded-2xl bg-amber-50 px-4 py-3 text-xs text-amber-900">
-          <span className="font-semibold tabular-nums">{taka(settlement.unmatched)}</span> of the dues is not owed to
-          any member — it is the part of the bills nobody has fronted yet, so it goes to the mess to pay the vendors.
+          <span className="font-semibold tabular-nums">{taka(settlement.unmatched)}</span> {finalSummary.unmatchedNote}
         </p>
       )}
 
       {settlement.surplus > 0 && (
         <p className="mt-3 rounded-2xl bg-teal-50 px-4 py-3 text-xs text-teal-900">
-          <span className="font-semibold tabular-nums">{taka(settlement.surplus)}</span> more has been collected than
-          the bills come to, so the mess itself refunds that much.
+          <span className="font-semibold tabular-nums">{taka(settlement.surplus)}</span> {finalSummary.surplusNote}
         </p>
       )}
     </div>

@@ -83,7 +83,7 @@ export default function BillsPage() {
       try {
         const res = await fetch(`/api/groups/${groupId}/bills?month=${month}`);
         const body = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(body?.error ?? 'Could not load bills.');
+        if (!res.ok) throw new Error(body?.error ?? strings.bills.loadFailed);
         setData(body);
       } catch (err) {
         toast.error((err as Error).message);
@@ -109,8 +109,8 @@ export default function BillsPage() {
         body: JSON.stringify({ isReceived: !bill.isReceived })
       });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not update the bill.');
-      toast.success(bill.isReceived ? 'Marked as unpaid.' : 'Marked as paid.');
+      if (!res.ok) throw new Error(body?.error ?? strings.bills.updateFailed);
+      toast.success(bill.isReceived ? strings.bills.markedUnpaid : strings.bills.markedPaid);
       await refresh();
     } catch (err) {
       toast.error((err as Error).message);
@@ -125,8 +125,8 @@ export default function BillsPage() {
         body: JSON.stringify(body)
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload?.error ?? 'Could not record that payment.');
-      toast.success('Payment recorded.');
+      if (!res.ok) throw new Error(payload?.error ?? strings.bills.collectFailed);
+      toast.success(strings.bills.collectionRecorded);
       await refresh();
     } catch (err) {
       toast.error((err as Error).message);
@@ -134,11 +134,7 @@ export default function BillsPage() {
   }
 
   async function reverseCollection(bill: Bill, collectionId: string) {
-    if (
-      !window.confirm(
-        'Reverse this entry?\n\nThe original stays in the history and a matching correction is added beside it. Nothing is erased.'
-      )
-    ) {
+    if (!window.confirm(strings.bills.reverseEntryConfirm)) {
       return;
     }
     try {
@@ -146,8 +142,8 @@ export default function BillsPage() {
         method: 'DELETE'
       });
       const payload = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(payload?.error ?? 'Could not reverse that entry.');
-      toast.success('Entry reversed. The original is kept in the history.');
+      if (!res.ok) throw new Error(payload?.error ?? strings.bills.reverseEntryFailed);
+      toast.success(strings.bills.entryReversed);
       await refresh();
       bumpAdvances();
     } catch (err) {
@@ -157,14 +153,14 @@ export default function BillsPage() {
 
   async function remove(bill: Bill) {
     const label = data?.categoryLabels[bill.type] ?? bill.type;
-    if (!window.confirm(`Delete this ${label} bill of ${taka(bill.amount)}?`)) {
+    if (!window.confirm(strings.bills.deleteConfirm(label, taka(bill.amount)))) {
       return;
     }
     try {
       const res = await fetch(`/api/bills/${bill.id}`, { method: 'DELETE' });
       const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? 'Could not delete the bill.');
-      toast.success('Bill deleted.');
+      if (!res.ok) throw new Error(body?.error ?? strings.bills.deleteFailed);
+      toast.success(strings.bills.deleted);
       collapse(bill.id);
       await refresh();
       bumpAdvances();
@@ -183,18 +179,16 @@ export default function BillsPage() {
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
-      <PageTitle title="Bills & fixed costs" />
+      <PageTitle title={strings.bills.title} />
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Bills &amp; fixed costs</h1>
-        <p className="mt-1 text-slate-600">
-          Rent, electricity, water, waste, chef, Wi-Fi and anything else that is not day-to-day bazar.
-        </p>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{strings.bills.title}</h1>
+        <p className="mt-1 text-slate-600">{strings.bills.subtitle}</p>
       </div>
 
       {loadingGroups ? (
-        <Card>Loading...</Card>
+        <Card>{strings.common.loading}</Card>
       ) : groups.length === 0 ? (
-        <Card>You&apos;re not part of any group yet.</Card>
+        <Card>{strings.emptyState.noGroups}</Card>
       ) : (
         <div className="space-y-6">
           <Card>
@@ -202,7 +196,7 @@ export default function BillsPage() {
           </Card>
 
           {loading || !data ? (
-            <Card>Loading bills...</Card>
+            <Card>{strings.bills.loadingBills}</Card>
           ) : (
             <>
               <BillStats
@@ -252,7 +246,7 @@ export default function BillsPage() {
 
               <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 className="text-lg font-semibold">Bills this month</h2>
+                  <h2 className="text-lg font-semibold">{strings.bills.thisMonth}</h2>
                   <div className="flex items-center gap-3">
                     {bills.length > 1 && (
                       <button
@@ -260,16 +254,16 @@ export default function BillsPage() {
                         onClick={() => setExpanded(openCount === bills.length ? [] : bills.map((bill) => bill.id))}
                         className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
                       >
-                        {openCount === bills.length ? 'Collapse all' : 'Expand all'}
+                        {openCount === bills.length ? strings.bills.collapseAll : strings.bills.expandAll}
                       </button>
                     )}
-                    <p className="text-sm text-slate-500">{bills.length} recorded</p>
+                    <p className="text-sm text-slate-500">{strings.bills.recorded(bills.length)}</p>
                   </div>
                 </div>
 
                 {bills.length === 0 ? (
                   <p className="mt-4 text-slate-500">
-                    No bills recorded for this month{canManage ? ' yet — add one above.' : '.'}
+                    {canManage ? strings.bills.noneSupervisor : strings.bills.none}
                   </p>
                 ) : (
                   <div className="mt-5 space-y-6">
@@ -282,7 +276,7 @@ export default function BillsPage() {
                           </h3>
                           <span className="text-xs text-slate-500">
                             {taka(totalsOf(grouped[kind]).total)} ·{' '}
-                            {taka(totalsOf(grouped[kind]).outstanding)} still owed
+                            {strings.bills.stillOwed(taka(totalsOf(grouped[kind]).outstanding))}
                           </span>
                         </div>
                         <p className="mt-0.5 text-xs text-slate-500">{BILL_KIND_COPY[kind].hint}</p>
@@ -297,18 +291,18 @@ export default function BillsPage() {
                                 <h4 className="font-semibold text-slate-900">
                                   {data.categoryLabels[group.type] ?? group.type}
                                   <span className="ml-2 text-xs font-normal text-slate-500">
-                                    {group.bills.length} {group.bills.length === 1 ? 'bill' : 'bills'}
+                                    {strings.bills.billCount(group.bills.length)}
                                   </span>
                                 </h4>
                                 <p className="text-xs text-slate-500">
                                   <span className="font-semibold tabular-nums text-slate-700">
                                     {taka(group.totals.total)}
                                   </span>{' '}
-                                  · {taka(group.totals.collected)} collected
+                                  · {strings.bills.collectedAmount(taka(group.totals.collected))}
                                   {group.totals.outstanding > 0 && (
                                     <span className="font-semibold text-rose-600">
                                       {' '}
-                                      · {taka(group.totals.outstanding)} still owed
+                                      · {strings.bills.stillOwed(taka(group.totals.outstanding))}
                                     </span>
                                   )}
                                 </p>
@@ -857,7 +851,7 @@ function Breakdown({
 
   return (
     <div className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">Cost breakdown</h2>
+      <h2 className="text-lg font-semibold">{strings.bills.costBreakdown}</h2>
       <ul className="mt-4 space-y-3">
         {rows.map((row) => {
           const percent = total > 0 ? Math.round((row.amount / total) * 100) : 0;
@@ -883,7 +877,7 @@ function AdvanceNote({ share }: { share: Share }) {
   if (share.advance <= 0) return null;
   return (
     <p className="mt-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800">
-      Paid {taka(share.advance)} over their share — the mess owes this back, funded by the members still due.
+      {strings.bills.advanceOverpaidNote(taka(share.advance))}
     </p>
   );
 }
@@ -1064,23 +1058,23 @@ function SplitPanel({
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
               <th scope="col" className="px-4 py-2.5 text-left font-semibold">
-                Member
+                {strings.common.member}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-semibold">
-                Share
+                {strings.bills.colShare}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-semibold">
-                Paid
+                {strings.bills.colPaid}
               </th>
               <th scope="col" className="px-3 py-2.5 text-right font-semibold">
-                Due
+                {strings.bills.colDue}
               </th>
               <th scope="col" className="px-3 py-2.5 text-left font-semibold">
-                Status
+                {strings.common.status}
               </th>
               {showActionsColumn && (
                 <th scope="col" className="px-4 py-2.5 text-right font-semibold">
-                  Record payment
+                  {strings.bills.colRecordPayment}
                 </th>
               )}
             </tr>
@@ -1102,7 +1096,7 @@ function SplitPanel({
                   <td className="px-4 py-3 align-top">
                     <div className="font-medium text-slate-900">
                       {share.userName}
-                      {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
+                      {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">{strings.common.you}</span>}
                     </div>
                     <AdvanceNote share={share} />
                   </td>
@@ -1116,7 +1110,7 @@ function SplitPanel({
                     ) : share.advance > 0 ? (
                       <span className="font-semibold text-teal-700">
                         +{taka(share.advance)}
-                        <span className="block text-[10px] font-normal text-teal-600">gets back</span>
+                        <span className="block text-[10px] font-normal text-teal-600">{strings.bills.getsBackLabel}</span>
                       </span>
                     ) : (
                       <span className="text-slate-300">—</span>
@@ -1177,7 +1171,7 @@ function SplitPanel({
                     {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
                   </p>
                   <p className="mt-0.5 text-xs text-slate-500">
-                    Share {taka(share.amount)} · paid {taka(share.paid)}
+                    {strings.bills.sharePaid(taka(share.amount), taka(share.paid))}
                   </p>
                 </div>
                 <StatusPill entry={share} />
@@ -1192,14 +1186,14 @@ function SplitPanel({
                 </div>
                 {share.outstanding > 0 ? (
                   <span className="shrink-0 text-sm font-bold tabular-nums text-rose-600">
-                    {taka(share.outstanding)} due
+                    {strings.bills.dueSuffix(taka(share.outstanding))}
                   </span>
                 ) : share.advance > 0 ? (
                   <span className="shrink-0 text-sm font-bold tabular-nums text-teal-700">
-                    +{taka(share.advance)} back
+                    +{strings.bills.backSuffix(taka(share.advance))}
                   </span>
                 ) : (
-                  <span className="shrink-0 text-sm font-semibold text-green-700">Settled</span>
+                  <span className="shrink-0 text-sm font-semibold text-green-700">{strings.bills.settled}</span>
                 )}
               </div>
 
@@ -1269,15 +1263,15 @@ function BillRow({
           <div className="flex flex-wrap items-center gap-2">
             <h5 className="font-semibold">{longDate(bill.date)}</h5>
             <span
-              title="Whether the bill itself has been settled with the landlord, shop or utility — separate from which members have chipped in."
+              title={strings.bills.vendorPaidTooltip}
               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                 bill.isReceived ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
               }`}
             >
-              {bill.isReceived ? 'Vendor paid' : 'Vendor unpaid'}
+              {bill.isReceived ? strings.bills.vendorPaid : strings.bills.vendorUnpaid}
             </span>
           </div>
-          {bill.payer && <p className="mt-1 text-sm text-slate-500">paid by {bill.payer.name}</p>}
+          {bill.payer && <p className="mt-1 text-sm text-slate-500">{strings.bills.paidByName(bill.payer.name)}</p>}
           {bill.note && <p className="mt-1 text-sm text-slate-600">{bill.note}</p>}
         </div>
 
@@ -1285,11 +1279,11 @@ function BillRow({
           <p className="text-lg font-semibold tabular-nums">{taka(bill.amount)}</p>
           {myShare && (
             <p className="text-xs text-slate-500">
-              your share {taka(myShare.amount)}
+              {strings.bills.yourShareOf(taka(myShare.amount))}
               {myShare.outstanding > 0 ? (
-                <span className="ml-1 font-semibold text-rose-600">· {taka(myShare.outstanding)} due</span>
+                <span className="ml-1 font-semibold text-rose-600">· {strings.bills.dueSuffix(taka(myShare.outstanding))}</span>
               ) : (
-                <span className="ml-1 font-semibold text-green-600">· paid</span>
+                <span className="ml-1 font-semibold text-green-600">{strings.bills.paidDot}</span>
               )}
             </p>
           )}
@@ -1304,25 +1298,25 @@ function BillRow({
       >
         <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">
           <span className="text-slate-600">
-            Collected <span className="font-semibold text-slate-900">{taka(bill.collected)}</span> of{' '}
+            {strings.bills.collectedLabel} <span className="font-semibold text-slate-900">{taka(bill.collected)}</span> {strings.bills.ofLabel}{' '}
             {taka(bill.amount)}
           </span>
           <span className="flex flex-wrap items-center gap-2">
             {bill.unpaidMemberCount > 0 ? (
               <span className="font-semibold text-amber-600">
-                {bill.unpaidMemberCount} {bill.unpaidMemberCount === 1 ? 'member owes' : 'members owe'}{' '}
+                {bill.unpaidMemberCount} {strings.bills.memberOwes(bill.unpaidMemberCount)}{' '}
                 {taka(bill.uncollected)}
               </span>
             ) : (
-              <span className="font-semibold text-green-600">Everyone has paid</span>
+              <span className="font-semibold text-green-600">{strings.bills.everyonePaid}</span>
             )}
             {bill.advance > 0 && (
               <span className="rounded-full bg-teal-100 px-2 py-0.5 font-semibold text-teal-800">
-                {taka(bill.advance)} back to those who overpaid
+                {strings.bills.advanceBack(taka(bill.advance))}
               </span>
             )}
             <span className="text-slate-500">
-              {isOpen ? 'Hide' : 'Show'} split ({bill.shares.length}) {isOpen ? '▲' : '▼'}
+              {isOpen ? strings.bills.hideSplit(bill.shares.length) : strings.bills.showSplit(bill.shares.length)} {isOpen ? '▲' : '▼'}
             </span>
           </span>
         </div>
@@ -1352,24 +1346,24 @@ function BillRow({
                 onClick={onToggle}
                 className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
-                Mark vendor {bill.isReceived ? 'unpaid' : 'paid'}
+                {strings.bills.markVendor(bill.isReceived)}
               </button>
               <button
                 type="button"
                 onClick={onEdit}
                 className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
               >
-                Edit
+                {strings.common.edit}
               </button>
               <button
                 type="button"
                 onClick={onDelete}
                 className="rounded-full border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
               >
-                Delete
+                {strings.common.delete}
               </button>
               <span className="ml-auto text-xs text-slate-400">
-                Payment entries cannot be edited or deleted — only reversed.
+                {strings.bills.collectionsNote}
               </span>
             </div>
           )}
@@ -1445,19 +1439,19 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
       <div className="grid gap-4 sm:grid-cols-2">
         <Listbox
           className="block"
-          label="Cost type"
+          label={strings.bills.costTypeLabel}
           value={type}
           onChange={setType}
           options={[
             ...(initial && !categories.some((c) => c.code === initial.type)
-              ? [{ value: initial.type, label: `${initial.type} (retired)` }]
+              ? [{ value: initial.type, label: strings.bills.retiredSuffix(initial.type) }]
               : []),
             ...categories.map((category) => ({ value: category.code, label: category.label }))
           ]}
         />
 
         <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Amount (৳)</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.bills.amountLabel}</span>
           <input
             type="number"
             min="0"
@@ -1470,7 +1464,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
         </label>
 
         <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Date</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.date}</span>
           <input
             type="date"
             value={date}
@@ -1482,27 +1476,27 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
 
         <Listbox
           className="block"
-          label="Paid by"
+          label={strings.bills.paidBy}
           value={payerId}
           onChange={setPayerId}
-          placeholder="Not recorded"
-          options={[{ value: '', label: 'Not recorded' }, ...members.map((m) => ({ value: m.id, label: m.name }))]}
+          placeholder={strings.bills.notRecorded}
+          options={[{ value: '', label: strings.bills.notRecorded }, ...members.map((m) => ({ value: m.id, label: m.name }))]}
         />
       </div>
 
       <label className="mt-4 block">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Note</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.note}</span>
         <input
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="July electricity, meter reading 4821"
+          placeholder={strings.bills.notePlaceholder}
           className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
         />
       </label>
 
       <fieldset className="mt-4">
-        <legend className="text-xs font-medium uppercase tracking-wide text-slate-500">How is this shared?</legend>
+        <legend className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.bills.howShared}</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {[SPLIT_METHODS.EQUAL, SPLIT_METHODS.CUSTOM].map((method) => (
             <button
@@ -1520,22 +1514,20 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
           ))}
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          {splitMethod === SPLIT_METHODS.EQUAL
-            ? 'Divided evenly across every active member of the group.'
-            : 'Pick the members this cost belongs to and set each amount.'}
+          {splitMethod === SPLIT_METHODS.EQUAL ? strings.bills.equalHint : strings.bills.customHint}
         </p>
       </fieldset>
 
       {splitMethod === SPLIT_METHODS.CUSTOM && (
         <div className="mt-3 rounded-2xl border border-slate-200 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm font-medium">Assign to members</span>
+            <span className="text-sm font-medium">{strings.bills.assignToMembers}</span>
             <button
               type="button"
               onClick={spreadEvenly}
               className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
             >
-              Split evenly between selected
+              {strings.bills.splitEvenlySelected}
             </button>
           </div>
           <ul className="mt-3 space-y-2">
@@ -1571,7 +1563,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
               Math.abs(customTotal - (Number(amount) || 0)) > 0.01 ? 'text-red-600' : 'text-green-700'
             }`}
           >
-            Assigned {taka(customTotal)} of {taka(Number(amount) || 0)}
+            {strings.bills.assignedOf(taka(customTotal), taka(Number(amount) || 0))}
           </p>
         </div>
       )}
@@ -1583,7 +1575,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
           onChange={(e) => setIsReceived(e.target.checked)}
           className="h-4 w-4 rounded border-slate-300"
         />
-        <span className="text-sm">Already paid to the landlord / provider</span>
+        <span className="text-sm">{strings.bills.alreadyPaid}</span>
       </label>
     </>
   );
@@ -1617,8 +1609,8 @@ function CategoryManager({
         body: JSON.stringify({ label })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not add that cost type.');
-      toast.success(`"${data.category.label}" added.`);
+      if (!res.ok) throw new Error(data?.error ?? strings.bills.addCostTypeFailed);
+      toast.success(strings.bills.costTypeAdded(data.category.label));
       setLabel('');
       await onChanged();
     } catch (err) {
@@ -1631,16 +1623,16 @@ function CategoryManager({
   async function remove(category: Category) {
     const message =
       category.inUse > 0
-        ? `"${category.label}" is used by ${category.inUse} bill${category.inUse === 1 ? '' : 's'}. It will be hidden from the dropdown but those bills keep their label. Continue?`
-        : `Remove "${category.label}" from the cost type list?`;
+        ? strings.bills.removeCostTypeConfirmInUse(category.label, category.inUse)
+        : strings.bills.removeCostTypeConfirm(category.label);
     if (!window.confirm(message)) return;
 
     setBusy(true);
     try {
       const res = await fetch(`/api/expense-categories/${category.id}`, { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not remove that cost type.');
-      toast.success(data.archived ? `"${category.label}" hidden from new bills.` : `"${category.label}" removed.`);
+      if (!res.ok) throw new Error(data?.error ?? strings.bills.removeCostTypeFailed);
+      toast.success(data.archived ? strings.bills.costTypeHidden(category.label) : strings.bills.costTypeRemoved(category.label));
       await onChanged();
     } catch (err) {
       toast.error((err as Error).message);
@@ -1650,7 +1642,7 @@ function CategoryManager({
   }
 
   async function rename(category: Category) {
-    const next = window.prompt('Rename this cost type', category.label);
+    const next = window.prompt(strings.bills.renamePrompt, category.label);
     if (next === null || next.trim() === category.label) return;
 
     setBusy(true);
@@ -1661,8 +1653,8 @@ function CategoryManager({
         body: JSON.stringify({ label: next })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not rename that cost type.');
-      toast.success('Renamed.');
+      if (!res.ok) throw new Error(data?.error ?? strings.bills.renameCostTypeFailed);
+      toast.success(strings.bills.renamed);
       await onChanged();
     } catch (err) {
       toast.error((err as Error).message);
@@ -1688,13 +1680,13 @@ function CategoryManager({
   return (
     <div className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold">Cost types</h2>
+        <h2 className="text-lg font-semibold">{strings.bills.costTypesTitle}</h2>
         <button
           type="button"
           onClick={() => setOpen(false)}
           className="text-sm text-slate-500 hover:text-slate-900"
         >
-          Done
+          {strings.bills.done}
         </button>
       </div>
 
@@ -1710,16 +1702,16 @@ function CategoryManager({
               type="button"
               onClick={() => rename(category)}
               disabled={busy}
-              aria-label={`Rename ${category.label}`}
+              aria-label={strings.bills.renameAria(category.label)}
               className="rounded-full px-1.5 text-xs text-slate-500 hover:text-slate-900 disabled:opacity-50"
             >
-              edit
+              {strings.bills.costTypeEdit}
             </button>
             <button
               type="button"
               onClick={() => remove(category)}
               disabled={busy}
-              aria-label={`Remove ${category.label}`}
+              aria-label={strings.bills.removeAria(category.label)}
               className="rounded-full bg-white px-1.5 text-slate-400 hover:text-red-600 disabled:opacity-50"
             >
               ×
@@ -1733,7 +1725,7 @@ function CategoryManager({
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           maxLength={40}
-          placeholder="Add a cost type, e.g. Gas cylinder"
+          placeholder={strings.bills.addCostTypePlaceholder}
           className="min-w-0 flex-1 rounded-full border border-slate-300 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white"
         />
         <button
@@ -1741,7 +1733,7 @@ function CategoryManager({
           disabled={busy || !label.trim()}
           className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-5 py-2 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
         >
-          Add
+          {strings.common.add}
         </button>
       </form>
     </div>
@@ -1777,8 +1769,8 @@ function AddBillForm({
         body: JSON.stringify(body())
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not record the bill.');
-      toast.success('Bill recorded.');
+      if (!res.ok) throw new Error(data?.error ?? strings.bills.recordFailed);
+      toast.success(strings.bills.billRecorded);
       setOpen(false);
       await onSaved();
     } catch (err) {
@@ -1917,8 +1909,8 @@ function EditBill({
         body: JSON.stringify(body())
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error ?? 'Could not update the bill.');
-      toast.success('Bill updated.');
+      if (!res.ok) throw new Error(data?.error ?? strings.bills.updateFailed);
+      toast.success(strings.bills.billUpdated);
       await onSaved();
     } catch (err) {
       toast.error((err as Error).message);
