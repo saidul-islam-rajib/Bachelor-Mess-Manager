@@ -33,7 +33,7 @@ export function PhotoLightbox({ images, index, onIndexChange, onClose, altFor }:
   if (count === 0) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black/95" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex flex-col bg-black" onClick={onClose}>
       <button
         type="button"
         onClick={onClose}
