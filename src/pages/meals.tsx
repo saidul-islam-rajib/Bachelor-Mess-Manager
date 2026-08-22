@@ -409,7 +409,7 @@ export default function MealsPage() {
                         {FIELDS.map((f) => (
                           <label key={f} className="block">
                             <span className="text-xs text-slate-500">{FIELD_LABELS[f]}</span>
-                            {canEdit ? (
+                            {canEdit && !awaiting ? (
                               <input
                                 type="number"
                                 min={0}
@@ -420,7 +420,12 @@ export default function MealsPage() {
                                 className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-2 py-2 text-center text-base"
                               />
                             ) : (
-                              <span className="mt-1 block rounded-xl bg-slate-100 px-2 py-2 text-center text-base text-slate-500">
+                              <span
+                                title={awaiting ? strings.meals.pendingApprovalTooltip : undefined}
+                                className={`mt-1 block rounded-xl px-2 py-2 text-center text-base ${
+                                  awaiting ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'
+                                }`}
+                              >
                                 {mine[f] || 0}
                               </span>
                             )}
@@ -567,7 +572,7 @@ export default function MealsPage() {
                             const awaiting = pendingByCell.has(`${m.id}|${date}`);
                             return FIELDS.map((f, i) => {
                               const edge = i === 2 ? 'border-r border-slate-200' : '';
-                              return canEdit ? (
+                              return canEdit && !awaiting ? (
                                 <td key={`${m.id}-${f}`} className={`px-1 py-1.5 ${edge}`}>
                                   <input
                                     type="number"
@@ -575,22 +580,17 @@ export default function MealsPage() {
                                     value={c[f] || 0}
                                     onChange={(e) => setLocal(m.id, date, f, parseInt(e.target.value, 10))}
                                     onBlur={() => saveDay(m.id, date)}
-                                    title={
-                                      awaiting
-                                        ? strings.meals.pendingApprovalTooltip
-                                        : date < today
-                                          ? strings.meals.pastDayTooltip
-                                          : undefined
-                                    }
-                                    className={`w-14 rounded-lg border bg-white px-1 py-1.5 text-center focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${
-                                      awaiting ? 'border-amber-400 bg-amber-50' : 'border-slate-300'
-                                    }`}
+                                    title={date < today ? strings.meals.pastDayTooltip : undefined}
+                                    className="w-14 rounded-lg border border-slate-300 bg-white px-1 py-1.5 text-center focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                                   />
                                 </td>
                               ) : (
                                 <td
                                   key={`${m.id}-${f}`}
-                                  className={`px-2 py-2 ${edge} ${mine ? 'text-slate-400' : 'text-slate-600'}`}
+                                  title={awaiting ? strings.meals.pendingApprovalTooltip : undefined}
+                                  className={`px-2 py-2 ${edge} ${
+                                    awaiting ? 'bg-amber-50 text-amber-700' : mine ? 'text-slate-400' : 'text-slate-600'
+                                  }`}
                                 >
                                   {c[f] || 0}
                                 </td>

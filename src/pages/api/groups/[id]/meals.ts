@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
-import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
+import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { dayToUtcDate, parseMonth, todayKey, utcDateToDay } from '@/lib/month';
 import { syncPlansForMonth } from '@/lib/meal-plan';
 import { GROUP_STATUS, NOTIFICATION_TYPES, REQUEST_STATUS } from '@/lib/constants';
@@ -215,23 +215,21 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       select: { id: true }
     });
 
-    const request = existing
-      ? await prisma.mealChangeRequest.update({
-          where: { id: existing.id },
-          data: pendingFields,
-          include: { user: { select: { id: true, name: true } } }
-        })
-      : await prisma.mealChangeRequest.create({
-          data: {
-            userId: targetUserId,
-            groupId,
-            date,
-            ...pendingFields,
-            status: REQUEST_STATUS.PENDING,
-            publishedAt: new Date()
-          },
-          include: { user: { select: { id: true, name: true } } }
-        });
+    if (existing) {
+      return conflict(res, strings.meals.alreadyPendingError);
+    }
+
+    const request = await prisma.mealChangeRequest.create({
+      data: {
+        userId: targetUserId,
+        groupId,
+        date,
+        ...pendingFields,
+        status: REQUEST_STATUS.PENDING,
+        publishedAt: new Date()
+      },
+      include: { user: { select: { id: true, name: true } } }
+    });
 
     const supervisor = await prisma.user.findUnique({
       where: { id: group.supervisorId },

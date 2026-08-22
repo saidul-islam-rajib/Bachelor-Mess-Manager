@@ -657,6 +657,8 @@ const en = {
     withdrawn: 'Request withdrawn.',
     saveFailed: 'Could not save.',
     sentToSupervisor: 'Sent to your supervisor. The meal table updates once they approve it.',
+    alreadyPendingError:
+      'You already have a pending change for this day. Withdraw it or wait for your supervisor’s decision before submitting another.',
     loadingMeals: 'Loading meals...',
     yourMeals: 'Your meals',
     yourCost: 'Your cost',
