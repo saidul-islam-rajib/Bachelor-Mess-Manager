@@ -44,6 +44,9 @@ export function PostCard({
   const typeLabel = strings.community.types[message.type as keyof typeof strings.community.types];
   const isToLet = message.type === COMMUNITY_MESSAGE_TYPES.TOLET;
   const interactive = !message.system;
+  const tenantRestrictionValue = message.tenantRestriction ?? TOLET_TENANT_RESTRICTION.ANY;
+  const tenantRestrictionLabel =
+    strings.toLet.tenantRestriction[tenantRestrictionValue as keyof typeof strings.toLet.tenantRestriction];
 
   return (
     <li
@@ -98,11 +101,9 @@ export function PostCard({
                 {strings.toLet.genderPreference[message.genderPreference as keyof typeof strings.toLet.genderPreference]}
               </Badge>
             )}
-            {message.tenantRestriction && message.tenantRestriction !== TOLET_TENANT_RESTRICTION.ANY && (
-              <Badge tone="info">
-                {strings.toLet.tenantRestriction[message.tenantRestriction as keyof typeof strings.toLet.tenantRestriction]}
-              </Badge>
-            )}
+            <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
+              {tenantRestrictionLabel}
+            </Badge>
           </div>
 
           {message.title && <p className="mt-1.5 text-[15px] font-semibold text-slate-900">{message.title}</p>}

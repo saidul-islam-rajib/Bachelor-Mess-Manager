@@ -9,7 +9,6 @@ import {
   TOLET_GENDER_PREFERENCE_VALUES,
   TOLET_MONTHS,
   TOLET_TENANT_RESTRICTION,
-  TOLET_TENANT_RESTRICTION_VALUES,
   TOLET_TYPE_VALUES
 } from '@/lib/constants';
 import { formatBytes } from '@/lib/format';
@@ -281,13 +280,15 @@ export function ToLetComposer({
     value: pref,
     label: strings.toLet.genderPreference[pref as keyof typeof strings.toLet.genderPreference]
   }));
-  const restrictionOptions = TOLET_TENANT_RESTRICTION_VALUES.map((restriction) => ({
-    value: restriction,
-    label: strings.toLet.tenantRestriction[restriction as keyof typeof strings.toLet.tenantRestriction]
-  }));
+  const currentMonthIndex = new Date().getMonth();
+  const upcomingMonths = [0, 1, 2].map((offset) => TOLET_MONTHS[(currentMonthIndex + offset) % 12]);
+  const selectableMonths =
+    form.availableMonth && !upcomingMonths.includes(form.availableMonth as (typeof TOLET_MONTHS)[number])
+      ? [form.availableMonth as (typeof TOLET_MONTHS)[number], ...upcomingMonths]
+      : upcomingMonths;
   const monthOptions = [
     { value: '', label: strings.toLet.composer.availableNowOption },
-    ...TOLET_MONTHS.map((month) => ({ value: month, label: strings.toLet.months[month] }))
+    ...selectableMonths.map((month) => ({ value: month, label: strings.toLet.months[month] }))
   ];
   const expiryOptions = toLetConfig.expiryOptionsDays.map((days) => ({
     value: String(days),
@@ -426,22 +427,25 @@ export function ToLetComposer({
         </Section>
 
         <Section title={strings.toLet.composer.sectionWhoFor}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Select
-              label={strings.toLet.composer.genderPreferenceLabel}
-              value={form.genderPreference}
-              onChange={(value) => update('genderPreference', value)}
-              options={genderOptions}
-              compact
+          <Select
+            label={strings.toLet.composer.genderPreferenceLabel}
+            value={form.genderPreference}
+            onChange={(value) => update('genderPreference', value)}
+            options={genderOptions}
+            compact
+          />
+
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={form.tenantRestriction === TOLET_TENANT_RESTRICTION.FAMILY}
+              onChange={(event) =>
+                update('tenantRestriction', event.target.checked ? TOLET_TENANT_RESTRICTION.FAMILY : TOLET_TENANT_RESTRICTION.ANY)
+              }
+              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
             />
-            <Select
-              label={strings.toLet.composer.tenantRestrictionLabel}
-              value={form.tenantRestriction}
-              onChange={(value) => update('tenantRestriction', value)}
-              options={restrictionOptions}
-              compact
-            />
-          </div>
+            {strings.toLet.composer.familyOnlyLabel}
+          </label>
         </Section>
 
         <Section title={strings.toLet.composer.sectionContact}>

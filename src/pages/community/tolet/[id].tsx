@@ -156,9 +156,8 @@ export default function ToLetDetailPage() {
   const typeLabel = strings.toLet.types[(listing.listingType ?? '') as keyof typeof strings.toLet.types];
   const genderLabel =
     listing.genderPreference && (strings.toLet.genderPreference[listing.genderPreference as keyof typeof strings.toLet.genderPreference] ?? null);
-  const restrictionLabel =
-    listing.tenantRestriction &&
-    (strings.toLet.tenantRestriction[listing.tenantRestriction as keyof typeof strings.toLet.tenantRestriction] ?? null);
+  const tenantRestrictionValue = listing.tenantRestriction ?? TOLET_TENANT_RESTRICTION.ANY;
+  const restrictionLabel = strings.toLet.tenantRestriction[tenantRestrictionValue as keyof typeof strings.toLet.tenantRestriction];
   const availableMonthLabel = listing.availableMonth
     ? strings.toLet.availableFromMonth(strings.toLet.months[listing.availableMonth as keyof typeof strings.toLet.months])
     : null;
@@ -194,9 +193,9 @@ export default function ToLetDetailPage() {
               {listing.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && genderLabel && (
                 <Badge tone="warning">{genderLabel}</Badge>
               )}
-              {listing.tenantRestriction !== TOLET_TENANT_RESTRICTION.ANY && restrictionLabel && (
-                <Badge tone="info">{restrictionLabel}</Badge>
-              )}
+              <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
+                {restrictionLabel}
+              </Badge>
             </div>
             <h1 className="mt-2 text-2xl font-semibold text-slate-900">{listing.title}</h1>
             <p className="mt-1 text-sm text-slate-500">

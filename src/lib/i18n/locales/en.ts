@@ -1387,7 +1387,7 @@ const en = {
       FEMALE: 'Female only'
     },
     tenantRestriction: {
-      ANY: 'Anyone',
+      ANY: 'Restriction-less',
       BACHELOR: 'Bachelor allowed',
       FAMILY: 'Family only'
     },
@@ -1437,7 +1437,7 @@ const en = {
       locationLabel: 'Location',
       locationPlaceholder: 'Area, road, and any nearby landmark',
       genderPreferenceLabel: 'Preferred for',
-      tenantRestrictionLabel: 'Tenant type',
+      familyOnlyLabel: 'Family only (not open to bachelors)',
       availableMonthLabel: 'Available from',
       availableNowOption: 'Available now',
       contactNameLabel: 'Contact name',
