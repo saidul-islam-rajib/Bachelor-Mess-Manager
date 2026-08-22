@@ -105,7 +105,7 @@ export function RoleRequestPanel() {
     >
       <div>
         {loading ? (
-          <p className="text-sm text-slate-500">{strings.common.loading}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{strings.common.loading}</p>
         ) : pending ? (
           <div className="space-y-3">
             <Alert tone="warning">
@@ -134,19 +134,19 @@ export function RoleRequestPanel() {
             </Button>
 
             {data?.policy.autoApproveSupervisor && !isSupervisor && (
-              <p className="text-xs text-green-700">{strings.roleRequests.autoApproveHint}</p>
+              <p className="text-xs text-green-700 dark:text-green-400">{strings.roleRequests.autoApproveHint}</p>
             )}
           </div>
         )}
 
         {data && data.requests.filter((request) => request.status !== 'PENDING').length > 0 && (
-          <ul className="mt-5 space-y-2 border-t border-slate-100 pt-4">
+          <ul className="mt-5 space-y-2 border-t border-slate-100 dark:border-slate-700 pt-4">
             {data.requests
               .filter((request) => request.status !== 'PENDING')
               .slice(0, 4)
               .map((request) => (
                 <li key={request.id} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="text-slate-600">
+                  <span className="text-slate-600 dark:text-slate-400">
                     {roleLabel(request.requestedRole)} · {formatDate(request.createdAt)}
                   </span>
                   <Badge tone={request.status === 'APPROVED' ? 'success' : 'neutral'}>{request.status}</Badge>

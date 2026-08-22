@@ -8,7 +8,7 @@ export function ToLetGallery({ images, title }: { images: string[]; title: strin
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-[16/10] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
+      <div className="flex aspect-[16/10] items-center justify-center rounded-3xl border border-dashed border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm text-slate-400 dark:text-slate-500">
         {strings.toLet.noPhotos}
       </div>
     );
@@ -23,7 +23,7 @@ export function ToLetGallery({ images, title }: { images: string[]; title: strin
       <button
         type="button"
         onClick={() => setLightboxOpen(true)}
-        className="block w-full cursor-zoom-in overflow-hidden rounded-3xl bg-slate-100"
+        className="block w-full cursor-zoom-in overflow-hidden rounded-3xl bg-slate-100 dark:bg-slate-700"
       >
         <img src={src} alt={alt} className="aspect-[16/10] w-full object-cover" />
       </button>

@@ -39,7 +39,7 @@ function Chevron({ open }: { open: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
-      className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+      className={`shrink-0 text-slate-400 dark:text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`}
     >
       <path d="m6 9 6 6 6-6" />
     </svg>
@@ -64,12 +64,12 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
   const isDaily = rateMode === MEAL_RATE_MODES.DAILY;
 
   return (
-    <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <section className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between gap-4 bg-gradient-to-br from-brand-50 to-white px-5 py-4 text-left transition-colors hover:from-brand-100 sm:px-6 sm:py-5"
+        className="flex w-full items-center justify-between gap-4 bg-gradient-to-br from-brand-50 to-white px-5 py-4 text-left transition-colors hover:from-brand-100 dark:from-brand-500/10 dark:to-slate-800 dark:hover:from-brand-500/15 sm:px-6 sm:py-5"
       >
         <div className="min-w-0">
           <p className="truncate text-xs font-medium uppercase tracking-wide text-brand-700/80">
@@ -77,28 +77,28 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
           </p>
           {headline ? (
             <p className="mt-1 flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold tabular-nums text-slate-900 sm:text-4xl">
+              <span className="text-3xl font-bold tabular-nums text-slate-900 dark:text-slate-100 sm:text-4xl">
                 {taka(headline.runningRate)}
               </span>
-              <span className="text-sm text-slate-500">{copy.perMealUnit}</span>
+              <span className="text-sm text-slate-500 dark:text-slate-400">{copy.perMealUnit}</span>
             </p>
           ) : (
-            <p className="mt-1 text-xl font-semibold text-slate-900">{copy.noRateYet}</p>
+            <p className="mt-1 text-xl font-semibold text-slate-900 dark:text-slate-100">{copy.noRateYet}</p>
           )}
         </div>
 
         <div className="flex shrink-0 items-center gap-4">
           <div className="hidden text-right sm:block">
-            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{copy.monthLabel}</p>
-            <p className="text-lg font-semibold tabular-nums text-slate-900">{monthRate > 0 ? taka(monthRate) : '—'}</p>
+            <p className="text-[11px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500">{copy.monthLabel}</p>
+            <p className="text-lg font-semibold tabular-nums text-slate-900 dark:text-slate-100">{monthRate > 0 ? taka(monthRate) : '—'}</p>
           </div>
           <Chevron open={open} />
         </div>
       </button>
 
       {open && (
-        <div className="border-t border-slate-100 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-          <p className="text-sm text-slate-500">
+        <div className="border-t border-slate-100 dark:border-slate-700 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             {headline ? (
               <>
                 {copy.yourMealsToday(headline.myMeals)} · {copy.yourCostToday} {taka(headline.myCost)}
@@ -114,19 +114,19 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
             <Tile label={copy.yourCostMonth} value={taka(myCost)} />
           </div>
 
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">
             {isDaily ? copy.modeDaily : copy.modeMonthly}. {isDaily ? copy.monthHintDaily : copy.monthHintMonthly}
           </p>
 
           <div className="mt-5">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{copy.dayByDay}</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{copy.dayByDay}</h3>
 
             {priced.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-500">{copy.noPricedDays}</p>
+              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{copy.noPricedDays}</p>
             ) : (
               <>
-                <ul className="mt-2 divide-y divide-slate-100">
-                  <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 pb-1.5 text-[11px] uppercase tracking-wide text-slate-400 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+                <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-700">
+                  <li className="grid grid-cols-[minmax(0,1fr)_auto_auto] gap-3 pb-1.5 text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
                     <span>{copy.colDay}</span>
                     <span className="hidden text-right sm:block">{copy.colGroupMeals}</span>
                     <span className="text-right" title={copy.runningRateHint}>
@@ -145,12 +145,12 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
                       <span className="truncate">
                         <span className="sm:hidden">{shortDayLabel(day.date)}</span>
                         <span className="hidden sm:inline">{dayLabel(day.date)}</span>
-                        <span className="ml-2 text-xs font-normal text-slate-400">
+                        <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">
                           {copy.colYourMeals} {day.myMeals}
                         </span>
                       </span>
-                      <span className="hidden text-right tabular-nums text-slate-500 sm:block">{day.groupMeals}</span>
-                      <span className="text-right tabular-nums text-slate-600">{taka(day.runningRate)}</span>
+                      <span className="hidden text-right tabular-nums text-slate-500 dark:text-slate-400 sm:block">{day.groupMeals}</span>
+                      <span className="text-right tabular-nums text-slate-600 dark:text-slate-400">{taka(day.runningRate)}</span>
                       <span className="text-right tabular-nums font-medium">{taka(day.myCost)}</span>
                     </li>
                   ))}
@@ -161,7 +161,7 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
                     type="button"
                     onClick={() => setExpandedDays((value) => !value)}
                     aria-expanded={expandedDays}
-                    className="mt-3 min-h-[2.25rem] w-full rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
+                    className="mt-3 min-h-[2.25rem] w-full rounded-xl border border-slate-200 dark:border-slate-700 px-3 py-2 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
                   >
                     {expandedDays ? copy.showLess : copy.showAll(priced.length)}
                   </button>
@@ -177,9 +177,9 @@ export default function MealRateCard({ days, today, monthRate, rateMode, myMeals
 
 function Tile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="min-w-0 rounded-xl bg-slate-50 px-3 py-2.5 text-center">
-      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
-      <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-slate-900 sm:text-base">{value}</p>
+    <div className="min-w-0 rounded-xl bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-center">
+      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100 sm:text-base">{value}</p>
     </div>
   );
 }

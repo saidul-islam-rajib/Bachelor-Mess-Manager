@@ -1467,11 +1467,6 @@ const en = {
 
     search: {
       placeholder: 'Search by location, title, or rent...',
-      filtersAction: 'Filters',
-      typeAll: 'All types',
-      typeLabel: 'Type',
-      minRentLabel: 'Min rent',
-      maxRentLabel: 'Max rent',
       noResults: 'No to-let listings match your search.',
       noResultsHint: 'Try a different keyword, or clear your filters.',
       nearestBanner: (query: string) => `No exact matches for "${query}" — showing the nearest to-lets instead.`,

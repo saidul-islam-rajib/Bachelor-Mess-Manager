@@ -121,7 +121,7 @@ const SORTS = [
   { value: 'recent', label: copy.sorts.recent }
 ];
 
-const RANK_TONES = ['bg-amber-100 text-amber-800', 'bg-slate-200 text-slate-700', 'bg-orange-100 text-orange-800'];
+const RANK_TONES = ['bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300', 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300', 'bg-orange-100 text-orange-800'];
 
 const SECONDS_PER_HOUR = 3600;
 const SECONDS_PER_MINUTE = 60;
@@ -169,12 +169,12 @@ function Bar({ label, hint, value, max, tone = 'bg-brand-500' }: {
     <div className="grid grid-cols-[7.5rem_1fr_4rem] items-center gap-3 text-sm">
       <div className="min-w-0">
         <p className="truncate font-medium">{label}</p>
-        {hint && <p className="text-xs text-slate-400">{hint}</p>}
+        {hint && <p className="text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
       </div>
-      <div className="h-2.5 rounded-full bg-slate-100">
+      <div className="h-2.5 rounded-full bg-slate-100 dark:bg-slate-700">
         <div className={`h-2.5 rounded-full ${tone}`} style={{ width: `${width}%` }} />
       </div>
-      <p className="text-right tabular-nums text-slate-600">{value}</p>
+      <p className="text-right tabular-nums text-slate-600 dark:text-slate-400">{value}</p>
     </div>
   );
 }
@@ -231,7 +231,7 @@ export default function ActivityPanel() {
       render: (row) => (
         <span
           className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
-            RANK_TONES[row.rank - 1] ?? 'bg-slate-100 text-slate-600'
+            RANK_TONES[row.rank - 1] ?? 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
           }`}
         >
           {row.rank}
@@ -246,13 +246,13 @@ export default function ActivityPanel() {
           <p className="flex items-center gap-2 font-medium">
             <span className="truncate">{row.name}</span>
             {row.online && (
-              <span className="inline-flex items-center gap-1 text-xs font-normal text-green-600">
+              <span className="inline-flex items-center gap-1 text-xs font-normal text-green-600 dark:text-green-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
                 {copy.online}
               </span>
             )}
           </p>
-          <p className="truncate text-xs text-slate-500">{row.email}</p>
+          <p className="truncate text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
         </div>
       )
     },
@@ -273,13 +273,13 @@ export default function ActivityPanel() {
       key: 'average',
       header: copy.columns.averageVisit,
       align: 'right',
-      render: (row) => <span className="tabular-nums text-slate-600">{formatDuration(row.averageSeconds)}</span>
+      render: (row) => <span className="tabular-nums text-slate-600 dark:text-slate-400">{formatDuration(row.averageSeconds)}</span>
     },
     {
       key: 'lastSeen',
       header: copy.columns.lastSeen,
       align: 'right',
-      render: (row) => <span className="whitespace-nowrap text-slate-600">{relative(row.lastSeenAt)}</span>
+      render: (row) => <span className="whitespace-nowrap text-slate-600 dark:text-slate-400">{relative(row.lastSeenAt)}</span>
     },
     {
       key: 'actions',
@@ -352,7 +352,7 @@ export default function ActivityPanel() {
           </div>
 
           <div className="mt-6">
-            <p className="text-xs uppercase tracking-wide text-slate-500">{copy.hourByHour}</p>
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{copy.hourByHour}</p>
             <div className="mt-3 flex h-24 items-end gap-[3px]">
               {report.byHour.map((hour) => (
                 <div
@@ -367,7 +367,7 @@ export default function ActivityPanel() {
                 </div>
               ))}
             </div>
-            <div className="mt-1 flex justify-between text-[10px] text-slate-400">
+            <div className="mt-1 flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
               <span>00:00</span>
               <span>06:00</span>
               <span>12:00</span>
@@ -386,16 +386,16 @@ export default function ActivityPanel() {
           </div>
 
           <div className="mt-6">
-            <p className="text-xs uppercase tracking-wide text-slate-500">{copy.devices.title}</p>
+            <p className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{copy.devices.title}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {report.byDevice.length === 0 && <p className="text-sm text-slate-400">{copy.devices.empty}</p>}
+              {report.byDevice.length === 0 && <p className="text-sm text-slate-400 dark:text-slate-500">{copy.devices.empty}</p>}
               {report.byDevice.map((device) => (
                 <button
                   key={device.device}
                   type="button"
                   onClick={() => setOpenDevice(device.device)}
                   title={copy.devices.openHint(deviceLabel(device.device))}
-                  className="inline-flex min-h-[2rem] items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-sm transition-colors hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                  className="inline-flex min-h-[2rem] items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-700 px-3 py-1 text-sm transition-colors hover:bg-brand-50 hover:text-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
                 >
                   {deviceLabel(device.device)}
                   <span className="font-semibold tabular-nums">{device.visits}</span>
@@ -409,7 +409,7 @@ export default function ActivityPanel() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     aria-hidden="true"
-                    className="text-slate-400"
+                    className="text-slate-400 dark:text-slate-500"
                   >
                     <path d="m9 6 6 6-6 6" />
                   </svg>
@@ -424,19 +424,19 @@ export default function ActivityPanel() {
         <Card>
           <CardHeader title={copy.trend.title} description={copy.trend.subtitle} />
           <div className="mt-5 flex items-start gap-3">
-            <div className="flex h-32 w-8 shrink-0 flex-col justify-between text-right text-[10px] tabular-nums text-slate-400">
+            <div className="flex h-32 w-8 shrink-0 flex-col justify-between text-right text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
               <span>{trendMax}</span>
               <span>{Math.round(trendMax / 2)}</span>
               <span>0</span>
             </div>
-            <div className="flex h-32 flex-1 items-end gap-1 overflow-x-auto border-l border-b border-slate-200 pl-1">
+            <div className="flex h-32 flex-1 items-end gap-1 overflow-x-auto border-l border-b border-slate-200 dark:border-slate-700 pl-1">
               {report.trend.map((point) => (
                 <div
                   key={point.day}
                   className="group relative flex h-full min-w-[12px] flex-1 flex-col justify-end"
                   title={copy.trendTooltip(point.day, point.visits, point.visitors)}
                 >
-                  <span className="mb-0.5 text-center text-[10px] font-medium tabular-nums text-slate-500">
+                  <span className="mb-0.5 text-center text-[10px] font-medium tabular-nums text-slate-500 dark:text-slate-400">
                     {point.visits}
                   </span>
                   <div
@@ -454,7 +454,7 @@ export default function ActivityPanel() {
               ))}
             </div>
           </div>
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pl-11 text-[10px] text-slate-400">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 pl-11 text-[10px] text-slate-400 dark:text-slate-500">
             <span>{report.trend[0]?.day}</span>
             <span className="flex items-center gap-3">
               <span className="flex items-center gap-1">
@@ -484,18 +484,18 @@ export default function ActivityPanel() {
             emptyTitle={copy.leaderboard.emptyTitle}
             emptyDescription={copy.leaderboard.emptyBody}
             renderCard={(row) => (
-              <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-medium">
-                      <span className="mr-2 text-slate-400">#{row.rank}</span>
+                      <span className="mr-2 text-slate-400 dark:text-slate-500">#{row.rank}</span>
                       {row.name}
                     </p>
-                    <p className="truncate text-xs text-slate-500">{row.email}</p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
                   </div>
                   {row.online && <Badge tone="success">{copy.online}</Badge>}
                 </div>
-                <p className="mt-3 text-sm text-slate-600">
+                <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
                   {copy.cardSummary(row.visits, formatDuration(row.seconds), relative(row.lastSeenAt))}
                 </p>
                 <Button className="mt-3" variant="secondary" size="sm" onClick={() => setOpenMember(row)}>
@@ -588,7 +588,7 @@ function DeviceVisitorsModal({
             <span className="truncate">{row.name}</span>
             {row.online && <Badge tone="success">{copy.online}</Badge>}
           </p>
-          <p className="truncate text-xs text-slate-500">{row.email}</p>
+          <p className="truncate text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
         </div>
       )
     },
@@ -600,7 +600,7 @@ function DeviceVisitorsModal({
       render: (row) => (
         <div>
           <p className="tabular-nums font-medium">{row.visits}</p>
-          <p className="text-xs text-slate-400">{copy.devices.share(row.share)}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-500">{copy.devices.share(row.share)}</p>
         </div>
       )
     },
@@ -617,7 +617,7 @@ function DeviceVisitorsModal({
         row.otherDevices.length === 0 ? (
           <Badge tone="info">{copy.devices.onlyDevice}</Badge>
         ) : (
-          <span className="text-xs text-slate-600">
+          <span className="text-xs text-slate-600 dark:text-slate-400">
             {copy.devices.alsoUses(row.otherDevices.map(deviceLabel).join(', '))}
           </span>
         )
@@ -626,7 +626,7 @@ function DeviceVisitorsModal({
       key: 'lastSeen',
       header: copy.columns.lastSeen,
       align: 'right',
-      render: (row) => <span className="whitespace-nowrap text-slate-600">{relative(row.lastSeenAt)}</span>
+      render: (row) => <span className="whitespace-nowrap text-slate-600 dark:text-slate-400">{relative(row.lastSeenAt)}</span>
     },
     {
       key: 'actions',
@@ -642,7 +642,7 @@ function DeviceVisitorsModal({
 
   return (
     <Modal open onClose={onClose} title={copy.devices.modalTitle(deviceLabel(device))} size="lg">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-500 dark:text-slate-400">
         {copy.devices.modalSubtitle(data?.visits ?? 0, data?.total ?? 0, periodLabel)}
       </p>
 
@@ -655,18 +655,18 @@ function DeviceVisitorsModal({
           emptyTitle={copy.devices.emptyTitle}
           emptyDescription={copy.devices.emptyBody}
           renderCard={(row) => (
-            <div className="rounded-2xl border border-slate-200 p-4">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="truncate font-medium">{row.name}</p>
-                  <p className="truncate text-xs text-slate-500">{row.email}</p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
                 </div>
                 {row.online && <Badge tone="success">{copy.online}</Badge>}
               </div>
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
                 {copy.cardSummary(row.visits, formatDuration(row.seconds), relative(row.lastSeenAt))}
               </p>
-              <p className="mt-1 text-xs text-slate-400">
+              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                 {copy.devices.share(row.share)}
                 {row.otherDevices.length > 0
                   ? ` · ${copy.devices.alsoUses(row.otherDevices.map(deviceLabel).join(', '))}`
@@ -740,7 +740,7 @@ function MemberVisitsModal({ member, onClose }: { member: ActivityMember; onClos
 
   return (
     <Modal open onClose={onClose} title={copy.memberVisitsTitle(member.name)} size="lg">
-      <p className="text-sm text-slate-500">
+      <p className="text-sm text-slate-500 dark:text-slate-400">
         {copy.memberVisitsSubtitle(
           member.visits,
           formatDuration(member.seconds),
@@ -757,9 +757,9 @@ function MemberVisitsModal({ member, onClose }: { member: ActivityMember; onClos
           emptyTitle={copy.noVisitsTitle}
           emptyDescription={copy.noVisitsBody}
           renderCard={(row) => (
-            <div className="rounded-2xl border border-slate-200 p-4 text-sm">
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 text-sm">
               <p className="font-medium">{formatDateTime(row.startedAt)}</p>
-              <p className="mt-1 text-slate-600">
+              <p className="mt-1 text-slate-600 dark:text-slate-400">
                 {copy.columns.stayed} {formatDuration(row.seconds)} · {titleCase(row.bucket)} ·{' '}
                 {deviceLabel(row.device)}
               </p>

@@ -88,11 +88,11 @@ export default function GuidePage() {
         <meta name="description" content={guide.metaDescription(appConfig.name)} />
       </Head>
 
-      <div className="border-b border-slate-200 bg-white">
+      <div className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <div className="mx-auto max-w-content px-4 py-12 sm:py-16">
-          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">{guide.eyebrow}</p>
+          <p className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{guide.eyebrow}</p>
           <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">{guide.pageTitle(appConfig.name)}</h1>
-          <p className="mt-3 hyphens-auto text-justify text-lg text-slate-600">{guide.intro}</p>
+          <p className="mt-3 hyphens-auto text-justify text-lg text-slate-600 dark:text-slate-400">{guide.intro}</p>
 
           {!user && (
             <div className="mt-6 flex flex-wrap gap-3">
@@ -104,7 +104,7 @@ export default function GuidePage() {
               </Link>
               <Link
                 href={ROUTES.auth.login}
-                className="rounded-full border border-slate-300 px-6 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-slate-300 dark:border-slate-600 px-6 py-3 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 {guide.signIn}
               </Link>
@@ -118,7 +118,7 @@ export default function GuidePage() {
           aria-label={guide.onThisPage}
           className="scrollbar-thin mb-8 lg:sticky lg:top-24 lg:mb-0 lg:h-fit lg:max-h-[calc(100vh-7rem)] lg:w-60 lg:shrink-0 lg:overflow-y-auto"
         >
-          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500">{guide.onThisPage}</p>
+          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{guide.onThisPage}</p>
           <ul className="mt-2 space-y-0.5">
             {SECTIONS.map((section) => (
               <li key={section.id}>
@@ -128,7 +128,7 @@ export default function GuidePage() {
                   className={`block rounded-lg px-3 py-1.5 text-sm transition-colors ${
                     active === section.id
                       ? 'bg-brand-600 font-medium text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
                 >
                   {section.title}
@@ -322,9 +322,9 @@ export default function GuidePage() {
             </P>
             <P>
               {guide.talking.p2Pre}
-              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code>
+              <code className="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-sm">@</code>
               {guide.talking.p2Mid}
-              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@everyone</code>
+              <code className="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-sm">@everyone</code>
               {guide.talking.p2Post}
             </P>
             <Callout>{guide.talking.callout}</Callout>
@@ -349,7 +349,7 @@ export default function GuidePage() {
               {guide.community.p2Pre}
               <strong>{guide.community.whatsNewLabel}</strong>
               {guide.community.p2Mid}
-              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@</code>
+              <code className="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-sm">@</code>
               {guide.community.p2Post}
             </P>
             <P>{guide.community.p3}</P>
@@ -421,9 +421,9 @@ export default function GuidePage() {
             <P>{guide.bazar.p2}</P>
             <P>
               {guide.bazar.p3Pre}
-              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@name</code>
+              <code className="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-sm">@name</code>
               {guide.bazar.p3Mid}
-              <code className="rounded bg-slate-100 px-1.5 py-0.5 text-sm">@everyone</code>
+              <code className="rounded bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 text-sm">@everyone</code>
               {guide.bazar.p3Post}
             </P>
             <Figure title={guide.bazar.figureTitle} caption={guide.bazar.figureCaption}>
@@ -545,9 +545,9 @@ export default function GuidePage() {
             />
           </Section>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:p-8">
             <h2 className="text-xl font-semibold">{guide.stillStuckTitle}</h2>
-            <p className="mt-2 text-slate-600">{guide.stillStuckBody}</p>
+            <p className="mt-2 text-slate-600 dark:text-slate-400">{guide.stillStuckBody}</p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link
                 href={user ? ROUTES.dashboard : ROUTES.auth.register}
@@ -557,7 +557,7 @@ export default function GuidePage() {
               </Link>
               <Link
                 href={ROUTES.home}
-                className="rounded-full border border-slate-300 px-6 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-slate-300 dark:border-slate-600 px-6 py-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 {guide.home}
               </Link>
@@ -579,12 +579,12 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 function P({ children }: { children: ReactNode }) {
-  return <p className="hyphens-auto text-justify text-base leading-relaxed text-slate-600">{children}</p>;
+  return <p className="hyphens-auto text-justify text-base leading-relaxed text-slate-600 dark:text-slate-400">{children}</p>;
 }
 
 function A({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <a href={href} className="font-medium text-slate-900 underline underline-offset-2 hover:text-slate-600">
+    <a href={href} className="font-medium text-slate-900 dark:text-slate-100 underline underline-offset-2 hover:text-slate-600">
       {children}
     </a>
   );
@@ -592,7 +592,7 @@ function A({ href, children }: { href: string; children: ReactNode }) {
 
 function Route({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link href={href} className="font-medium text-slate-900 underline underline-offset-2 hover:text-slate-600">
+    <Link href={href} className="font-medium text-slate-900 dark:text-slate-100 underline underline-offset-2 hover:text-slate-600">
       {children}
     </Link>
   );
@@ -600,7 +600,7 @@ function Route({ href, children }: { href: string; children: ReactNode }) {
 
 function Callout({ children }: { children: ReactNode }) {
   return (
-    <div className="hyphens-auto rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-justify text-sm leading-relaxed text-slate-700">
+    <div className="hyphens-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-5 py-4 text-justify text-sm leading-relaxed text-slate-700 dark:text-slate-300">
       {children}
     </div>
   );
@@ -610,9 +610,9 @@ function Definitions({ items }: { items: { term: string; detail: string }[] }) {
   return (
     <dl className="space-y-4">
       {items.map((item) => (
-        <div key={item.term} className="border-l-2 border-slate-200 pl-4">
-          <dt className="font-semibold text-slate-900">{item.term}</dt>
-          <dd className="mt-1 hyphens-auto text-justify leading-relaxed text-slate-600">{item.detail}</dd>
+        <div key={item.term} className="border-l-2 border-slate-200 dark:border-slate-700 pl-4">
+          <dt className="font-semibold text-slate-900 dark:text-slate-100">{item.term}</dt>
+          <dd className="mt-1 hyphens-auto text-justify leading-relaxed text-slate-600 dark:text-slate-400">{item.detail}</dd>
         </div>
       ))}
     </dl>
@@ -627,7 +627,7 @@ function Steps({ items }: { items: string[] }) {
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">
             {index + 1}
           </span>
-          <span className="hyphens-auto pt-0.5 text-justify leading-relaxed text-slate-600">{item}</span>
+          <span className="hyphens-auto pt-0.5 text-justify leading-relaxed text-slate-600 dark:text-slate-400">{item}</span>
         </li>
       ))}
     </ol>

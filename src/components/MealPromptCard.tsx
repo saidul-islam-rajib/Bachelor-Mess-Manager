@@ -47,8 +47,8 @@ function Stepper({
   const clamp = (next: number) => Math.min(mealPromptConfig.maxCountPerMeal, Math.max(0, next));
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2.5">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
+    <div className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5">
+      <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{label}</span>
       <div className="flex items-center gap-2">
         <Button
           size="sm"
@@ -112,13 +112,13 @@ export function MealPromptCard({
 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="text-base font-semibold text-slate-900">{strings.mealPrompt.cardTitle}</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{strings.mealPrompt.cardTitle}</p>
                 {answered && <Badge tone="success">{ANSWER_LABELS[prompt.answer as string] ?? ''}</Badge>}
               </div>
-              <p className="mt-0.5 text-sm text-slate-600">
+              <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">
                 {strings.mealPrompt.question(prompt.groupName, formatDay(prompt.date))}
               </p>
-              <p className="mt-0.5 text-xs text-slate-500">
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                 {answered
                   ? strings.mealPrompt.savedDetail(summarizeCounts(prompt.counts))
                   : `${strings.mealPrompt.usualHint} ${summarizeCounts(prompt.planned)}.`}
@@ -180,11 +180,11 @@ export function MealPromptCard({
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-base font-semibold text-slate-900">{strings.mealPrompt.cardTitle}</p>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{strings.mealPrompt.cardTitle}</p>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {strings.mealPrompt.question(prompt.groupName, formatDay(prompt.date))}
           </p>
         </div>
@@ -192,7 +192,7 @@ export function MealPromptCard({
       </div>
 
       {answered && (
-        <p className="mt-3 rounded-2xl bg-slate-50 px-4 py-2.5 text-sm text-slate-600">
+        <p className="mt-3 rounded-2xl bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-sm text-slate-600 dark:text-slate-400">
           {strings.mealPrompt.savedDetail(summarizeCounts(prompt.counts))}
         </p>
       )}
@@ -209,14 +209,14 @@ export function MealPromptCard({
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-400 dark:text-slate-500">
               {strings.mealPrompt.usualHint} {summarizeCounts(prompt.planned)}.
             </p>
             <button
               type="button"
               disabled={locked}
               onClick={() => setChoosing(true)}
-              className="text-sm font-medium text-slate-700 underline-offset-2 hover:underline disabled:opacity-40"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300 underline-offset-2 hover:underline disabled:opacity-40"
             >
               {strings.mealPrompt.choose}
             </button>

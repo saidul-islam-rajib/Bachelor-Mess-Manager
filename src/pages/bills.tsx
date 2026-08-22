@@ -182,7 +182,7 @@ export default function BillsPage() {
       <PageTitle title={strings.bills.title} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{strings.bills.title}</h1>
-        <p className="mt-1 text-slate-600">{strings.bills.subtitle}</p>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">{strings.bills.subtitle}</p>
       </div>
 
       {loadingGroups ? (
@@ -244,7 +244,7 @@ export default function BillsPage() {
                 />
               )}
 
-              <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+              <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-lg font-semibold">{strings.bills.thisMonth}</h2>
                   <div className="flex items-center gap-3">
@@ -252,17 +252,17 @@ export default function BillsPage() {
                       <button
                         type="button"
                         onClick={() => setExpanded(openCount === bills.length ? [] : bills.map((bill) => bill.id))}
-                        className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                        className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
                       >
                         {openCount === bills.length ? strings.bills.collapseAll : strings.bills.expandAll}
                       </button>
                     )}
-                    <p className="text-sm text-slate-500">{strings.bills.recorded(bills.length)}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{strings.bills.recorded(bills.length)}</p>
                   </div>
                 </div>
 
                 {bills.length === 0 ? (
-                  <p className="mt-4 text-slate-500">
+                  <p className="mt-4 text-slate-500 dark:text-slate-400">
                     {canManage ? strings.bills.noneSupervisor : strings.bills.none}
                   </p>
                 ) : (
@@ -270,32 +270,32 @@ export default function BillsPage() {
                     {KIND_ORDER.filter((kind) => grouped[kind].length > 0).map((kind) => (
                       <section key={kind}>
                         <div className="flex flex-wrap items-baseline justify-between gap-2">
-                          <h3 className="font-semibold text-slate-900">
+                          <h3 className="font-semibold text-slate-900 dark:text-slate-100">
                             {BILL_KIND_COPY[kind].title}{' '}
-                            <span className="font-normal text-slate-400">({grouped[kind].length})</span>
+                            <span className="font-normal text-slate-400 dark:text-slate-500">({grouped[kind].length})</span>
                           </h3>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-slate-500 dark:text-slate-400">
                             {taka(totalsOf(grouped[kind]).total)} ·{' '}
                             {strings.bills.stillOwed(taka(totalsOf(grouped[kind]).outstanding))}
                           </span>
                         </div>
-                        <p className="mt-0.5 text-xs text-slate-500">{BILL_KIND_COPY[kind].hint}</p>
+                        <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{BILL_KIND_COPY[kind].hint}</p>
 
                         <div className="mt-3 space-y-4">
                           {billsByType(grouped[kind]).map((group) => (
                             <div
                               key={group.type}
-                              className="rounded-2xl border border-slate-200 bg-slate-50/60 p-2.5 sm:p-4"
+                              className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 p-2.5 sm:p-4"
                             >
                               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                                <h4 className="font-semibold text-slate-900">
+                                <h4 className="font-semibold text-slate-900 dark:text-slate-100">
                                   {data.categoryLabels[group.type] ?? group.type}
-                                  <span className="ml-2 text-xs font-normal text-slate-500">
+                                  <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">
                                     {strings.bills.billCount(group.bills.length)}
                                   </span>
                                 </h4>
-                                <p className="text-xs text-slate-500">
-                                  <span className="font-semibold tabular-nums text-slate-700">
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  <span className="font-semibold tabular-nums text-slate-700 dark:text-slate-300">
                                     {taka(group.totals.total)}
                                   </span>{' '}
                                   · {strings.bills.collectedAmount(taka(group.totals.collected))}
@@ -448,7 +448,7 @@ function PaymentHistorySection({
   const pageItems = entries.slice(currentPage * HISTORY_PAGE_SIZE, currentPage * HISTORY_PAGE_SIZE + HISTORY_PAGE_SIZE);
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-6">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -457,34 +457,34 @@ function PaymentHistorySection({
       >
         <div>
           <h2 className="text-lg font-semibold">{strings.bills.paymentHistory.title}</h2>
-          <p className="mt-0.5 text-sm text-slate-500">{strings.bills.paymentHistory.subtitle(entries.length)}</p>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{strings.bills.paymentHistory.subtitle(entries.length)}</p>
         </div>
         <Chevron open={open} />
       </button>
 
       {open && (
         <>
-          <ul className="mt-4 divide-y divide-slate-100">
+          <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
             {pageItems.map((entry) => (
               <li key={entry.id} className="py-3">
                 <div className="flex items-start justify-between gap-3">
                   <button
                     type="button"
                     onClick={() => onOpenBill(entry.billId)}
-                    className="min-w-0 truncate text-left text-sm font-medium text-slate-900 hover:underline"
+                    className="min-w-0 truncate text-left text-sm font-medium text-slate-900 dark:text-slate-100 hover:underline"
                   >
                     {entry.memberName}
-                    {entry.toUserName && <span className="font-normal text-slate-500"> → {entry.toUserName}</span>}
+                    {entry.toUserName && <span className="font-normal text-slate-500 dark:text-slate-400"> → {entry.toUserName}</span>}
                   </button>
                   <span
                     className={`shrink-0 text-sm font-semibold tabular-nums ${
-                      entry.isReversed ? 'text-slate-400 line-through' : 'text-slate-900'
+                      entry.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-slate-900 dark:text-slate-100'
                     }`}
                   >
                     {taka(entry.amount)}
                   </span>
                 </div>
-                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500">
+                <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <span>{entry.billLabel}</span>
                   <span aria-hidden>·</span>
                   <span>{formatDayKey(entry.billDate, 'dayMonth')}</span>
@@ -498,7 +498,7 @@ function PaymentHistorySection({
                     <span className="font-medium text-teal-700">{strings.bills.paymentHistory.fromAdvance}</span>
                   )}
                   {entry.isReversed && (
-                    <span className="font-medium text-amber-600">{strings.bills.ledger.reversed}</span>
+                    <span className="font-medium text-amber-600 dark:text-amber-400">{strings.bills.ledger.reversed}</span>
                   )}
                   {canManage && !entry.isReversed && (
                     <button
@@ -515,21 +515,21 @@ function PaymentHistorySection({
           </ul>
 
           {pageCount > 1 && (
-            <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-700 pt-3">
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={currentPage === 0}
-                className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {strings.common.pager.previous}
               </button>
-              <span className="text-xs text-slate-500">{strings.common.pager.pageOf(currentPage + 1, pageCount)}</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{strings.common.pager.pageOf(currentPage + 1, pageCount)}</span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
                 disabled={currentPage === pageCount - 1}
-                className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {strings.common.pager.next}
               </button>
@@ -652,7 +652,7 @@ function AdvancesSection({
   );
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-6">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -661,7 +661,7 @@ function AdvancesSection({
       >
         <div>
           <h2 className="text-lg font-semibold">{strings.bills.advances.title}</h2>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {totalBalance > 0
               ? strings.bills.advances.balanceSummary(taka(totalBalance), data.members.length)
               : strings.bills.advances.noneYet}
@@ -672,9 +672,9 @@ function AdvancesSection({
 
       {open && (
         <div className="mt-4 space-y-5">
-          <p className="text-xs text-slate-500">{strings.bills.advances.explanation}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{strings.bills.advances.explanation}</p>
 
-          <ul className="divide-y divide-slate-100 rounded-2xl border border-slate-100">
+          <ul className="divide-y divide-slate-100 dark:divide-slate-700 rounded-2xl border border-slate-100 dark:border-slate-700">
             {data.members.map((m) => (
               <li key={m.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
                 <span className="truncate font-medium">
@@ -683,7 +683,7 @@ function AdvancesSection({
                     <span className="ml-1 text-xs font-normal text-brand-700">{strings.common.you}</span>
                   )}
                 </span>
-                <span className={`shrink-0 font-semibold tabular-nums ${m.balance > 0 ? 'text-teal-700' : 'text-slate-300'}`}>
+                <span className={`shrink-0 font-semibold tabular-nums ${m.balance > 0 ? 'text-teal-700' : 'text-slate-300 dark:text-slate-600'}`}>
                   {taka(m.balance)}
                 </span>
               </li>
@@ -691,7 +691,7 @@ function AdvancesSection({
           </ul>
 
           {canManage && (
-            <form onSubmit={submitCollect} className="flex flex-wrap items-end gap-2 rounded-2xl bg-slate-50 p-3">
+            <form onSubmit={submitCollect} className="flex flex-wrap items-end gap-2 rounded-2xl bg-slate-50 dark:bg-slate-900 p-3">
               <div className="min-w-[9rem] flex-1">
                 <Listbox
                   label={strings.common.member}
@@ -703,7 +703,7 @@ function AdvancesSection({
               </div>
               <div className="w-28">
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.amount}</span>
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.common.amount}</span>
                   <input
                     type="number"
                     inputMode="decimal"
@@ -712,19 +712,19 @@ function AdvancesSection({
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
                     required
-                    className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
                   />
                 </label>
               </div>
               <div className="min-w-[9rem] flex-1">
                 <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.bills.advances.noteLabel}</span>
+                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.bills.advances.noteLabel}</span>
                   <input
                     type="text"
                     value={note}
                     onChange={(event) => setNote(event.target.value)}
                     placeholder={strings.bills.advances.notePlaceholder}
-                    className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
                   />
                 </label>
               </div>
@@ -740,16 +740,16 @@ function AdvancesSection({
 
           {data.history.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                 {strings.bills.advances.historyTitle}
               </h3>
-              <ul className="mt-2 divide-y divide-slate-100">
+              <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-700">
                 {pageItems.map((entry) => {
                   const isDeposit = !entry.expenseId && !entry.reversalOfId;
                   return (
                     <li key={entry.id} className="py-2.5 text-sm">
                       <div className="flex items-start justify-between gap-3">
-                        <p className="min-w-0 truncate font-medium text-slate-900">
+                        <p className="min-w-0 truncate font-medium text-slate-900 dark:text-slate-100">
                           {entry.userName}
                           {entry.expenseId
                             ? ` ${strings.bills.advances.appliedToBill}`
@@ -760,9 +760,9 @@ function AdvancesSection({
                         <span
                           className={`shrink-0 text-sm font-semibold tabular-nums ${
                             entry.isReversed
-                              ? 'text-slate-400 line-through'
+                              ? 'text-slate-400 dark:text-slate-500 line-through'
                               : entry.amount < 0
-                                ? 'text-slate-500'
+                                ? 'text-slate-500 dark:text-slate-400'
                                 : 'text-teal-700'
                           }`}
                         >
@@ -770,7 +770,7 @@ function AdvancesSection({
                           {taka(Math.abs(entry.amount))}
                         </span>
                       </div>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500">
+                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 dark:text-slate-400">
                         <span>{formatInstant(entry.createdAt, 'dayMonthTime')}</span>
                         {entry.recordedByName && (
                           <>
@@ -785,7 +785,7 @@ function AdvancesSection({
                           </>
                         )}
                         {entry.isReversed && (
-                          <span className="font-medium text-amber-600">{strings.bills.ledger.reversed}</span>
+                          <span className="font-medium text-amber-600 dark:text-amber-400">{strings.bills.ledger.reversed}</span>
                         )}
                         {canManage && isDeposit && entry.amount > 0 && !entry.isReversed && (
                           <button
@@ -803,23 +803,23 @@ function AdvancesSection({
               </ul>
 
               {pageCount > 1 && (
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-700 pt-3">
                   <button
                     type="button"
                     onClick={() => setPage((p) => Math.max(0, p - 1))}
                     disabled={currentPage === 0}
-                    className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {strings.common.pager.previous}
                   </button>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
                     {strings.common.pager.pageOf(currentPage + 1, pageCount)}
                   </span>
                   <button
                     type="button"
                     onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
                     disabled={currentPage === pageCount - 1}
-                    className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     {strings.common.pager.next}
                   </button>
@@ -850,7 +850,7 @@ function Breakdown({
   if (rows.length === 0) return null;
 
   return (
-    <div className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="h-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{strings.bills.costBreakdown}</h2>
       <ul className="mt-4 space-y-3">
         {rows.map((row) => {
@@ -859,11 +859,11 @@ function Breakdown({
             <li key={row.value}>
               <div className="flex items-baseline justify-between text-sm">
                 <span className="font-medium">{row.label}</span>
-                <span className="text-slate-600">
-                  {taka(row.amount)} <span className="text-xs text-slate-400">({percent}%)</span>
+                <span className="text-slate-600 dark:text-slate-400">
+                  {taka(row.amount)} <span className="text-xs text-slate-400 dark:text-slate-500">({percent}%)</span>
                 </span>
               </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                 <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
               </div>
             </li>
@@ -928,13 +928,13 @@ function MemberActions({
           }}
           placeholder={strings.common.amount}
           aria-label={strings.bills.transfer.amountFrom(share.userName)}
-          className={`w-24 rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+          className={`w-24 rounded-full border border-slate-300 dark:border-slate-600 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
         />
         <select
           value={toUserId}
           onChange={(event) => setToUserId(event.target.value)}
           aria-label={strings.bills.transfer.whoDidPay(share.userName)}
-          className={`rounded-full border border-slate-300 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+          className={`rounded-full border border-slate-300 dark:border-slate-600 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
         >
           <option value="">{strings.bills.transfer.intoCollection}</option>
           {recipients.map((recipient) => (
@@ -954,7 +954,7 @@ function MemberActions({
         <button
           type="button"
           onClick={onCancel}
-          className={`rounded-full border border-slate-200 font-medium text-slate-600 hover:bg-slate-100 ${size}`}
+          className={`rounded-full border border-slate-200 dark:border-slate-700 font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 ${size}`}
         >
           {strings.common.cancel}
         </button>
@@ -976,7 +976,7 @@ function MemberActions({
       <button
         type="button"
         onClick={() => onStart(false)}
-        className={`rounded-full border border-slate-300 font-medium text-slate-700 hover:bg-slate-50 ${size}`}
+        className={`rounded-full border border-slate-300 dark:border-slate-600 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 ${size}`}
       >
         {share.outstanding > 0 ? strings.bills.partPayment : strings.common.add}
       </button>
@@ -1052,11 +1052,11 @@ function SplitPanel({
   }
 
   return (
-    <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200">
+    <div className="mt-3 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
       <div className="hidden md:block">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               <th scope="col" className="px-4 py-2.5 text-left font-semibold">
                 {strings.common.member}
               </th>
@@ -1079,7 +1079,7 @@ function SplitPanel({
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {rows.map((share) => {
               const isMe = share.userId === currentUserId;
               return (
@@ -1090,19 +1090,19 @@ function SplitPanel({
                       ? 'bg-teal-50/60'
                       : isMe
                         ? 'bg-brand-50/40'
-                        : 'bg-white'
+                        : 'bg-white dark:bg-slate-800'
                   }
                 >
                   <td className="px-4 py-3 align-top">
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium text-slate-900 dark:text-slate-100">
                       {share.userName}
                       {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">{strings.common.you}</span>}
                     </div>
                     <AdvanceNote share={share} />
                   </td>
-                  <td className="px-3 py-3 text-right align-top tabular-nums text-slate-600">{taka(share.amount)}</td>
-                  <td className="px-3 py-3 text-right align-top tabular-nums font-medium text-slate-900">
-                    {share.paid > 0 ? taka(share.paid) : <span className="text-slate-300">—</span>}
+                  <td className="px-3 py-3 text-right align-top tabular-nums text-slate-600 dark:text-slate-400">{taka(share.amount)}</td>
+                  <td className="px-3 py-3 text-right align-top tabular-nums font-medium text-slate-900 dark:text-slate-100">
+                    {share.paid > 0 ? taka(share.paid) : <span className="text-slate-300 dark:text-slate-600">—</span>}
                   </td>
                   <td className="px-3 py-3 text-right align-top tabular-nums">
                     {share.outstanding > 0 ? (
@@ -1113,7 +1113,7 @@ function SplitPanel({
                         <span className="block text-[10px] font-normal text-teal-600">{strings.bills.getsBackLabel}</span>
                       </span>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <span className="text-slate-300 dark:text-slate-600">—</span>
                     )}
                   </td>
                   <td className="px-3 py-3 align-top">
@@ -1147,7 +1147,7 @@ function SplitPanel({
         </table>
       </div>
 
-      <ul className="divide-y divide-slate-100 md:hidden">
+      <ul className="divide-y divide-slate-100 dark:divide-slate-700 md:hidden">
         {rows.map((share) => {
           const isMe = share.userId === currentUserId;
           const progress =
@@ -1161,16 +1161,16 @@ function SplitPanel({
                   ? 'border-l-4 border-teal-400 bg-teal-50/60'
                   : isMe
                     ? 'bg-brand-50/50'
-                    : 'bg-white'
+                    : 'bg-white dark:bg-slate-800'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-semibold text-slate-900">
+                  <p className="truncate font-semibold text-slate-900 dark:text-slate-100">
                     {share.userName}
                     {isMe && <span className="ml-1.5 text-xs font-normal text-brand-700">(you)</span>}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate-500">
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                     {strings.bills.sharePaid(taka(share.amount), taka(share.paid))}
                   </p>
                 </div>
@@ -1178,7 +1178,7 @@ function SplitPanel({
               </div>
 
               <div className="mt-2.5 flex items-center gap-2.5">
-                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200">
+                <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                   <div
                     className={`h-full rounded-full ${share.outstanding > 0 ? 'bg-amber-500' : 'bg-green-500'}`}
                     style={{ width: `${progress}%` }}
@@ -1193,7 +1193,7 @@ function SplitPanel({
                     +{strings.bills.backSuffix(taka(share.advance))}
                   </span>
                 ) : (
-                  <span className="shrink-0 text-sm font-semibold text-green-700">{strings.bills.settled}</span>
+                  <span className="shrink-0 text-sm font-semibold text-green-700 dark:text-green-400">{strings.bills.settled}</span>
                 )}
               </div>
 
@@ -1255,7 +1255,7 @@ function BillRow({
     <li
       id={`bill-${bill.id}`}
       className={`scroll-mt-24 rounded-2xl border p-3.5 transition-colors sm:p-4 ${
-        isOpen ? 'border-brand-300 bg-white shadow-sm' : 'border-slate-200 bg-white'
+        isOpen ? 'border-brand-300 bg-white dark:bg-slate-800 shadow-sm' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800'
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1265,25 +1265,25 @@ function BillRow({
             <span
               title={strings.bills.vendorPaidTooltip}
               className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                bill.isReceived ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                bill.isReceived ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400' : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'
               }`}
             >
               {bill.isReceived ? strings.bills.vendorPaid : strings.bills.vendorUnpaid}
             </span>
           </div>
-          {bill.payer && <p className="mt-1 text-sm text-slate-500">{strings.bills.paidByName(bill.payer.name)}</p>}
-          {bill.note && <p className="mt-1 text-sm text-slate-600">{bill.note}</p>}
+          {bill.payer && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.bills.paidByName(bill.payer.name)}</p>}
+          {bill.note && <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{bill.note}</p>}
         </div>
 
         <div className="text-right">
           <p className="text-lg font-semibold tabular-nums">{taka(bill.amount)}</p>
           {myShare && (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               {strings.bills.yourShareOf(taka(myShare.amount))}
               {myShare.outstanding > 0 ? (
                 <span className="ml-1 font-semibold text-rose-600">· {strings.bills.dueSuffix(taka(myShare.outstanding))}</span>
               ) : (
-                <span className="ml-1 font-semibold text-green-600">{strings.bills.paidDot}</span>
+                <span className="ml-1 font-semibold text-green-600 dark:text-green-400">{strings.bills.paidDot}</span>
               )}
             </p>
           )}
@@ -1294,33 +1294,33 @@ function BillRow({
         type="button"
         onClick={onToggleOpen}
         aria-expanded={isOpen}
-        className="mt-3 w-full rounded-xl bg-slate-50 px-3 py-2.5 text-left transition-colors hover:bg-slate-100"
+        className="mt-3 w-full rounded-xl bg-slate-50 dark:bg-slate-900 px-3 py-2.5 text-left transition-colors hover:bg-slate-100 dark:hover:bg-slate-700"
       >
         <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">
-          <span className="text-slate-600">
-            {strings.bills.collectedLabel} <span className="font-semibold text-slate-900">{taka(bill.collected)}</span> {strings.bills.ofLabel}{' '}
+          <span className="text-slate-600 dark:text-slate-400">
+            {strings.bills.collectedLabel} <span className="font-semibold text-slate-900 dark:text-slate-100">{taka(bill.collected)}</span> {strings.bills.ofLabel}{' '}
             {taka(bill.amount)}
           </span>
           <span className="flex flex-wrap items-center gap-2">
             {bill.unpaidMemberCount > 0 ? (
-              <span className="font-semibold text-amber-600">
+              <span className="font-semibold text-amber-600 dark:text-amber-400">
                 {bill.unpaidMemberCount} {strings.bills.memberOwes(bill.unpaidMemberCount)}{' '}
                 {taka(bill.uncollected)}
               </span>
             ) : (
-              <span className="font-semibold text-green-600">{strings.bills.everyonePaid}</span>
+              <span className="font-semibold text-green-600 dark:text-green-400">{strings.bills.everyonePaid}</span>
             )}
             {bill.advance > 0 && (
               <span className="rounded-full bg-teal-100 px-2 py-0.5 font-semibold text-teal-800">
                 {strings.bills.advanceBack(taka(bill.advance))}
               </span>
             )}
-            <span className="text-slate-500">
+            <span className="text-slate-500 dark:text-slate-400">
               {isOpen ? strings.bills.hideSplit(bill.shares.length) : strings.bills.showSplit(bill.shares.length)} {isOpen ? '▲' : '▼'}
             </span>
           </span>
         </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
           <div
             className={`h-full rounded-full transition-all ${bill.isFullyCollected ? 'bg-green-500' : 'bg-brand-600'}`}
             style={{ width: `${percent}%` }}
@@ -1340,29 +1340,29 @@ function BillRow({
           />
 
           {canManage && (
-            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
+            <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 dark:border-slate-700 pt-3">
               <button
                 type="button"
                 onClick={onToggle}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 {strings.bills.markVendor(bill.isReceived)}
               </button>
               <button
                 type="button"
                 onClick={onEdit}
-                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 {strings.common.edit}
               </button>
               <button
                 type="button"
                 onClick={onDelete}
-                className="rounded-full border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                className="rounded-full border border-red-200 dark:border-red-500/30 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50"
               >
                 {strings.common.delete}
               </button>
-              <span className="ml-auto text-xs text-slate-400">
+              <span className="ml-auto text-xs text-slate-400 dark:text-slate-500">
                 {strings.bills.collectionsNote}
               </span>
             </div>
@@ -1451,7 +1451,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
         />
 
         <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.bills.amountLabel}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.bills.amountLabel}</span>
           <input
             type="number"
             min="0"
@@ -1459,18 +1459,18 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+            className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
           />
         </label>
 
         <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.date}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.common.date}</span>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+            className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
           />
         </label>
 
@@ -1485,18 +1485,18 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
       </div>
 
       <label className="mt-4 block">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.note}</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.common.note}</span>
         <input
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder={strings.bills.notePlaceholder}
-          className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+          className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
         />
       </label>
 
       <fieldset className="mt-4">
-        <legend className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.bills.howShared}</legend>
+        <legend className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.bills.howShared}</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {[SPLIT_METHODS.EQUAL, SPLIT_METHODS.CUSTOM].map((method) => (
             <button
@@ -1506,26 +1506,26 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
               className={`rounded-full px-4 py-2 text-sm transition ${
                 splitMethod === method
                   ? 'bg-brand-600 font-medium text-white'
-                  : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  : 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
               {SPLIT_METHOD_LABELS[method]}
             </button>
           ))}
         </div>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           {splitMethod === SPLIT_METHODS.EQUAL ? strings.bills.equalHint : strings.bills.customHint}
         </p>
       </fieldset>
 
       {splitMethod === SPLIT_METHODS.CUSTOM && (
-        <div className="mt-3 rounded-2xl border border-slate-200 p-3">
+        <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-medium">{strings.bills.assignToMembers}</span>
             <button
               type="button"
               onClick={spreadEvenly}
-              className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+              className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               {strings.bills.splitEvenlySelected}
             </button>
@@ -1540,7 +1540,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
                     type="checkbox"
                     checked={selected}
                     onChange={() => toggleMember(m.id)}
-                    className="h-4 w-4 rounded border-slate-300"
+                    className="h-4 w-4 rounded border-slate-300 dark:border-slate-600"
                   />
                   <label htmlFor={`share-${m.id}`} className="flex-1 text-sm">
                     {m.name}
@@ -1552,15 +1552,15 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
                     value={custom[m.id] ?? ''}
                     disabled={!selected}
                     onChange={(e) => setCustom((c) => ({ ...c, [m.id]: e.target.value }))}
-                    className="w-28 rounded-xl border border-slate-300 bg-slate-50 px-3 py-1.5 text-right text-sm disabled:opacity-40"
+                    className="w-28 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-right text-sm disabled:opacity-40"
                   />
                 </li>
               );
             })}
           </ul>
           <p
-            className={`mt-3 border-t border-slate-100 pt-2 text-sm ${
-              Math.abs(customTotal - (Number(amount) || 0)) > 0.01 ? 'text-red-600' : 'text-green-700'
+            className={`mt-3 border-t border-slate-100 dark:border-slate-700 pt-2 text-sm ${
+              Math.abs(customTotal - (Number(amount) || 0)) > 0.01 ? 'text-red-600 dark:text-red-400' : 'text-green-700 dark:text-green-400'
             }`}
           >
             {strings.bills.assignedOf(taka(customTotal), taka(Number(amount) || 0))}
@@ -1573,7 +1573,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
           type="checkbox"
           checked={isReceived}
           onChange={(e) => setIsReceived(e.target.checked)}
-          className="h-4 w-4 rounded border-slate-300"
+          className="h-4 w-4 rounded border-slate-300 dark:border-slate-600"
         />
         <span className="text-sm">{strings.bills.alreadyPaid}</span>
       </label>
@@ -1669,7 +1669,7 @@ function CategoryManager({
         type="button"
         onClick={() => setOpen(true)}
         aria-expanded={false}
-        className="flex h-full w-full items-center justify-between gap-3 rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-3 text-left text-sm font-medium text-slate-600 hover:border-slate-400 hover:bg-slate-50"
+        className="flex h-full w-full items-center justify-between gap-3 rounded-3xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-5 py-3 text-left text-sm font-medium text-slate-600 dark:text-slate-400 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
       >
         {strings.bills.manageCostTypes(categories.length)}
         <Chevron open={false} />
@@ -1678,13 +1678,13 @@ function CategoryManager({
   }
 
   return (
-    <div className="h-full rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="h-full rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">{strings.bills.costTypesTitle}</h2>
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-sm text-slate-500 hover:text-slate-900"
+          className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
         >
           {strings.bills.done}
         </button>
@@ -1694,16 +1694,16 @@ function CategoryManager({
         {categories.map((category) => (
           <li
             key={category.id}
-            className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 py-1 pl-3 pr-1.5 text-sm"
+            className="flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 py-1 pl-3 pr-1.5 text-sm"
           >
             <span className="font-medium">{category.label}</span>
-            {category.inUse > 0 && <span className="text-xs text-slate-400">{category.inUse}</span>}
+            {category.inUse > 0 && <span className="text-xs text-slate-400 dark:text-slate-500">{category.inUse}</span>}
             <button
               type="button"
               onClick={() => rename(category)}
               disabled={busy}
               aria-label={strings.bills.renameAria(category.label)}
-              className="rounded-full px-1.5 text-xs text-slate-500 hover:text-slate-900 disabled:opacity-50"
+              className="rounded-full px-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 disabled:opacity-50"
             >
               {strings.bills.costTypeEdit}
             </button>
@@ -1712,7 +1712,7 @@ function CategoryManager({
               onClick={() => remove(category)}
               disabled={busy}
               aria-label={strings.bills.removeAria(category.label)}
-              className="rounded-full bg-white px-1.5 text-slate-400 hover:text-red-600 disabled:opacity-50"
+              className="rounded-full bg-white dark:bg-slate-800 px-1.5 text-slate-400 dark:text-slate-500 hover:text-red-600 disabled:opacity-50"
             >
               ×
             </button>
@@ -1726,7 +1726,7 @@ function CategoryManager({
           onChange={(e) => setLabel(e.target.value)}
           maxLength={40}
           placeholder={strings.bills.addCostTypePlaceholder}
-          className="min-w-0 flex-1 rounded-full border border-slate-300 bg-slate-50 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white"
+          className="min-w-0 flex-1 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white"
         />
         <button
           type="submit"
@@ -1786,11 +1786,11 @@ function AddBillForm({
         type="button"
         onClick={() => setOpen(true)}
         aria-expanded={false}
-        className="flex w-full items-center justify-between gap-3 rounded-3xl border border-dashed border-slate-300 bg-white px-5 py-4 text-left hover:border-slate-400 hover:bg-slate-50"
+        className="flex w-full items-center justify-between gap-3 rounded-3xl border border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-5 py-4 text-left hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
       >
         <span>
-          <span className="block text-sm font-medium text-slate-700">{strings.bills.recordCta}</span>
-          <span className="mt-0.5 block text-xs text-slate-500">{strings.bills.recordCollapsedHint}</span>
+          <span className="block text-sm font-medium text-slate-700 dark:text-slate-300">{strings.bills.recordCta}</span>
+          <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{strings.bills.recordCollapsedHint}</span>
         </span>
         <Chevron open={false} />
       </button>
@@ -1801,7 +1801,7 @@ function AddBillForm({
     <form
       key={`${groupId}-${month}`}
       onSubmit={submit}
-      className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+      className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6"
     >
       <button
         type="button"
@@ -1810,7 +1810,7 @@ function AddBillForm({
         className="flex w-full items-center justify-between gap-3 text-left"
       >
         <h2 className="text-lg font-semibold">{strings.bills.record}</h2>
-        <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400">
           {strings.bills.recordOpen}
           <Chevron open />
         </span>
@@ -1827,7 +1827,7 @@ function AddBillForm({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+          className="rounded-full border border-slate-200 dark:border-slate-700 px-5 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
         >
           {strings.common.cancel}
         </button>
@@ -1868,11 +1868,11 @@ function BillChangeHistory({ groupId, billId }: { groupId: string; billId: strin
   }, [groupId, billId, toast]);
 
   return (
-    <div className="mt-5 border-t border-slate-100 pt-4">
+    <div className="mt-5 border-t border-slate-100 dark:border-slate-700 pt-4">
       <h4 className="text-sm font-semibold">{strings.history.title}</h4>
-      <p className="mt-0.5 text-xs text-slate-500">{strings.history.subtitleBill}</p>
+      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{strings.history.subtitleBill}</p>
       {loading ? (
-        <p className="mt-3 text-sm text-slate-500">{strings.history.loading}</p>
+        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{strings.history.loading}</p>
       ) : (
         <HistoryList history={history ?? []} fallbackLabel={strings.bills.label} />
       )}
@@ -1935,7 +1935,7 @@ function EditBill({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-slate-200 dark:border-slate-700 px-5 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
           >
             {strings.common.cancel}
           </button>
@@ -1947,5 +1947,5 @@ function EditBill({
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">{children}</div>;
 }

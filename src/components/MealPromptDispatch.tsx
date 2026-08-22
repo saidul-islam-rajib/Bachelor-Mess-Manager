@@ -21,10 +21,10 @@ export function MealPromptDispatch({ groupId }: { groupId: string }) {
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-900">{strings.mealPrompt.sendNow}</p>
-        <p className="mt-0.5 text-sm text-slate-500">{strings.mealPrompt.notificationBody}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{strings.mealPrompt.sendNow}</p>
+        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{strings.mealPrompt.notificationBody}</p>
       </div>
       <Button onClick={send} loading={busy}>
         {strings.mealPrompt.sendNow}

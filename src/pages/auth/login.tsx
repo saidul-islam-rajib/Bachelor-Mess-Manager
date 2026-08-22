@@ -78,10 +78,10 @@ export default function LoginPage() {
       <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
 
       <h1 className="text-2xl font-semibold sm:text-3xl">{strings.title}</h1>
-      <p className="mt-1.5 text-sm text-slate-500">{i18n.auth.login.subtitle}</p>
+      <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{i18n.auth.login.subtitle}</p>
 
       {formError && (
-        <div role="alert" className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="mt-6 rounded-2xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-400">
           {formError}
         </div>
       )}
@@ -126,7 +126,7 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
         {strings.registerLink}{' '}
         <Link href={ROUTES.auth.register} className="font-medium text-brand-700 hover:underline">
           {strings.register}

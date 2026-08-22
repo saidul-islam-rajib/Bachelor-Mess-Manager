@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import type { GetServerSideProps } from 'next';
 import { CommunityComments } from '@/components/community/CommunityComments';
 import { ToLetComposer } from '@/components/community/ToLetComposer';
 import { ToLetGallery } from '@/components/community/ToLetGallery';
@@ -18,23 +19,47 @@ import {
   ShareButtons,
   useConfirm
 } from '@/components/ui';
-import { TOLET_GENDER_PREFERENCE, TOLET_STATUS, TOLET_TENANT_RESTRICTION, USER_ROLES } from '@/lib/constants';
+import { COMMUNITY_MESSAGE_TYPES, TOLET_GENDER_PREFERENCE, TOLET_STATUS, TOLET_TENANT_RESTRICTION, USER_ROLES } from '@/lib/constants';
 import { api, errorMessage } from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { googleMapsLink } from '@/lib/geo';
 import { strings } from '@/lib/i18n';
+import { publicBaseUrl } from '@/lib/password-tokens';
 import { ROUTES, toLetListingPath } from '@/lib/routes';
-import type { CommunityMessageView } from '@/lib/community';
+import { getMessageForView, type CommunityMessageView } from '@/lib/community';
 
-export default function ToLetDetailPage() {
+type PageProps = {
+  initialListing: CommunityMessageView | null;
+  pageUrl: string;
+  ogImage: string | null;
+};
+
+export const getServerSideProps: GetServerSideProps<PageProps> = async (context) => {
+  const id = typeof context.params?.id === 'string' ? context.params.id : null;
+  if (!id) return { notFound: true };
+
+  const message = await getMessageForView(id);
+  if (!message || message.type !== COMMUNITY_MESSAGE_TYPES.TOLET) return { notFound: true };
+
+  const baseUrl = publicBaseUrl(context.req);
+  return {
+    props: {
+      initialListing: message,
+      pageUrl: `${baseUrl}${toLetListingPath(message.id)}`,
+      ogImage: message.images[0] ? `${baseUrl}${message.images[0]}` : null
+    }
+  };
+};
+
+export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: PageProps) {
   const router = useRouter();
   const toast = useToast();
   const confirm = useConfirm();
   const { user } = useCurrentUser();
   const id = typeof router.query.id === 'string' ? router.query.id : undefined;
 
-  const [listing, setListing] = useState<CommunityMessageView | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [listing, setListing] = useState<CommunityMessageView | null>(initialListing);
+  const [loading, setLoading] = useState(!initialListing);
   const [notFound, setNotFound] = useState(false);
   const [composerMode, setComposerMode] = useState<'edit' | 'repost' | null>(null);
   const [busy, setBusy] = useState(false);
@@ -42,7 +67,6 @@ export default function ToLetDetailPage() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
-    setLoading(true);
     setNotFound(false);
 
     api
@@ -168,11 +192,16 @@ export default function ToLetDetailPage() {
 
   return (
     <PageContainer width="medium">
-      <PageTitle title={listing.title ?? strings.toLet.postAction} description={listing.text} />
+      <PageTitle
+        title={listing.title ?? strings.toLet.postAction}
+        description={listing.text.length > 200 ? `${listing.text.slice(0, 197)}...` : listing.text}
+        image={ogImage ?? undefined}
+        url={pageUrl}
+      />
 
       <Link
         href={ROUTES.community}
-        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"
+        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700"
       >
         <span aria-hidden="true">&larr;</span> {strings.toLet.backToBrowse}
       </Link>
@@ -197,8 +226,8 @@ export default function ToLetDetailPage() {
                 {restrictionLabel}
               </Badge>
             </div>
-            <h1 className="mt-2 text-2xl font-semibold text-slate-900">{listing.title}</h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{listing.title}</h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
               {listing.location}
               {mapsLink && (
                 <a
@@ -211,41 +240,41 @@ export default function ToLetDetailPage() {
                 </a>
               )}
             </p>
-            {availableMonthLabel && <p className="mt-0.5 text-xs text-slate-400">{availableMonthLabel}</p>}
+            {availableMonthLabel && <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{availableMonthLabel}</p>}
           </div>
 
           <div className="shrink-0 text-right">
             <p className="text-2xl font-semibold text-brand-700">
               {listing.rent !== null && strings.toLet.rentPerMonth(formatCurrency(listing.rent))}
             </p>
-            {listing.rentNegotiable && <p className="text-xs text-slate-400">{strings.toLet.negotiable}</p>}
+            {listing.rentNegotiable && <p className="text-xs text-slate-400 dark:text-slate-500">{strings.toLet.negotiable}</p>}
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <LikeButton messageId={listing.id} liked={listing.likedByViewer} count={listing.likeCount} onChange={onLikeChange} />
           <ShareButtons url={toLetListingPath(listing.id)} title={listing.title ?? ''} />
-          <span className="text-xs text-slate-400">{strings.toLet.viewsCount(listing.viewCount)}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">{strings.toLet.viewsCount(listing.viewCount)}</span>
         </div>
 
-        <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800">{listing.text}</p>
+        <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800 dark:text-slate-200">{listing.text}</p>
 
-        <dl className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2">
+        <dl className="grid gap-4 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:grid-cols-2">
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.toLet.contactTitle}</dt>
-            <dd className="mt-1 text-sm font-medium text-slate-800">
+            <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.toLet.contactTitle}</dt>
+            <dd className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">
               {listing.contactName ?? listing.authorName}
               {listing.contactPhone ? ` · ${listing.contactPhone}` : ` · ${strings.toLet.noContactPhone}`}
             </dd>
           </div>
           <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.toLet.postedBy(listing.authorName)}</dt>
-            <dd className="mt-1 text-sm font-medium text-slate-800">{strings.toLet.postedOn(formatDate(listing.createdAt))}</dd>
+            <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.toLet.postedBy(listing.authorName)}</dt>
+            <dd className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">{strings.toLet.postedOn(formatDate(listing.createdAt))}</dd>
           </div>
         </dl>
 
         {canManage && (
-          <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+          <div className="flex flex-wrap gap-2 border-t border-slate-100 dark:border-slate-700 pt-4">
             <Button variant="secondary" size="sm" onClick={() => setComposerMode('edit')} disabled={busy}>
               {strings.toLet.editAction}
             </Button>
@@ -264,7 +293,7 @@ export default function ToLetDetailPage() {
           </div>
         )}
 
-        <div className="border-t border-slate-100 pt-5">
+        <div className="border-t border-slate-100 dark:border-slate-700 pt-5">
           <h2 className="mb-3 text-lg font-semibold">{strings.community.comments.title}</h2>
           <CommunityComments messageId={listing.id} canModerate={isAdmin} />
         </div>

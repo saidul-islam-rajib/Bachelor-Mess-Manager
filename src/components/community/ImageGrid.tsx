@@ -32,7 +32,7 @@ export function ImageGrid({ images, authorName }: { images: string[]; authorName
 
   return (
     <>
-      <div className={`grid gap-px bg-slate-100 ${LAYOUT[visible.length] ?? 'grid-cols-2'}`}>
+      <div className={`grid gap-px bg-slate-100 dark:bg-slate-700 ${LAYOUT[visible.length] ?? 'grid-cols-2'}`}>
         {visible.map((src, index) => {
           const isLastTile = hiddenCount > 0 && index === visible.length - 1;
           return (
@@ -40,7 +40,7 @@ export function ImageGrid({ images, authorName }: { images: string[]; authorName
               key={src}
               type="button"
               onClick={() => setOpenIndex(index)}
-              className={`relative block w-full cursor-zoom-in bg-slate-100 ${cellClassName(visible.length, index)}`}
+              className={`relative block w-full cursor-zoom-in bg-slate-100 dark:bg-slate-700 ${cellClassName(visible.length, index)}`}
             >
               <img
                 src={src}

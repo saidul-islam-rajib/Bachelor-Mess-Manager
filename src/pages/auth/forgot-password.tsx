@@ -57,16 +57,16 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
       <PageTitle title={copy.title} />
       <XssWarningModal open={Boolean(xssField)} field={xssField} onClose={() => setXssField(null)} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
+        <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:p-10">
           {sent ? (
             <>
               <h1 className="text-2xl font-semibold">{copy.sentTitle}</h1>
-              <p className="mt-2 text-sm text-slate-600">{copy.sentBody(sent.email)}</p>
-              <p className="mt-3 text-xs text-slate-500">{copy.sentHint}</p>
+              <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{copy.sentBody(sent.email)}</p>
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">{copy.sentHint}</p>
 
               {sent.link && (
                 <Alert tone="warning" className="mt-5">
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
           ) : (
             <>
               <h1 className="text-2xl font-semibold">{copy.title}</h1>
-              <p className="mt-1 text-sm text-slate-500">{copy.subtitle}</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{copy.subtitle}</p>
 
               {formError && (
                 <Alert tone="danger" className="mt-6">

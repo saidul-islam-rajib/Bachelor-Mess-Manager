@@ -16,9 +16,9 @@ export type HistoryEvent = {
 };
 
 const TONES: Record<string, string> = {
-  [EXPENSE_ACTIONS.CREATED]: 'bg-green-50 text-green-700 ring-green-600/20',
-  [EXPENSE_ACTIONS.UPDATED]: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-  [EXPENSE_ACTIONS.DELETED]: 'bg-red-50 text-red-700 ring-red-600/20'
+  [EXPENSE_ACTIONS.CREATED]: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-green-600/20',
+  [EXPENSE_ACTIONS.UPDATED]: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-amber-600/20',
+  [EXPENSE_ACTIONS.DELETED]: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-red-600/20'
 };
 
 export function describeHistoryEvent(event: HistoryEvent, fallbackLabel: string): string {
@@ -56,19 +56,19 @@ export function HistoryList({
   const copy = strings.history;
 
   if (history.length === 0) {
-    return <p className="mt-4 text-sm text-slate-500">{emptyText ?? copy.empty}</p>;
+    return <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{emptyText ?? copy.empty}</p>;
   }
 
   return (
-    <ul className="mt-4 divide-y divide-slate-100">
+    <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
       {history.map((event) => (
         <li key={event.id} className="flex flex-wrap items-start justify-between gap-2 py-3">
           <div className="min-w-0">
             <p className="text-sm">
               <span className="font-medium">{event.actorName}</span>{' '}
-              <span className="text-slate-600">{describeHistoryEvent(event, fallbackLabel)}</span>
+              <span className="text-slate-600 dark:text-slate-400">{describeHistoryEvent(event, fallbackLabel)}</span>
             </p>
-            <p className="mt-0.5 text-xs text-slate-400">{formatInstant(event.at, 'dayMonthTime')}</p>
+            <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{formatInstant(event.at, 'dayMonthTime')}</p>
           </div>
           <span
             className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
@@ -93,9 +93,9 @@ export default function ChangeHistory({
   subtitle: string;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{strings.history.title}</h2>
-      <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
       <HistoryList history={history} fallbackLabel={fallbackLabel} />
     </div>
   );

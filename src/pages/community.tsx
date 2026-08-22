@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnnouncementsRail } from '@/components/community/AnnouncementsRail';
 import { Composer } from '@/components/community/Composer';
-import { ComposerTrigger } from '@/components/community/ComposerTrigger';
 import { PeopleRail } from '@/components/community/PeopleRail';
 import { PostCard, type CommunityMessage } from '@/components/community/PostCard';
 import { ToLetComposer } from '@/components/community/ToLetComposer';
@@ -263,19 +262,16 @@ export default function CommunityPage() {
 
       <div className="grid gap-4 lg:grid-cols-[65fr_35fr]">
         <div className="min-w-0 space-y-4">
-          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-            <ToLetSearchBar value={search} onChange={setSearch} previewItems={searchResult?.items ?? []} />
-
-            {user && !searching && (
-              <div className="border-t border-slate-100">
-                <ComposerTrigger
-                  userName={user.name}
-                  userImage={user.profileImage ?? null}
-                  onOpen={() => setComposerOpen(true)}
-                  onOpenToLet={() => setToLetComposerOpen(true)}
-                />
-              </div>
-            )}
+          <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
+            <ToLetSearchBar
+              value={search}
+              onChange={setSearch}
+              previewItems={searchResult?.items ?? []}
+              userName={user?.name}
+              userImage={user?.profileImage}
+              onOpenComposer={user ? () => setComposerOpen(true) : undefined}
+              onOpenToLet={user ? () => setToLetComposerOpen(true) : undefined}
+            />
           </div>
 
           {searching ? (
@@ -323,7 +319,7 @@ export default function CommunityPage() {
                     ))}
                   </ul>
 
-                  <div ref={sentinel} className="py-6 text-center text-sm text-slate-400">
+                  <div ref={sentinel} className="py-6 text-center text-sm text-slate-400 dark:text-slate-500">
                     {loadingMore ? strings.community.loadingOlder : !hasMore ? strings.community.endOfFeed : null}
                   </div>
                 </>

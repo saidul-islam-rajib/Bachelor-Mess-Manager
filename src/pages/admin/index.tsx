@@ -299,7 +299,7 @@ function RegistrationsPanel() {
       render: (row) => (
         <div>
           <p className="font-medium">{row.name}</p>
-          <p className="text-xs text-slate-500">{row.email}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
         </div>
       )
     },
@@ -329,7 +329,7 @@ function RegistrationsPanel() {
       render: (row) => (
         <div>
           <p className="font-medium">{row.name}</p>
-          <p className="text-xs text-slate-500">{row.email}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
         </div>
       )
     },
@@ -339,7 +339,7 @@ function RegistrationsPanel() {
       key: 'createdAt',
       header: strings.admin.registrations.registeredAt,
       align: 'right',
-      render: (row) => <span className="text-xs text-slate-600">{formatDateTime(row.createdAt)}</span>
+      render: (row) => <span className="text-xs text-slate-600 dark:text-slate-400">{formatDateTime(row.createdAt)}</span>
     }
   ];
 
@@ -515,7 +515,7 @@ function UsersPanel() {
       render: (row) => (
         <div>
           <p className="font-medium">{row.name}</p>
-          <p className="text-xs text-slate-500">{row.email}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{row.email}</p>
         </div>
       )
     },
@@ -544,24 +544,24 @@ function UsersPanel() {
       render: (row) => {
         if (row.role === USER_ROLES.SUPERVISOR) {
           return row.supervisedGroups.length > 0 ? (
-            <span className="text-xs text-slate-600">
+            <span className="text-xs text-slate-600 dark:text-slate-400">
               {row.supervisedGroups.map((group) => group.name).join(', ')}
             </span>
           ) : (
-            <span className="text-xs text-slate-400">{strings.admin.users.noGroup}</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{strings.admin.users.noGroup}</span>
           );
         }
         return row.groups.length > 0 ? (
-          <div className="text-xs text-slate-600">
+          <div className="text-xs text-slate-600 dark:text-slate-400">
             {row.groups.map((group) => (
               <p key={group.id}>
                 {group.name}
-                <span className="text-slate-400"> · {group.supervisor.name}</span>
+                <span className="text-slate-400 dark:text-slate-500"> · {group.supervisor.name}</span>
               </p>
             ))}
           </div>
         ) : (
-          <span className="text-xs text-slate-400">{strings.admin.users.noGroup}</span>
+          <span className="text-xs text-slate-400 dark:text-slate-500">{strings.admin.users.noGroup}</span>
         );
       }
     },
@@ -569,7 +569,7 @@ function UsersPanel() {
       key: 'lastLoginAt',
       header: strings.admin.users.lastLogin,
       render: (row) => (
-        <span className="text-xs text-slate-600">
+        <span className="text-xs text-slate-600 dark:text-slate-400">
           {row.lastLoginAt ? formatDateTime(row.lastLoginAt) : strings.admin.users.never}
         </span>
       )
@@ -955,7 +955,7 @@ function GroupsPanel() {
               </span>
             )}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             {row.supervisor.email}
             {row.maxSupervisors !== null && (
               <span className="ml-1 text-brand-600">· limit {row.maxSupervisors}</span>
@@ -1199,7 +1199,7 @@ function GroupMembersModal({
         ) : active.length === 0 ? (
           <EmptyState title={strings.emptyState.noMembers} />
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-slate-100 dark:divide-slate-700">
             {active.map((member) => (
               <li key={member.id} className="flex items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
@@ -1211,7 +1211,7 @@ function GroupMembersModal({
                       </Badge>
                     )}
                   </p>
-                  <p className="truncate text-xs text-slate-500">{member.email}</p>
+                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">{member.email}</p>
                 </div>
                 {!member.isSupervisor && (
                   <div className="flex shrink-0 gap-2">
@@ -1386,12 +1386,12 @@ function SecurityPanel() {
           {data.lockedAccounts.length === 0 ? (
             <EmptyState title={strings.admin.security.noLockedAccounts} description="" />
           ) : (
-            <ul className="divide-y divide-slate-100">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-700">
               {data.lockedAccounts.map((account) => (
                 <li key={account.email} className="flex flex-wrap items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{account.email}</p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {account.failedAttempts} · {account.lastAttemptAt ? formatDateTime(account.lastAttemptAt) : ''}
                     </p>
                   </div>
@@ -1413,11 +1413,11 @@ function SecurityPanel() {
           ) : !failures || failures.failures.length === 0 ? (
             <EmptyState title={strings.admin.security.noRecentFailures} description="" />
           ) : (
-            <ul className="divide-y divide-slate-100 text-sm">
+            <ul className="divide-y divide-slate-100 dark:divide-slate-700 text-sm">
               {failures.failures.map((failure) => (
                 <li key={failure.id} className="flex flex-wrap items-center justify-between gap-2 py-2.5">
                   <span className="truncate">{failure.email}</span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
                     {failure.ipAddress} · {failure.reason ?? ''} · {formatDateTime(failure.createdAt)}
                   </span>
                 </li>
@@ -1489,11 +1489,11 @@ function NotificationEventToggles({
   }
 
   return (
-    <div className={`mt-5 rounded-2xl border border-slate-200 bg-white p-4 ${disabled ? 'opacity-50' : ''}`}>
+    <div className={`mt-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h4 className="text-sm font-semibold">{strings.admin.settings.notificationsPerEvent}</h4>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
             {strings.admin.settings.notificationsCount(onCount, types.length)}
           </p>
         </div>
@@ -1502,7 +1502,7 @@ function NotificationEventToggles({
             type="button"
             disabled={disabled}
             onClick={() => onChange('')}
-            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
           >
             {strings.admin.settings.notificationsAllOn}
           </button>
@@ -1510,7 +1510,7 @@ function NotificationEventToggles({
             type="button"
             disabled={disabled}
             onClick={() => onChange(types.join(','))}
-            className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
           >
             {strings.admin.settings.notificationsAllOff}
           </button>
@@ -1607,11 +1607,11 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
   const visible = onlyExceptions ? groups.filter((group) => group.overridden) : groups;
 
   return (
-    <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-4">
+    <div className="mt-5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h4 className="text-sm font-semibold">{strings.admin.settings.limitsForIndividualMesses}</h4>
-          <p className="mt-0.5 text-xs text-slate-500">
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
             {exceptions === 0
               ? strings.admin.settings.allMessesFollowDefault(siteMax)
               : strings.admin.settings.messExceptionsSummary(exceptions, siteMax)}
@@ -1633,13 +1633,13 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
       </div>
 
       {loading ? (
-        <p className="mt-4 text-sm text-slate-500">{strings.admin.settings.loadingMesses}</p>
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{strings.admin.settings.loadingMesses}</p>
       ) : visible.length === 0 ? (
-        <p className="mt-4 text-sm text-slate-500">
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
           {onlyExceptions ? strings.admin.settings.noMessHasOwnLimit : strings.admin.settings.noMessesMatch}
         </p>
       ) : (
-        <ul className="mt-4 divide-y divide-slate-100">
+        <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
           {visible.map((group) => (
             <li key={group.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
@@ -1651,7 +1651,7 @@ function SupervisorLimitManager({ siteMax }: { siteMax: number }) {
                     </span>
                   )}
                 </p>
-                <p className="truncate text-xs text-slate-500">
+                <p className="truncate text-xs text-slate-500 dark:text-slate-400">
                   {strings.admin.settings.usingOfMax(group.used, group.effectiveMax)} ·{' '}
                   {group.supervisors.map((s) => s.name).join(', ')}
                 </p>
@@ -1749,9 +1749,9 @@ function SettingsPanel() {
         onChange={(checked) => update('newsletterEnabled', checked)}
       />
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 sm:p-5">
         <h3 className="text-sm font-semibold">{strings.admin.settings.editingPastMeals}</h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           {strings.admin.settings.editingPastMealsHint}
         </p>
 
@@ -1772,14 +1772,14 @@ function SettingsPanel() {
           checked={settings.mealEditRequiresApproval}
           onChange={(checked) => update('mealEditRequiresApproval', checked)}
         />
-        <p className="mt-2 max-w-2xl text-xs text-slate-500">
+        <p className="mt-2 max-w-2xl text-xs text-slate-500 dark:text-slate-400">
           {strings.admin.settings.approvalDefaultHint}
         </p>
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 sm:p-5">
         <h3 className="text-sm font-semibold">{strings.admin.settings.supervisorsPerMess}</h3>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           {strings.admin.settings.supervisorsPerMessHint}
         </p>
 
@@ -1793,16 +1793,16 @@ function SettingsPanel() {
             { value: '2', label: strings.admin.settings.allowSecondSupervisor }
           ]}
         />
-        <p className="mt-2 max-w-2xl text-xs text-slate-500">
+        <p className="mt-2 max-w-2xl text-xs text-slate-500 dark:text-slate-400">
           {strings.admin.settings.supervisorLimitHint}
         </p>
 
         <SupervisorLimitManager siteMax={settings.maxSupervisorsPerGroup} />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 sm:p-5">
         <h3 className="text-sm font-semibold">{strings.admin.settings.notificationsTitle}</h3>
-        <p className="mt-1 max-w-3xl text-sm text-slate-600">{strings.admin.settings.notificationsHint}</p>
+        <p className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-400">{strings.admin.settings.notificationsHint}</p>
 
         <Checkbox
           className="mt-4"
@@ -1812,7 +1812,7 @@ function SettingsPanel() {
         />
 
         {!settings.notificationsEnabled && (
-          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          <p className="mt-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
             {strings.admin.settings.notificationsMasterOff}
           </p>
         )}
@@ -1824,9 +1824,9 @@ function SettingsPanel() {
         />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 sm:p-5">
         <h3 className="text-sm font-semibold">{strings.admin.settings.uploadsTitle}</h3>
-        <p className="mt-1 text-sm text-slate-600">{strings.admin.settings.uploadsHint}</p>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{strings.admin.settings.uploadsHint}</p>
 
         <NumberInput
           containerClassName="mt-4 max-w-xs"
@@ -1927,7 +1927,7 @@ function RoleRequestsPanel() {
       render: (row) => (
         <div>
           <p className="font-medium">{row.user.name}</p>
-          <p className="text-xs text-slate-500">{row.user.email}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{row.user.email}</p>
         </div>
       )
     },
@@ -1936,7 +1936,7 @@ function RoleRequestsPanel() {
     {
       key: 'reason',
       header: 'Reason',
-      render: (row) => <span className="text-xs text-slate-600">{row.reason ?? '—'}</span>
+      render: (row) => <span className="text-xs text-slate-600 dark:text-slate-400">{row.reason ?? '—'}</span>
     },
     { key: 'createdAt', header: strings.common.date, render: (row) => formatDate(row.createdAt) },
     {

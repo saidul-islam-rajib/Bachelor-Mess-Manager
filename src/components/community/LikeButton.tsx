@@ -53,7 +53,7 @@ export function LikeButton({
       title={liked ? strings.community.unlike : strings.community.like}
       className={`inline-flex items-center gap-1.5 rounded-full border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
         compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'
-      } ${liked ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}
+      } ${liked ? 'border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
     >
       <svg
         width={compact ? 14 : 16}

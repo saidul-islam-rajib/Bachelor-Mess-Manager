@@ -49,9 +49,9 @@ function BrandingPanel() {
 
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
       <section className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5 lg:flex">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg shadow-slate-900/5 lg:flex">
           <BrandingPanel />
           <div className="flex-1 p-6 sm:p-10 lg:flex lg:items-center lg:p-12">
             <div className="w-full">{children}</div>

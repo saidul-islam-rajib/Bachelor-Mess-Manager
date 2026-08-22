@@ -63,11 +63,11 @@ export function XssWarningModal({ open, field, onClose }: XssWarningModalProps) 
           <h2 id="xss-warning-title" className="text-lg font-semibold text-white">
             {strings.xssWarning.title}
           </h2>
-          <p className="mt-2 text-sm text-slate-300">
+          <p className="mt-2 text-sm text-slate-300 dark:text-slate-600">
             {strings.xssWarning.body}
-            {field ? <span className="block mt-1 text-slate-400">{strings.xssWarning.fieldLabel(field)}</span> : null}
+            {field ? <span className="block mt-1 text-slate-400 dark:text-slate-500">{strings.xssWarning.fieldLabel(field)}</span> : null}
           </p>
-          <p className="mt-3 text-xs text-slate-500">
+          <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
             {strings.xssWarning.hint}
           </p>
 

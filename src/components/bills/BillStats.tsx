@@ -36,21 +36,21 @@ function StatButton({
   hint: string;
   onClick: () => void;
 }) {
-  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : 'text-slate-900';
+  const color = tone === 'green' ? 'text-green-600 dark:text-green-400' : tone === 'red' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100';
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={active}
-      className={`rounded-3xl border bg-white p-3.5 text-left shadow-sm transition-all sm:p-5 ${
+      className={`rounded-3xl border bg-white dark:bg-slate-800 p-3.5 text-left shadow-sm transition-all sm:p-5 ${
         active
           ? 'border-brand-500 ring-2 ring-brand-100'
-          : 'border-slate-200 hover:border-brand-300 hover:shadow-md'
+          : 'border-slate-200 dark:border-slate-700 hover:border-brand-300 hover:shadow-md'
       }`}
     >
-      <div className="text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">{label}</div>
+      <div className="text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:text-xs">{label}</div>
       <div className={`mt-1.5 text-lg font-semibold tabular-nums sm:mt-2 sm:text-2xl ${color}`}>{value}</div>
-      <div className={`mt-1 text-[11px] font-medium ${active ? 'text-brand-700' : 'text-slate-400'}`}>
+      <div className={`mt-1 text-[11px] font-medium ${active ? 'text-brand-700' : 'text-slate-400 dark:text-slate-500'}`}>
         {active ? stats.hideDetails : `${hint} ▼`}
       </div>
     </button>
@@ -68,18 +68,18 @@ function Panel({
 }) {
   const copy = PANEL_TITLES[focus];
   return (
-    <div className="rounded-3xl border border-brand-200 bg-white p-4 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-brand-200 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <h2 className="text-lg font-semibold">{copy.title}</h2>
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex min-h-[2rem] shrink-0 items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
+          className="inline-flex min-h-[2rem] shrink-0 items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
         >
           {strings.common.close}
         </button>
       </div>
-      <p className="mt-1 text-sm text-slate-500">{copy.subtitle}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{copy.subtitle}</p>
       {children}
     </div>
   );
@@ -105,36 +105,36 @@ function BillLines({
             <button
               type="button"
               onClick={() => onOpenBill(bill.id)}
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-left transition-colors hover:border-brand-300 hover:bg-slate-50"
+              className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3 text-left transition-colors hover:border-brand-300 hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="font-medium text-slate-900">
+                <span className="font-medium text-slate-900 dark:text-slate-100">
                   {showDateOnly ? (
                     formatDayKey(bill.date, 'dayMonth')
                   ) : (
                     <>
                       {labels[bill.type] ?? bill.type}
-                      <span className="ml-2 text-xs font-normal text-slate-500">
+                      <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">
                         {formatDayKey(bill.date, 'dayMonth')}
                       </span>
                     </>
                   )}
-                  {bill.payer && <span className="ml-2 text-xs font-normal text-slate-500">{strings.bills.paidByName(bill.payer.name)}</span>}
+                  {bill.payer && <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">{strings.bills.paidByName(bill.payer.name)}</span>}
                 </span>
                 <span className="text-sm font-semibold tabular-nums">{taka(bill.amount)}</span>
               </div>
               <div className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs">
-                <span className="text-slate-500">
-                  {strings.bills.collectedLabel} <span className="font-semibold text-slate-700">{taka(bill.collected)}</span>
+                <span className="text-slate-500 dark:text-slate-400">
+                  {strings.bills.collectedLabel} <span className="font-semibold text-slate-700 dark:text-slate-300">{taka(bill.collected)}</span>
                   {bill.uncollected > 0 && (
                     <span className="ml-1.5 font-semibold text-rose-600">
                       · {stats.stillOwedByCount(taka(bill.uncollected), bill.unpaidMemberCount)}
                     </span>
                   )}
                 </span>
-                <span className="text-slate-400">{stats.openInList}</span>
+                <span className="text-slate-400 dark:text-slate-500">{stats.openInList}</span>
               </div>
-              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200">
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700">
                 <div
                   className={`h-full rounded-full ${bill.isFullyCollected ? 'bg-green-500' : 'bg-brand-600'}`}
                   style={{ width: `${percent}%` }}
@@ -166,26 +166,26 @@ function KindSection({
   return (
     <section className="mt-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">
-          {copy.title} <span className="font-normal text-slate-400">({bills.length})</span>
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+          {copy.title} <span className="font-normal text-slate-400 dark:text-slate-500">({bills.length})</span>
         </h3>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-500 dark:text-slate-400">
           {taka(totals.total)} · {strings.bills.collectedAmount(taka(totals.collected))}
         </span>
       </div>
-      <p className="mt-0.5 text-xs text-slate-500">{copy.hint}</p>
+      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{copy.hint}</p>
 
       <div className="mt-3 space-y-3">
         {billsByType(bills).map((group) => (
           <div key={group.type}>
             <div className="flex flex-wrap items-baseline justify-between gap-2 text-xs">
-              <span className="font-semibold text-slate-700">
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
                 {labels[group.type] ?? group.type}
                 {group.bills.length > 1 && (
-                  <span className="ml-1.5 font-normal text-slate-400">{stats.billsCountShort(group.bills.length)}</span>
+                  <span className="ml-1.5 font-normal text-slate-400 dark:text-slate-500">{stats.billsCountShort(group.bills.length)}</span>
                 )}
               </span>
-              <span className="tabular-nums text-slate-500">{taka(group.totals.total)}</span>
+              <span className="tabular-nums text-slate-500 dark:text-slate-400">{taka(group.totals.total)}</span>
             </div>
             <BillLines showDateOnly bills={group.bills} labels={labels} onOpenBill={onOpenBill} />
           </div>
@@ -265,13 +265,13 @@ export function BillStats({
         <Panel focus="total" onClose={() => setFocus(null)}>
           <KindSection kind={BILL_KINDS.SHARED} bills={grouped.SHARED} labels={labels} onOpenBill={onOpenBill} />
           <KindSection kind={BILL_KINDS.ASSIGNED} bills={grouped.ASSIGNED} labels={labels} onOpenBill={onOpenBill} />
-          {bills.length === 0 && <p className="mt-3 text-sm text-slate-500">{strings.bills.none}</p>}
+          {bills.length === 0 && <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{strings.bills.none}</p>}
         </Panel>
       )}
 
       {focus === 'collected' && (
         <Panel focus="collected" onClose={() => setFocus(null)}>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
             {stats.collectedSummary(taka(totals.collected), taka(totals.total), payers.length)}
           </p>
           <MemberTable
@@ -285,7 +285,7 @@ export function BillStats({
 
       {focus === 'owed' && (
         <Panel focus="owed" onClose={() => setFocus(null)}>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
             {owing.length === 0 ? (
               stats.allPaidThisMonth
             ) : (
@@ -296,7 +296,7 @@ export function BillStats({
             )}
           </p>
           {aheadDespiteDues > 0 && (
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
               {stats.overpaidNote(aheadDespiteDues)}
             </p>
           )}
@@ -331,24 +331,24 @@ export function BillStats({
       {focus === 'mine' && (
         <Panel focus="mine" onClose={() => setFocus(null)}>
           {!mine || mine.billCount === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">{stats.noShareThisMonth}</p>
+            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{stats.noShareThisMonth}</p>
           ) : (
             <>
-              <dl className="mt-3 grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm sm:grid-cols-4">
+              <dl className="mt-3 grid grid-cols-2 gap-3 rounded-2xl bg-slate-50 dark:bg-slate-900 px-4 py-3 text-sm sm:grid-cols-4">
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.bills.yourShare}</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.bills.yourShare}</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums">{taka(mine.share)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.bills.paid}</dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums text-green-600">{taka(mine.paid)}</dd>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.bills.paid}</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums text-green-600 dark:text-green-400">{taka(mine.paid)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">{stats.stillDueDt}</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{stats.stillDueDt}</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums text-rose-600">{taka(mine.outstanding)}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase tracking-wide text-slate-500">{stats.getsBackDt}</dt>
+                  <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{stats.getsBackDt}</dt>
                   <dd className="mt-0.5 font-semibold tabular-nums text-teal-700">{taka(mine.advance)}</dd>
                 </div>
               </dl>

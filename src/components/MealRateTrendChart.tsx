@@ -144,9 +144,9 @@ export default function MealRateTrendChart({ days, currentUserId }: { days: Tren
 
   if (points.length < 2) {
     return (
-      <div className="mt-6 border-t border-slate-100 pt-5">
-        <h3 className="text-sm font-semibold text-slate-900">{copy.title}</h3>
-        <div className="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
+      <div className="mt-6 border-t border-slate-100 dark:border-slate-700 pt-5">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{copy.title}</h3>
+        <div className="mt-3 flex h-32 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-sm text-slate-400 dark:text-slate-500">
           {copy.empty}
         </div>
       </div>
@@ -176,9 +176,9 @@ export default function MealRateTrendChart({ days, currentUserId }: { days: Tren
       : null;
 
   return (
-    <div className="mt-6 border-t border-slate-100 pt-5">
-      <h3 className="text-sm font-semibold text-slate-900">{copy.title}</h3>
-      <p className="text-xs text-slate-500">{copy.subtitle}</p>
+    <div className="mt-6 border-t border-slate-100 dark:border-slate-700 pt-5">
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{copy.title}</h3>
+      <p className="text-xs text-slate-500 dark:text-slate-400">{copy.subtitle}</p>
 
       <div className="relative mt-4">
         <svg
@@ -238,7 +238,7 @@ export default function MealRateTrendChart({ days, currentUserId }: { days: Tren
         </svg>
 
         <div
-          className="pointer-events-none absolute whitespace-nowrap rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium text-amber-700 shadow-sm ring-1 ring-amber-200"
+          className="pointer-events-none absolute whitespace-nowrap rounded-md bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400 shadow-sm ring-1 ring-amber-200"
           style={{
             left: `${(peakCoord.x / VIEW_WIDTH) * 100}%`,
             top: `${(peakCoord.y / VIEW_HEIGHT) * 100}%`,
@@ -248,7 +248,7 @@ export default function MealRateTrendChart({ days, currentUserId }: { days: Tren
           {copy.highest} · {taka(points[peakIndex].runningRate)}
         </div>
         <div
-          className="pointer-events-none absolute whitespace-nowrap rounded-md bg-white px-1.5 py-0.5 text-[10px] font-medium text-slate-500 shadow-sm ring-1 ring-slate-200"
+          className="pointer-events-none absolute whitespace-nowrap rounded-md bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 shadow-sm ring-1 ring-slate-200"
           style={{
             left: `${(troughCoord.x / VIEW_WIDTH) * 100}%`,
             top: `${(troughCoord.y / VIEW_HEIGHT) * 100}%`,
@@ -270,7 +270,7 @@ export default function MealRateTrendChart({ days, currentUserId }: { days: Tren
             <p className="font-semibold">
               {formatDayKey(active.date, 'weekdayDayMonth')} · {taka(active.runningRate)}
             </p>
-            <p className="mt-0.5 text-[11px] text-slate-300">
+            <p className="mt-0.5 text-[11px] text-slate-300 dark:text-slate-600">
               {delta === null
                 ? copy.firstPricedDay
                 : delta > 0
@@ -282,17 +282,17 @@ export default function MealRateTrendChart({ days, currentUserId }: { days: Tren
           </div>
         )}
 
-        <div className="mt-1.5 flex justify-between text-[11px] text-slate-400">
+        <div className="mt-1.5 flex justify-between text-[11px] text-slate-400 dark:text-slate-500">
           <span>{formatDayKey(points[0].date, 'dayMonth')}</span>
           <span>{formatDayKey(points[points.length - 1].date, 'dayMonth')}</span>
         </div>
       </div>
 
       {highestWeek && (
-        <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-900">
+        <div className="mt-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-xs text-amber-900 dark:text-amber-200">
           <p className="font-semibold">{copy.highestWeekLabel(highestWeek.rangeLabel)}</p>
-          <p className="mt-0.5 text-amber-800">{copy.highestWeekRate(taka(highestWeek.avg))}</p>
-          <p className="mt-1 text-amber-800">{buyerList ? copy.boughtBy(buyerList) : copy.noBuyersThatWeek}</p>
+          <p className="mt-0.5 text-amber-800 dark:text-amber-300">{copy.highestWeekRate(taka(highestWeek.avg))}</p>
+          <p className="mt-1 text-amber-800 dark:text-amber-300">{buyerList ? copy.boughtBy(buyerList) : copy.noBuyersThatWeek}</p>
         </div>
       )}
     </div>

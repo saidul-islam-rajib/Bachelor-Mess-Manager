@@ -155,7 +155,7 @@ export function Composer({
         />
 
         {images.map((src, index) => (
-          <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200">
+          <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
             <img src={src} alt="" className="h-full w-full object-cover" />
             <button
               type="button"
@@ -177,7 +177,7 @@ export function Composer({
             onClick={() => fileInput.current?.click()}
             aria-label={strings.community.addPhotos}
             title={strings.community.addPhotos}
-            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-brand-400 hover:text-brand-500"
+            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500 transition-colors hover:border-brand-400 hover:text-brand-500"
           >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />

@@ -31,7 +31,7 @@ export default function InstallAppBanner() {
   if (!installable && !needsManualInstall) return null;
 
   return (
-    <div className="border-b border-slate-200 bg-slate-900 text-white">
+    <div className="border-b border-slate-200 dark:border-slate-700 bg-slate-900 text-white">
       <div className="mx-auto flex max-w-content flex-wrap items-center gap-3 px-4 py-2.5 text-sm">
         <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -42,7 +42,7 @@ export default function InstallAppBanner() {
 
         <p className="min-w-0 flex-1">
           <span className="font-semibold">{strings.installBanner.install(appConfig.name)}</span>
-          <span className="ml-2 hidden text-slate-300 sm:inline">
+          <span className="ml-2 hidden text-slate-300 dark:text-slate-600 sm:inline">
             {strings.installBanner.hint}
           </span>
         </p>
@@ -51,7 +51,7 @@ export default function InstallAppBanner() {
           <button
             type="button"
             onClick={() => setShowIosSteps((v) => !v)}
-            className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
+            className="rounded-full bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700"
           >
             {showIosSteps ? strings.installBanner.hide : strings.installBanner.how}
           </button>
@@ -59,7 +59,7 @@ export default function InstallAppBanner() {
           <button
             type="button"
             onClick={promptInstall}
-            className="rounded-full bg-white px-4 py-1.5 text-sm font-medium text-slate-900 hover:bg-slate-100"
+            className="rounded-full bg-white dark:bg-slate-800 px-4 py-1.5 text-sm font-medium text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700"
           >
             {strings.installBanner.installCta}
           </button>
@@ -69,7 +69,7 @@ export default function InstallAppBanner() {
           type="button"
           onClick={dismiss}
           aria-label={strings.installBanner.dismiss}
-          className="-mr-1.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/10 hover:text-white"
+          className="-mr-1.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-slate-400 dark:text-slate-500 transition-colors hover:bg-white/10 hover:text-white"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M6 6l12 12M18 6L6 18" />

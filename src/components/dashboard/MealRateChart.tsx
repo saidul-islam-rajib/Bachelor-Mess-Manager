@@ -75,7 +75,7 @@ export default function MealRateChart({ days }: { days: MealRateChartDay[] }) {
 
   if (points.length === 0) {
     return (
-      <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-slate-200 text-sm text-slate-400">
+      <div className="flex h-28 items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-sm text-slate-400 dark:text-slate-500">
         {strings.mealRateChart.empty}
       </div>
     );
@@ -135,7 +135,7 @@ export default function MealRateChart({ days }: { days: MealRateChartDay[] }) {
         </div>
       )}
 
-      <div className="mt-1.5 flex justify-between text-[11px] text-slate-400">
+      <div className="mt-1.5 flex justify-between text-[11px] text-slate-400 dark:text-slate-500">
         <span>{formatDayKey(points[0].date, 'dayMonth')}</span>
         <span>{formatDayKey(points[points.length - 1].date, 'dayMonth')}</span>
       </div>

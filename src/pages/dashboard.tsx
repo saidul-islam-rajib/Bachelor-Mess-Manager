@@ -153,7 +153,7 @@ export default function DashboardPage() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold sm:text-3xl">{dashboardStrings.title}</h1>
-          <p className="mt-1 text-slate-600">
+          <p className="mt-1 text-slate-600 dark:text-slate-400">
             {user ? dashboardStrings.signedInAs(user.name, user.role.toLowerCase()) : dashboardStrings.subtitle}
           </p>
         </div>
@@ -210,7 +210,7 @@ function AdminDashboard({ report }: { report: AdminReport }) {
 
       <Card>
         <h2 className="text-lg font-semibold">{dashboardStrings.adminTools}</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {report.pendingApprovals > 0
             ? dashboardStrings.pendingRegistrations(report.pendingApprovals)
             : dashboardStrings.adminToolsHint}
@@ -322,7 +322,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
               <button
                 type="button"
                 onClick={() => setOpenIds(allExpanded ? new Set() : new Set(report.groups.map((group) => group.id)))}
-                className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 px-3 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                className="inline-flex min-h-[2rem] items-center rounded-full border border-slate-200 dark:border-slate-700 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 {allExpanded ? dashboardStrings.collapseAll : dashboardStrings.expandAll}
               </button>
@@ -333,7 +333,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
 
         {report.groups.length === 0 ? (
           <Card>
-            <p className="text-sm text-slate-500">{dashboardStrings.noGroupsYet}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400">{dashboardStrings.noGroupsYet}</p>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -353,7 +353,7 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
         <Card>
           <h2 className="text-lg font-semibold">{dashboardStrings.whoOwes}</h2>
           {report.unpaid.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">{dashboardStrings.allSettled}</p>
+            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{dashboardStrings.allSettled}</p>
           ) : (
             <PagedList
               items={report.unpaid}
@@ -363,9 +363,9 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
                 <li className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{row.name}</p>
-                    <p className="truncate text-xs text-slate-500">{row.groupName}</p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{row.groupName}</p>
                   </div>
-                  <span className="shrink-0 font-semibold text-red-600">{taka(row.due)}</span>
+                  <span className="shrink-0 font-semibold text-red-600 dark:text-red-400">{taka(row.due)}</span>
                 </li>
               )}
             />
@@ -378,16 +378,16 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
         <Card>
           <h2 className="text-lg font-semibold">{dashboardStrings.longestStaying}</h2>
           {report.longestStaying.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500">{dashboardStrings.noMembersYet}</p>
+            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{dashboardStrings.noMembersYet}</p>
           ) : (
-            <ul className="mt-4 divide-y divide-slate-100">
+            <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
               {report.longestStaying.map((row) => (
                 <li key={`${row.groupName}-${row.id}`} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <p className="truncate font-medium">{row.name}</p>
-                    <p className="truncate text-xs text-slate-500">{row.groupName}</p>
+                    <p className="truncate text-xs text-slate-500 dark:text-slate-400">{row.groupName}</p>
                   </div>
-                  <span className="shrink-0 text-sm text-slate-600">{formatStay(row.days)}</span>
+                  <span className="shrink-0 text-sm text-slate-600 dark:text-slate-400">{formatStay(row.days)}</span>
                 </li>
               ))}
             </ul>
@@ -408,7 +408,7 @@ function SupervisorGroupCard({
   onToggle: () => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
       <button
         type="button"
         onClick={onToggle}
@@ -419,15 +419,15 @@ function SupervisorGroupCard({
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-lg font-semibold">{card.name}</h3>
             {card.status === 'INACTIVE' && (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+              <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs text-slate-500 dark:text-slate-400">
                 {strings.status.INACTIVE}
               </span>
             )}
           </div>
-          <p className="mt-1 truncate text-sm text-slate-500">
+          <p className="mt-1 truncate text-sm text-slate-500 dark:text-slate-400">
             {dashboardStrings.groupCardSubtitle(card.memberCount, taka(card.mealRate))}
             {card.outstanding > 0 && (
-              <span className="text-red-600">{dashboardStrings.outstandingSuffix(taka(card.outstanding))}</span>
+              <span className="text-red-600 dark:text-red-400">{dashboardStrings.outstandingSuffix(taka(card.outstanding))}</span>
             )}
           </p>
         </div>
@@ -435,7 +435,7 @@ function SupervisorGroupCard({
       </button>
 
       {open && (
-        <div className="space-y-5 border-t border-slate-100 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+        <div className="space-y-5 border-t border-slate-100 dark:border-slate-700 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
           <GroupStatsPanel card={card} />
           <ActionLink href={groupPath(card.id)}>{dashboardStrings.openGroup}</ActionLink>
         </div>
@@ -456,7 +456,7 @@ function Chevron({ open }: { open: boolean }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
-      className={`shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
+      className={`shrink-0 text-slate-400 dark:text-slate-500 transition-transform ${open ? 'rotate-180' : ''}`}
     >
       <path d="m6 9 6 6 6-6" />
     </svg>
@@ -466,15 +466,15 @@ function Chevron({ open }: { open: boolean }) {
 function MiniStat({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' | 'amber' }) {
   const color =
     tone === 'green'
-      ? 'text-green-700'
+      ? 'text-green-700 dark:text-green-400'
       : tone === 'red'
-        ? 'text-red-600'
+        ? 'text-red-600 dark:text-red-400'
         : tone === 'amber'
-          ? 'text-amber-600'
-          : 'text-slate-900';
+          ? 'text-amber-600 dark:text-amber-400'
+          : 'text-slate-900 dark:text-slate-100';
   return (
-    <div className="min-w-0 rounded-xl bg-slate-50 px-3 py-2.5">
-      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500">{label}</p>
+    <div className="min-w-0 rounded-xl bg-slate-50 dark:bg-slate-900 px-3 py-2.5">
+      <p className="truncate text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
       <p className={`mt-0.5 truncate text-sm font-semibold tabular-nums sm:text-base ${color}`}>{value}</p>
     </div>
   );
@@ -504,7 +504,7 @@ function MoneyRows({
   return (
     <div className="space-y-4">
       <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{dashboardStrings.mealCostBazar}</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{dashboardStrings.mealCostBazar}</h4>
         <div className="mt-2 grid grid-cols-3 gap-2.5">
           <MiniStat label={strings.common.total} value={taka(bazar)} />
           <MiniStat label={dashboardStrings.frontedByMembers} value={taka(bazarPaid)} tone="green" />
@@ -517,7 +517,7 @@ function MoneyRows({
       </div>
 
       <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
           {dashboardStrings.billsRentUtilities}
         </h4>
         <div className="mt-2 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -541,7 +541,7 @@ function MoneyOverview({ label, expense, ...rows }: { label: string; expense: nu
     <Card>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">{label}</h2>
-        <span className="text-sm font-semibold text-slate-600">{dashboardStrings.totalAmount(taka(expense))}</span>
+        <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{dashboardStrings.totalAmount(taka(expense))}</span>
       </div>
       <div className="mt-4">
         <MoneyRows {...rows} />
@@ -565,11 +565,11 @@ function BreakdownBars({ byType, total }: { byType: Record<string, number>; tota
           <li key={type}>
             <div className="flex items-baseline justify-between text-sm">
               <span className="font-medium">{expenseTypeLabel(type)}</span>
-              <span className="text-slate-600">
-                {taka(amount)} <span className="text-xs text-slate-400">({percent}%)</span>
+              <span className="text-slate-600 dark:text-slate-400">
+                {taka(amount)} <span className="text-xs text-slate-400 dark:text-slate-500">({percent}%)</span>
               </span>
             </div>
-            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+            <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
               <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
             </div>
           </li>
@@ -585,7 +585,7 @@ function GroupStatsPanel({ card }: { card: GroupCard }) {
   return (
     <div className="space-y-5">
       <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{dashboardStrings.mealRate}</h4>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{dashboardStrings.mealRate}</h4>
         <div className="mt-2 grid grid-cols-3 gap-2.5">
           <MiniStat label={dashboardStrings.thisMonthShort} value={taka(card.mealRate)} />
           <MiniStat label={dashboardStrings.highestDay} value={taka(card.highestDayRate)} />
@@ -609,7 +609,7 @@ function GroupStatsPanel({ card }: { card: GroupCard }) {
 
       {hasBreakdown && (
         <div>
-          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{strings.bills.costBreakdown}</h4>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{strings.bills.costBreakdown}</h4>
           <div className="mt-2">
             <BreakdownBars byType={{ ...card.byType, BAZAR: card.bazar }} total={card.expense} />
           </div>
@@ -637,27 +637,27 @@ function PagedList<T>({
 
   return (
     <>
-      <ul className="mt-4 divide-y divide-slate-100">
+      <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
         {visible.map((item) => (
           <Fragment key={keyOf(item)}>{renderItem(item)}</Fragment>
         ))}
       </ul>
       {pageCount > 1 && (
-        <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-700 pt-3">
           <button
             type="button"
             onClick={() => setPage((p) => Math.max(0, p - 1))}
             disabled={currentPage === 0}
-            className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {strings.common.pager.previous}
           </button>
-          <span className="text-xs text-slate-500">{strings.common.pager.pageOf(currentPage + 1, pageCount)}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{strings.common.pager.pageOf(currentPage + 1, pageCount)}</span>
           <button
             type="button"
             onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
             disabled={currentPage === pageCount - 1}
-            className="min-h-[2.25rem] rounded-full border border-slate-200 px-3.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {strings.common.pager.next}
           </button>
@@ -739,7 +739,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
 
       <Card>
         <h2 className="text-lg font-semibold">{dashboardStrings.todayMealsTitle}</h2>
-        <p className="mt-1 text-sm text-slate-500">{dashboardStrings.todayMealsHint}</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{dashboardStrings.todayMealsHint}</p>
         <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
           <MiniStat label={strings.meals.breakfast} value={String(current.todayMeals.breakfast)} />
           <MiniStat label={strings.meals.lunch} value={String(current.todayMeals.lunch)} />
@@ -774,7 +774,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
       </Card>
 
       {hadLastMonth && previous && (
-        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
           <button
             type="button"
             onClick={() => setShowLastMonth((current) => !current)}
@@ -785,7 +785,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
             <Chevron open={showLastMonth} />
           </button>
           {showLastMonth && (
-            <dl className="grid gap-4 border-t border-slate-100 px-5 pb-5 pt-4 sm:grid-cols-4 sm:px-6 sm:pb-6">
+            <dl className="grid gap-4 border-t border-slate-100 dark:border-slate-700 px-5 pb-5 pt-4 sm:grid-cols-4 sm:px-6 sm:pb-6">
               <Field label={dashboardStrings.meals} value={String(previous.meals)} />
               <Field label={dashboardStrings.mealRate} value={taka(previous.mealRate)} />
               <Field label={dashboardStrings.yourCost} value={taka(previous.totalCost)} />
@@ -804,7 +804,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
           <h2 className="text-lg font-semibold">{group.name}</h2>
           <ActionLink href={groupPath(group.id)}>{dashboardStrings.groupPage}</ActionLink>
         </div>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {dashboardStrings.memberCountHere(group.memberCount, formatStay(group.stayDays))}
         </p>
 
@@ -812,7 +812,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
           <GroupStatsPanel card={group.card} />
         </div>
 
-        <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
           {dashboardStrings.everyoneThisMonth}
         </h3>
         <PagedList
@@ -824,13 +824,13 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
               <div className="min-w-0">
                 <p className="truncate font-medium">
                   {m.name}
-                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
+                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {strings.meals.mealCount(m.meals)} · {taka(m.mealCost)}
                 </p>
               </div>
-              <span className={`shrink-0 font-semibold ${m.due > 0.01 ? 'text-red-600' : 'text-green-600'}`}>
+              <span className={`shrink-0 font-semibold ${m.due > 0.01 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                 {taka(Math.abs(m.due))}
               </span>
             </li>
@@ -883,9 +883,9 @@ function QuickActions({
   items: { href: string; label: string; hint: string; icon: QuickActionIcon }[];
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{dashboardStrings.quickActions}</h2>
-      <p className="mt-1 text-sm text-slate-500">{dashboardStrings.quickActionsHint}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{dashboardStrings.quickActionsHint}</p>
 
       <ul className="mt-4 space-y-1.5">
         {items.map((item) => (
@@ -894,15 +894,15 @@ function QuickActions({
               href={item.href}
               className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors hover:bg-brand-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
             >
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition-colors group-hover:bg-brand-600 group-hover:text-white">
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors group-hover:bg-brand-600 group-hover:text-white">
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   {QUICK_ACTION_ICONS[item.icon]}
                 </svg>
               </span>
 
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-slate-900">{item.label}</span>
-                <span className="block truncate text-xs text-slate-500">{item.hint}</span>
+                <span className="block truncate text-sm font-medium text-slate-900 dark:text-slate-100">{item.label}</span>
+                <span className="block truncate text-xs text-slate-500 dark:text-slate-400">{item.hint}</span>
               </span>
 
               <svg
@@ -914,7 +914,7 @@ function QuickActions({
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="shrink-0 text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-brand-600"
+                className="shrink-0 text-slate-300 dark:text-slate-600 transition-all group-hover:translate-x-0.5 group-hover:text-brand-600"
               >
                 <path d="m9 6 6 6-6 6" />
               </svg>
@@ -943,11 +943,11 @@ function CostBreakdown({ byType, total }: { byType: Record<string, number>; tota
             <li key={type}>
               <div className="flex items-baseline justify-between text-sm">
                 <span className="font-medium">{expenseTypeLabel(type)}</span>
-                <span className="text-slate-600">
-                  {taka(amount)} <span className="text-xs text-slate-400">({percent}%)</span>
+                <span className="text-slate-600 dark:text-slate-400">
+                  {taka(amount)} <span className="text-xs text-slate-400 dark:text-slate-500">({percent}%)</span>
                 </span>
               </div>
-              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                 <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
               </div>
             </li>
@@ -960,8 +960,8 @@ function CostBreakdown({ byType, total }: { byType: Record<string, number>; tota
 
 function InvitationBanner({ count }: { count: number }) {
   return (
-    <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
-      <p className="text-amber-800">{dashboardStrings.pendingInvitations(count)}</p>
+    <div className="rounded-3xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-6 shadow-sm">
+      <p className="text-amber-800 dark:text-amber-300">{dashboardStrings.pendingInvitations(count)}</p>
       <LinkButton href={ROUTES.invitations} size="sm" className="mt-3">
         {dashboardStrings.viewInvitations}
       </LinkButton>
@@ -972,10 +972,10 @@ function InvitationBanner({ count }: { count: number }) {
 function StatusBadge({ status }: { status: string }) {
   const tone =
     status === 'PAID'
-      ? 'bg-green-100 text-green-700'
+      ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400'
       : status === 'PARTIAL'
-        ? 'bg-amber-100 text-amber-700'
-        : 'bg-red-100 text-red-700';
+        ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'
+        : 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400';
   return <span className={`rounded-full px-3 py-1 text-xs font-medium ${tone}`}>{status.toLowerCase()}</span>;
 }
 
@@ -997,29 +997,29 @@ function monthLabel(key: string) {
 }
 
 function Panel({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 text-slate-600 dark:text-slate-400 shadow-sm">{children}</div>;
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">{children}</div>;
 }
 
 function Stat({ label, value, tone }: { label: string; value: number | string; tone?: 'green' | 'red' | 'amber' }) {
   const color =
-    tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : tone === 'amber' ? 'text-amber-600' : '';
+    tone === 'green' ? 'text-green-600 dark:text-green-400' : tone === 'red' ? 'text-red-600 dark:text-red-400' : tone === 'amber' ? 'text-amber-600 dark:text-amber-400' : '';
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="text-sm uppercase tracking-wide text-slate-500">{label}</div>
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
+      <div className="text-sm uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</div>
       <div className={`mt-3 text-2xl font-semibold sm:text-3xl ${color}`}>{value}</div>
     </div>
   );
 }
 
 function Field({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' }) {
-  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : '';
+  const color = tone === 'green' ? 'text-green-600 dark:text-green-400' : tone === 'red' ? 'text-red-600 dark:text-red-400' : '';
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
+      <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</dt>
       <dd className={`mt-1 text-base font-semibold ${color}`}>{value}</dd>
     </div>
   );

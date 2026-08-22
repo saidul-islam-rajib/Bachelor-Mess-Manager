@@ -83,7 +83,7 @@ export default function NotificationsPage() {
               {strings.notifications.markAllRead}
             </Button>
           ) : (
-            <span className="text-sm text-slate-500">{strings.notifications.allRead}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{strings.notifications.allRead}</span>
           )
         }
       />
@@ -91,13 +91,13 @@ export default function NotificationsPage() {
       {invitationCount > 0 && (
         <Link
           href={ROUTES.invitations}
-          className="mb-4 block rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 transition-colors hover:bg-amber-100"
+          className="mb-4 block rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-4 py-3 text-sm text-amber-900 dark:text-amber-200 transition-colors hover:bg-amber-100"
         >
           {strings.notifications.pendingInvitations(invitationCount)}
         </Link>
       )}
 
-      <div className="mb-4 inline-flex rounded-full border border-slate-200 bg-white p-1 text-sm shadow-sm">
+      <div className="mb-4 inline-flex rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1 text-sm shadow-sm">
         {([
           ['all', strings.notifications.filterAll],
           ['unread', `${strings.notifications.filterUnread}${unreadCount > 0 ? ` (${unreadCount})` : ''}`]
@@ -108,7 +108,7 @@ export default function NotificationsPage() {
             onClick={() => changeFilter(value)}
             aria-pressed={filter === value}
             className={`rounded-full px-4 py-1.5 font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${
-              filter === value ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+              filter === value ? 'bg-brand-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
             }`}
           >
             {label}
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
         ))}
       </div>
 
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
         {loading && items.length === 0 ? (
           <div className="p-6">
             <Loader />
@@ -129,7 +129,7 @@ export default function NotificationsPage() {
             />
           </div>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-slate-100 dark:divide-slate-700">
             {items.map((item) => (
               <li key={item.id}>
                 <NotificationCard notification={item} onNavigate={() => markOneRead(item.id)} />

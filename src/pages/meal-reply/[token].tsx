@@ -78,7 +78,7 @@ export default function MealReplyPage() {
       ) : error && !prompt ? (
         <Card>
           <Alert tone="warning">{error}</Alert>
-          <Link href={ROUTES.meals} className="mt-4 inline-block text-sm font-medium text-slate-700 hover:underline">
+          <Link href={ROUTES.meals} className="mt-4 inline-block text-sm font-medium text-slate-700 dark:text-slate-300 hover:underline">
             {strings.mealPrompt.openApp}
           </Link>
         </Card>
@@ -91,7 +91,7 @@ export default function MealReplyPage() {
           <MealPromptCard prompt={prompt} busy={busy} disabled={prompt.expired} onAnswer={answer} />
 
           <p className="text-center">
-            <Link href={ROUTES.meals} className="text-sm font-medium text-slate-600 hover:underline">
+            <Link href={ROUTES.meals} className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:underline">
               {strings.mealPrompt.openApp}
             </Link>
           </p>

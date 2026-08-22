@@ -209,7 +209,7 @@ export default function ExpensesPage() {
       <PageTitle title={strings.expenses.title} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{strings.expenses.title}</h1>
-        <p className="mt-1 text-slate-600">{strings.expenses.subtitle}</p>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">{strings.expenses.subtitle}</p>
       </div>
 
       {loadingGroups ? (
@@ -223,7 +223,7 @@ export default function ExpensesPage() {
           </Card>
 
           <div className={`grid gap-4 ${byPayer.length > 0 ? 'lg:grid-cols-2' : ''}`}>
-            <div className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:order-2">
+            <div className="min-w-0 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6 lg:order-2">
               <button
                 type="button"
                 onClick={() => setAddOpen((v) => !v)}
@@ -232,38 +232,38 @@ export default function ExpensesPage() {
               >
                 <span>
                   <span className="block text-lg font-semibold">{strings.expenses.addPurchase}</span>
-                  <span className="mt-1 block text-sm text-slate-500">
+                  <span className="mt-1 block text-sm text-slate-500 dark:text-slate-400">
                     {strings.expenses.addPurchaseHint}
                   </span>
                 </span>
                 <span
                   aria-hidden
-                  className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 text-lg leading-none text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                  className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 dark:border-slate-600 text-lg leading-none text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
                 >
                   {addOpen ? '−' : '+'}
                 </span>
               </button>
 
               {addOpen && (
-              <form className="mt-5 border-t border-slate-100 pt-5" onSubmit={add}>
+              <form className="mt-5 border-t border-slate-100 dark:border-slate-700 pt-5" onSubmit={add}>
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <label className="sm:w-48">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.date}</span>
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.common.date}</span>
                     <input
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       required
-                      className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+                      className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
                     />
                   </label>
                   <label className="flex-1">
-                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.expenses.noteLabel}</span>
+                    <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.expenses.noteLabel}</span>
                     <input
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       placeholder={strings.expenses.notePlaceholder}
-                      className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+                      className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
                     />
                   </label>
                 </div>
@@ -284,10 +284,10 @@ export default function ExpensesPage() {
             </div>
 
             {byPayer.length > 0 && (
-              <div className="min-w-0 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:order-1">
+              <div className="min-w-0 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6 lg:order-1">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="text-lg font-semibold">{strings.expenses.byMember}</h2>
-                  <p className="text-sm text-slate-500">{strings.expenses.monthTotal(taka(monthTotal))}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{strings.expenses.monthTotal(taka(monthTotal))}</p>
                 </div>
                 <ul className="mt-4 space-y-3">
                   {byPayer.map((row) => {
@@ -297,16 +297,16 @@ export default function ExpensesPage() {
                         <div className="flex items-baseline justify-between gap-3 text-sm">
                           <span className="min-w-0 truncate font-medium">
                             {row.name}
-                            {row.id === user?.id && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
-                            <span className="ml-1.5 text-xs font-normal text-slate-400">
+                            {row.id === user?.id && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
+                            <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
                               {strings.expenses.purchaseCount(row.count)}
                             </span>
                           </span>
-                          <span className="shrink-0 text-slate-600">
-                            {taka(row.amount)} <span className="text-xs text-slate-400">({percent}%)</span>
+                          <span className="shrink-0 text-slate-600 dark:text-slate-400">
+                            {taka(row.amount)} <span className="text-xs text-slate-400 dark:text-slate-500">({percent}%)</span>
                           </span>
                         </div>
-                        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100">
+                        <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                           <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
                         </div>
                       </li>
@@ -317,22 +317,22 @@ export default function ExpensesPage() {
             )}
           </div>
 
-          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <h2 className="text-lg font-semibold">{strings.expenses.shoppingReport}</h2>
-              <p className="text-sm text-slate-500">{strings.expenses.monthTotal(taka(monthTotal))}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{strings.expenses.monthTotal(taka(monthTotal))}</p>
             </div>
 
             {loading ? (
-              <p className="mt-4 text-slate-500">{strings.common.loading}</p>
+              <p className="mt-4 text-slate-500 dark:text-slate-400">{strings.common.loading}</p>
             ) : expenses.length === 0 ? (
-              <p className="mt-4 text-slate-500">{strings.expenses.noPurchases}</p>
+              <p className="mt-4 text-slate-500 dark:text-slate-400">{strings.expenses.noPurchases}</p>
             ) : (
               <>
                 <div className="mt-4 hidden lg:block">
                   <table className="w-full table-fixed border-collapse text-sm">
                     <thead>
-                      <tr className="border-y border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                      <tr className="border-y border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         <th className="w-[15%] px-3 py-2">{strings.expenses.colDate}</th>
                         <th className="w-[17%] px-3 py-2">{strings.expenses.colMember}</th>
                         <th className="w-[25%] px-3 py-2">{strings.expenses.colProducts}</th>
@@ -346,7 +346,7 @@ export default function ExpensesPage() {
                       const dayTotal = list.reduce((sum, e) => sum + e.amount, 0);
 
                       return (
-                        <tbody key={day} className="border-b-4 border-slate-100">
+                        <tbody key={day} className="border-b-4 border-slate-100 dark:border-slate-700">
                           {editingHere ? (
                             <tr>
                               <td colSpan={5} className="px-3 py-4">
@@ -365,14 +365,14 @@ export default function ExpensesPage() {
                             </tr>
                           ) : (
                             list.map((expense, index) => (
-                              <tr key={expense.id} className="border-t border-slate-100 align-top">
+                              <tr key={expense.id} className="border-t border-slate-100 dark:border-slate-700 align-top">
                                 {index === 0 && (
                                   <td
                                     rowSpan={list.length}
                                     className="bg-slate-50/60 px-3 py-3 text-center align-middle font-medium"
                                   >
                                     {longDate(day)}
-                                    <span className="mt-1 block text-xs font-normal text-slate-500">
+                                    <span className="mt-1 block text-xs font-normal text-slate-500 dark:text-slate-400">
                                       {strings.expenses.dayTotal(taka(dayTotal))}
                                     </span>
                                   </td>
@@ -381,10 +381,10 @@ export default function ExpensesPage() {
                                 <td className="px-3 py-3 align-middle">
                                   <span className="font-medium">{expense.payer?.name ?? strings.expenses.unknownMember}</span>
                                   {expense.payer?.id === user?.id && (
-                                    <span className="ml-1 text-xs text-green-600">{strings.common.you}</span>
+                                    <span className="ml-1 text-xs text-green-600 dark:text-green-400">{strings.common.you}</span>
                                   )}
                                   {expense.note && (
-                                    <span className="mt-1 block text-xs italic text-slate-400">{expense.note}</span>
+                                    <span className="mt-1 block text-xs italic text-slate-400 dark:text-slate-500">{expense.note}</span>
                                   )}
                                   {canEditExpense(expense) && (
                                     <span className="mt-2 flex gap-1.5">
@@ -397,15 +397,15 @@ export default function ExpensesPage() {
                                 <td className="px-3 py-3">
                                   <ul className="space-y-1">
                                     {itemsOf(expense).map((item) => (
-                                      <li key={item.id} className="flex justify-between gap-2 text-slate-700">
+                                      <li key={item.id} className="flex justify-between gap-2 text-slate-700 dark:text-slate-300">
                                         <span className="min-w-0 line-clamp-2 break-words">{item.name}</span>
-                                        <span className="shrink-0 tabular-nums text-slate-500">{taka(item.amount)}</span>
+                                        <span className="shrink-0 tabular-nums text-slate-500 dark:text-slate-400">{taka(item.amount)}</span>
                                       </li>
                                     ))}
                                   </ul>
                                 </td>
 
-                                <td className="px-3 py-3 text-right tabular-nums font-medium text-slate-900">
+                                <td className="px-3 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">
                                   {taka(expense.amount)}
                                 </td>
 
@@ -435,7 +435,7 @@ export default function ExpensesPage() {
                     <div key={day}>
                       <div className="flex items-baseline justify-between">
                         <h3 className="font-semibold">{longDate(day)}</h3>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
                           {taka(list.reduce((sum, e) => sum + e.amount, 0))}
                         </span>
                       </div>
@@ -443,7 +443,7 @@ export default function ExpensesPage() {
                       <ul className="mt-2 space-y-3">
                         {list.map((expense) =>
                           editId === expense.id ? (
-                            <li key={expense.id} className="rounded-2xl border border-slate-300 p-4">
+                            <li key={expense.id} className="rounded-2xl border border-slate-300 dark:border-slate-600 p-4">
                               <EditPanel
                                 date={editDate}
                                 setDate={setEditDate}
@@ -457,25 +457,25 @@ export default function ExpensesPage() {
                               />
                             </li>
                           ) : (
-                            <li key={expense.id} className="rounded-2xl border border-slate-200 p-4">
+                            <li key={expense.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
                               <div className="flex items-start justify-between gap-2">
                                 <div>
                                   <p className="font-medium">
                                     {expense.payer?.name ?? strings.expenses.unknownMember}
                                     {expense.payer?.id === user?.id && (
-                                      <span className="ml-1 text-xs text-green-600">{strings.common.you}</span>
+                                      <span className="ml-1 text-xs text-green-600 dark:text-green-400">{strings.common.you}</span>
                                     )}
                                   </p>
-                                  {expense.note && <p className="text-xs italic text-slate-400">{expense.note}</p>}
+                                  {expense.note && <p className="text-xs italic text-slate-400 dark:text-slate-500">{expense.note}</p>}
                                 </div>
                                 <span className="font-semibold">{taka(expense.amount)}</span>
                               </div>
 
-                              <ul className="mt-3 divide-y divide-slate-100 border-y border-slate-100">
+                              <ul className="mt-3 divide-y divide-slate-100 dark:divide-slate-700 border-y border-slate-100 dark:border-slate-700">
                                 {itemsOf(expense).map((item) => (
                                   <li key={item.id} className="flex justify-between gap-3 py-1.5 text-sm">
-                                    <span className="text-slate-700">{item.name}</span>
-                                    <span className="tabular-nums text-slate-600">{taka(item.amount)}</span>
+                                    <span className="text-slate-700 dark:text-slate-300">{item.name}</span>
+                                    <span className="tabular-nums text-slate-600 dark:text-slate-400">{taka(item.amount)}</span>
                                   </li>
                                 ))}
                               </ul>
@@ -487,7 +487,7 @@ export default function ExpensesPage() {
                                 </div>
                               )}
 
-                              <div className="mt-3 border-t border-slate-100 pt-3">
+                              <div className="mt-3 border-t border-slate-100 dark:border-slate-700 pt-3">
                                 <CommentBox
                                   comments={expense.comments}
                                   currentUserId={user?.id}
@@ -532,7 +532,7 @@ function ItemRows({
 }) {
   return (
     <div className="mt-4">
-      <div className="hidden gap-3 px-1 pb-1 text-xs font-medium uppercase tracking-wide text-slate-500 sm:flex">
+      <div className="hidden gap-3 px-1 pb-1 text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400 sm:flex">
         <span className="flex-1">{strings.expenses.colProduct}</span>
         <span className="w-32">{strings.expenses.colPrice}</span>
         <span className="w-9" />
@@ -545,7 +545,7 @@ function ItemRows({
               value={row.name}
               onChange={(e) => setRows((prev) => prev.map((r, i) => (i === index ? { ...r, name: e.target.value } : r)))}
               placeholder={strings.expenses.productPlaceholder}
-              className="flex-1 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+              className="flex-1 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
             />
             <input
               type="number"
@@ -556,13 +556,13 @@ function ItemRows({
                 setRows((prev) => prev.map((r, i) => (i === index ? { ...r, amount: e.target.value } : r)))
               }
               placeholder="৳"
-              className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2 sm:w-32"
+              className="rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2 sm:w-32"
             />
             <button
               type="button"
               onClick={() => setRows((prev) => (prev.length === 1 ? prev : prev.filter((_, i) => i !== index)))}
               aria-label={strings.expenses.removeProduct}
-              className="h-9 w-9 shrink-0 rounded-xl border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              className="h-9 w-9 shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700"
             >
               ×
             </button>
@@ -574,12 +574,12 @@ function ItemRows({
         <button
           type="button"
           onClick={() => setRows((prev) => [...prev, blankRow()])}
-          className="rounded-full border border-slate-300 px-4 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+          className="rounded-full border border-slate-300 dark:border-slate-600 px-4 py-1.5 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           {strings.expenses.addProduct}
         </button>
         <p className="text-sm">
-          <span className="text-slate-500">{strings.common.total} </span>
+          <span className="text-slate-500 dark:text-slate-400">{strings.common.total} </span>
           <span className="font-semibold">{taka(total)}</span>
         </p>
       </div>
@@ -612,20 +612,20 @@ function EditPanel({
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="sm:w-48">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.date}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.common.date}</span>
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
           />
         </label>
         <label className="flex-1">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{strings.common.note}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.common.note}</span>
           <input
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
           />
         </label>
       </div>
@@ -643,7 +643,7 @@ function EditPanel({
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-full border border-slate-300 px-5 py-2 text-sm text-slate-600 hover:bg-slate-100"
+          className="rounded-full border border-slate-300 dark:border-slate-600 px-5 py-2 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           {strings.common.cancel}
         </button>
@@ -695,23 +695,23 @@ function CommentBox({
   return (
     <div className="min-w-0">
       {comments.length === 0 ? (
-        <p className="text-xs text-slate-400">{strings.expenses.noComments}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">{strings.expenses.noComments}</p>
       ) : (
         <ul className="space-y-1.5">
           {comments.map((c) => (
-            <li key={c.id} className="group/comment rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
+            <li key={c.id} className="group/comment rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2">
               <div className="flex items-center gap-2">
-                <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600">
+                <p className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600 dark:text-slate-400">
                   {c.authorName}
-                  {c.authorId === currentUserId && <span className="ml-1 text-green-600">{strings.common.you}</span>}
-                  <span className="ml-2 font-normal text-slate-400">{when(c.createdAt)}</span>
+                  {c.authorId === currentUserId && <span className="ml-1 text-green-600 dark:text-green-400">{strings.common.you}</span>}
+                  <span className="ml-2 font-normal text-slate-400 dark:text-slate-500">{when(c.createdAt)}</span>
                 </p>
                 {canDelete && (
                   <button
                     onClick={() => onDelete(c.id)}
                     aria-label={strings.expenses.deleteComment}
                     title={strings.expenses.deleteComment}
-                    className="-mr-1 shrink-0 rounded-md p-1 text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover/comment:text-slate-400"
+                    className="-mr-1 shrink-0 rounded-md p-1 text-slate-300 dark:text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover/comment:text-slate-400"
                   >
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 6h18" />
@@ -725,7 +725,7 @@ function CommentBox({
                 text={c.text}
                 members={members}
                 mentionNames={mentionNames}
-                className="mt-0.5 break-words text-sm text-slate-700"
+                className="mt-0.5 break-words text-sm text-slate-700 dark:text-slate-300"
               />
             </li>
           ))}
@@ -767,7 +767,7 @@ function EditButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex min-h-[2rem] items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900"
+      className="inline-flex min-h-[2rem] items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 transition-colors hover:border-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100"
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" />
@@ -782,7 +782,7 @@ function DeleteButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex min-h-[2rem] items-center gap-1.5 rounded-lg border border-red-100 bg-red-50 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-200 hover:bg-red-100 hover:text-red-700"
+      className="inline-flex min-h-[2rem] items-center gap-1.5 rounded-lg border border-red-100 dark:border-red-500/20 bg-red-50 dark:bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 transition-colors hover:border-red-200 hover:bg-red-100 hover:text-red-700"
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M3 6h18" />
@@ -795,5 +795,5 @@ function DeleteButton({ onClick }: { onClick: () => void }) {
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm text-slate-600 sm:p-6">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm text-slate-600 dark:text-slate-400 sm:p-6">{children}</div>;
 }

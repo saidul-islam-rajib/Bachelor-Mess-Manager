@@ -213,12 +213,12 @@ export default function UserPermissionsModal({
         <LoadingCard />
       ) : (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium">{copy.roleBaseline(roleLabel(data.user.role))}</p>
-              <p className="text-xs text-slate-500">{copy.summary(counts.allowed, counts.total)}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{copy.summary(counts.allowed, counts.total)}</p>
             </div>
-            <p className="mt-1 text-xs text-slate-500">{copy.roleBaselineHint}</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{copy.roleBaselineHint}</p>
 
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={applyReadOnly}>
@@ -229,7 +229,7 @@ export default function UserPermissionsModal({
               </Button>
             </div>
 
-            <p className="mt-2 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
               {counts.added + counts.blocked === 0
                 ? copy.noOverrides
                 : copy.overrideCount(counts.added, counts.blocked)}
@@ -244,10 +244,10 @@ export default function UserPermissionsModal({
             <div className="space-y-5">
               {grouped.map((group) => (
                 <section key={group.category}>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
                     {categoryLabel(group.category)}
                   </h3>
-                  <ul className="mt-2 divide-y divide-slate-100">
+                  <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-700">
                     {group.items.map((definition) => {
                       const choice = choices[definition.code] ?? 'INHERIT';
                       const inRole = roleGrants.has(definition.code);
@@ -258,7 +258,7 @@ export default function UserPermissionsModal({
                           <div className="flex flex-wrap items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium">{definition.name}</p>
-                              <p className="mt-0.5 text-xs text-slate-500">{definition.description}</p>
+                              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{definition.description}</p>
                             </div>
                             <Badge tone={isAllowed ? 'success' : 'neutral'}>
                               {isAllowed ? copy.effectiveAllowed : copy.effectiveBlocked}
@@ -268,7 +268,7 @@ export default function UserPermissionsModal({
                           <div
                             role="radiogroup"
                             aria-label={definition.name}
-                            className="mt-2 inline-flex rounded-full border border-slate-200 bg-slate-50 p-0.5"
+                            className="mt-2 inline-flex rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-0.5"
                           >
                             {CHOICES.map((option) => (
                               <button
@@ -283,8 +283,8 @@ export default function UserPermissionsModal({
                                       ? 'bg-red-600 text-white'
                                       : option.value === 'ALLOW'
                                         ? 'bg-brand-600 text-white'
-                                        : 'bg-white text-slate-700 shadow-sm'
-                                    : 'text-slate-500 hover:text-slate-800'
+                                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm'
+                                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100'
                                 }`}
                               >
                                 {option.value === 'INHERIT'

@@ -274,7 +274,7 @@ export default function MembersPage() {
       <PageTitle title={strings.members.title} description={strings.members.subtitle} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{strings.members.title}</h1>
-        <p className="mt-1 text-slate-600">{strings.members.subtitle}</p>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">{strings.members.subtitle}</p>
       </div>
 
       {loadingGroups && groups.length === 0 ? (
@@ -312,12 +312,12 @@ export default function MembersPage() {
               />
 
               {(showClosed || hiddenInactive > 0) && (
-                <label className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm text-slate-600">
+                <label className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
                   <input
                     type="checkbox"
                     checked={showClosed}
                     onChange={(event) => setShowClosed(event.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                    className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
                   />
                   {strings.members.showClosed}
                   {!showClosed && hiddenInactive > 0 ? ` (${hiddenInactive})` : ''}
@@ -326,12 +326,12 @@ export default function MembersPage() {
             </div>
 
             {selectedGroup && (
-              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 text-sm text-slate-500">
+              <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 dark:border-slate-700 pt-4 text-sm text-slate-500 dark:text-slate-400">
                 <span
                   className={`rounded-full px-3 py-1 text-xs ${
                     selectedGroup.status === GROUP_STATUS.ACTIVE
-                      ? 'bg-green-100 text-green-700'
-                      : 'bg-slate-100 text-slate-600'
+                      ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                   }`}
                 >
                   {selectedGroup.status}
@@ -351,7 +351,7 @@ export default function MembersPage() {
           </Card>
 
           {tabs.length > 1 && (
-            <div className="flex flex-wrap gap-1 rounded-full border border-slate-200 bg-white p-1 text-sm shadow-sm sm:w-fit">
+            <div className="flex flex-wrap gap-1 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-1 text-sm shadow-sm sm:w-fit">
               {tabs.map((item) => (
                 <button
                   key={item.id}
@@ -359,7 +359,7 @@ export default function MembersPage() {
                   onClick={() => setTab(item.id)}
                   aria-pressed={tab === item.id}
                   className={`rounded-full px-4 py-1.5 font-medium transition-colors ${
-                    tab === item.id ? 'bg-brand-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+                    tab === item.id ? 'bg-brand-600 text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
                   }`}
                 >
                   {item.label}
@@ -382,7 +382,7 @@ export default function MembersPage() {
                   />
                 </div>
 
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <h2 className="text-lg font-semibold">{strings.members.current}</h2>
                     {canLeave && (
@@ -390,14 +390,14 @@ export default function MembersPage() {
                         type="button"
                         onClick={leave}
                         disabled={busy === user?.id}
-                        className="inline-flex min-h-[2rem] items-center rounded-full border border-red-200 px-4 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        className="inline-flex min-h-[2rem] items-center rounded-full border border-red-200 dark:border-red-500/30 px-4 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 disabled:opacity-50"
                       >
                         {strings.members.leaveGroup}
                       </button>
                     )}
                   </div>
 
-                  <ul className="mt-4 divide-y divide-slate-100">
+                  <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
                     {active.map((member) => (
                       <li
                         key={member.membershipId}
@@ -407,13 +407,13 @@ export default function MembersPage() {
                           type="button"
                           onClick={() => setProfileId(member.id)}
                           aria-label={strings.members.profile.viewLabel(member.name)}
-                          className="flex min-w-0 items-center gap-3 rounded-2xl text-left transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                          className="flex min-w-0 items-center gap-3 rounded-2xl text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
                         >
                           <Avatar member={member} />
                           <span className="min-w-0">
                             <span className="block truncate font-medium">
                               {member.name}
-                              {member.id === user?.id && <span className="ml-1 text-xs text-green-600">(you)</span>}
+                              {member.id === user?.id && <span className="ml-1 text-xs text-green-600 dark:text-green-400">(you)</span>}
                               {member.isSupervisor && (
                                 <span className="ml-2 rounded-full bg-brand-600 px-2 py-0.5 text-xs font-normal text-white">
                                   supervisor
@@ -425,7 +425,7 @@ export default function MembersPage() {
                                 </span>
                               )}
                             </span>
-                            <span className="block truncate text-xs text-slate-500">
+                            <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
                               {member.email}
                               {member.phone && ` · ${member.phone}`}
                             </span>
@@ -435,7 +435,7 @@ export default function MembersPage() {
                         <div className="flex items-center gap-3">
                           <div className="text-right">
                             <p className="text-sm font-medium">{formatStay(member.stayDays)}</p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
                               {strings.members.since(shortDate(member.joinedAt))}
                             </p>
                           </div>
@@ -444,7 +444,7 @@ export default function MembersPage() {
                               type="button"
                               onClick={() => dropCoSupervisor(member)}
                               disabled={busy === member.id}
-                              className="rounded-full border border-amber-200 px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                              className="rounded-full border border-amber-200 dark:border-amber-500/30 px-3 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400 hover:bg-amber-50 disabled:opacity-50"
                             >
                               {strings.groups.coSupervisorRemove}
                             </button>
@@ -473,7 +473,7 @@ export default function MembersPage() {
                                 type="button"
                                 onClick={() => setActive(member, false)}
                                 disabled={busy === member.id}
-                                className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                                className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
                               >
                                 {strings.common.remove}
                               </button>
@@ -486,10 +486,10 @@ export default function MembersPage() {
                 </div>
 
                 {past.length > 0 && (
-                  <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                  <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
                     <h2 className="text-lg font-semibold">{strings.members.past}</h2>
-                    <p className="mt-1 text-sm text-slate-500">{strings.members.pastHint}</p>
-                    <ul className="mt-4 divide-y divide-slate-100">
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.members.pastHint}</p>
+                    <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
                       {past.map((member) => (
                         <li
                           key={member.membershipId}
@@ -499,12 +499,12 @@ export default function MembersPage() {
                             type="button"
                             onClick={() => setProfileId(member.id)}
                             aria-label={strings.members.profile.viewLabel(member.name)}
-                            className="flex min-w-0 items-center gap-3 rounded-2xl text-left transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
+                            className="flex min-w-0 items-center gap-3 rounded-2xl text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
                           >
                             <Avatar member={member} muted />
                             <span className="min-w-0">
-                              <span className="block truncate font-medium text-slate-600">{member.name}</span>
-                              <span className="block truncate text-xs text-slate-500">
+                              <span className="block truncate font-medium text-slate-600 dark:text-slate-400">{member.name}</span>
+                              <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
                                 {member.leftAt
                                   ? strings.members.left(shortDate(member.leftAt))
                                   : strings.members.noLongerActive}{' '}
@@ -517,7 +517,7 @@ export default function MembersPage() {
                               type="button"
                               onClick={() => setActive(member, true)}
                               disabled={busy === member.id}
-                              className="rounded-full border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                              className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
                             >
                               {strings.members.addBack}
                             </button>
@@ -586,7 +586,7 @@ function Avatar({ member, muted = false }: { member: Member; muted?: boolean }) 
   return (
     <span
       className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-medium ${
-        muted ? 'bg-slate-100 text-slate-400' : 'bg-slate-200 text-slate-600'
+        muted ? 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
       }`}
     >
       {initials || '?'}
@@ -596,13 +596,13 @@ function Avatar({ member, muted = false }: { member: Member; muted?: boolean }) 
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-5">
+      <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</div>
       <div className="mt-2 text-xl font-semibold sm:text-2xl">{value}</div>
     </div>
   );
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">{children}</div>;
 }

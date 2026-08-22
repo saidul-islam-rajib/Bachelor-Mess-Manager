@@ -21,7 +21,7 @@ export default function NotificationCard({
         if (!notification.read) markRead(notification.id);
         onNavigate?.();
       }}
-      className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-slate-50 ${
+      className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 ${
         notification.read ? '' : 'bg-slate-50/70'
       }`}
     >
@@ -30,25 +30,25 @@ export default function NotificationCard({
       </span>
       <div className="min-w-0 flex-1">
         {notification.title ? (
-          <p className="text-sm font-semibold leading-snug text-slate-900">{notification.title}</p>
+          <p className="text-sm font-semibold leading-snug text-slate-900 dark:text-slate-100">{notification.title}</p>
         ) : (
-          <p className="text-sm text-slate-700">
-            <span className="font-semibold text-slate-900">{notification.actorName}</span>{' '}
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            <span className="font-semibold text-slate-900 dark:text-slate-100">{notification.actorName}</span>{' '}
             {ACTIONS[notification.type] ?? strings.notifications.defaultAction}
             {notification.groupName && (
               <>
                 {` ${strings.notifications.inGroup} `}
-                <span className="font-semibold text-slate-900">{notification.groupName}</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{notification.groupName}</span>
               </>
             )}
           </p>
         )}
         {notification.excerpt && (
-          <p className={`mt-0.5 text-xs text-slate-500 ${notification.title ? '' : 'truncate'}`}>
+          <p className={`mt-0.5 text-xs text-slate-500 dark:text-slate-400 ${notification.title ? '' : 'truncate'}`}>
             {notification.excerpt}
           </p>
         )}
-        <p className="mt-0.5 text-xs text-slate-400">
+        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
           {notification.title && notification.groupName ? `${notification.groupName} · ` : ''}
           {timeAgo(notification.createdAt)}
         </p>

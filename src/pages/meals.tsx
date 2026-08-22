@@ -304,7 +304,7 @@ export default function MealsPage() {
       <PageTitle title={strings.meals.title} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{strings.meals.title}</h1>
-        <p className="mt-1 text-slate-600">
+        <p className="mt-1 text-slate-600 dark:text-slate-400">
           {canManage ? strings.meals.subtitleManage : strings.meals.subtitle}
         </p>
       </div>
@@ -318,7 +318,7 @@ export default function MealsPage() {
           <Card>
             <GroupMonthControls groups={groups} groupId={groupId} setGroupId={setGroupId} month={month} setMonth={setMonth} />
             {weights && (
-              <p className="mt-3 text-xs text-slate-500">
+              <p className="mt-3 text-xs text-slate-500 dark:text-slate-400">
                 {strings.meals.weightsNote(weights.breakfast, weights.lunch, weights.dinner)}
               </p>
             )}
@@ -352,7 +352,7 @@ export default function MealsPage() {
               )}
 
               {me && summary?.rateMode === 'DAILY' && (
-                <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                <p className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
                   {strings.meals.dailyCostNote}
                 </p>
               )}
@@ -373,8 +373,8 @@ export default function MealsPage() {
                   return (
                     <li
                       key={date}
-                      className={`rounded-2xl border bg-white p-4 shadow-sm ${
-                        date === today ? 'border-brand-600 ring-1 ring-brand-500' : 'border-slate-200'
+                      className={`rounded-2xl border bg-white dark:bg-slate-800 p-4 shadow-sm ${
+                        date === today ? 'border-brand-600 ring-1 ring-brand-500' : 'border-slate-200 dark:border-slate-700'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -382,10 +382,10 @@ export default function MealsPage() {
                           <p className="font-semibold">
                             {dayLabel(date)}
                             {date === today && (
-                              <span className="ml-2 text-xs font-medium text-green-600">{strings.meals.today}</span>
+                              <span className="ml-2 text-xs font-medium text-green-600 dark:text-green-400">{strings.meals.today}</span>
                             )}
                           </p>
-                          <p className="mt-0.5 text-xs text-slate-500">
+                          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                             {strings.meals.mealCount(round2(logged.byDay[date] ?? 0))}
                           </p>
                           {info && info.perMealPrice > 0 && (
@@ -395,11 +395,11 @@ export default function MealsPage() {
                           )}
                         </div>
                         {awaiting ? (
-                          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs text-amber-700">
+                          <span className="rounded-full bg-amber-100 dark:bg-amber-500/15 px-2.5 py-0.5 text-xs text-amber-700 dark:text-amber-400">
                             {strings.meals.awaitingApproval}
                           </span>
                         ) : !canEdit ? (
-                          <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-500">
+                          <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2.5 py-0.5 text-xs text-slate-500 dark:text-slate-400">
                             {strings.meals.locked}
                           </span>
                         ) : null}
@@ -408,7 +408,7 @@ export default function MealsPage() {
                       <div className="mt-3 grid grid-cols-3 gap-2">
                         {FIELDS.map((f) => (
                           <label key={f} className="block">
-                            <span className="text-xs text-slate-500">{FIELD_LABELS[f]}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-400">{FIELD_LABELS[f]}</span>
                             {canEdit && !awaiting ? (
                               <input
                                 type="number"
@@ -417,13 +417,13 @@ export default function MealsPage() {
                                 value={mine[f] || 0}
                                 onChange={(e) => setLocal(user?.id ?? '', date, f, parseInt(e.target.value, 10))}
                                 onBlur={() => saveDay(user?.id ?? '', date)}
-                                className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-2 py-2 text-center text-base"
+                                className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-2 py-2 text-center text-base"
                               />
                             ) : (
                               <span
                                 title={awaiting ? strings.meals.pendingApprovalTooltip : undefined}
                                 className={`mt-1 block rounded-xl px-2 py-2 text-center text-base ${
-                                  awaiting ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'
+                                  awaiting ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                                 }`}
                               >
                                 {mine[f] || 0}
@@ -434,11 +434,11 @@ export default function MealsPage() {
                       </div>
 
                       {canEdit && needsApproval(user?.id ?? '', date) && (
-                        <p className="mt-2 text-xs text-amber-700">{strings.meals.approvalNotice}</p>
+                        <p className="mt-2 text-xs text-amber-700 dark:text-amber-400">{strings.meals.approvalNotice}</p>
                       )}
 
                       {others.length > 0 && canManage && (
-                        <div className="mt-3 border-t border-slate-100 pt-3">
+                        <div className="mt-3 border-t border-slate-100 dark:border-slate-700 pt-3">
                           <button
                             type="button"
                             onClick={() => setOpenDay((current) => (current === date ? '' : date))}
@@ -466,12 +466,12 @@ export default function MealsPage() {
                               {others.map((m) => {
                                 const memberCell = cell(m.id, date);
                                 return (
-                                  <li key={m.id} className="rounded-xl bg-slate-50 p-3">
-                                    <p className="text-xs font-medium text-slate-700">{m.name}</p>
+                                  <li key={m.id} className="rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
+                                    <p className="text-xs font-medium text-slate-700 dark:text-slate-300">{m.name}</p>
                                     <div className="mt-2 grid grid-cols-3 gap-2">
                                       {FIELDS.map((f) => (
                                         <label key={f} className="block">
-                                          <span className="text-[11px] text-slate-500">{FIELD_LABELS[f]}</span>
+                                          <span className="text-[11px] text-slate-500 dark:text-slate-400">{FIELD_LABELS[f]}</span>
                                           <input
                                             type="number"
                                             min={0}
@@ -480,7 +480,7 @@ export default function MealsPage() {
                                             value={memberCell[f] || 0}
                                             onChange={(e) => setLocal(m.id, date, f, parseInt(e.target.value, 10))}
                                             onBlur={() => saveDay(m.id, date)}
-                                            className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-center text-sm"
+                                            className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1.5 text-center text-sm"
                                           />
                                         </label>
                                       ))}
@@ -494,12 +494,12 @@ export default function MealsPage() {
                       )}
 
                       {others.length > 0 && !canManage && (
-                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-slate-100 dark:border-slate-700 pt-3 text-xs text-slate-500 dark:text-slate-400">
                           {others.map((m) => {
                             const c = cell(m.id, date);
                             return (
                               <span key={m.id}>
-                                {m.name} <span className="font-medium text-slate-700">{c.breakfast}/{c.lunch}/{c.dinner}</span>
+                                {m.name} <span className="font-medium text-slate-700 dark:text-slate-300">{c.breakfast}/{c.lunch}/{c.dinner}</span>
                               </span>
                             );
                           })}
@@ -509,23 +509,23 @@ export default function MealsPage() {
                   );
                 })}
               </ul>
-              <div className="hidden overflow-x-auto rounded-3xl border border-slate-200 bg-white shadow-sm lg:block">
+              <div className="hidden overflow-x-auto rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm lg:block">
                 <table className="min-w-full border-collapse text-center text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200 bg-slate-50">
-                      <th rowSpan={2} className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 px-4 py-3 text-left font-semibold">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                      <th rowSpan={2} className="sticky left-0 z-10 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-left font-semibold">
                         {strings.common.date}
                       </th>
                       {members.map((m) => (
                         <th
                           key={m.id}
                           colSpan={3}
-                          className={`border-r border-slate-200 px-3 py-3 font-semibold ${
-                            isMe(m.id) ? 'bg-slate-100 text-slate-900' : 'text-slate-600'
+                          className={`border-r border-slate-200 dark:border-slate-700 px-3 py-3 font-semibold ${
+                            isMe(m.id) ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400'
                           }`}
                         >
                           {m.name}
-                          {isMe(m.id) && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
+                          {isMe(m.id) && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
                         </th>
                       ))}
                       <th rowSpan={2} className="px-4 py-3 font-semibold">{strings.meals.colMeals}</th>
@@ -533,13 +533,13 @@ export default function MealsPage() {
                         {strings.meals.rate.runningRateColumn}
                       </th>
                     </tr>
-                    <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs uppercase text-slate-500 dark:text-slate-400">
                       {members.flatMap((m) =>
                         FIELDS.map((f, i) => (
                           <th
                             key={`${m.id}-${f}`}
-                            className={`px-2 pb-2 font-medium ${i === 2 ? 'border-r border-slate-200' : ''} ${
-                              isMe(m.id) ? 'bg-slate-100' : ''
+                            className={`px-2 pb-2 font-medium ${i === 2 ? 'border-r border-slate-200 dark:border-slate-700' : ''} ${
+                              isMe(m.id) ? 'bg-slate-100 dark:bg-slate-700' : ''
                             }`}
                           >
                             {FIELD_SHORT[f]}
@@ -555,15 +555,15 @@ export default function MealsPage() {
                       return (
                         <tr
                           key={date}
-                          className={`border-b border-slate-100 last:border-0 ${isToday ? 'bg-amber-50' : 'hover:bg-slate-50/70'}`}
+                          className={`border-b border-slate-100 dark:border-slate-700 last:border-0 ${isToday ? 'bg-amber-50 dark:bg-amber-500/10' : 'hover:bg-slate-50/70'}`}
                         >
                           <td
-                            className={`sticky left-0 z-10 border-r border-slate-200 px-4 py-2 text-left font-medium ${
-                              isToday ? 'bg-amber-50' : 'bg-white'
+                            className={`sticky left-0 z-10 border-r border-slate-200 dark:border-slate-700 px-4 py-2 text-left font-medium ${
+                              isToday ? 'bg-amber-50 dark:bg-amber-500/10' : 'bg-white dark:bg-slate-800'
                             }`}
                           >
                             {date.slice(8)}
-                            <span className="ml-2 text-xs font-normal text-slate-400">{dayLabel(date).slice(0, 3)}</span>
+                            <span className="ml-2 text-xs font-normal text-slate-400 dark:text-slate-500">{dayLabel(date).slice(0, 3)}</span>
                           </td>
                           {members.flatMap((m) => {
                             const c = cell(m.id, date);
@@ -571,7 +571,7 @@ export default function MealsPage() {
                             const canEdit = editable(m.id, date);
                             const awaiting = pendingByCell.has(`${m.id}|${date}`);
                             return FIELDS.map((f, i) => {
-                              const edge = i === 2 ? 'border-r border-slate-200' : '';
+                              const edge = i === 2 ? 'border-r border-slate-200 dark:border-slate-700' : '';
                               return canEdit && !awaiting ? (
                                 <td key={`${m.id}-${f}`} className={`px-1 py-1.5 ${edge}`}>
                                   <input
@@ -581,7 +581,7 @@ export default function MealsPage() {
                                     onChange={(e) => setLocal(m.id, date, f, parseInt(e.target.value, 10))}
                                     onBlur={() => saveDay(m.id, date)}
                                     title={date < today ? strings.meals.pastDayTooltip : undefined}
-                                    className="w-14 rounded-lg border border-slate-300 bg-white px-1 py-1.5 text-center focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                                    className="w-14 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1 py-1.5 text-center focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
                                   />
                                 </td>
                               ) : (
@@ -589,7 +589,7 @@ export default function MealsPage() {
                                   key={`${m.id}-${f}`}
                                   title={awaiting ? strings.meals.pendingApprovalTooltip : undefined}
                                   className={`px-2 py-2 ${edge} ${
-                                    awaiting ? 'bg-amber-50 text-amber-700' : mine ? 'text-slate-400' : 'text-slate-600'
+                                    awaiting ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : mine ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'
                                   }`}
                                 >
                                   {c[f] || 0}
@@ -598,7 +598,7 @@ export default function MealsPage() {
                             });
                           })}
                           <td className="px-4 py-2 font-semibold">{round2(logged.byDay[date] ?? 0)}</td>
-                          <td className="px-4 py-2 text-slate-600" title={strings.meals.rate.runningRateHint}>
+                          <td className="px-4 py-2 text-slate-600 dark:text-slate-400" title={strings.meals.rate.runningRateHint}>
                             {info && info.runningRate ? info.runningRate.toFixed(2) : '—'}
                           </td>
                         </tr>
@@ -607,15 +607,15 @@ export default function MealsPage() {
                   </tbody>
                   {summary && (
                     <tfoot>
-                      <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
-                        <td className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 px-4 py-3 text-left">{strings.common.total}</td>
+                      <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 font-semibold">
+                        <td className="sticky left-0 z-10 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-left">{strings.common.total}</td>
                         {members.map((m) => (
-                          <td key={m.id} colSpan={3} className="border-r border-slate-200 px-3 py-3">
+                          <td key={m.id} colSpan={3} className="border-r border-slate-200 dark:border-slate-700 px-3 py-3">
                             {round2(logged.byMember[m.id] ?? 0)}
                           </td>
                         ))}
                         <td className="px-4 py-3">{logged.total}</td>
-                        <td className="px-4 py-3 text-slate-600" title={strings.meals.rate.runningRateHint}>
+                        <td className="px-4 py-3 text-slate-600 dark:text-slate-400" title={strings.meals.rate.runningRateHint}>
                           {summary.days.length > 0 && summary.days[summary.days.length - 1].runningRate > 0
                             ? summary.days[summary.days.length - 1].runningRate.toFixed(2)
                             : '—'}
@@ -627,7 +627,7 @@ export default function MealsPage() {
               </div>
 
               {rateNote && (
-                <p className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
+                <p className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
                   {rateNote}
                 </p>
               )}
@@ -673,12 +673,12 @@ function DayRangeBar({
   const last = visibleDays[visibleDays.length - 1];
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 shadow-sm">
       <div className="min-w-0">
         <p className="text-sm font-medium">
           {hiddenDayCount > 0 ? copy.showingRange(dayLabel(first), dayLabel(last)) : copy.showingAll(totalDays)}
         </p>
-        {hiddenDayCount > 0 && <p className="mt-0.5 text-xs text-slate-500">{copy.hiddenNote(hiddenDayCount)}</p>}
+        {hiddenDayCount > 0 && <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{copy.hiddenNote(hiddenDayCount)}</p>}
       </div>
 
       {collapsible && (
@@ -686,7 +686,7 @@ function DayRangeBar({
           type="button"
           onClick={onToggle}
           aria-expanded={showWholeMonth}
-          className="min-h-[2.25rem] shrink-0 rounded-full border border-slate-300 px-4 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
+          className="min-h-[2.25rem] shrink-0 rounded-full border border-slate-300 dark:border-slate-600 px-4 py-1.5 text-sm font-medium text-brand-700 transition-colors hover:bg-brand-50"
         >
           {showWholeMonth ? copy.showAroundToday : copy.showWholeMonth(totalDays)}
         </button>
@@ -702,8 +702,8 @@ function ChangeSummary({ change }: { change: PendingChange }) {
         {change.userName ? `${change.userName} · ` : ''}
         {dayLabel(change.date)}
       </p>
-      <p className="mt-0.5 text-sm text-slate-600">{change.summary}</p>
-      {change.reason && <p className="mt-1 text-xs italic text-slate-500">“{change.reason}”</p>}
+      <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{change.summary}</p>
+      {change.reason && <p className="mt-1 text-xs italic text-slate-500 dark:text-slate-400">“{change.reason}”</p>}
     </div>
   );
 }
@@ -716,14 +716,14 @@ function PendingApprovals({
   onDecide: (id: string, status: 'APPROVED' | 'REJECTED') => void;
 }) {
   return (
-    <div className="rounded-3xl border border-amber-300 bg-amber-50 p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-amber-300 bg-amber-50 dark:bg-amber-500/10 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">
         {strings.meals.waitingForYouTitle}
-        <span className="ml-2 rounded-full bg-white px-2.5 py-0.5 text-sm font-medium text-amber-700 ring-1 ring-amber-300">
+        <span className="ml-2 rounded-full bg-white dark:bg-slate-800 px-2.5 py-0.5 text-sm font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-300">
           {changes.length}
         </span>
       </h2>
-      <p className="mt-1 text-sm text-slate-600">
+      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
         {strings.meals.waitingForYouHint}
       </p>
 
@@ -731,7 +731,7 @@ function PendingApprovals({
         {changes.map((change) => (
           <li
             key={change.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-4 ring-1 ring-amber-200"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white dark:bg-slate-800 p-4 ring-1 ring-amber-200"
           >
             <ChangeSummary change={change} />
             <div className="flex shrink-0 gap-2">
@@ -745,7 +745,7 @@ function PendingApprovals({
               <button
                 type="button"
                 onClick={() => onDecide(change.id, 'REJECTED')}
-                className="rounded-full border border-slate-300 px-4 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-full border border-slate-300 dark:border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
               >
                 {strings.meals.decline}
               </button>
@@ -759,22 +759,22 @@ function PendingApprovals({
 
 function MyPendingChanges({ changes, onWithdraw }: { changes: PendingChange[]; onWithdraw: (id: string) => void }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{strings.meals.waitingForSupervisorTitle}</h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {strings.meals.waitingForSupervisorHint}
       </p>
       <ul className="mt-4 space-y-3">
         {changes.map((change) => (
           <li
             key={change.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 p-4"
+            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 p-4"
           >
             <ChangeSummary change={change} />
             <button
               type="button"
               onClick={() => onWithdraw(change.id)}
-              className="shrink-0 rounded-full border border-slate-300 px-4 py-1.5 text-sm text-slate-600 hover:bg-slate-50"
+              className="shrink-0 rounded-full border border-slate-300 dark:border-slate-600 px-4 py-1.5 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               {strings.meals.withdraw}
             </button>
@@ -788,17 +788,17 @@ function MyPendingChanges({ changes, onWithdraw }: { changes: PendingChange[]; o
 function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; currentUserId?: string }) {
   if (!summary) return null;
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">{strings.meals.monthlySummary}</h2>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           {strings.meals.totalSpent(taka(summary.totals.expense), summary.totals.meals)}
         </p>
       </div>
       <div className="mt-4 hidden overflow-x-auto sm:block">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
               <th className="px-3 py-2">{strings.common.member}</th>
               <th className="px-3 py-2 text-right">{strings.meals.colMeals}</th>
               <th className="px-3 py-2 text-right">{strings.meals.colCost}</th>
@@ -808,15 +808,15 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
           </thead>
           <tbody>
             {summary.members.map((m) => (
-              <tr key={m.id} className="border-b border-slate-100 last:border-0">
+              <tr key={m.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
                 <td className="px-3 py-2 font-medium">
                   {m.name}
-                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
+                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
                 </td>
                 <td className="px-3 py-2 text-right">{m.meals}</td>
                 <td className="px-3 py-2 text-right">{taka(m.cost)}</td>
                 <td className="px-3 py-2 text-right">{taka(m.paid)}</td>
-                <td className={`px-3 py-2 text-right font-medium ${m.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <td className={`px-3 py-2 text-right font-medium ${m.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {m.balance >= 0 ? '+' : '−'}
                   {Math.abs(m.balance).toFixed(2)}
                 </td>
@@ -827,25 +827,25 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
       </div>
       <ul className="mt-4 space-y-3 sm:hidden">
         {summary.members.map((m) => (
-          <li key={m.id} className="rounded-2xl border border-slate-200 p-4">
+          <li key={m.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
             <div className="flex items-center justify-between">
               <p className="font-medium">
                 {m.name}
-                {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>}
+                {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
               </p>
-              <span className={`font-semibold ${m.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`font-semibold ${m.balance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {m.balance >= 0 ? '+' : '−'}
                 {Math.abs(m.balance).toFixed(2)}
               </span>
             </div>
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               {strings.meals.mobileSummaryLine(m.meals, taka(m.cost), taka(m.paid))}
             </p>
           </li>
         ))}
       </ul>
 
-      <p className="mt-3 text-xs text-slate-400">{strings.meals.balanceFootnote}</p>
+      <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">{strings.meals.balanceFootnote}</p>
 
       <MealRateTrendChart days={summary.days} currentUserId={currentUserId} />
     </div>
@@ -853,15 +853,15 @@ function MonthlySummary({ summary, currentUserId }: { summary: Summary | null; c
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' }) {
-  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : 'text-slate-900';
+  const color = tone === 'green' ? 'text-green-600 dark:text-green-400' : tone === 'red' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100';
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-5">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
       <p className={`mt-1 text-xl font-semibold sm:text-2xl ${color}`}>{value}</p>
     </div>
   );
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm text-slate-600 sm:p-6">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm text-slate-600 dark:text-slate-400 sm:p-6">{children}</div>;
 }

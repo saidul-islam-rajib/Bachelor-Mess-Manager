@@ -26,8 +26,8 @@ function readAsDataUrl(file: File): Promise<string> {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="space-y-3 border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
+    <div className="space-y-3 border-t border-slate-100 dark:border-slate-700 pt-4 first:border-t-0 first:pt-0">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{title}</h3>
       {children}
     </div>
   );
@@ -39,7 +39,7 @@ function MoreOptionsToggle({ open, onToggle }: { open: boolean; onToggle: () => 
       type="button"
       onClick={onToggle}
       aria-expanded={open}
-      className="flex w-full items-center justify-between rounded-xl border-t border-slate-100 py-3 text-sm font-medium text-brand-700 transition-colors hover:text-brand-800"
+      className="flex w-full items-center justify-between rounded-xl border-t border-slate-100 dark:border-slate-700 py-3 text-sm font-medium text-brand-700 transition-colors hover:text-brand-800"
     >
       {open ? strings.toLet.composer.fewerOptions : strings.toLet.composer.moreOptions}
       <svg
@@ -391,12 +391,12 @@ export function ToLetComposer({
             onChange={(value) => update('rent', value)}
             min={0}
           />
-          <label className="flex items-center gap-1.5 pb-2.5 text-sm text-slate-700">
+          <label className="flex items-center gap-1.5 pb-2.5 text-sm text-slate-700 dark:text-slate-300">
             <input
               type="checkbox"
               checked={form.rentNegotiable}
               onChange={(event) => update('rentNegotiable', event.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
             />
             {strings.toLet.composer.negotiableLabel}
           </label>
@@ -416,7 +416,7 @@ export function ToLetComposer({
               type="button"
               onClick={shareLocation}
               disabled={locating}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" />
@@ -426,12 +426,12 @@ export function ToLetComposer({
             </button>
 
             {hasSharedLocation && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                 📍 {strings.toLet.location.shared}
                 <button
                   type="button"
                   onClick={clearSharedLocation}
-                  className="text-emerald-600 hover:text-emerald-900"
+                  className="text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-200"
                   aria-label={strings.toLet.location.clearAction}
                   title={strings.toLet.location.clearAction}
                 >
@@ -462,14 +462,14 @@ export function ToLetComposer({
               compact
             />
 
-            <label className="flex items-center gap-2 text-sm text-slate-700">
+            <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
               <input
                 type="checkbox"
                 checked={form.tenantRestriction === TOLET_TENANT_RESTRICTION.FAMILY}
                 onChange={(event) =>
                   update('tenantRestriction', event.target.checked ? TOLET_TENANT_RESTRICTION.FAMILY : TOLET_TENANT_RESTRICTION.ANY)
                 }
-                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+                className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
               />
               {strings.toLet.composer.familyOnlyLabel}
             </label>
@@ -514,7 +514,7 @@ export function ToLetComposer({
             {form.images.map((src, index) => (
               <div
                 key={src}
-                className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200"
+                className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700"
               >
                 <img src={src} alt="" className="h-full w-full object-cover" />
                 <button
@@ -546,7 +546,7 @@ export function ToLetComposer({
                 onClick={() => fileInput.current?.click()}
                 aria-label={strings.community.addPhotos}
                 title={strings.community.addPhotos}
-                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-brand-400 hover:text-brand-500"
+                className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500 transition-colors hover:border-brand-400 hover:text-brand-500"
               >
                 <svg
                   width="24"
@@ -563,7 +563,7 @@ export function ToLetComposer({
               </button>
             )}
           </div>
-          <p className="mt-2 text-xs text-slate-500">{strings.toLet.composer.photosHint(toLetConfig.maxImagesPerListing)}</p>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{strings.toLet.composer.photosHint(toLetConfig.maxImagesPerListing)}</p>
         </Section>
       </div>
     </Modal>

@@ -86,15 +86,15 @@ export default function RegisterPage() {
         </Alert>
 
         {done.setupLink && (
-          <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-xs font-medium text-amber-800">{strings.auth.developmentLink}</p>
-            <Link href={done.setupLink} className="mt-1 block break-all text-xs text-amber-900 underline">
+          <div className="mt-4 rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 p-4">
+            <p className="text-xs font-medium text-amber-800 dark:text-amber-300">{strings.auth.developmentLink}</p>
+            <Link href={done.setupLink} className="mt-1 block break-all text-xs text-amber-900 dark:text-amber-200 underline">
               {done.setupLink}
             </Link>
           </div>
         )}
 
-        <p className="mt-6 text-center text-sm text-slate-600">
+        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
           <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
             {strings.auth.register.loginLink}
           </Link>
@@ -109,7 +109,7 @@ export default function RegisterPage() {
       <PageTitle title={strings.auth.register.title} description={strings.auth.register.subtitle} />
 
       <h1 className="text-2xl font-semibold sm:text-3xl">{strings.auth.register.title}</h1>
-      <p className="mt-1.5 text-sm text-slate-500">{strings.auth.checkEmail}</p>
+      <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{strings.auth.checkEmail}</p>
 
       {formError && (
         <Alert tone="danger" className="mt-6">
@@ -165,7 +165,7 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
         {strings.auth.register.loginPrompt}{' '}
         <Link href={ROUTES.auth.login} className="font-medium text-brand-700 hover:underline">
           {strings.auth.register.loginLink}

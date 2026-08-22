@@ -17,7 +17,7 @@ export function PeopleRail({ members }: { members: (Member & { profileImage?: st
         {shown.map((member) => (
           <li key={member.id} className="flex items-center gap-2.5">
             <Avatar name={member.name} image={member.profileImage ?? null} size="sm" />
-            <span className="min-w-0 truncate text-sm text-slate-700">{member.name}</span>
+            <span className="min-w-0 truncate text-sm text-slate-700 dark:text-slate-300">{member.name}</span>
           </li>
         ))}
       </ul>

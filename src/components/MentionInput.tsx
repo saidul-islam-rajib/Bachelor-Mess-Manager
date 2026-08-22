@@ -141,19 +141,19 @@ export function MentionInput({
         <input
           {...shared}
           type="text"
-          className={`w-full min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${className}`}
+          className={`w-full min-w-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${className}`}
         />
       ) : (
         <textarea
           {...shared}
           rows={rows}
-          className={`w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${className}`}
+          className={`w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-3 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 ${className}`}
         />
       )}
 
       {matches.length > 0 && (
         <ul
-          className={`absolute z-30 w-64 max-w-[calc(100vw-3rem)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg ${
+          className={`absolute z-30 w-64 max-w-[calc(100vw-3rem)] overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg ${
             inline ? 'bottom-full left-0 mb-1' : 'left-3 top-full mt-1'
           }`}
         >
@@ -166,7 +166,7 @@ export function MentionInput({
                   insert(member);
                 }}
                 className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                  index === highlight ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
+                  index === highlight ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
               >
                 <span
@@ -178,7 +178,7 @@ export function MentionInput({
                 </span>
                 <span className="truncate">{member.name}</span>
                 {member.id === EVERYONE_ID && (
-                  <span className="ml-auto shrink-0 text-xs text-slate-400">{strings.comments.mentionEveryone}</span>
+                  <span className="ml-auto shrink-0 text-xs text-slate-400 dark:text-slate-500">{strings.comments.mentionEveryone}</span>
                 )}
               </button>
             </li>
@@ -186,7 +186,7 @@ export function MentionInput({
         </ul>
       )}
 
-      {showHint && <p className="mt-1 text-xs text-slate-400">{hint}</p>}
+      {showHint && <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{hint}</p>}
     </div>
   );
 }
@@ -195,7 +195,7 @@ export function MentionText({
   text,
   members,
   mentionNames = {},
-  className = 'whitespace-pre-wrap break-words text-slate-700'
+  className = 'whitespace-pre-wrap break-words text-slate-700 dark:text-slate-300'
 }: {
   text: string;
   members: Member[];
@@ -213,7 +213,7 @@ export function MentionText({
           <span
             key={index}
             className={`rounded px-1 font-medium ${
-              part.userId === null ? 'bg-amber-100 text-amber-800' : 'bg-slate-900/5 text-slate-900'
+              part.userId === null ? 'bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300' : 'bg-slate-900/5 text-slate-900 dark:text-slate-100'
             }`}
           >
             @{part.name}

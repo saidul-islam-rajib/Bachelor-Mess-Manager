@@ -165,7 +165,7 @@ export default function PaymentsPage() {
       <PageTitle title={payments.title} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{payments.title}</h1>
-        <p className="mt-1 text-slate-600">{canManage ? payments.subtitleManage : payments.subtitleMember}</p>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">{canManage ? payments.subtitleManage : payments.subtitleMember}</p>
       </div>
 
       {loadingGroups ? (
@@ -183,7 +183,7 @@ export default function PaymentsPage() {
           ) : (
             <>
               {data.closing && (
-                <div className="rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm text-slate-700">
+                <div className="rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-5 py-4 text-sm text-slate-700 dark:text-slate-300">
                   <span className="font-semibold">{payments.monthClosedPre}</span>{' '}
                   {payments.monthClosedThrough(data.closing.closedThrough)}
                   {data.closing.closedBy ? payments.monthClosedBy(data.closing.closedBy) : ''}
@@ -200,9 +200,9 @@ export default function PaymentsPage() {
               </div>
 
               {canManage && (
-                <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
                   <h2 className="text-lg font-semibold">{payments.record}</h2>
-                  <p className="mt-1 text-sm text-slate-500">{payments.recordHint}</p>
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{payments.recordHint}</p>
                   <form className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_auto_auto]" onSubmit={record}>
                     <ListboxControl
                       value={payerId}
@@ -225,14 +225,14 @@ export default function PaymentsPage() {
                       onChange={(e) => setAmount(e.target.value)}
                       required
                       placeholder={payments.amountPlaceholder}
-                      className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+                      className="rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
                     />
                     <input
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       required
-                      className="rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+                      className="rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
                     />
                     <button
                       type="submit"
@@ -357,9 +357,9 @@ function CloseMonth({
 
   if (closing) {
     return (
-      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
         <h2 className="text-lg font-semibold">{payments.monthClosedTitle}</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           {payments.closedThroughHint(
             closing.closedThrough,
             closing.closedBy ? payments.monthClosedBy(closing.closedBy) : '.'
@@ -368,7 +368,7 @@ function CloseMonth({
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="mt-4 rounded-full border border-slate-300 px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="mt-4 rounded-full border border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
         >
           {open ? payments.cancel : payments.closeForMoreMembers}
         </button>
@@ -395,12 +395,12 @@ function CloseMonth({
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">{payments.closeMonthTitle}</h2>
-        <span className="text-sm text-slate-500">{payments.stillOutstanding(taka(outstanding))}</span>
+        <span className="text-sm text-slate-500 dark:text-slate-400">{payments.stillOutstanding(taka(outstanding))}</span>
       </div>
-      <p className="mt-1 text-sm text-slate-500">{payments.closeMonthHint}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{payments.closeMonthHint}</p>
 
       {!open ? (
         <button
@@ -470,16 +470,16 @@ function CloseForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-4 space-y-4 border-t border-slate-100 pt-4">
+    <form onSubmit={onSubmit} className="mt-4 space-y-4 border-t border-slate-100 dark:border-slate-700 pt-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block">
-          <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{payments.closeThrough}</span>
+          <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{payments.closeThrough}</span>
           <input
             type="date"
             value={through}
             onChange={(e) => setThrough(e.target.value)}
             required
-            className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5"
+            className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5"
           />
         </label>
 
@@ -499,7 +499,7 @@ function CloseForm({
 
       {scope === 'MEMBERS' && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{payments.membersLabel}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{payments.membersLabel}</p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {members.map((member) => (
               <li key={member.id}>
@@ -509,7 +509,7 @@ function CloseForm({
                   className={`rounded-full border px-3 py-1.5 text-sm transition-colors ${
                     selected.includes(member.id)
                       ? 'border-brand-600 bg-brand-600 text-white'
-                      : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                      : 'border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {member.name}
@@ -519,12 +519,12 @@ function CloseForm({
             ))}
           </ul>
 
-          <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+          <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
             <input
               type="checkbox"
               checked={endMembership}
               onChange={(e) => setEndMembership(e.target.checked)}
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
             />
             {payments.leavingOnThisDate}
           </label>
@@ -532,13 +532,13 @@ function CloseForm({
       )}
 
       <label className="block">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">{payments.notePlaceholder}</span>
+        <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{payments.notePlaceholder}</span>
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
           maxLength={300}
           placeholder={payments.noteExample}
-          className="mt-1 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5"
+          className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5"
         />
       </label>
 
@@ -554,7 +554,7 @@ function CloseForm({
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-full border border-slate-200 px-5 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+            className="rounded-full border border-slate-200 dark:border-slate-700 px-5 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
           >
             {payments.cancel}
           </button>
@@ -577,20 +577,20 @@ function MemberBalances({
   const columns = hasOpening ? 10 : 9;
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{payments.memberBalances}</h2>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {hasOpening ? payments.balanceFormulaWithCarryIn : payments.balanceFormula}
       </p>
 
       {members.length === 0 ? (
-        <p className="mt-4 text-slate-500">{payments.noMembersThisMonth}</p>
+        <p className="mt-4 text-slate-500 dark:text-slate-400">{payments.noMembersThisMonth}</p>
       ) : (
         <>
           <div className="mt-4 hidden overflow-x-auto md:block">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <th className="px-3 py-2">{payments.member}</th>
                   <th className="px-3 py-2 text-right">{payments.meals}</th>
                   {hasOpening && <th className="px-3 py-2 text-right">{payments.broughtForward}</th>}
@@ -605,24 +605,24 @@ function MemberBalances({
               </thead>
               <tbody>
                 {members.map((m) => (
-                  <tr key={m.id} className="border-b border-slate-100 last:border-0">
+                  <tr key={m.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
                     <td className="px-3 py-3 font-medium">
                       {m.name}
-                      {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">({strings.common.you})</span>}
+                      {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">({strings.common.you})</span>}
                       {!m.isActive && (
-                        <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                        <span className="ml-2 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                           {payments.left}
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-3 text-right text-slate-600">{m.meals}</td>
-                    {hasOpening && <td className="px-3 py-3 text-right text-slate-600">{taka(m.carryIn)}</td>}
-                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.mealCost)}</td>
-                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.billShare)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{m.meals}</td>
+                    {hasOpening && <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.carryIn)}</td>}
+                    <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.mealCost)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.billShare)}</td>
                     <td className="px-3 py-3 text-right font-medium">{taka(m.cost)}</td>
-                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.bazarPaid)}</td>
-                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.collected)}</td>
-                    <td className={`px-3 py-3 text-right font-semibold ${m.due > 0.005 ? 'text-red-600' : 'text-green-600'}`}>
+                    <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.bazarPaid)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.collected)}</td>
+                    <td className={`px-3 py-3 text-right font-semibold ${m.due > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                       {taka(Math.abs(m.due))}
                       {m.due < -0.005 && <span className="ml-1 text-xs font-normal">{payments.refund}</span>}
                     </td>
@@ -633,7 +633,7 @@ function MemberBalances({
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-slate-200 text-sm font-semibold">
+                <tr className="border-t-2 border-slate-200 dark:border-slate-700 text-sm font-semibold">
                   <td className="px-3 py-3">{payments.groupTotal}</td>
                   <td className="px-3 py-3 text-right">{totals.meals}</td>
                   {hasOpening && <td className="px-3 py-3 text-right">{taka(totals.carryIn)}</td>}
@@ -646,7 +646,7 @@ function MemberBalances({
                   <td />
                 </tr>
                 <tr>
-                  <td colSpan={columns} className="px-3 pb-1 pt-2 text-xs font-normal text-slate-500">
+                  <td colSpan={columns} className="px-3 pb-1 pt-2 text-xs font-normal text-slate-500 dark:text-slate-400">
                     {payments.footerFootnote(taka(totals.bazar), taka(totals.bills))}
                   </td>
                 </tr>
@@ -655,11 +655,11 @@ function MemberBalances({
           </div>
           <ul className="mt-4 space-y-3 md:hidden">
             {members.map((m) => (
-              <li key={m.id} className="rounded-2xl border border-slate-200 p-4">
+              <li key={m.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-medium">
                     {m.name}
-                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">({strings.common.you})</span>}
+                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">({strings.common.you})</span>}
                   </p>
                   <StatusBadge status={m.status} />
                 </div>
@@ -672,9 +672,9 @@ function MemberBalances({
                   <Field label={payments.boughtGroceries} value={taka(m.bazarPaid)} />
                   <Field label={payments.cashPaid} value={taka(m.collected)} />
                 </dl>
-                <div className="mt-3 flex items-baseline justify-between border-t border-slate-100 pt-3">
-                  <span className="text-sm text-slate-500">{m.due < -0.005 ? payments.refundOwed : payments.due}</span>
-                  <span className={`text-base font-semibold ${m.due > 0.005 ? 'text-red-600' : 'text-green-600'}`}>
+                <div className="mt-3 flex items-baseline justify-between border-t border-slate-100 dark:border-slate-700 pt-3">
+                  <span className="text-sm text-slate-500 dark:text-slate-400">{m.due < -0.005 ? payments.refundOwed : payments.due}</span>
+                  <span className={`text-base font-semibold ${m.due > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                     {taka(Math.abs(m.due))}
                   </span>
                 </div>
@@ -705,18 +705,18 @@ function MemberCostBreakdown({
     .sort((a, b) => byType[b] - byType[a]);
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{payments.whoIsChargedWhat}</h2>
-      <p className="mt-1 text-sm text-slate-500">{payments.whoIsChargedWhatHint}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{payments.whoIsChargedWhatHint}</p>
 
       {members.length === 0 ? (
-        <p className="mt-4 text-slate-500">{payments.noMembersThisMonth}</p>
+        <p className="mt-4 text-slate-500 dark:text-slate-400">{payments.noMembersThisMonth}</p>
       ) : (
         <>
           <div className="mt-4 hidden overflow-x-auto lg:block">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <th className="px-3 py-2">{payments.member}</th>
                   <th className="px-3 py-2 text-right">{payments.meals}</th>
                   <th className="px-3 py-2 text-right">{payments.bazarBought}</th>
@@ -731,16 +731,16 @@ function MemberCostBreakdown({
               </thead>
               <tbody>
                 {members.map((m) => (
-                  <tr key={m.id} className="border-b border-slate-100 last:border-0">
+                  <tr key={m.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
                     <td className="px-3 py-3 font-medium">
                       {m.name}
-                      {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">({strings.common.you})</span>}
+                      {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">({strings.common.you})</span>}
                     </td>
-                    <td className="px-3 py-3 text-right text-slate-600">{m.meals}</td>
-                    <td className="px-3 py-3 text-right font-medium text-green-700">{taka(m.bazarPaid)}</td>
-                    <td className="px-3 py-3 text-right text-slate-600">{taka(m.mealCost)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{m.meals}</td>
+                    <td className="px-3 py-3 text-right font-medium text-green-700 dark:text-green-400">{taka(m.bazarPaid)}</td>
+                    <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.mealCost)}</td>
                     {types.map((code) => (
-                      <td key={code} className="px-3 py-3 text-right text-slate-600">
+                      <td key={code} className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">
                         {taka(m.billShareByType?.[code] ?? 0)}
                       </td>
                     ))}
@@ -749,10 +749,10 @@ function MemberCostBreakdown({
                 ))}
               </tbody>
               <tfoot>
-                <tr className="border-t-2 border-slate-200 font-semibold">
+                <tr className="border-t-2 border-slate-200 dark:border-slate-700 font-semibold">
                   <td className="px-3 py-3">{payments.groupTotal}</td>
                   <td className="px-3 py-3 text-right">{totals.meals}</td>
-                  <td className="px-3 py-3 text-right text-green-700">{taka(sum(members, (m) => m.bazarPaid))}</td>
+                  <td className="px-3 py-3 text-right text-green-700 dark:text-green-400">{taka(sum(members, (m) => m.bazarPaid))}</td>
                   <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.mealCost))}</td>
                   {types.map((code) => (
                     <td key={code} className="px-3 py-3 text-right">
@@ -767,11 +767,11 @@ function MemberCostBreakdown({
 
           <ul className="mt-4 space-y-3 lg:hidden">
             {members.map((m) => (
-              <li key={m.id} className="rounded-2xl border border-slate-200 p-4">
+              <li key={m.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-medium">
                     {m.name}
-                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">({strings.common.you})</span>}
+                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">({strings.common.you})</span>}
                   </p>
                   <span className="text-sm font-semibold">{taka(m.mealCost + m.billShare)}</span>
                 </div>
@@ -810,22 +810,22 @@ function MealRateBreakdown({
   const bazarBuyers = members.filter((m) => m.bazarPaid > 0.005);
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">{payments.mealRateTitle}</h2>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+        <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-400">
           {daily ? payments.pricedDayByDay : payments.oneRateForMonth}
         </span>
       </div>
 
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
         {payments.monthRateFormula(taka(totals.bazar), totals.meals)}
-        <span className="font-semibold text-slate-900">{taka(totals.mealRate)}</span>
+        <span className="font-semibold text-slate-900 dark:text-slate-100">{taka(totals.mealRate)}</span>
         {payments.monthRateSuffix}
       </p>
 
       {daily && (
-        <p className="mt-3 rounded-xl bg-slate-50 px-4 py-3 text-sm leading-relaxed text-slate-600">
+        <p className="mt-3 rounded-xl bg-slate-50 dark:bg-slate-900 px-4 py-3 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
           {payments.dailyExplanationPre}
           {taka(totals.averageDayRate)}
           {payments.dailyExplanationMid(totals.pricedDays)}
@@ -833,18 +833,18 @@ function MealRateBreakdown({
       )}
 
       {daily && totals.unallocatedBazar > 0.005 && (
-        <p className="mt-3 rounded-xl bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
+        <p className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 px-4 py-2.5 text-sm text-amber-800 dark:text-amber-300">
           {payments.unallocatedNote(taka(totals.unallocatedBazar))}
         </p>
       )}
 
       {priced.length === 0 ? (
-        <p className="mt-4 text-slate-500">{payments.nothingRecordedYet}</p>
+        <p className="mt-4 text-slate-500 dark:text-slate-400">{payments.nothingRecordedYet}</p>
       ) : (
-        <div className="mt-4 max-h-80 overflow-auto rounded-2xl border border-slate-100">
+        <div className="mt-4 max-h-80 overflow-auto rounded-2xl border border-slate-100 dark:border-slate-700">
           <table className="min-w-full text-sm">
-            <thead className="sticky top-0 bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="sticky top-0 bg-slate-50 dark:bg-slate-900">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <th className="px-3 py-2">{payments.colDay}</th>
                 <th className="px-3 py-2 text-right">{payments.meals}</th>
                 <th className="px-3 py-2 text-right">{payments.colBazarSpent}</th>
@@ -860,17 +860,17 @@ function MealRateBreakdown({
             </thead>
             <tbody>
               {priced.map((day) => (
-                <tr key={day.date} className="border-t border-slate-100">
+                <tr key={day.date} className="border-t border-slate-100 dark:border-slate-700">
                   <td className="px-3 py-2 font-medium">{day.date}</td>
-                  <td className="px-3 py-2 text-right text-slate-600">{day.meals}</td>
-                  <td className="px-3 py-2 text-right text-slate-600">{day.bazar > 0 ? taka(day.bazar) : '—'}</td>
+                  <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-400">{day.meals}</td>
+                  <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-400">{day.bazar > 0 ? taka(day.bazar) : '—'}</td>
                   {daily && (
-                    <td className="px-3 py-2 text-right text-slate-600">{day.charged > 0 ? taka(day.charged) : '—'}</td>
+                    <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-400">{day.charged > 0 ? taka(day.charged) : '—'}</td>
                   )}
-                  <td className="px-3 py-2 text-right font-medium text-slate-900">
+                  <td className="px-3 py-2 text-right font-medium text-slate-900 dark:text-slate-100">
                     {day.meals > 0 ? taka(day.rate) : '—'}
                   </td>
-                  <td className="px-3 py-2 text-right text-slate-600">
+                  <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-400">
                     {day.runningRate > 0 ? taka(day.runningRate) : '—'}
                   </td>
                   <td className="px-3 py-2 text-right font-medium">{day.meals > 0 ? taka(day.cost) : '—'}</td>
@@ -878,7 +878,7 @@ function MealRateBreakdown({
               ))}
             </tbody>
             <tfoot className="sticky bottom-0">
-              <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
+              <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 font-semibold">
                 <td className="px-3 py-2">{payments.total}</td>
                 <td className="px-3 py-2 text-right">{totals.meals}</td>
                 <td className="px-3 py-2 text-right">{taka(totals.bazar)}</td>
@@ -895,15 +895,15 @@ function MealRateBreakdown({
       )}
 
       <h3 className="mt-6 text-sm font-semibold">{payments.bazarByMemberTitle}</h3>
-      <p className="mt-1 text-sm text-slate-500">{payments.bazarByMemberHint}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{payments.bazarByMemberHint}</p>
 
       {bazarBuyers.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500">{payments.noBazarRecorded}</p>
+        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{payments.noBazarRecorded}</p>
       ) : (
-        <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-100">
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-700">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
+            <thead className="bg-slate-50 dark:bg-slate-900">
+              <tr className="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <th className="px-3 py-2">{payments.colMember}</th>
                 <th className="px-3 py-2 text-right">{payments.bazarBought}</th>
                 <th className="px-3 py-2 text-right">{payments.colShareOfBazar}</th>
@@ -912,23 +912,23 @@ function MealRateBreakdown({
             </thead>
             <tbody>
               {bazarBuyers.map((m) => (
-                <tr key={m.id} className="border-t border-slate-100">
+                <tr key={m.id} className="border-t border-slate-100 dark:border-slate-700">
                   <td className="px-3 py-2 font-medium">
                     {m.name}
-                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600">({strings.common.you})</span>}
+                    {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">({strings.common.you})</span>}
                   </td>
-                  <td className="px-3 py-2 text-right font-medium text-green-700">{taka(m.bazarPaid)}</td>
-                  <td className="px-3 py-2 text-right text-slate-600">
+                  <td className="px-3 py-2 text-right font-medium text-green-700 dark:text-green-400">{taka(m.bazarPaid)}</td>
+                  <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-400">
                     {totals.bazar > 0 ? `${Math.round((m.bazarPaid / totals.bazar) * 100)}%` : '—'}
                   </td>
-                  <td className="px-3 py-2 text-right text-slate-600">
+                  <td className="px-3 py-2 text-right text-slate-600 dark:text-slate-400">
                     {totals.meals > 0 ? taka(m.bazarPaid / totals.meals) : '—'}
                   </td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-slate-200 bg-slate-50 font-semibold">
+              <tr className="border-t-2 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 font-semibold">
                 <td className="px-3 py-2">{payments.total}</td>
                 <td className="px-3 py-2 text-right">{taka(sum(bazarBuyers, (m) => m.bazarPaid))}</td>
                 <td className="px-3 py-2 text-right">100%</td>
@@ -956,20 +956,20 @@ function PaymentLog({
   const total = paymentRows.reduce((sum, p) => sum + p.amount, 0);
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">{payments.received}</h2>
-        <p className="text-sm text-slate-500">{payments.countSummary(paymentRows.length, taka(total))}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{payments.countSummary(paymentRows.length, taka(total))}</p>
       </div>
       {paymentRows.length === 0 ? (
-        <p className="mt-4 text-slate-500">{payments.noPaymentsRecorded}</p>
+        <p className="mt-4 text-slate-500 dark:text-slate-400">{payments.noPaymentsRecorded}</p>
       ) : (
         <>
-        <ul className="mt-4 divide-y divide-slate-100">
+        <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
           {paymentRows.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
               <div className="min-w-0">
-                <p className={`font-medium ${p.isReversed ? 'text-slate-400 line-through' : ''}`}>
+                <p className={`font-medium ${p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : ''}`}>
                   {p.userName}
                   {p.billId && (
                     <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
@@ -982,15 +982,15 @@ function PaymentLog({
                     </span>
                   )}
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   {p.date}
-                  {p.isReversed && <span className="ml-2 text-xs text-slate-400">{payments.reversedBadge}</span>}
+                  {p.isReversed && <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">{payments.reversedBadge}</span>}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <span
                   className={`font-semibold tabular-nums ${
-                    p.amount < 0 ? 'text-rose-600' : p.isReversed ? 'text-slate-400 line-through' : 'text-green-600'
+                    p.amount < 0 ? 'text-rose-600' : p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-green-600 dark:text-green-400'
                   }`}
                 >
                   {p.amount < 0 ? `−${taka(Math.abs(p.amount))}` : taka(p.amount)}
@@ -998,7 +998,7 @@ function PaymentLog({
                 {canManage && !p.isReversal && !p.isReversed && (
                   <button
                     onClick={() => onRemove(p.id)}
-                    className="rounded-full border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
+                    className="rounded-full border border-red-200 dark:border-red-500/30 px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50"
                   >
                     {payments.reverse}
                   </button>
@@ -1007,7 +1007,7 @@ function PaymentLog({
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-xs text-slate-400">{payments.neverEditedFootnote}</p>
+        <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">{payments.neverEditedFootnote}</p>
         </>
       )}
     </div>
@@ -1016,9 +1016,9 @@ function PaymentLog({
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    [PAYMENT_STATUS.PAID]: 'bg-green-50 text-green-700 ring-green-600/20',
-    [PAYMENT_STATUS.PARTIAL]: 'bg-amber-50 text-amber-700 ring-amber-600/20',
-    [PAYMENT_STATUS.PENDING]: 'bg-red-50 text-red-700 ring-red-600/20',
+    [PAYMENT_STATUS.PAID]: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-green-600/20',
+    [PAYMENT_STATUS.PARTIAL]: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-amber-600/20',
+    [PAYMENT_STATUS.PENDING]: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-red-600/20',
     [PAYMENT_STATUS.REFUND]: 'bg-sky-50 text-sky-700 ring-sky-600/20'
   };
   const label: Record<string, string> = {
@@ -1035,10 +1035,10 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' }) {
-  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : 'text-slate-900';
+  const color = tone === 'green' ? 'text-green-600 dark:text-green-400' : tone === 'red' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100';
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
-      <p className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</p>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-5">
+      <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</p>
       <p className={`mt-1 text-xl font-semibold sm:text-2xl ${color}`}>{value}</p>
     </div>
   );
@@ -1047,12 +1047,12 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: 'gr
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs text-slate-500">{label}</dt>
+      <dt className="text-xs text-slate-500 dark:text-slate-400">{label}</dt>
       <dd className="font-medium">{value}</dd>
     </div>
   );
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm text-slate-600 sm:p-6">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm text-slate-600 dark:text-slate-400 sm:p-6">{children}</div>;
 }

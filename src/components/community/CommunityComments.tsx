@@ -123,9 +123,9 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
   return (
     <div className="space-y-4">
       {loading ? (
-        <p className="text-sm text-slate-400">{strings.common.loading}</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500">{strings.common.loading}</p>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-slate-400">{strings.community.comments.empty}</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500">{strings.community.comments.empty}</p>
       ) : (
         <ul className="space-y-3">
           {comments.map((comment) => (
@@ -133,12 +133,12 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
               <div className="flex gap-3">
                 <Avatar name={comment.userName} image={comment.userImage} size="sm" />
                 <div className="min-w-0 flex-1">
-                  <div className="rounded-2xl bg-slate-50 px-4 py-2.5">
+                  <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 px-4 py-2.5">
                     <div className="flex items-baseline justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-slate-900">{comment.userName}</p>
-                      <span className="shrink-0 text-xs text-slate-400">{timeAgo(comment.createdAt)}</span>
+                      <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{comment.userName}</p>
+                      <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{timeAgo(comment.createdAt)}</span>
                     </div>
-                    <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-slate-700">{comment.text}</p>
+                    <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-slate-700 dark:text-slate-300">{comment.text}</p>
                   </div>
 
                   <div className="mt-1 flex items-center gap-3 px-1">
@@ -148,7 +148,7 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
                         setReplyFor(comment.id);
                         setReplyText('');
                       }}
-                      className="text-xs font-medium text-slate-500 hover:text-slate-700"
+                      className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700"
                     >
                       {strings.community.comments.reply}
                     </button>
@@ -156,7 +156,7 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
                       <button
                         type="button"
                         onClick={() => void removeComment(comment)}
-                        className="text-xs font-medium text-slate-400 hover:text-red-600"
+                        className="text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-600"
                       >
                         {strings.community.comments.deleteComment}
                       </button>
@@ -164,23 +164,23 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
                   </div>
 
                   {comment.replies.length > 0 && (
-                    <ul className="mt-2 space-y-2 border-l-2 border-slate-100 pl-4">
+                    <ul className="mt-2 space-y-2 border-l-2 border-slate-100 dark:border-slate-700 pl-4">
                       {comment.replies.map((reply) => (
                         <li key={reply.id} className="flex gap-2.5">
                           <Avatar name={reply.userName} image={reply.userImage} size="sm" />
                           <div className="min-w-0 flex-1">
-                            <div className="rounded-2xl bg-slate-50 px-3.5 py-2">
+                            <div className="rounded-2xl bg-slate-50 dark:bg-slate-900 px-3.5 py-2">
                               <div className="flex items-baseline justify-between gap-2">
-                                <p className="truncate text-xs font-semibold text-slate-900">{reply.userName}</p>
-                                <span className="shrink-0 text-xs text-slate-400">{timeAgo(reply.createdAt)}</span>
+                                <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">{reply.userName}</p>
+                                <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{timeAgo(reply.createdAt)}</span>
                               </div>
-                              <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-slate-700">{reply.text}</p>
+                              <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-slate-700 dark:text-slate-300">{reply.text}</p>
                             </div>
                             {(canModerate || reply.userId === user?.id) && (
                               <button
                                 type="button"
                                 onClick={() => void removeReply(comment, reply.id)}
-                                className="mt-1 px-1 text-xs font-medium text-slate-400 hover:text-red-600"
+                                className="mt-1 px-1 text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-red-600"
                               >
                                 {strings.community.comments.deleteReply}
                               </button>
@@ -198,7 +198,7 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
                         onChange={(event) => setReplyText(event.target.value)}
                         rows={1}
                         placeholder={strings.community.comments.replyPlaceholder}
-                        className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-3.5 py-2 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+                        className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
                       />
                       <Button
                         size="sm"
@@ -227,7 +227,7 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
               rows={2}
               maxLength={communityConfig.maxMessageLength}
               placeholder={strings.community.comments.placeholder}
-              className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+              className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
             />
             <div className="mt-2 flex justify-end">
               <Button size="sm" onClick={() => void submit()} disabled={!text.trim()} loading={posting}>

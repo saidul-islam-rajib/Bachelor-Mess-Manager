@@ -92,7 +92,7 @@ export default function MemberProfile({ userId, onClose }: MemberProfileProps) {
       {loading && <Loader />}
 
       {!loading && error && (
-        <p className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>
+        <p className="rounded-2xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-400">{error}</p>
       )}
 
       {!loading && !error && member && (
@@ -123,11 +123,11 @@ export default function MemberProfile({ userId, onClose }: MemberProfileProps) {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 p-4">
-            <h4 className="text-xs uppercase tracking-wide text-slate-500">{copy.contact}</h4>
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
+            <h4 className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{copy.contact}</h4>
             <dl className="mt-3 space-y-2 text-sm">
               <div className="flex flex-wrap justify-between gap-2">
-                <dt className="text-slate-500">{copy.email}</dt>
+                <dt className="text-slate-500 dark:text-slate-400">{copy.email}</dt>
                 <dd className="min-w-0 break-all font-medium">
                   <a className="hover:underline" href={`mailto:${member.email}`}>
                     {member.email}
@@ -135,35 +135,35 @@ export default function MemberProfile({ userId, onClose }: MemberProfileProps) {
                 </dd>
               </div>
               <div className="flex flex-wrap justify-between gap-2">
-                <dt className="text-slate-500">{copy.phone}</dt>
+                <dt className="text-slate-500 dark:text-slate-400">{copy.phone}</dt>
                 <dd className="font-medium">
                   {member.phone ? (
                     <a className="hover:underline" href={`tel:${member.phone}`}>
                       {member.phone}
                     </a>
                   ) : (
-                    <span className="text-slate-400">{copy.phoneMissing}</span>
+                    <span className="text-slate-400 dark:text-slate-500">{copy.phoneMissing}</span>
                   )}
                 </dd>
               </div>
               <div className="flex flex-wrap justify-between gap-2">
-                <dt className="text-slate-500">{copy.memberSince}</dt>
+                <dt className="text-slate-500 dark:text-slate-400">{copy.memberSince}</dt>
                 <dd className="font-medium">{formatInstant(member.memberSince, 'date')}</dd>
               </div>
             </dl>
           </div>
 
           <div>
-            <h4 className="text-xs uppercase tracking-wide text-slate-500">{copy.inMesses}</h4>
+            <h4 className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{copy.inMesses}</h4>
 
             {member.groups.length === 0 ? (
-              <p className="mt-3 text-sm text-slate-500">{copy.noSharedGroups}</p>
+              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">{copy.noSharedGroups}</p>
             ) : (
               <ul className="mt-3 space-y-2">
                 {member.groups.map((group) => (
                   <li
                     key={group.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 px-4 py-3"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 dark:border-slate-700 px-4 py-3"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">
@@ -174,7 +174,7 @@ export default function MemberProfile({ userId, onClose }: MemberProfileProps) {
                           </Badge>
                         )}
                       </p>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                         {group.isActive
                           ? copy.activeSince(formatInstant(group.joinedAt, 'date'))
                           : group.leftAt
@@ -182,7 +182,7 @@ export default function MemberProfile({ userId, onClose }: MemberProfileProps) {
                             : strings.members.noLongerActive}
                       </p>
                     </div>
-                    <span className="shrink-0 text-sm font-medium text-slate-600">
+                    <span className="shrink-0 text-sm font-medium text-slate-600 dark:text-slate-400">
                       {formatStay(group.stayDays)}
                     </span>
                   </li>

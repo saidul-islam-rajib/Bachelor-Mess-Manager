@@ -123,11 +123,11 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
     <div className="space-y-6">
       <Card>
         <h2 className="text-lg font-semibold">{strings.groups.statusTitle}</h2>
-        <p className="mt-1 text-sm text-slate-500">{strings.groups.statusHint}</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.groups.statusHint}</p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <span
             className={`rounded-full px-3 py-1 text-sm ${
-              group.status === GROUP_STATUS.ACTIVE ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'
+              group.status === GROUP_STATUS.ACTIVE ? 'bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
             }`}
           >
             {group.status}
@@ -138,7 +138,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
             disabled={busy}
             className={`rounded-full px-5 py-2 text-sm transition-colors disabled:opacity-50 ${
               group.status === GROUP_STATUS.ACTIVE
-                ? 'border border-red-200 text-red-600 hover:bg-red-50'
+                ? 'border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 hover:bg-red-50'
                 : 'bg-brand-600 shadow-sm shadow-brand-600/20 text-white hover:bg-brand-700 transition-all active:translate-y-px'
             }`}
           >
@@ -170,7 +170,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
 
       <Card>
         <h2 className="text-lg font-semibold">{strings.groups.costRulesTitle}</h2>
-        <p className="mt-1 text-sm text-slate-500">{strings.groups.costRulesHint}</p>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.groups.costRulesHint}</p>
 
         <Listbox
           className="mt-4 block max-w-md"
@@ -183,7 +183,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
             { value: MEAL_RATE_MODES.DAILY, label: strings.groups.rateDaily }
           ]}
         />
-        <p className="mt-2 max-w-xl text-xs text-slate-500">
+        <p className="mt-2 max-w-xl text-xs text-slate-500 dark:text-slate-400">
           {group.mealRateMode === MEAL_RATE_MODES.DAILY
             ? strings.groups.rateDailyHint
             : strings.groups.rateMonthlyHint}
@@ -201,18 +201,18 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
                 strings.groups.settingFailed
               )
             }
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
           />
           <span>
             <span className="text-sm font-medium">{strings.groups.carryLabel}</span>
-            <span className="mt-0.5 block text-xs text-slate-500">{strings.groups.carryHint}</span>
+            <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">{strings.groups.carryHint}</span>
           </span>
         </label>
       </Card>
 
       <Card>
         <h2 className="text-lg font-semibold">{strings.groups.pastMealsTitle}</h2>
-        <p className="mt-1 max-w-2xl text-sm text-slate-500">{strings.groups.pastMealsHint}</p>
+        <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">{strings.groups.pastMealsHint}</p>
 
         <Listbox
           className="mt-4 block max-w-md"
@@ -247,7 +247,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
           ]}
         />
 
-        <p className="mt-2 max-w-2xl text-xs text-slate-500">
+        <p className="mt-2 max-w-2xl text-xs text-slate-500 dark:text-slate-400">
           {policy?.requiresApproval ? strings.groups.pastMealsRequiredHint : strings.groups.pastMealsAutoHint}
         </p>
       </Card>
@@ -255,7 +255,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
       {isAdmin && supervisors && (
         <Card>
           <h2 className="text-lg font-semibold">{strings.groups.supervisorsForThisMess}</h2>
-          <p className="mt-1 max-w-2xl text-sm text-slate-500">
+          <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
             {strings.groups.supervisorsForThisMessHint}
           </p>
 
@@ -281,7 +281,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
             ]}
           />
 
-          <p className="mt-2 max-w-2xl text-xs text-slate-500">
+          <p className="mt-2 max-w-2xl text-xs text-slate-500 dark:text-slate-400">
             {strings.groups.usingOfMax(supervisors.supervisors.length, supervisors.maxSupervisors)}{' '}
             {supervisors.canAddMore
               ? strings.groups.addSecondFromRoster
@@ -320,18 +320,18 @@ function MealWeights({
   return (
     <Card>
       <h2 className="text-lg font-semibold">{strings.groups.mealWeightsTitle}</h2>
-      <p className="mt-1 text-sm text-slate-500">{strings.groups.mealWeightsHint}</p>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.groups.mealWeightsHint}</p>
       <form className="mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto]" onSubmit={submit}>
         {fields.map((field) => (
           <label key={field.label} className="text-sm">
-            <span className="text-slate-600">{field.label}</span>
+            <span className="text-slate-600 dark:text-slate-400">{field.label}</span>
             <input
               type="number"
               min="0"
               step="0.1"
               value={field.value}
               onChange={(event) => field.set(event.target.value)}
-              className="mt-1 w-full rounded-xl border border-slate-300 bg-slate-50 px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2"
             />
           </label>
         ))}
@@ -348,5 +348,5 @@ function MealWeights({
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">{children}</div>;
+  return <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">{children}</div>;
 }

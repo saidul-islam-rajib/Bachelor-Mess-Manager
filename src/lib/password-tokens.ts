@@ -15,7 +15,7 @@ function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-export function publicBaseUrl(req: NextApiRequest): string {
+export function publicBaseUrl(req: { headers: NextApiRequest['headers'] }): string {
   if (appUrlConfig.publicUrl) return appUrlConfig.publicUrl.replace(/\/+$/, '');
 
   const forwardedProto = req.headers['x-forwarded-proto'];

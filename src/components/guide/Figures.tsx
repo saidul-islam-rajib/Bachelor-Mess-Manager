@@ -15,10 +15,10 @@ type FigureProps = { title: string; caption: string; children: React.ReactNode }
 
 export function Figure({ title, caption, children }: FigureProps) {
   return (
-    <figure className="mt-6 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+    <figure className="mt-6 overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
       <div className="overflow-x-auto p-4 sm:p-6">{children}</div>
-      <figcaption className="border-t border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600 sm:px-6">
-        <span className="font-medium text-slate-900">{title}.</span> {caption}
+      <figcaption className="border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-sm text-slate-600 dark:text-slate-400 sm:px-6">
+        <span className="font-medium text-slate-900 dark:text-slate-100">{title}.</span> {caption}
       </figcaption>
     </figure>
   );

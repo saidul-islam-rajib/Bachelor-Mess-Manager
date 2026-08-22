@@ -65,15 +65,15 @@ function AppFrame({ path, label, children }: { path: string; label: string; chil
     <div
       role="img"
       aria-label={label}
-      className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10"
+      className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-xl shadow-slate-900/10"
     >
-      <div className="flex items-center gap-2 border-b border-slate-200 bg-slate-100 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
         <div className="flex gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
           <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
           <span className="h-2.5 w-2.5 rounded-full bg-slate-300" />
         </div>
-        <div className="min-w-0 flex-1 truncate rounded-full bg-white px-3 py-1 text-[10px] text-slate-400 sm:text-[11px]">
+        <div className="min-w-0 flex-1 truncate rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-[10px] text-slate-400 dark:text-slate-500 sm:text-[11px]">
           {path}
         </div>
       </div>
@@ -85,17 +85,17 @@ function AppFrame({ path, label, children }: { path: string; label: string; chil
 function PreviewHeading({ title, meta }: { title: string; meta?: string }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
-      {meta && <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-500">{meta}</span>}
+      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+      {meta && <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-[11px] text-slate-500 dark:text-slate-400">{meta}</span>}
     </div>
   );
 }
 
 function Tile({ label, value, tone }: { label: string; value: string; tone?: 'green' | 'red' }) {
-  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : 'text-slate-900';
+  const color = tone === 'green' ? 'text-green-600 dark:text-green-400' : tone === 'red' ? 'text-red-600 dark:text-red-400' : 'text-slate-900 dark:text-slate-100';
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-2.5 sm:p-3">
-      <div className="text-[9px] uppercase leading-tight tracking-wide text-slate-500 sm:text-[10px]">{label}</div>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-2.5 sm:p-3">
+      <div className="text-[9px] uppercase leading-tight tracking-wide text-slate-500 dark:text-slate-400 sm:text-[10px]">{label}</div>
       <div className={`mt-1 truncate text-sm font-semibold tabular-nums sm:text-lg ${color}`}>{value}</div>
     </div>
   );
@@ -104,8 +104,8 @@ function Tile({ label, value, tone }: { label: string; value: string; tone?: 'gr
 function FieldMock({ label, value }: { label: string; value: string }) {
   return (
     <label className="block">
-      <span className="text-[9px] font-medium uppercase tracking-wide text-slate-400 sm:text-[10px]">{label}</span>
-      <span className="mt-1 block truncate rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+      <span className="text-[9px] font-medium uppercase tracking-wide text-slate-400 dark:text-slate-500 sm:text-[10px]">{label}</span>
+      <span className="mt-1 block truncate rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-2 text-xs text-slate-700 dark:text-slate-300">
         {value}
       </span>
     </label>
@@ -142,21 +142,21 @@ export function DashboardPreview() {
         />
       </div>
 
-      <div className="mt-4 rounded-2xl border border-slate-200 p-3">
-        <div className="text-[11px] font-medium text-slate-500">{strings.dashboard.whereMoneyWent}</div>
+      <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+        <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{strings.dashboard.whereMoneyWent}</div>
         <ul className="mt-3 space-y-2">
           {SPEND_BREAKDOWN.map((row) => (
             <li key={row.label} className="flex items-center gap-2 sm:gap-3">
-              <span className="w-14 shrink-0 truncate text-[10px] text-slate-600 sm:w-20 sm:text-[11px]">
+              <span className="w-14 shrink-0 truncate text-[10px] text-slate-600 dark:text-slate-400 sm:w-20 sm:text-[11px]">
                 {row.label}
               </span>
-              <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100">
+              <span className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                 <span
                   className="block h-full rounded-full bg-brand-600"
                   style={{ width: `${Math.round((row.amount / maxAmount) * 100)}%` }}
                 />
               </span>
-              <span className="w-16 shrink-0 text-right text-[10px] tabular-nums text-slate-500 sm:w-20 sm:text-[11px]">
+              <span className="w-16 shrink-0 text-right text-[10px] tabular-nums text-slate-500 dark:text-slate-400 sm:w-20 sm:text-[11px]">
                 {formatCurrency(row.amount)}
               </span>
             </li>
@@ -164,14 +164,14 @@ export function DashboardPreview() {
         </ul>
       </div>
 
-      <div className="mt-3 rounded-2xl border border-slate-200 p-3">
-        <div className="text-[11px] font-medium text-slate-500">{strings.dashboard.whoOwes}</div>
-        <ul className="mt-2 divide-y divide-slate-100">
+      <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+        <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400">{strings.dashboard.whoOwes}</div>
+        <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-700">
           {owing.map((row) => (
             <li key={row.name} className="flex items-center gap-3 py-2">
               <Avatar name={row.name} size="sm" />
-              <span className="min-w-0 flex-1 truncate text-xs text-slate-700">{row.name}</span>
-              <span className="text-xs font-semibold tabular-nums text-red-600">{formatCurrency(row.due)}</span>
+              <span className="min-w-0 flex-1 truncate text-xs text-slate-700 dark:text-slate-300">{row.name}</span>
+              <span className="text-xs font-semibold tabular-nums text-red-600 dark:text-red-400">{formatCurrency(row.due)}</span>
             </li>
           ))}
         </ul>
@@ -192,7 +192,7 @@ export function MealsPreview() {
     <AppFrame path="bachelor-point.app/meals" label={strings.landing.screens.meals.title}>
       <PreviewHeading title={strings.meals.title} meta="12 Jul 2026" />
 
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-2 text-[9px] uppercase tracking-wide text-slate-400 sm:gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 pb-2 text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500 sm:gap-3">
         <span>{strings.common.member}</span>
         <span className="grid grid-cols-3 gap-1.5 text-center">
           {columns.map((column) => (
@@ -204,7 +204,7 @@ export function MealsPreview() {
         </span>
       </div>
 
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-slate-100 dark:divide-slate-700">
         {MEAL_ROWS.map((row) => (
           <li
             key={row.name}
@@ -212,7 +212,7 @@ export function MealsPreview() {
           >
             <span className="flex min-w-0 items-center gap-2">
               <Avatar name={row.name} size="sm" className="hidden sm:flex" />
-              <span className="truncate text-[11px] text-slate-700 sm:text-xs">{row.name}</span>
+              <span className="truncate text-[11px] text-slate-700 dark:text-slate-300 sm:text-xs">{row.name}</span>
             </span>
             <span className="grid grid-cols-3 gap-1.5">
               {columns.map((column) => (
@@ -221,7 +221,7 @@ export function MealsPreview() {
                   className={`flex h-7 w-10 items-center justify-center rounded-full text-[11px] font-medium sm:w-16 ${
                     row[column.key]
                       ? 'bg-brand-600 text-white'
-                      : 'border border-dashed border-slate-200 text-slate-300'
+                      : 'border border-dashed border-slate-200 dark:border-slate-700 text-slate-300 dark:text-slate-600'
                   }`}
                 >
                   {row[column.key] ? '✓' : '–'}
@@ -232,11 +232,11 @@ export function MealsPreview() {
         ))}
       </ul>
 
-      <div className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 px-3 py-2.5">
-        <span className="text-[11px] text-slate-500">{strings.meals.totalMeals}</span>
-        <span className="text-sm font-semibold tabular-nums text-slate-900">{total}</span>
+      <div className="mt-3 flex items-center justify-between rounded-2xl bg-slate-50 dark:bg-slate-900 px-3 py-2.5">
+        <span className="text-[11px] text-slate-500 dark:text-slate-400">{strings.meals.totalMeals}</span>
+        <span className="text-sm font-semibold tabular-nums text-slate-900 dark:text-slate-100">{total}</span>
       </div>
-      <p className="mt-2 text-[11px] text-slate-400">{strings.meals.pastLocked}</p>
+      <p className="mt-2 text-[11px] text-slate-400 dark:text-slate-500">{strings.meals.pastLocked}</p>
     </AppFrame>
   );
 }
@@ -248,35 +248,35 @@ export function BazarPreview() {
     <AppFrame path="bachelor-point.app/expenses" label={strings.landing.screens.bazar.title}>
       <PreviewHeading title={strings.expenses.title} meta="11 Jul 2026" />
 
-      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-3">
+      <div className="flex items-center gap-3 rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
         <Avatar name={MEMBERS[0]} size="md" />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-xs font-medium text-slate-900">{MEMBERS[0]}</div>
-          <div className="text-[11px] text-slate-500">{strings.payments.boughtGroceries}</div>
+          <div className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{MEMBERS[0]}</div>
+          <div className="text-[11px] text-slate-500 dark:text-slate-400">{strings.payments.boughtGroceries}</div>
         </div>
         <div className="text-right">
-          <div className="text-base font-semibold tabular-nums text-slate-900">{formatCurrency(total)}</div>
+          <div className="text-base font-semibold tabular-nums text-slate-900 dark:text-slate-100">{formatCurrency(total)}</div>
         </div>
       </div>
 
-      <ul className="mt-3 divide-y divide-slate-100 rounded-2xl border border-slate-200 px-3">
+      <ul className="mt-3 divide-y divide-slate-100 dark:divide-slate-700 rounded-2xl border border-slate-200 dark:border-slate-700 px-3">
         {BAZAR_ITEMS.map((item) => (
           <li key={item.name} className="flex items-center justify-between gap-3 py-2.5">
-            <span className="truncate text-xs text-slate-700">{item.name}</span>
-            <span className="text-xs tabular-nums text-slate-500">{formatCurrency(item.amount)}</span>
+            <span className="truncate text-xs text-slate-700 dark:text-slate-300">{item.name}</span>
+            <span className="text-xs tabular-nums text-slate-500 dark:text-slate-400">{formatCurrency(item.amount)}</span>
           </li>
         ))}
         <li className="flex items-center justify-between gap-3 py-2.5">
-          <span className="text-xs font-semibold text-slate-900">{strings.common.total}</span>
-          <span className="text-xs font-semibold tabular-nums text-slate-900">{formatCurrency(total)}</span>
+          <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">{strings.common.total}</span>
+          <span className="text-xs font-semibold tabular-nums text-slate-900 dark:text-slate-100">{formatCurrency(total)}</span>
         </li>
       </ul>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] text-slate-600">
+        <span className="rounded-full bg-slate-100 dark:bg-slate-700 px-2.5 py-1 text-[11px] text-slate-600 dark:text-slate-400">
           {strings.expenses.changeHistory}
         </span>
-        <span className="rounded-full bg-green-50 px-2.5 py-1 text-[11px] text-green-700">
+        <span className="rounded-full bg-green-50 dark:bg-green-500/10 px-2.5 py-1 text-[11px] text-green-700 dark:text-green-400">
           {strings.expenses.shoppingReport}
         </span>
       </div>
@@ -302,7 +302,7 @@ export function BalancesPreview() {
       <div className="mt-4 overflow-x-auto">
         <table className="w-full border-collapse text-left xl:min-w-[34rem]">
           <thead>
-            <tr className="text-[10px] uppercase tracking-wide text-slate-400">
+            <tr className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
               <th className="pb-2 font-normal">{strings.common.member}</th>
               <th className="hidden pb-2 text-right font-normal sm:table-cell">{strings.payments.mealShare}</th>
               <th className="hidden pb-2 text-right font-normal sm:table-cell">{strings.payments.bills}</th>
@@ -313,13 +313,13 @@ export function BalancesPreview() {
               <th className="pb-2 text-right font-normal">{strings.payments.due}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
             {rows.map((row) => (
-              <tr key={row.name} className="text-[11px] text-slate-600 sm:text-xs">
+              <tr key={row.name} className="text-[11px] text-slate-600 dark:text-slate-400 sm:text-xs">
                 <td className="py-2.5 pr-3">
                   <span className="flex min-w-0 items-center gap-2">
                     <Avatar name={row.name} size="sm" className="hidden sm:flex" />
-                    <span className="truncate text-slate-700">{row.name}</span>
+                    <span className="truncate text-slate-700 dark:text-slate-300">{row.name}</span>
                   </span>
                 </td>
                 <td className="hidden py-2.5 text-right tabular-nums sm:table-cell">
@@ -332,7 +332,7 @@ export function BalancesPreview() {
                 <td className="hidden py-2.5 text-right tabular-nums xl:table-cell">{formatCurrency(row.paid)}</td>
                 <td
                   className={`py-2.5 text-right font-semibold tabular-nums ${
-                    row.due > 0 ? 'text-red-600' : 'text-green-600'
+                    row.due > 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
                   }`}
                 >
                   {row.due > 0 ? formatCurrency(row.due) : formatCurrency(-row.due)}
@@ -342,7 +342,7 @@ export function BalancesPreview() {
           </tbody>
         </table>
       </div>
-      <p className="mt-3 text-[11px] text-slate-400">{strings.payments.balanceFormula}</p>
+      <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">{strings.payments.balanceFormula}</p>
     </AppFrame>
   );
 }
@@ -351,13 +351,13 @@ export function LoginPreview() {
   return (
     <AppFrame path="bachelor-point.app/auth/login" label={strings.auth.login.title}>
       <PreviewHeading title={strings.auth.login.title} />
-      <p className="mb-3 text-[11px] leading-relaxed text-slate-500">{strings.auth.login.subtitle}</p>
+      <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{strings.auth.login.subtitle}</p>
       <div className="space-y-3">
         <FieldMock label={strings.auth.login.email} value="rakib@example.com" />
         <FieldMock label={strings.auth.login.password} value="••••••••" />
       </div>
       <div className="mt-4 flex items-center justify-between">
-        <span className="text-[11px] text-slate-400">{strings.auth.login.forgotLink}</span>
+        <span className="text-[11px] text-slate-400 dark:text-slate-500">{strings.auth.login.forgotLink}</span>
         <SubmitMock label={strings.auth.login.submit} />
       </div>
     </AppFrame>
@@ -368,7 +368,7 @@ export function RegisterPreview() {
   return (
     <AppFrame path="bachelor-point.app/auth/register" label={strings.auth.register.title}>
       <PreviewHeading title={strings.auth.register.title} />
-      <p className="mb-3 text-[11px] leading-relaxed text-slate-500">{strings.auth.register.subtitle}</p>
+      <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{strings.auth.register.subtitle}</p>
       <div className="space-y-3">
         <FieldMock label={strings.auth.register.name} value={MEMBERS[2]} />
         <FieldMock label={strings.auth.register.email} value="nayeem@example.com" />
@@ -395,27 +395,27 @@ export function CommunityPreview() {
   return (
     <AppFrame path="bachelor-point.app/community" label={strings.community.title}>
       <PreviewHeading title={strings.community.title} />
-      <div className="mb-3 rounded-full bg-slate-50 px-3 py-2 text-center text-[10px] text-slate-500">
+      <div className="mb-3 rounded-full bg-slate-50 dark:bg-slate-900 px-3 py-2 text-center text-[10px] text-slate-500 dark:text-slate-400">
         {strings.community.signedOutHint}
       </div>
       <ul className="space-y-2.5">
         {COMMUNITY_POSTS.map((post) => (
-          <li key={`${post.name}-${post.date}`} className="rounded-2xl border border-slate-200 p-3">
+          <li key={`${post.name}-${post.date}`} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
             <div className="flex items-center gap-2">
               <Avatar name={post.name} size="sm" />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <span className="truncate text-xs font-medium text-slate-900">{post.name}</span>
+                  <span className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{post.name}</span>
                   {post.badge && (
-                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-medium text-amber-700">
+                    <span className="shrink-0 rounded-full bg-amber-100 dark:bg-amber-500/15 px-2 py-0.5 text-[9px] font-medium text-amber-700 dark:text-amber-400">
                       {post.badge}
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] text-slate-400">{post.date}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500">{post.date}</span>
               </div>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-600">{post.body}</p>
+            <p className="mt-2 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">{post.body}</p>
           </li>
         ))}
       </ul>
@@ -427,10 +427,10 @@ export function AccountPreview() {
   return (
     <AppFrame path="bachelor-point.app/profile" label={strings.profile.title}>
       <PreviewHeading title={strings.profile.title} />
-      <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+      <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-700 pb-3">
         <Avatar name={MEMBERS[0]} size="md" />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-xs font-medium text-slate-900">{MEMBERS[0]}</div>
+          <div className="truncate text-xs font-medium text-slate-900 dark:text-slate-100">{MEMBERS[0]}</div>
           <div className="text-[11px] text-brand-700">{strings.profile.changePhoto}</div>
         </div>
       </div>
@@ -449,18 +449,18 @@ export function QuickReplyPreview() {
   return (
     <AppFrame path="bachelor-point.app" label={strings.mealPrompt.title}>
       <PreviewHeading title={strings.mealPrompt.title} />
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-        <p className="text-xs leading-relaxed text-slate-700">{strings.mealPrompt.cardTitle}</p>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-3">
+        <p className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">{strings.mealPrompt.cardTitle}</p>
         <div className="mt-3 flex gap-2">
           <span className="flex-1 rounded-full bg-brand-600 px-3 py-2 text-center text-xs font-semibold text-white">
             {strings.mealPrompt.yes}
           </span>
-          <span className="flex-1 rounded-full border border-slate-300 px-3 py-2 text-center text-xs font-semibold text-slate-600">
+          <span className="flex-1 rounded-full border border-slate-300 dark:border-slate-600 px-3 py-2 text-center text-xs font-semibold text-slate-600 dark:text-slate-400">
             {strings.mealPrompt.no}
           </span>
         </div>
       </div>
-      <p className="mt-3 text-[11px] text-slate-400">
+      <p className="mt-3 text-[11px] text-slate-400 dark:text-slate-500">
         {strings.mealPrompt.usualHint} {strings.mealPrompt.saved}
       </p>
     </AppFrame>
@@ -476,19 +476,19 @@ export function TalkingPreview() {
   return (
     <AppFrame path="bachelor-point.app/members" label={strings.comments.title}>
       <PreviewHeading title={strings.comments.title} />
-      <p className="mb-3 text-[11px] leading-relaxed text-slate-500">{strings.comments.sectionDescription}</p>
+      <p className="mb-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">{strings.comments.sectionDescription}</p>
       <ul className="space-y-2.5">
         {MESS_MESSAGES.map((message) => (
           <li key={message.name} className="flex items-start gap-2">
             <Avatar name={message.name} size="sm" />
-            <div className="min-w-0 flex-1 rounded-2xl bg-slate-50 px-3 py-2">
-              <p className="text-xs font-medium text-slate-900">{message.name}</p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600">{message.body}</p>
+            <div className="min-w-0 flex-1 rounded-2xl bg-slate-50 dark:bg-slate-900 px-3 py-2">
+              <p className="text-xs font-medium text-slate-900 dark:text-slate-100">{message.name}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed text-slate-600 dark:text-slate-400">{message.body}</p>
             </div>
           </li>
         ))}
       </ul>
-      <div className="mt-3 rounded-full border border-slate-200 px-3 py-2 text-[11px] text-slate-400">
+      <div className="mt-3 rounded-full border border-slate-200 dark:border-slate-700 px-3 py-2 text-[11px] text-slate-400 dark:text-slate-500">
         {strings.comments.placeholder}
       </div>
     </AppFrame>
@@ -504,15 +504,15 @@ export function NotificationsPreview() {
   return (
     <AppFrame path="bachelor-point.app" label={strings.notifications.panelTitle}>
       <PreviewHeading title={strings.notifications.panelTitle} meta={strings.notifications.newCount(2)} />
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-slate-100 dark:divide-slate-700">
         {NOTIFICATION_ROWS.map((row) => (
           <li key={row.name} className="flex items-center gap-3 py-2.5">
             <Avatar name={row.name} size="sm" />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-xs text-slate-700">
-                <span className="font-medium text-slate-900">{row.name}</span> {row.text}
+              <p className="truncate text-xs text-slate-700 dark:text-slate-300">
+                <span className="font-medium text-slate-900 dark:text-slate-100">{row.name}</span> {row.text}
               </p>
-              <p className="text-[10px] text-slate-400">{row.time}</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500">{row.time}</p>
             </div>
             <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
           </li>
@@ -545,13 +545,13 @@ export function PermissionsPreview() {
   return (
     <AppFrame path="bachelor-point.app/members" label={permissions.action}>
       <PreviewHeading title={permissions.modalTitle(MEMBERS[1])} meta={permissions.roleBaseline(strings.roles.MEMBER)} />
-      <ul className="divide-y divide-slate-100">
+      <ul className="divide-y divide-slate-100 dark:divide-slate-700">
         {PERMISSION_ROWS.map((row) => (
           <li key={row.name} className="flex items-center justify-between gap-3 py-2">
-            <span className="truncate text-xs text-slate-700">{row.name}</span>
+            <span className="truncate text-xs text-slate-700 dark:text-slate-300">{row.name}</span>
             <span
               className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-medium ${
-                row.allowed ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-500'
+                row.allowed ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
               }`}
             >
               {row.allowed ? permissions.effectiveAllowed : permissions.effectiveBlocked}
@@ -560,7 +560,7 @@ export function PermissionsPreview() {
         ))}
       </ul>
       <div className="mt-3 flex justify-end">
-        <span className="rounded-full border border-slate-300 px-3 py-1.5 text-[11px] text-slate-600">
+        <span className="rounded-full border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-[11px] text-slate-600 dark:text-slate-400">
           {permissions.presetReset}
         </span>
       </div>
@@ -580,13 +580,13 @@ export function PhonePreview() {
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-xs font-semibold">{install.action(appConfig.name)}</p>
-          <p className="truncate text-[11px] text-slate-300">{install.body}</p>
+          <p className="truncate text-[11px] text-slate-300 dark:text-slate-600">{install.body}</p>
         </div>
-        <span className="shrink-0 rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-900">
+        <span className="shrink-0 rounded-full bg-white dark:bg-slate-800 px-3 py-1.5 text-[11px] font-semibold text-slate-900 dark:text-slate-100">
           {install.button}
         </span>
       </div>
-      <ol className="mt-3 space-y-1.5 text-[11px] text-slate-500">
+      <ol className="mt-3 space-y-1.5 text-[11px] text-slate-500 dark:text-slate-400">
         <li>1. {install.step1}</li>
         <li>2. {install.step2}</li>
         <li>3. {install.step3}</li>
@@ -606,25 +606,25 @@ export function MealRateDiagram() {
     <div
       role="img"
       aria-label={strings.landing.math.diagramLabel}
-      className="flex flex-col items-center justify-center gap-2 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:flex-wrap sm:gap-4 sm:p-8"
+      className="flex flex-col items-center justify-center gap-2 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:flex-row sm:flex-wrap sm:gap-4 sm:p-8"
     >
       {parts.map((part, index) => (
         <Fragment key={part.label}>
           <div
             className={`w-full rounded-2xl px-4 py-3 text-center sm:w-auto sm:min-w-[7.5rem] ${
-              index === parts.length - 1 ? 'bg-brand-600 text-white' : 'bg-slate-50 text-slate-900'
+              index === parts.length - 1 ? 'bg-brand-600 text-white' : 'bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100'
             }`}
           >
             <div
               className={`text-[10px] uppercase tracking-wide ${
-                index === parts.length - 1 ? 'text-slate-300' : 'text-slate-500'
+                index === parts.length - 1 ? 'text-slate-300 dark:text-slate-600' : 'text-slate-500 dark:text-slate-400'
               }`}
             >
               {part.label}
             </div>
             <div className="mt-1 text-lg font-semibold tabular-nums sm:text-xl">{part.value}</div>
           </div>
-          {part.operator && <span className="text-xl font-light text-slate-400 sm:text-2xl">{part.operator}</span>}
+          {part.operator && <span className="text-xl font-light text-slate-400 dark:text-slate-500 sm:text-2xl">{part.operator}</span>}
         </Fragment>
       ))}
     </div>

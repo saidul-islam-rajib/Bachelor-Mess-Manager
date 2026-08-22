@@ -21,10 +21,10 @@ export default function ErrorPage({
   return (
     <PageContainer width="narrow">
       <PageTitle title={title} />
-      <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm sm:mt-12 sm:p-12">
+      <div className="mt-6 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 text-center shadow-sm sm:mt-12 sm:p-12">
         <p className="text-6xl font-semibold tracking-tight text-brand-600 sm:text-7xl">{code}</p>
         <h1 className="mt-4 text-2xl font-semibold sm:text-3xl">{title}</h1>
-        <p className="mx-auto mt-3 max-w-md text-slate-600">{body}</p>
+        <p className="mx-auto mt-3 max-w-md text-slate-600 dark:text-slate-400">{body}</p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           {action}

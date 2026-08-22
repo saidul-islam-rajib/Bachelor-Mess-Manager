@@ -14,7 +14,7 @@ export default function UpdateBanner() {
         <button
           type="button"
           onClick={applyUpdate}
-          className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-green-700 hover:bg-green-50"
+          className="rounded-full bg-white dark:bg-slate-800 px-4 py-1 text-xs font-semibold text-green-700 dark:text-green-400 hover:bg-green-50"
         >
           {strings.updateBanner.reloadNow}
         </button>

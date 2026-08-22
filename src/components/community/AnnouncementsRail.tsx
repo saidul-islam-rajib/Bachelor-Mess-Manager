@@ -14,12 +14,12 @@ export function AnnouncementsRail({ messages }: { messages: CommunityMessage[] }
       <CardHeader title={strings.community.announcementsTitle} />
       <ul className="mt-3 space-y-2.5">
         {announcements.map((announcement) => (
-          <li key={announcement.id} className="rounded-xl bg-amber-50 px-3 py-2.5">
+          <li key={announcement.id} className="rounded-xl bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5">
             {announcement.title && (
-              <p className="text-sm font-semibold leading-tight text-slate-900">{announcement.title}</p>
+              <p className="text-sm font-semibold leading-tight text-slate-900 dark:text-slate-100">{announcement.title}</p>
             )}
-            <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-600">{announcement.text}</p>
-            <p className="mt-1 text-[11px] text-slate-400">{timeAgo(announcement.createdAt)}</p>
+            <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-600 dark:text-slate-400">{announcement.text}</p>
+            <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">{timeAgo(announcement.createdAt)}</p>
           </li>
         ))}
       </ul>

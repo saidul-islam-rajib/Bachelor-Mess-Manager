@@ -144,23 +144,23 @@ export default function ExplainerVideo() {
   const icon = SCENE_ICONS[sceneIndex];
 
   return (
-    <section className="border-b border-slate-200 bg-gradient-to-b from-brand-50/60 via-white to-white">
+    <section className="border-b border-slate-200 dark:border-slate-700 bg-gradient-to-b from-brand-50/60 via-white to-white dark:from-slate-900 dark:via-slate-900 dark:to-slate-900">
       <div className="mx-auto max-w-content px-4 py-10 sm:py-14">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-brand-700 shadow-sm ring-1 ring-brand-100">
+          <span className="inline-flex items-center rounded-full bg-white dark:bg-slate-800 px-3 py-1 text-xs font-medium text-brand-700 shadow-sm ring-1 ring-brand-100">
             {copy.eyebrow}
           </span>
-          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{copy.title}</h2>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">{copy.subtitle}</p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100 sm:text-3xl">{copy.title}</h2>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400 sm:text-base">{copy.subtitle}</p>
         </div>
 
-        <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-lg shadow-slate-900/5">
-          <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-2.5 sm:px-5">
+        <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg shadow-slate-900/5">
+          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 sm:px-5">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-white">
               <LandingIcon name={icon} className="h-4 w-4" />
             </span>
-            <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">{scene.title}</span>
-            <span className="shrink-0 text-xs tabular-nums text-slate-400">{copy.sceneOf(sceneIndex + 1, total)}</span>
+            <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700 dark:text-slate-300">{scene.title}</span>
+            <span className="shrink-0 text-xs tabular-nums text-slate-400 dark:text-slate-500">{copy.sceneOf(sceneIndex + 1, total)}</span>
           </div>
 
           {TOPIC_SCENES[sceneIndex] ? (
@@ -169,21 +169,21 @@ export default function ExplainerVideo() {
               className="flex flex-col items-center gap-6 px-5 py-8 sm:flex-row sm:items-center sm:gap-10 sm:px-8 lg:gap-14 lg:px-12"
             >
               <div className="flex w-full shrink-0 justify-center sm:w-[45%]">{TOPIC_SCENES[sceneIndex]()}</div>
-              <p className="text-justify text-sm leading-relaxed text-slate-700 sm:text-base">
+              <p className="text-justify text-sm leading-relaxed text-slate-700 dark:text-slate-300 sm:text-base">
                 {scriptFor[sceneIndex]}
               </p>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-5 px-5 py-8 sm:flex-row sm:items-start sm:gap-6 sm:px-8">
               <HostCharacter variant={host} talking={playing && !muted} />
-              <p className="text-justify text-sm leading-relaxed text-slate-700 sm:text-base">
+              <p className="text-justify text-sm leading-relaxed text-slate-700 dark:text-slate-300 sm:text-base">
                 {scriptFor[sceneIndex]}
               </p>
             </div>
           )}
 
           {!speechSupported && (
-            <p className="px-5 pb-2 text-center text-xs text-slate-400 sm:px-8">{copy.noSpeechNote}</p>
+            <p className="px-5 pb-2 text-center text-xs text-slate-400 dark:text-slate-500 sm:px-8">{copy.noSpeechNote}</p>
           )}
 
           <div className="flex items-center justify-center gap-1.5 pb-4">
@@ -195,19 +195,19 @@ export default function ExplainerVideo() {
                 aria-label={copy.sceneOf(index + 1, total)}
                 aria-current={index === sceneIndex ? 'true' : undefined}
                 className={`h-1.5 rounded-full transition-all ${
-                  index === sceneIndex ? 'w-6 bg-brand-600' : 'w-1.5 bg-slate-200 hover:bg-slate-300'
+                  index === sceneIndex ? 'w-6 bg-brand-600' : 'w-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300'
                 }`}
               />
             ))}
           </div>
 
-          <div className="flex items-center justify-center gap-2 border-t border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
+          <div className="flex items-center justify-center gap-2 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 sm:px-5">
             <button
               type="button"
               onClick={() => goTo(sceneIndex - 1)}
               disabled={sceneIndex === 0}
               aria-label={copy.previous}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m15 6-6 6 6 6" />
@@ -250,7 +250,7 @@ export default function ExplainerVideo() {
               onClick={() => goTo(sceneIndex + 1)}
               disabled={sceneIndex === total - 1}
               aria-label={copy.next}
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="m9 6 6 6-6 6" />
@@ -263,7 +263,7 @@ export default function ExplainerVideo() {
                 onClick={() => setMuted((current) => !current)}
                 aria-label={muted ? copy.unmute : copy.mute}
                 aria-pressed={muted}
-                className="ml-1 flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 hover:bg-slate-100"
+                className="ml-1 flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 {muted ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

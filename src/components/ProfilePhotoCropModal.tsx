@@ -183,7 +183,7 @@ export function ProfilePhotoCropModal({ file, onCancel, onCropped }: Props) {
               onClick={() => handleZoomChange(zoom - ZOOM_STEP)}
               aria-label={strings.profile.cropZoomOut}
               disabled={!natural}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
             >
               &minus;
             </button>
@@ -203,7 +203,7 @@ export function ProfilePhotoCropModal({ file, onCancel, onCropped }: Props) {
               onClick={() => handleZoomChange(zoom + ZOOM_STEP)}
               aria-label={strings.profile.cropZoomIn}
               disabled={!natural}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50"
             >
               +
             </button>

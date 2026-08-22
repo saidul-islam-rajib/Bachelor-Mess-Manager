@@ -84,10 +84,10 @@ export default function SetPasswordPage() {
   const title = isReset ? strings.auth.setPassword.resetTitle : strings.auth.setPassword.title;
 
   return (
-    <div className="bg-slate-50 text-slate-900">
+    <div className="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
       <PageTitle title={title} />
       <section className="mx-auto max-w-md px-4 py-12 sm:py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10">
+        <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm sm:p-10">
           {!router.isReady || (token && !check) ? (
             <LoadingCard label={strings.auth.setPassword.checking} />
           ) : !token || (check && !check.valid) ? (
@@ -100,7 +100,7 @@ export default function SetPasswordPage() {
                 <Link href={ROUTES.auth.forgotPassword} className="font-medium text-brand-700 hover:underline">
                   {strings.auth.setPassword.requestAnother}
                 </Link>
-                <Link href={ROUTES.auth.login} className="font-medium text-slate-500 hover:underline">
+                <Link href={ROUTES.auth.login} className="font-medium text-slate-500 dark:text-slate-400 hover:underline">
                   {strings.auth.setPassword.requestNew}
                 </Link>
               </div>
@@ -108,12 +108,12 @@ export default function SetPasswordPage() {
           ) : check && check.valid ? (
             <>
               <h1 className="text-2xl font-semibold">{title}</h1>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {isReset
                   ? strings.auth.setPassword.resetSubtitle(check.name)
                   : strings.auth.setPassword.subtitle(check.name)}
               </p>
-              <p className="mt-1 text-xs text-slate-400">{check.email}</p>
+              <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">{check.email}</p>
 
               {formError && (
                 <Alert tone="danger" className="mt-6">

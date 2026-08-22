@@ -220,7 +220,7 @@ export default function MessComments({ groupId }: { groupId: string }) {
         <button
           type="button"
           onClick={() => setComposerOpen(true)}
-          className="flex-1 rounded-full border border-slate-200 bg-slate-50 px-4 py-2.5 text-left text-sm text-slate-500 transition-colors hover:bg-slate-100"
+          className="flex-1 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-left text-sm text-slate-500 dark:text-slate-400 transition-colors hover:bg-slate-100 dark:hover:bg-slate-700"
         >
           {strings.comments.placeholder}
         </button>
@@ -263,7 +263,7 @@ export default function MessComments({ groupId }: { groupId: string }) {
           />
 
           {images.map((src, index) => (
-            <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200">
+            <div key={src} className="group relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-700">
               <img src={src} alt="" className="h-full w-full object-cover" />
               <button
                 type="button"
@@ -285,7 +285,7 @@ export default function MessComments({ groupId }: { groupId: string }) {
               onClick={() => fileInput.current?.click()}
               aria-label={strings.comments.addPhotos}
               title={strings.comments.addPhotos}
-              className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 transition-colors hover:border-brand-400 hover:text-brand-500"
+              className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500 transition-colors hover:border-brand-400 hover:text-brand-500"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 5v14M5 12h14" />
@@ -295,10 +295,10 @@ export default function MessComments({ groupId }: { groupId: string }) {
         </div>
       </Modal>
 
-      <div className="border-t border-slate-100 pt-5">
-        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <div className="border-t border-slate-100 dark:border-slate-700 pt-5">
+        <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           {strings.comments.threadHeading}
-          <span className="font-normal normal-case tracking-normal text-slate-400">({comments.length})</span>
+          <span className="font-normal normal-case tracking-normal text-slate-400 dark:text-slate-500">({comments.length})</span>
         </h3>
 
         {loading ? (
@@ -310,17 +310,17 @@ export default function MessComments({ groupId }: { groupId: string }) {
         ) : (
           <ul className="mt-4 space-y-4">
             {comments.map((comment) => (
-              <li key={comment.id} className="overflow-hidden rounded-2xl border border-slate-200">
+              <li key={comment.id} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700">
                 <div className="p-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-medium">
                         {comment.authorName}
                         {comment.authorId === currentUserId && (
-                          <span className="ml-1 text-xs font-normal text-green-600">{strings.common.you}</span>
+                          <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>
                         )}
                       </p>
-                      <p className="text-xs text-slate-400">{formatDateTime(comment.createdAt)}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{formatDateTime(comment.createdAt)}</p>
                     </div>
                     {isSupervisor && (
                       <DeleteButton onClick={() => removeComment(comment.id)} label={strings.comments.deleteComment} />
@@ -335,27 +335,27 @@ export default function MessComments({ groupId }: { groupId: string }) {
                 </div>
 
                 {comment.images.length > 0 && (
-                  <div className="border-t border-slate-100">
+                  <div className="border-t border-slate-100 dark:border-slate-700">
                     <ImageGrid images={comment.images} authorName={comment.authorName} />
                   </div>
                 )}
 
                 <div className="p-4 pt-3">
                   {comment.replies.length > 0 && (
-                    <ul className="space-y-2 border-l-2 border-slate-100 pl-4">
+                    <ul className="space-y-2 border-l-2 border-slate-100 dark:border-slate-700 pl-4">
                       {comment.replies.map((reply) => (
-                        <li key={reply.id} className="rounded-xl bg-slate-50 px-3 py-2">
+                        <li key={reply.id} className="rounded-xl bg-slate-50 dark:bg-slate-900 px-3 py-2">
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
-                              <p className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-600">
+                              <p className="flex flex-wrap items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400">
                                 <span>
                                   {reply.authorName}
                                   {reply.authorId === currentUserId && (
-                                    <span className="ml-1 text-green-600">{strings.common.you}</span>
+                                    <span className="ml-1 text-green-600 dark:text-green-400">{strings.common.you}</span>
                                   )}
                                 </span>
                                 {reply.isSupervisor && <Badge tone="info">{strings.common.supervisor}</Badge>}
-                                <span className="font-normal text-slate-400">{formatDateTime(reply.createdAt)}</span>
+                                <span className="font-normal text-slate-400 dark:text-slate-500">{formatDateTime(reply.createdAt)}</span>
                               </p>
                               <div className="mt-0.5 text-sm">
                                 <MentionText text={reply.text} members={members} mentionNames={mentionNames} />
@@ -437,7 +437,7 @@ function DeleteButton({ onClick, label }: { onClick: () => void; label: string }
       onClick={onClick}
       aria-label={label}
       title={label}
-      className="-my-1.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+      className="-my-1.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-300 dark:text-slate-600 transition-colors hover:bg-red-50 hover:text-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
     >
       <svg
         width="13"
