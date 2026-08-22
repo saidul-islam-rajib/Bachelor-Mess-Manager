@@ -1,5 +1,12 @@
 import { toLetConfig } from '@/config';
-import { TOLET_GENDER_PREFERENCE, TOLET_GENDER_PREFERENCE_VALUES, TOLET_TYPE_VALUES } from '@/lib/constants';
+import {
+  TOLET_GENDER_PREFERENCE,
+  TOLET_GENDER_PREFERENCE_VALUES,
+  TOLET_MONTHS,
+  TOLET_TENANT_RESTRICTION,
+  TOLET_TENANT_RESTRICTION_VALUES,
+  TOLET_TYPE_VALUES
+} from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 import { validateAmount, validatePhone } from '@/lib/validation';
 import type { PostMessageToLetInput } from '@/lib/community';
@@ -24,6 +31,8 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     latitude,
     longitude,
     genderPreference,
+    tenantRestriction,
+    availableMonth,
     contactName,
     contactPhone,
     expiryDays
@@ -51,6 +60,22 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
       return { ok: false, error: strings.toLet.genderPreferenceInvalid };
     }
     genderPref = genderPreference;
+  }
+
+  let tenantRestrictionValue: string = TOLET_TENANT_RESTRICTION.ANY;
+  if (tenantRestriction !== undefined && tenantRestriction !== null && tenantRestriction !== '') {
+    if (typeof tenantRestriction !== 'string' || !TOLET_TENANT_RESTRICTION_VALUES.includes(tenantRestriction)) {
+      return { ok: false, error: strings.toLet.tenantRestrictionInvalid };
+    }
+    tenantRestrictionValue = tenantRestriction;
+  }
+
+  let availableMonthValue: string | null = null;
+  if (availableMonth !== undefined && availableMonth !== null && availableMonth !== '') {
+    if (typeof availableMonth !== 'string' || !(TOLET_MONTHS as readonly string[]).includes(availableMonth)) {
+      return { ok: false, error: strings.toLet.availableMonthInvalid };
+    }
+    availableMonthValue = availableMonth;
   }
 
   const locationValue = typeof location === 'string' ? location.trim() : '';
@@ -82,6 +107,8 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
       latitude: parseCoordinate(latitude) ?? null,
       longitude: parseCoordinate(longitude) ?? null,
       genderPreference: genderPref,
+      tenantRestriction: tenantRestrictionValue,
+      availableMonth: availableMonthValue,
       contactName: typeof contactName === 'string' && contactName.trim() ? contactName.trim() : null,
       contactPhone: phoneCheck.value,
       expiryDays: expiryDaysValue

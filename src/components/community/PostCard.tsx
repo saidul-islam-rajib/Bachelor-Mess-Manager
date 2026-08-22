@@ -7,7 +7,7 @@ import { timeAgo } from '@/components/InvitationsProvider';
 import { MentionText, type Member } from '@/components/MentionInput';
 import { Avatar, Badge } from '@/components/ui';
 import { appConfig } from '@/config';
-import { COMMUNITY_MESSAGE_TYPES, TOLET_GENDER_PREFERENCE } from '@/lib/constants';
+import { COMMUNITY_MESSAGE_TYPES, TOLET_GENDER_PREFERENCE, TOLET_TENANT_RESTRICTION } from '@/lib/constants';
 import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 import { toLetListingPath } from '@/lib/routes';
@@ -98,6 +98,11 @@ export function PostCard({
                 {strings.toLet.genderPreference[message.genderPreference as keyof typeof strings.toLet.genderPreference]}
               </Badge>
             )}
+            {message.tenantRestriction && message.tenantRestriction !== TOLET_TENANT_RESTRICTION.ANY && (
+              <Badge tone="info">
+                {strings.toLet.tenantRestriction[message.tenantRestriction as keyof typeof strings.toLet.tenantRestriction]}
+              </Badge>
+            )}
           </div>
 
           {message.title && <p className="mt-1.5 text-[15px] font-semibold text-slate-900">{message.title}</p>}
@@ -117,6 +122,12 @@ export function PostCard({
                   · {strings.toLet.search.distanceAway(distanceKm.toFixed(1))}
                 </span>
               )}
+            </p>
+          )}
+
+          {message.availableMonth && (
+            <p className="text-xs text-slate-400">
+              {strings.toLet.availableFromMonth(strings.toLet.months[message.availableMonth as keyof typeof strings.toLet.months])}
             </p>
           )}
 

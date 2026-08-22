@@ -885,6 +885,8 @@ model CommunityMessage {
   latitude         Float?
   longitude        Float?
   genderPreference String?
+  tenantRestriction String?
+  availableMonth   String?
   contactName      String?
   contactPhone     String?
   listingStatus    String?

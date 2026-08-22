@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useRouter } from 'next/router';
 import { Listbox, NumberInput, useDebouncedValue } from '@/components/ui';
-import { api } from '@/lib/api-client';
+import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 import { TOLET_TYPE_VALUES } from '@/lib/constants';
+import { toLetListingPath } from '@/lib/routes';
+import type { CommunityMessageView } from '@/lib/community';
 
 export type ToLetSearchState = { q: string; type: string; minRent: string; maxRent: string };
 
@@ -17,79 +20,76 @@ const TYPE_OPTIONS = [
   ...TOLET_TYPE_VALUES.map((type) => ({ value: type, label: strings.toLet.types[type as keyof typeof strings.toLet.types] }))
 ];
 
-export function ToLetSearchBar({ value, onChange }: { value: ToLetSearchState; onChange: (next: ToLetSearchState) => void }) {
+const PREVIEW_LIMIT = 5;
+
+export function ToLetSearchBar({
+  value,
+  onChange,
+  previewItems
+}: {
+  value: ToLetSearchState;
+  onChange: (next: ToLetSearchState) => void;
+  previewItems: CommunityMessageView[];
+}) {
+  const router = useRouter();
   const [inputValue, setInputValue] = useState(value.q);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const debouncedInput = useDebouncedValue(inputValue);
+  const latest = useRef({ value, onChange });
+  latest.current = { value, onChange };
 
   useEffect(() => setInputValue(value.q), [value.q]);
 
   useEffect(() => {
-    const term = debouncedInput.trim();
-    if (term.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-
-    let cancelled = false;
-    api
-      .get<{ suggestions: string[] }>('/api/community/messages/suggestions', { query: { q: term } })
-      .then((data) => {
-        if (!cancelled) setSuggestions(data.suggestions);
-      })
-      .catch(() => undefined);
-
-    return () => {
-      cancelled = true;
-    };
+    latest.current.onChange({ ...latest.current.value, q: debouncedInput });
   }, [debouncedInput]);
 
   useEffect(() => {
-    if (!suggestionsOpen) return undefined;
+    if (!previewOpen) return undefined;
 
     function onPointerDown(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) setSuggestionsOpen(false);
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) setPreviewOpen(false);
     }
 
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [suggestionsOpen]);
+  }, [previewOpen]);
 
-  function submitQuery(q: string) {
-    setInputValue(q);
-    setSuggestionsOpen(false);
-    setActiveIndex(-1);
-    onChange({ ...value, q });
+  const preview = previewItems.slice(0, PREVIEW_LIMIT);
+  const showPreview = previewOpen && inputValue.trim().length >= 2 && preview.length > 0;
+
+  function goToActive() {
+    const target = activeIndex >= 0 ? preview[activeIndex] : preview[0];
+    if (target) {
+      setPreviewOpen(false);
+      void router.push(toLetListingPath(target.id));
+    }
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (!suggestionsOpen || suggestions.length === 0) {
-      if (event.key === 'Enter') submitQuery(inputValue);
-      return;
-    }
+    if (!showPreview) return;
 
     if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setActiveIndex((current) => Math.min(current + 1, suggestions.length - 1));
+      setActiveIndex((current) => Math.min(current + 1, preview.length - 1));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       setActiveIndex((current) => Math.max(current - 1, 0));
-    } else if (event.key === 'Enter') {
+    } else if (event.key === 'Enter' && activeIndex >= 0) {
       event.preventDefault();
-      submitQuery(activeIndex >= 0 ? suggestions[activeIndex] : inputValue);
+      goToActive();
     } else if (event.key === 'Escape') {
-      setSuggestionsOpen(false);
+      setPreviewOpen(false);
     }
   }
 
   const activeFilterCount = [value.type, value.minRent, value.maxRent].filter(Boolean).length;
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-2 shadow-sm">
+    <div className="p-2">
       <div className="flex items-center gap-2">
         <div ref={wrapperRef} className="relative min-w-0 flex-1">
           <svg
@@ -110,36 +110,46 @@ export function ToLetSearchBar({ value, onChange }: { value: ToLetSearchState; o
             value={inputValue}
             onChange={(event) => {
               setInputValue(event.target.value);
-              setSuggestionsOpen(true);
+              setPreviewOpen(true);
               setActiveIndex(-1);
             }}
-            onFocus={() => setSuggestionsOpen(true)}
+            onFocus={() => setPreviewOpen(true)}
             onKeyDown={onKeyDown}
             placeholder={strings.toLet.search.placeholder}
             aria-label={strings.toLet.search.placeholder}
             className="w-full rounded-full border border-transparent bg-slate-50 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
           />
 
-          {suggestionsOpen && suggestions.length > 0 && (
+          {showPreview && (
             <ul
               role="listbox"
-              className="absolute left-0 right-0 z-30 mt-1.5 max-h-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white py-1 shadow-xl"
+              className="absolute left-0 right-0 z-30 mt-1.5 max-h-80 overflow-y-auto rounded-2xl border border-slate-200 bg-white py-1 shadow-xl"
             >
-              {suggestions.map((suggestion, index) => (
-                <li
-                  key={suggestion}
-                  role="option"
-                  aria-selected={index === activeIndex}
-                  onMouseDown={(event) => {
-                    event.preventDefault();
-                    submitQuery(suggestion);
-                  }}
-                  onMouseEnter={() => setActiveIndex(index)}
-                  className={`cursor-pointer px-4 py-2 text-sm ${
-                    index === activeIndex ? 'bg-brand-50 text-brand-800' : 'text-slate-700'
-                  }`}
-                >
-                  {suggestion}
+              {preview.map((item, index) => (
+                <li key={item.id} role="option" aria-selected={index === activeIndex}>
+                  <button
+                    type="button"
+                    onMouseDown={(event) => event.preventDefault()}
+                    onClick={() => {
+                      setPreviewOpen(false);
+                      void router.push(toLetListingPath(item.id));
+                    }}
+                    onMouseEnter={() => setActiveIndex(index)}
+                    className={`flex w-full items-center gap-3 px-3 py-2 text-left transition-colors ${
+                      index === activeIndex ? 'bg-brand-50' : ''
+                    }`}
+                  >
+                    <div className="h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                      {item.images[0] && <img src={item.images[0]} alt="" className="h-full w-full object-cover" />}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-slate-900">{item.title}</p>
+                      <p className="truncate text-xs text-slate-500">
+                        {item.location}
+                        {item.rent !== null && ` · ${strings.toLet.rentPerMonth(formatCurrency(item.rent))}`}
+                      </p>
+                    </div>
+                  </button>
                 </li>
               ))}
             </ul>
