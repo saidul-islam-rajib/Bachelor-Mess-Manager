@@ -263,22 +263,20 @@ export default function CommunityPage() {
 
       <div className="grid gap-4 lg:grid-cols-[65fr_35fr]">
         <div className="min-w-0 space-y-4">
-          <ToLetSearchBar value={search} onChange={setSearch} />
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+            <ToLetSearchBar value={search} onChange={setSearch} previewItems={searchResult?.items ?? []} />
 
-          {user && !searching && (
-            <div className="space-y-2">
-              <ComposerTrigger
-                userName={user.name}
-                userImage={user.profileImage ?? null}
-                onOpen={() => setComposerOpen(true)}
-              />
-              <div className="flex justify-end">
-                <Button size="sm" variant="secondary" onClick={() => setToLetComposerOpen(true)}>
-                  {strings.toLet.postAction}
-                </Button>
+            {user && !searching && (
+              <div className="border-t border-slate-100">
+                <ComposerTrigger
+                  userName={user.name}
+                  userImage={user.profileImage ?? null}
+                  onOpen={() => setComposerOpen(true)}
+                  onOpenToLet={() => setToLetComposerOpen(true)}
+                />
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {searching ? (
             <ToLetSearchResults

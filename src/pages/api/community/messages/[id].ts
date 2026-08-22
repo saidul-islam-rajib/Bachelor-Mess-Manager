@@ -14,16 +14,10 @@ import {
   type UpdateListingInput
 } from '@/lib/community';
 import { strings } from '@/lib/i18n';
-import {
-  COMMUNITY_MESSAGE_TYPES,
-  TOLET_GENDER_PREFERENCE,
-  TOLET_GENDER_PREFERENCE_VALUES,
-  TOLET_STATUS,
-  TOLET_TYPE_VALUES
-} from '@/lib/constants';
+import { COMMUNITY_MESSAGE_TYPES, TOLET_STATUS } from '@/lib/constants';
 import { geocode } from '@/lib/geo';
 import { firstValue } from '@/lib/query';
-import { validateAmount, validatePhone } from '@/lib/validation';
+import { parseToLetFields } from '@/lib/tolet-validation';
 import { saveImage } from '@/lib/uploads';
 import { findXssField } from '@/lib/xss';
 import { withAudit } from '@/lib/with-audit';
@@ -101,107 +95,47 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return ok(res, { message: updated });
     }
 
-    const patch: UpdateListingInput = {};
-
-    if (body.listingType !== undefined) {
-      if (typeof body.listingType !== 'string' || !TOLET_TYPE_VALUES.includes(body.listingType)) {
-        return badRequest(res, strings.toLet.typeInvalid);
-      }
-      patch.listingType = body.listingType;
+    const imageInputs = Array.isArray(body.images)
+      ? body.images.filter((item): item is string => typeof item === 'string')
+      : undefined;
+    if (imageInputs && imageInputs.length > toLetConfig.maxImagesPerListing) {
+      return badRequest(res, strings.toLet.tooManyPhotos(toLetConfig.maxImagesPerListing));
     }
 
-    if (body.genderPreference !== undefined) {
-      if (
-        body.genderPreference !== null &&
-        body.genderPreference !== '' &&
-        (typeof body.genderPreference !== 'string' || !TOLET_GENDER_PREFERENCE_VALUES.includes(body.genderPreference))
-      ) {
-        return badRequest(res, strings.toLet.genderPreferenceInvalid);
-      }
-      patch.genderPreference =
-        typeof body.genderPreference === 'string' && body.genderPreference ? body.genderPreference : TOLET_GENDER_PREFERENCE.ANY;
-    }
+    const toLetCheck = parseToLetFields(body);
+    if (!toLetCheck.ok) return badRequest(res, toLetCheck.error);
 
-    if (body.title !== undefined) {
-      const value = typeof body.title === 'string' ? body.title.trim() : '';
-      if (!value) return badRequest(res, strings.toLet.titleRequired);
-      if (value.length > toLetConfig.maxTitleLength) return badRequest(res, strings.toLet.titleTooLong(toLetConfig.maxTitleLength));
-      patch.title = value;
-    }
-
-    if (body.text !== undefined) {
-      const value = typeof body.text === 'string' ? body.text.trim() : '';
-      if (!value) return badRequest(res, strings.toLet.descriptionRequired);
-      if (value.length > toLetConfig.maxDescriptionLength) {
-        return badRequest(res, strings.toLet.descriptionTooLong(toLetConfig.maxDescriptionLength));
-      }
-      patch.text = value;
-    }
-
-    if (body.location !== undefined) {
-      const value = typeof body.location === 'string' ? body.location.trim() : '';
-      if (!value) return badRequest(res, strings.toLet.locationRequired);
-      if (value.length > toLetConfig.maxLocationLength) return badRequest(res, strings.toLet.locationTooLong(toLetConfig.maxLocationLength));
-      patch.location = value;
-
-      if (body.latitude !== undefined || body.longitude !== undefined) {
-        const lat = Number(body.latitude);
-        const lng = Number(body.longitude);
-        patch.latitude = Number.isFinite(lat) ? lat : null;
-        patch.longitude = Number.isFinite(lng) ? lng : null;
-      } else {
-        const point = await geocode(value);
-        patch.latitude = point?.lat ?? null;
-        patch.longitude = point?.lng ?? null;
-      }
-    }
-
-    if (body.rent !== undefined) {
-      const rentCheck = validateAmount(body.rent);
-      if (!rentCheck.ok) return badRequest(res, rentCheck.error);
-      patch.rent = rentCheck.value;
-    }
-
-    if (body.rentNegotiable !== undefined) {
-      patch.rentNegotiable = Boolean(body.rentNegotiable);
-    }
-
-    if (body.contactPhone !== undefined) {
-      const phoneCheck = validatePhone(body.contactPhone);
-      if (!phoneCheck.ok) return badRequest(res, phoneCheck.error);
-      patch.contactPhone = phoneCheck.value;
-    }
-
-    if (body.contactName !== undefined) {
-      patch.contactName = typeof body.contactName === 'string' && body.contactName.trim() ? body.contactName.trim() : null;
-    }
-
-    if (body.expiryDays !== undefined) {
-      const expiryDaysValue = Number(body.expiryDays);
-      if (!(toLetConfig.expiryOptionsDays as readonly number[]).includes(expiryDaysValue)) {
-        return badRequest(res, strings.toLet.expiryInvalid);
-      }
-      patch.expiresAt = computeExpiresAt(expiryDaysValue);
-      patch.listingStatus = TOLET_STATUS.ACTIVE;
-    }
-
-    if (
-      findXssField({
-        title: patch.title ?? '',
-        text: patch.text ?? '',
-        location: patch.location ?? '',
-        contactName: patch.contactName ?? ''
-      })
-    ) {
+    if (findXssField({ title: toLetCheck.title, text: toLetCheck.text, location: toLetCheck.value.location })) {
       return badRequest(res, strings.errors.suspiciousInput);
     }
 
-    if (body.images !== undefined) {
-      const imageInputs = Array.isArray(body.images) ? body.images.filter((item): item is string => typeof item === 'string') : [];
-      if (imageInputs.length > toLetConfig.maxImagesPerListing) {
-        return badRequest(res, strings.toLet.tooManyPhotos(toLetConfig.maxImagesPerListing));
+    if (toLetCheck.value.latitude === null || toLetCheck.value.longitude === null) {
+      const point = await geocode(toLetCheck.value.location);
+      if (point) {
+        toLetCheck.value.latitude = point.lat;
+        toLetCheck.value.longitude = point.lng;
       }
+    }
 
+    const patch: UpdateListingInput = {
+      listingType: toLetCheck.value.listingType,
+      title: toLetCheck.title,
+      text: toLetCheck.text,
+      rent: toLetCheck.value.rent,
+      rentNegotiable: toLetCheck.value.rentNegotiable,
+      location: toLetCheck.value.location,
+      latitude: toLetCheck.value.latitude ?? null,
+      longitude: toLetCheck.value.longitude ?? null,
+      genderPreference: toLetCheck.value.genderPreference,
+      tenantRestriction: toLetCheck.value.tenantRestriction,
+      availableMonth: toLetCheck.value.availableMonth,
+      contactName: toLetCheck.value.contactName,
+      contactPhone: toLetCheck.value.contactPhone,
+      expiresAt: computeExpiresAt(toLetCheck.value.expiryDays),
+      listingStatus: TOLET_STATUS.ACTIVE
+    };
+
+    if (imageInputs) {
       const savedImages: string[] = [];
       for (const image of imageInputs) {
         if (image.startsWith('data:')) {

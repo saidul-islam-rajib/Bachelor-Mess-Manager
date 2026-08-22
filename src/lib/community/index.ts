@@ -40,6 +40,8 @@ export type CommunityMessageView = {
   latitude: number | null;
   longitude: number | null;
   genderPreference: string | null;
+  tenantRestriction: string | null;
+  availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
   listingStatus: string | null;
@@ -109,6 +111,8 @@ const MESSAGE_SELECT = {
   latitude: true,
   longitude: true,
   genderPreference: true,
+  tenantRestriction: true,
+  availableMonth: true,
   contactName: true,
   contactPhone: true,
   listingStatus: true,
@@ -185,6 +189,8 @@ function serialize(row: MessageRow, likedByViewer: boolean): CommunityMessageVie
     latitude: row.latitude,
     longitude: row.longitude,
     genderPreference: row.genderPreference,
+    tenantRestriction: row.tenantRestriction,
+    availableMonth: row.availableMonth,
     contactName: row.contactName,
     contactPhone: row.contactPhone,
     listingStatus: row.listingStatus,
@@ -304,6 +310,8 @@ export type PostMessageToLetInput = {
   latitude?: number | null;
   longitude?: number | null;
   genderPreference: string;
+  tenantRestriction: string;
+  availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
   expiryDays: number;
@@ -338,6 +346,8 @@ async function createMessageRow(
             latitude: params.toLet.latitude ?? null,
             longitude: params.toLet.longitude ?? null,
             genderPreference: params.toLet.genderPreference,
+            tenantRestriction: params.toLet.tenantRestriction,
+            availableMonth: params.toLet.availableMonth,
             contactName: params.toLet.contactName,
             contactPhone: params.toLet.contactPhone,
             listingStatus: TOLET_STATUS.ACTIVE,
@@ -393,6 +403,8 @@ export type UpdateListingInput = Partial<{
   latitude: number | null;
   longitude: number | null;
   genderPreference: string;
+  tenantRestriction: string;
+  availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
   listingStatus: string;
@@ -459,22 +471,6 @@ const TOLET_ACTIVE_SQL = Prisma.sql`
   AND "listingStatus" = ${TOLET_STATUS.ACTIVE}
   AND "expiresAt" > NOW()
 `;
-
-export async function suggestLocations(q: string): Promise<string[]> {
-  const value = q.trim();
-  if (value.length < 2) return [];
-
-  const rows = await prisma.$queryRaw<Array<{ location: string; score: number }>>(Prisma.sql`
-    SELECT DISTINCT "location", similarity("location", ${value}) AS score FROM "CommunityMessage"
-    WHERE ${TOLET_ACTIVE_SQL}
-      AND "location" IS NOT NULL
-      AND (similarity("location", ${value}) > 0.2 OR "location" ILIKE ${`${value}%`})
-    ORDER BY score DESC
-    LIMIT ${toLetConfig.suggestionCount}
-  `);
-
-  return rows.map((row) => row.location).filter(Boolean);
-}
 
 export async function searchListings(options: {
   q?: string;

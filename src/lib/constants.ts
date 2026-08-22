@@ -105,6 +105,33 @@ export type ToLetGenderPreference = (typeof TOLET_GENDER_PREFERENCE)[keyof typeo
 
 export const TOLET_GENDER_PREFERENCE_VALUES = Object.values(TOLET_GENDER_PREFERENCE) as string[];
 
+export const TOLET_TENANT_RESTRICTION = {
+  ANY: 'ANY',
+  BACHELOR: 'BACHELOR',
+  FAMILY: 'FAMILY'
+} as const;
+
+export type ToLetTenantRestriction = (typeof TOLET_TENANT_RESTRICTION)[keyof typeof TOLET_TENANT_RESTRICTION];
+
+export const TOLET_TENANT_RESTRICTION_VALUES = Object.values(TOLET_TENANT_RESTRICTION) as string[];
+
+export const TOLET_MONTHS = [
+  'JANUARY',
+  'FEBRUARY',
+  'MARCH',
+  'APRIL',
+  'MAY',
+  'JUNE',
+  'JULY',
+  'AUGUST',
+  'SEPTEMBER',
+  'OCTOBER',
+  'NOVEMBER',
+  'DECEMBER'
+] as const;
+
+export type ToLetMonth = (typeof TOLET_MONTHS)[number];
+
 export const MEAL_PROMPT_ANSWERS = {
   YES: 'YES',
   NO: 'NO',
