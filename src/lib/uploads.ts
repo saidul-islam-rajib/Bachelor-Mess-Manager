@@ -4,6 +4,7 @@ import path from 'node:path';
 import { uploadConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import { formatBytes } from '@/lib/format';
+import { prisma } from '@/lib/prisma';
 import { getUploadPolicy } from '@/lib/settings-service';
 import { ACCEPTED_IMAGE_EXTENSIONS, ACCEPTED_IMAGE_MIMES, IMAGE_FORMATS } from '@/lib/uploads.client';
 
@@ -124,4 +125,13 @@ export async function readImage(name: string): Promise<{ body: Buffer; contentTy
 
 function safeFileName(name: string): string | null {
   return FILE_NAME_PATTERN.test(name) ? name : null;
+}
+
+export async function isPubliclyViewable(name: string): Promise<boolean> {
+  const url = `${uploadConfig.routePrefix}${name}`;
+  const [postImage, avatarOwner] = await Promise.all([
+    prisma.communityMessageImage.findFirst({ where: { url, message: { deletedAt: null } }, select: { id: true } }),
+    prisma.user.findFirst({ where: { profileImage: url }, select: { id: true } })
+  ]);
+  return Boolean(postImage ?? avatarOwner);
 }

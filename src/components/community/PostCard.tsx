@@ -91,62 +91,78 @@ export function PostCard({
       </div>
 
       {isToLet ? (
-        <div className="px-4 pb-3 pt-2">
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Badge tone="neutral">
-              {strings.toLet.types[(message.listingType ?? '') as keyof typeof strings.toLet.types]}
-            </Badge>
-            {message.genderPreference && message.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && (
-              <Badge tone="warning">
-                {strings.toLet.genderPreference[message.genderPreference as keyof typeof strings.toLet.genderPreference]}
+        <div className="flex gap-3 px-4 pb-3 pt-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge tone="neutral">
+                {strings.toLet.types[(message.listingType ?? '') as keyof typeof strings.toLet.types]}
               </Badge>
-            )}
-            <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
-              {tenantRestrictionLabel}
-            </Badge>
-          </div>
+              {message.genderPreference && message.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && (
+                <Badge tone="warning">
+                  {strings.toLet.genderPreference[message.genderPreference as keyof typeof strings.toLet.genderPreference]}
+                </Badge>
+              )}
+              <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
+                {tenantRestrictionLabel}
+              </Badge>
+            </div>
 
-          {message.title && <p className="mt-1.5 text-[15px] font-semibold text-slate-900">{message.title}</p>}
+            {message.title && <p className="mt-1.5 text-[15px] font-semibold text-slate-900">{message.title}</p>}
 
-          <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-brand-700">
-            {message.rent !== null && strings.toLet.rentPerMonth(formatCurrency(message.rent))}
-            {message.rentNegotiable && (
-              <span className="text-xs font-normal text-slate-400">{strings.toLet.negotiable}</span>
-            )}
-          </p>
-
-          {message.location && (
-            <p className="text-sm text-slate-500">
-              {message.location}
-              {distanceKm !== undefined && distanceKm !== null && (
-                <span className="ml-1.5 text-xs text-slate-400">
-                  · {strings.toLet.search.distanceAway(distanceKm.toFixed(1))}
-                </span>
+            <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-brand-700">
+              {message.rent !== null && strings.toLet.rentPerMonth(formatCurrency(message.rent))}
+              {message.rentNegotiable && (
+                <span className="text-xs font-normal text-slate-400">{strings.toLet.negotiable}</span>
               )}
             </p>
-          )}
 
-          {message.availableMonth && (
-            <p className="text-xs text-slate-400">
-              {strings.toLet.availableFromMonth(strings.toLet.months[message.availableMonth as keyof typeof strings.toLet.months])}
-            </p>
-          )}
+            {message.location && (
+              <p className="text-sm text-slate-500">
+                {message.location}
+                {distanceKm !== undefined && distanceKm !== null && (
+                  <span className="ml-1.5 text-xs text-slate-400">
+                    · {strings.toLet.search.distanceAway(distanceKm.toFixed(1))}
+                  </span>
+                )}
+              </p>
+            )}
 
-          {message.text && (
-            <MentionText
-              text={message.text}
-              members={members}
-              mentionNames={mentionNames}
-              className="mt-1.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800"
-            />
-          )}
+            {message.availableMonth && (
+              <p className="text-xs text-slate-400">
+                {strings.toLet.availableFromMonth(strings.toLet.months[message.availableMonth as keyof typeof strings.toLet.months])}
+              </p>
+            )}
 
-          <Link
-            href={toLetListingPath(message.id)}
-            className="mt-2 inline-block text-sm font-medium text-brand-700 hover:text-brand-800"
-          >
-            {strings.toLet.viewAction}
-          </Link>
+            {message.text && (
+              <MentionText
+                text={message.text}
+                members={members}
+                mentionNames={mentionNames}
+                className="mt-1.5 line-clamp-2 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800"
+              />
+            )}
+
+            <Link
+              href={toLetListingPath(message.id)}
+              className="mt-2 inline-block text-sm font-medium text-brand-700 hover:text-brand-800"
+            >
+              {strings.toLet.viewAction}
+            </Link>
+          </div>
+
+          {message.images.length > 0 && (
+            <Link
+              href={toLetListingPath(message.id)}
+              className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-28 sm:w-28"
+            >
+              <img src={message.images[0]} alt="" className="h-full w-full object-cover" />
+              {message.images.length > 1 && (
+                <span className="absolute bottom-1 right-1 rounded-full bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  +{message.images.length - 1}
+                </span>
+              )}
+            </Link>
+          )}
         </div>
       ) : (
         (message.title || message.text) && (
@@ -164,7 +180,7 @@ export function PostCard({
         )
       )}
 
-      {message.images.length > 0 && (
+      {!isToLet && message.images.length > 0 && (
         <div className={message.title || message.text ? '' : 'mt-3'}>
           <ImageGrid images={message.images} authorName={message.authorName} />
         </div>

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser } from '@/lib/auth-utils';
 import { methodNotAllowed, notFound, unauthorized } from '@/lib/http';
-import { imageExists, readImage } from '@/lib/uploads';
+import { imageExists, isPubliclyViewable, readImage } from '@/lib/uploads';
 import { uploadConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
@@ -22,14 +22,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return methodNotAllowed(res, ['GET', 'HEAD']);
   }
 
-  const sessionUser = await getSessionUser(req);
-  if (!sessionUser) {
-    return unauthorized(res, 'You must be signed in.');
-  }
-
   const name = Array.isArray(req.query.file) ? req.query.file[0] : req.query.file;
   if (!name) {
     return notFound(res, 'Not found.');
+  }
+
+  const sessionUser = await getSessionUser(req);
+  if (!sessionUser && !(await isPubliclyViewable(name))) {
+    return unauthorized(res, 'You must be signed in.');
   }
 
   const etag = `"${name}"`;

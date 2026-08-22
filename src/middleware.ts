@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   ROUTES.community,
   ROUTES.mealReply,
   '/api/community/messages',
+  '/api/uploads',
   '/api/meal-reply',
   '/api/meal-prompts/dispatch',
   '/auth/login',
