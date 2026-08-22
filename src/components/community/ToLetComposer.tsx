@@ -25,6 +25,8 @@ type FormState = {
   rent: string;
   rentNegotiable: boolean;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   genderPreference: string;
   contactName: string;
   contactPhone: string;
@@ -40,6 +42,8 @@ function emptyForm(defaultContactName: string, defaultContactPhone: string): For
     rent: '',
     rentNegotiable: false,
     location: '',
+    latitude: null,
+    longitude: null,
     genderPreference: TOLET_GENDER_PREFERENCE.ANY,
     contactName: defaultContactName,
     contactPhone: defaultContactPhone,
@@ -48,10 +52,29 @@ function emptyForm(defaultContactName: string, defaultContactPhone: string): For
   };
 }
 
+function formFromSource(source: CommunityMessageView, defaultContactName: string, defaultContactPhone: string): FormState {
+  return {
+    listingType: source.listingType ?? TOLET_TYPE_VALUES[0],
+    title: source.title ?? '',
+    text: source.text,
+    rent: source.rent !== null ? String(source.rent) : '',
+    rentNegotiable: source.rentNegotiable,
+    location: source.location ?? '',
+    latitude: source.latitude,
+    longitude: source.longitude,
+    genderPreference: source.genderPreference ?? TOLET_GENDER_PREFERENCE.ANY,
+    contactName: source.contactName ?? defaultContactName,
+    contactPhone: source.contactPhone ?? defaultContactPhone,
+    expiryDays: toLetConfig.defaultExpiryDays,
+    images: source.images
+  };
+}
+
 export function ToLetComposer({
   open,
   onClose,
   listing,
+  prefillFrom,
   defaultContactName,
   defaultContactPhone,
   onSaved
@@ -59,6 +82,7 @@ export function ToLetComposer({
   open: boolean;
   onClose: () => void;
   listing?: CommunityMessageView | null;
+  prefillFrom?: CommunityMessageView | null;
   defaultContactName: string;
   defaultContactPhone: string;
   onSaved: (listing: CommunityMessageView) => void;
@@ -68,30 +92,21 @@ export function ToLetComposer({
   const [form, setForm] = useState<FormState>(() => emptyForm(defaultContactName, defaultContactPhone));
   const [maxImageBytes, setMaxImageBytes] = useState(uploadConfig.maxImageBytes);
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   const editing = Boolean(listing);
+  const reposting = !editing && Boolean(prefillFrom);
+  const source = listing ?? prefillFrom ?? null;
 
   useEffect(() => {
     if (!open) return;
 
     setForm(
-      listing
-        ? {
-            listingType: listing.listingType ?? TOLET_TYPE_VALUES[0],
-            title: listing.title ?? '',
-            text: listing.text,
-            rent: listing.rent !== null ? String(listing.rent) : '',
-            rentNegotiable: listing.rentNegotiable,
-            location: listing.location ?? '',
-            genderPreference: listing.genderPreference ?? TOLET_GENDER_PREFERENCE.ANY,
-            contactName: listing.contactName ?? defaultContactName,
-            contactPhone: listing.contactPhone ?? defaultContactPhone,
-            expiryDays: toLetConfig.defaultExpiryDays,
-            images: listing.images
-          }
+      source
+        ? formFromSource(source, defaultContactName, defaultContactPhone)
         : emptyForm(defaultContactName, defaultContactPhone)
     );
-  }, [open, listing, defaultContactName, defaultContactPhone]);
+  }, [open, source, defaultContactName, defaultContactPhone]);
 
   useEffect(() => {
     let cancelled = false;
@@ -111,6 +126,39 @@ export function ToLetComposer({
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function shareLocation() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      toast.error(strings.toLet.location.unsupported);
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        setForm((current) => ({ ...current, latitude, longitude }));
+
+        api
+          .get<{ label: string | null }>('/api/community/messages/reverse-geocode', { query: { lat: latitude, lng: longitude } })
+          .then((data) => {
+            if (data.label) update('location', data.label);
+          })
+          .catch(() => undefined)
+          .finally(() => setLocating(false));
+      },
+      () => {
+        toast.error(strings.toLet.location.shareFailed);
+        setLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  function clearSharedLocation() {
+    setForm((current) => ({ ...current, latitude: null, longitude: null }));
   }
 
   async function addFiles(event: ChangeEvent<HTMLInputElement>) {
@@ -168,6 +216,8 @@ export function ToLetComposer({
         rent: Number(form.rent),
         rentNegotiable: form.rentNegotiable,
         location: form.location.trim(),
+        latitude: form.latitude,
+        longitude: form.longitude,
         genderPreference: form.genderPreference,
         contactName: form.contactName.trim() || null,
         contactPhone: form.contactPhone.trim() || null,
@@ -178,10 +228,12 @@ export function ToLetComposer({
       const data =
         editing && listing
           ? await api.patch<{ message: CommunityMessageView }>(`/api/community/messages/${listing.id}`, payload)
-          : await api.post<{ message: CommunityMessageView }>('/api/community/messages', payload);
+          : reposting && prefillFrom
+            ? await api.post<{ message: CommunityMessageView }>(`/api/community/messages/${prefillFrom.id}/repost`, payload)
+            : await api.post<{ message: CommunityMessageView }>('/api/community/messages', payload);
 
       onSaved(data.message);
-      toast.success(editing ? strings.toLet.updated : strings.toLet.created);
+      toast.success(editing ? strings.toLet.updated : reposting ? strings.toLet.reposted : strings.toLet.created);
       onClose();
     } catch (error) {
       toast.error(errorMessage(error));
@@ -204,12 +256,19 @@ export function ToLetComposer({
   }));
 
   const canSubmit = Boolean(form.title.trim() && form.text.trim() && form.location.trim() && form.rent.trim());
+  const hasSharedLocation = form.latitude !== null && form.longitude !== null;
 
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title={editing ? strings.toLet.composer.editTitle : strings.toLet.composer.createTitle}
+      title={
+        editing
+          ? strings.toLet.composer.editTitle
+          : reposting
+            ? strings.toLet.composer.repostTitle
+            : strings.toLet.composer.createTitle
+      }
       size="lg"
       footer={
         <Button onClick={() => void submit()} disabled={!canSubmit} loading={saving}>
@@ -217,7 +276,9 @@ export function ToLetComposer({
             ? strings.toLet.composer.submitting
             : editing
               ? strings.toLet.composer.submitEdit
-              : strings.toLet.composer.submitCreate}
+              : reposting
+                ? strings.toLet.composer.submitRepost
+                : strings.toLet.composer.submitCreate}
         </Button>
       }
     >
@@ -273,13 +334,45 @@ export function ToLetComposer({
           {strings.toLet.composer.negotiableLabel}
         </label>
 
-        <Input
-          label={strings.toLet.composer.locationLabel}
-          value={form.location}
-          onChange={(value) => update('location', value)}
-          placeholder={strings.toLet.composer.locationPlaceholder}
-          maxLength={toLetConfig.maxLocationLength}
-        />
+        <div>
+          <Input
+            label={strings.toLet.composer.locationLabel}
+            value={form.location}
+            onChange={(value) => update('location', value)}
+            placeholder={strings.toLet.composer.locationPlaceholder}
+            maxLength={toLetConfig.maxLocationLength}
+          />
+
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={shareLocation}
+              disabled={locating}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+              {locating ? strings.toLet.location.sharing : strings.toLet.location.shareAction}
+            </button>
+
+            {hasSharedLocation && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                📍 {strings.toLet.location.shared}
+                <button
+                  type="button"
+                  onClick={clearSharedLocation}
+                  className="text-emerald-600 hover:text-emerald-900"
+                  aria-label={strings.toLet.location.clearAction}
+                  title={strings.toLet.location.clearAction}
+                >
+                  &times;
+                </button>
+              </span>
+            )}
+          </div>
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Input

@@ -21,6 +21,7 @@ import {
   TOLET_STATUS,
   TOLET_TYPE_VALUES
 } from '@/lib/constants';
+import { geocode } from '@/lib/geo';
 import { firstValue } from '@/lib/query';
 import { validateAmount, validatePhone } from '@/lib/validation';
 import { saveImage } from '@/lib/uploads';
@@ -142,6 +143,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       if (!value) return badRequest(res, strings.toLet.locationRequired);
       if (value.length > toLetConfig.maxLocationLength) return badRequest(res, strings.toLet.locationTooLong(toLetConfig.maxLocationLength));
       patch.location = value;
+
+      if (body.latitude !== undefined || body.longitude !== undefined) {
+        const lat = Number(body.latitude);
+        const lng = Number(body.longitude);
+        patch.latitude = Number.isFinite(lat) ? lat : null;
+        patch.longitude = Number.isFinite(lng) ? lng : null;
+      } else {
+        const point = await geocode(value);
+        patch.latitude = point?.lat ?? null;
+        patch.longitude = point?.lng ?? null;
+      }
     }
 
     if (body.rent !== undefined) {

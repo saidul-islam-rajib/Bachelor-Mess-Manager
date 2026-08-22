@@ -109,7 +109,8 @@ export const CACHE_DEFAULTS = {
   sessionUserMs: 5_000,
   billsListMs: 15_000,
   dashboardGroupMs: 20_000,
-  advancesMs: 15_000
+  advancesMs: 15_000,
+  geocodeMs: 86_400_000
 } as const;
 
 export const COMMUNITY_DEFAULTS = {
@@ -131,7 +132,18 @@ export const TOLET_DEFAULTS = {
   defaultExpiryDays: 30,
   quickExpiryDays: 1,
   expiryOptionsDays: [1, 7, 30, 90],
-  commentMaxLength: 500
+  commentMaxLength: 500,
+  searchPageSize: 9,
+  suggestionCount: 6,
+  nearestResultCount: 6,
+  nearestSearchRadiusKm: 60
+} as const;
+
+export const GEOCODE_DEFAULTS = {
+  baseUrl: 'https://nominatim.openstreetmap.org',
+  countryCodes: 'bd',
+  userAgent: 'BachelorPoint/1.0 (+https://team-sober.com)',
+  timeoutMs: 5000
 } as const;
 
 export const MEAL_PROMPT_DEFAULTS = {

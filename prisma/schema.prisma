@@ -882,6 +882,8 @@ model CommunityMessage {
   rent             Float?
   rentNegotiable   Boolean                 @default(false)
   location         String?
+  latitude         Float?
+  longitude        Float?
   genderPreference String?
   contactName      String?
   contactPhone     String?

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { appConfig, communityConfig } from '@/config';
+import { appConfig, communityConfig, toLetConfig } from '@/config';
 import { ANNOUNCEMENTS } from '@/lib/community/announcements';
 import {
   COMMUNITY_MESSAGE_TYPES,
@@ -10,9 +10,11 @@ import {
   USER_ROLES,
   USER_STATUS
 } from '@/lib/constants';
+import { geocode, haversineKm } from '@/lib/geo';
 import { strings } from '@/lib/i18n';
 import { mentionIdsIn, mentionsEveryone } from '@/lib/mentions';
 import { createNotifications } from '@/lib/notifications';
+import { buildPageMeta, type PageMeta } from '@/lib/query';
 import { ROUTES, toLetListingPath } from '@/lib/routes';
 import { isNotificationEnabled } from '@/lib/settings-service';
 
@@ -35,6 +37,8 @@ export type CommunityMessageView = {
   rent: number | null;
   rentNegotiable: boolean;
   location: string | null;
+  latitude: number | null;
+  longitude: number | null;
   genderPreference: string | null;
   contactName: string | null;
   contactPhone: string | null;
@@ -46,6 +50,16 @@ export type CommunityMessageView = {
   commentCount: number;
   likedByViewer: boolean;
   createdAt: string;
+};
+
+export type ToLetSearchItem = CommunityMessageView & { distanceKm: number | null };
+
+export type ToLetSearchFallback = { query: string } | null;
+
+export type ToLetSearchResult = {
+  items: ToLetSearchItem[];
+  meta: PageMeta;
+  fallback: ToLetSearchFallback;
 };
 
 export type CommunityCommentReplyView = {
@@ -92,6 +106,8 @@ const MESSAGE_SELECT = {
   rent: true,
   rentNegotiable: true,
   location: true,
+  latitude: true,
+  longitude: true,
   genderPreference: true,
   contactName: true,
   contactPhone: true,
@@ -166,6 +182,8 @@ function serialize(row: MessageRow, likedByViewer: boolean): CommunityMessageVie
     rent: row.rent,
     rentNegotiable: row.rentNegotiable,
     location: row.location,
+    latitude: row.latitude,
+    longitude: row.longitude,
     genderPreference: row.genderPreference,
     contactName: row.contactName,
     contactPhone: row.contactPhone,
@@ -283,20 +301,25 @@ export type PostMessageToLetInput = {
   rent: number;
   rentNegotiable: boolean;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   genderPreference: string;
   contactName: string | null;
   contactPhone: string | null;
   expiryDays: number;
 };
 
-export async function postMessage(params: {
-  authorId: string;
-  text: string;
-  images?: string[];
-  title?: string | null;
-  toLet?: PostMessageToLetInput;
-}): Promise<CommunityMessageView> {
-  const row = await prisma.communityMessage.create({
+async function createMessageRow(
+  db: Pick<typeof prisma, 'communityMessage'>,
+  params: {
+    authorId: string;
+    text: string;
+    images?: string[];
+    title?: string | null;
+    toLet?: PostMessageToLetInput;
+  }
+): Promise<MessageRow> {
+  return db.communityMessage.create({
     data: {
       key: `${MEMBER_KEY_PREFIX}${randomUUID()}`,
       type: params.toLet ? COMMUNITY_MESSAGE_TYPES.TOLET : COMMUNITY_MESSAGE_TYPES.MEMBER,
@@ -312,6 +335,8 @@ export async function postMessage(params: {
             rent: params.toLet.rent,
             rentNegotiable: params.toLet.rentNegotiable,
             location: params.toLet.location,
+            latitude: params.toLet.latitude ?? null,
+            longitude: params.toLet.longitude ?? null,
             genderPreference: params.toLet.genderPreference,
             contactName: params.toLet.contactName,
             contactPhone: params.toLet.contactPhone,
@@ -332,6 +357,28 @@ export async function postMessage(params: {
     },
     select: MESSAGE_SELECT
   });
+}
+
+export async function postMessage(params: {
+  authorId: string;
+  text: string;
+  images?: string[];
+  title?: string | null;
+  toLet?: PostMessageToLetInput;
+}): Promise<CommunityMessageView> {
+  const row = await createMessageRow(prisma, params);
+  return serialize(row, false);
+}
+
+export async function repostListing(
+  oldId: string,
+  params: { authorId: string; text: string; images: string[]; title: string; toLet: PostMessageToLetInput },
+  actorId: string
+): Promise<CommunityMessageView> {
+  const row = await prisma.$transaction(async (tx) => {
+    await tx.communityMessage.update({ where: { id: oldId }, data: { deletedAt: new Date(), updatedById: actorId } });
+    return createMessageRow(tx, params);
+  });
 
   return serialize(row, false);
 }
@@ -343,6 +390,8 @@ export type UpdateListingInput = Partial<{
   rent: number;
   rentNegotiable: boolean;
   location: string;
+  latitude: number | null;
+  longitude: number | null;
   genderPreference: string;
   contactName: string | null;
   contactPhone: string | null;
@@ -401,6 +450,138 @@ export async function myListings(userId: string): Promise<CommunityMessageView[]
     orderBy: { createdAt: 'desc' }
   });
   return rows.map((row) => serialize(row, false));
+}
+
+const TOLET_ACTIVE_SQL = Prisma.sql`
+  "type" = ${COMMUNITY_MESSAGE_TYPES.TOLET}
+  AND "deletedAt" IS NULL
+  AND "isPublished" = true
+  AND "listingStatus" = ${TOLET_STATUS.ACTIVE}
+  AND "expiresAt" > NOW()
+`;
+
+export async function suggestLocations(q: string): Promise<string[]> {
+  const value = q.trim();
+  if (value.length < 2) return [];
+
+  const rows = await prisma.$queryRaw<Array<{ location: string; score: number }>>(Prisma.sql`
+    SELECT DISTINCT "location", similarity("location", ${value}) AS score FROM "CommunityMessage"
+    WHERE ${TOLET_ACTIVE_SQL}
+      AND "location" IS NOT NULL
+      AND (similarity("location", ${value}) > 0.2 OR "location" ILIKE ${`${value}%`})
+    ORDER BY score DESC
+    LIMIT ${toLetConfig.suggestionCount}
+  `);
+
+  return rows.map((row) => row.location).filter(Boolean);
+}
+
+export async function searchListings(options: {
+  q?: string;
+  type?: string;
+  minRent?: number;
+  maxRent?: number;
+  page?: number;
+  pageSize?: number;
+  viewerId?: string | null;
+}): Promise<ToLetSearchResult> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.min(Math.max(1, options.pageSize ?? toLetConfig.searchPageSize), toLetConfig.searchPageSize);
+  const q = options.q?.trim() ?? '';
+
+  const conditions: Prisma.Sql[] = [TOLET_ACTIVE_SQL];
+  if (options.type) conditions.push(Prisma.sql`"listingType" = ${options.type}`);
+  if (options.minRent !== undefined) conditions.push(Prisma.sql`"rent" >= ${options.minRent}`);
+  if (options.maxRent !== undefined) conditions.push(Prisma.sql`"rent" <= ${options.maxRent}`);
+
+  const searchCondition = q
+    ? Prisma.sql`AND (
+        similarity(COALESCE("title", ''), ${q}) > 0.15 OR
+        similarity(COALESCE("location", ''), ${q}) > 0.15 OR
+        similarity(COALESCE("text", ''), ${q}) > 0.1 OR
+        "title" ILIKE ${`%${q}%`} OR
+        "location" ILIKE ${`%${q}%`} OR
+        "text" ILIKE ${`%${q}%`}
+      )`
+    : Prisma.empty;
+
+  const scoreExpr = q
+    ? Prisma.sql`(
+        GREATEST(similarity(COALESCE("title", ''), ${q}), 0) * 3 +
+        GREATEST(similarity(COALESCE("location", ''), ${q}), 0) * 2.5 +
+        GREATEST(similarity(COALESCE("text", ''), ${q}), 0) +
+        CASE WHEN "title" ILIKE ${`%${q}%`} THEN 2 ELSE 0 END +
+        CASE WHEN "location" ILIKE ${`%${q}%`} THEN 1.5 ELSE 0 END
+      )`
+    : Prisma.sql`0`;
+
+  const whereSql = Prisma.join(conditions, ' AND ');
+
+  const ranked = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT "id" FROM "CommunityMessage"
+    WHERE ${whereSql} ${searchCondition}
+    ORDER BY ${scoreExpr} DESC, "createdAt" DESC
+  `);
+
+  let ids = ranked.map((row) => row.id);
+  let fallback: ToLetSearchFallback = null;
+  const distanceById = new Map<string, number>();
+  let total = ids.length;
+
+  if (ids.length === 0 && q) {
+    const point = await geocode(q);
+    if (point) {
+      const candidates = await prisma.communityMessage.findMany({
+        where: {
+          type: COMMUNITY_MESSAGE_TYPES.TOLET,
+          deletedAt: null,
+          isPublished: true,
+          listingStatus: TOLET_STATUS.ACTIVE,
+          expiresAt: { gt: new Date() },
+          latitude: { not: null },
+          longitude: { not: null },
+          ...(options.type ? { listingType: options.type } : {}),
+          ...(options.minRent !== undefined ? { rent: { gte: options.minRent } } : {}),
+          ...(options.maxRent !== undefined ? { rent: { lte: options.maxRent } } : {})
+        },
+        select: { id: true, latitude: true, longitude: true }
+      });
+
+      const nearest = candidates
+        .map((candidate) => ({
+          id: candidate.id,
+          distanceKm: haversineKm(point, { lat: candidate.latitude!, lng: candidate.longitude! })
+        }))
+        .filter((candidate) => candidate.distanceKm <= toLetConfig.nearestSearchRadiusKm)
+        .sort((a, b) => a.distanceKm - b.distanceKm)
+        .slice(0, toLetConfig.nearestResultCount);
+
+      for (const candidate of nearest) distanceById.set(candidate.id, candidate.distanceKm);
+      ids = nearest.map((candidate) => candidate.id);
+      total = ids.length;
+      if (ids.length > 0) fallback = { query: q };
+    }
+  }
+
+  const pageIds = fallback ? ids : ids.slice((page - 1) * pageSize, page * pageSize);
+
+  const rows =
+    pageIds.length > 0
+      ? await prisma.communityMessage.findMany({ where: { id: { in: pageIds } }, select: MESSAGE_SELECT })
+      : [];
+  const rowsById = new Map(rows.map((row) => [row.id, row]));
+  const liked = await likedMessageIds(pageIds, options.viewerId);
+
+  const items: ToLetSearchItem[] = pageIds
+    .map((id) => rowsById.get(id))
+    .filter((row): row is MessageRow => Boolean(row))
+    .map((row) => ({ ...serialize(row, liked.has(row.id)), distanceKm: distanceById.get(row.id) ?? null }));
+
+  return {
+    items,
+    meta: buildPageMeta(page, fallback ? Math.max(items.length, 1) : pageSize, fallback ? items.length : total),
+    fallback
+  };
 }
 
 export async function getMessageForView(id: string, viewerId?: string | null): Promise<CommunityMessageView | null> {

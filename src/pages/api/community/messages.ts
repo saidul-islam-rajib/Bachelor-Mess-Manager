@@ -2,19 +2,12 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { communityConfig, toLetConfig } from '@/config';
-import {
-  directory,
-  ensureWelcomeMessage,
-  notifyMentions,
-  postMessage,
-  readFeed,
-  unreadCount,
-  type PostMessageToLetInput
-} from '@/lib/community';
+import { directory, ensureWelcomeMessage, notifyMentions, postMessage, readFeed, searchListings, unreadCount } from '@/lib/community';
+import { geocode } from '@/lib/geo';
 import { strings } from '@/lib/i18n';
-import { TOLET_GENDER_PREFERENCE, TOLET_GENDER_PREFERENCE_VALUES, TOLET_TYPE_VALUES } from '@/lib/constants';
+import { TOLET_TYPE_VALUES } from '@/lib/constants';
 import { queryInt, queryString } from '@/lib/query';
-import { validateAmount, validatePhone } from '@/lib/validation';
+import { parseToLetFields } from '@/lib/tolet-validation';
 import { saveImage } from '@/lib/uploads';
 import { findXssField } from '@/lib/xss';
 import { withAudit } from '@/lib/with-audit';
@@ -25,59 +18,34 @@ export const config = {
   }
 };
 
-function parseToLetInput(
-  body: Record<string, unknown>
-): { ok: true; value: PostMessageToLetInput } | { ok: false; error: string } {
-  const { listingType, rent, rentNegotiable, location, genderPreference, contactName, contactPhone, expiryDays } = body;
-
-  if (typeof listingType !== 'string' || !TOLET_TYPE_VALUES.includes(listingType)) {
-    return { ok: false, error: strings.toLet.typeInvalid };
-  }
-
-  let genderPref: string = TOLET_GENDER_PREFERENCE.ANY;
-  if (genderPreference !== undefined && genderPreference !== null && genderPreference !== '') {
-    if (typeof genderPreference !== 'string' || !TOLET_GENDER_PREFERENCE_VALUES.includes(genderPreference)) {
-      return { ok: false, error: strings.toLet.genderPreferenceInvalid };
-    }
-    genderPref = genderPreference;
-  }
-
-  const locationValue = typeof location === 'string' ? location.trim() : '';
-  if (!locationValue) return { ok: false, error: strings.toLet.locationRequired };
-  if (locationValue.length > toLetConfig.maxLocationLength) {
-    return { ok: false, error: strings.toLet.locationTooLong(toLetConfig.maxLocationLength) };
-  }
-
-  const rentCheck = validateAmount(rent);
-  if (!rentCheck.ok) return { ok: false, error: rentCheck.error };
-
-  const phoneCheck = validatePhone(contactPhone);
-  if (!phoneCheck.ok) return { ok: false, error: phoneCheck.error };
-
-  const expiryDaysValue = Number(expiryDays);
-  if (!(toLetConfig.expiryOptionsDays as readonly number[]).includes(expiryDaysValue)) {
-    return { ok: false, error: strings.toLet.expiryInvalid };
-  }
-
-  return {
-    ok: true,
-    value: {
-      listingType,
-      rent: rentCheck.value,
-      rentNegotiable: Boolean(rentNegotiable),
-      location: locationValue,
-      genderPreference: genderPref,
-      contactName: typeof contactName === 'string' && contactName.trim() ? contactName.trim() : null,
-      contactPhone: phoneCheck.value,
-      expiryDays: expiryDaysValue
-    }
-  };
-}
-
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req, res);
 
   if (req.method === 'GET') {
+    const q = queryString(req, 'q');
+    const type = queryString(req, 'type');
+    const minRentRaw = queryString(req, 'minRent');
+    const maxRentRaw = queryString(req, 'maxRent');
+    const isSearch = Boolean(q || type || minRentRaw || maxRentRaw);
+
+    if (isSearch) {
+      const page = queryInt(req, 'page', 1, 1, Number.MAX_SAFE_INTEGER);
+      const minRent = minRentRaw !== undefined && Number.isFinite(Number(minRentRaw)) ? Number(minRentRaw) : undefined;
+      const maxRent = maxRentRaw !== undefined && Number.isFinite(Number(maxRentRaw)) ? Number(maxRentRaw) : undefined;
+
+      const result = await searchListings({
+        q,
+        type: type && TOLET_TYPE_VALUES.includes(type) ? type : undefined,
+        minRent,
+        maxRent,
+        page,
+        pageSize: toLetConfig.searchPageSize,
+        viewerId: sessionUser?.id ?? null
+      });
+
+      return ok(res, { mode: 'search', ...result });
+    }
+
     const after = queryString(req, 'after');
     const before = queryString(req, 'before');
     const limit = queryInt(req, 'limit', communityConfig.pageSize, 1, communityConfig.pageSize);
@@ -89,6 +57,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const incremental = Boolean(after);
 
     return ok(res, {
+      mode: 'feed',
       ...feed,
       members: incremental ? undefined : await directory(),
       unreadCount: sessionUser ? await unreadCount(sessionUser.id) : 0,
@@ -109,30 +78,29 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === 'POST') {
     const body = req.body as Record<string, unknown>;
-    const { text, images, title, listingType } = body;
+    const { text, images, listingType } = body;
     const value = typeof text === 'string' ? text.trim() : '';
     const imageInputs = Array.isArray(images) ? images.filter((item): item is string => typeof item === 'string') : [];
     const isToLet = listingType !== undefined;
 
     if (isToLet) {
-      const titleValue = typeof title === 'string' ? title.trim() : '';
-      if (!titleValue) return badRequest(res, strings.toLet.titleRequired);
-      if (titleValue.length > toLetConfig.maxTitleLength) {
-        return badRequest(res, strings.toLet.titleTooLong(toLetConfig.maxTitleLength));
-      }
-      if (!value) return badRequest(res, strings.toLet.descriptionRequired);
-      if (value.length > toLetConfig.maxDescriptionLength) {
-        return badRequest(res, strings.toLet.descriptionTooLong(toLetConfig.maxDescriptionLength));
-      }
       if (imageInputs.length > toLetConfig.maxImagesPerListing) {
         return badRequest(res, strings.toLet.tooManyPhotos(toLetConfig.maxImagesPerListing));
       }
 
-      const toLetCheck = parseToLetInput(body);
+      const toLetCheck = parseToLetFields(body);
       if (!toLetCheck.ok) return badRequest(res, toLetCheck.error);
 
-      if (findXssField({ title: titleValue, text: value, location: toLetCheck.value.location })) {
+      if (findXssField({ title: toLetCheck.title, text: toLetCheck.text, location: toLetCheck.value.location })) {
         return badRequest(res, strings.errors.suspiciousInput);
+      }
+
+      if (toLetCheck.value.latitude === null || toLetCheck.value.longitude === null) {
+        const point = await geocode(toLetCheck.value.location);
+        if (point) {
+          toLetCheck.value.latitude = point.lat;
+          toLetCheck.value.longitude = point.lng;
+        }
       }
 
       const savedImages: string[] = [];
@@ -144,8 +112,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
       const message = await postMessage({
         authorId: sessionUser.id,
-        title: titleValue,
-        text: value,
+        title: toLetCheck.title,
+        text: toLetCheck.text,
         images: savedImages,
         toLet: toLetCheck.value
       });

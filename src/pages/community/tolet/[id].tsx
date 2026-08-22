@@ -21,6 +21,7 @@ import {
 import { TOLET_GENDER_PREFERENCE, TOLET_STATUS, USER_ROLES } from '@/lib/constants';
 import { api, errorMessage } from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { googleMapsLink } from '@/lib/geo';
 import { strings } from '@/lib/i18n';
 import { ROUTES, toLetListingPath } from '@/lib/routes';
 import type { CommunityMessageView } from '@/lib/community';
@@ -35,7 +36,7 @@ export default function ToLetDetailPage() {
   const [listing, setListing] = useState<CommunityMessageView | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [editorOpen, setEditorOpen] = useState(false);
+  const [composerMode, setComposerMode] = useState<'edit' | 'repost' | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -92,6 +93,22 @@ export default function ToLetDetailPage() {
     }
   }
 
+  async function confirmRepost() {
+    if (!listing) return;
+    const accepted = await confirm({
+      title: strings.toLet.repostConfirmTitle,
+      message: strings.toLet.repostConfirmBody,
+      confirmLabel: strings.toLet.repostAction
+    });
+    if (!accepted) return;
+    setComposerMode('repost');
+  }
+
+  function onReposted(updated: CommunityMessageView) {
+    setComposerMode(null);
+    void router.push(toLetListingPath(updated.id));
+  }
+
   async function removeListing() {
     if (!listing) return;
     const accepted = await confirm({
@@ -139,6 +156,10 @@ export default function ToLetDetailPage() {
   const typeLabel = strings.toLet.types[(listing.listingType ?? '') as keyof typeof strings.toLet.types];
   const genderLabel =
     listing.genderPreference && (strings.toLet.genderPreference[listing.genderPreference as keyof typeof strings.toLet.genderPreference] ?? null);
+  const mapsLink = googleMapsLink(
+    listing.latitude !== null && listing.longitude !== null ? { lat: listing.latitude, lng: listing.longitude } : null,
+    listing.location
+  );
 
   return (
     <PageContainer width="medium">
@@ -169,7 +190,19 @@ export default function ToLetDetailPage() {
               )}
             </div>
             <h1 className="mt-2 text-2xl font-semibold text-slate-900">{listing.title}</h1>
-            <p className="mt-1 text-sm text-slate-500">{listing.location}</p>
+            <p className="mt-1 text-sm text-slate-500">
+              {listing.location}
+              {mapsLink && (
+                <a
+                  href={mapsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1.5 font-medium text-brand-700 hover:text-brand-800"
+                >
+                  {strings.toLet.location.viewOnMap}
+                </a>
+              )}
+            </p>
           </div>
 
           <div className="shrink-0 text-right">
@@ -204,12 +237,16 @@ export default function ToLetDetailPage() {
 
         {canManage && (
           <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
-            <Button variant="secondary" size="sm" onClick={() => setEditorOpen(true)} disabled={busy}>
+            <Button variant="secondary" size="sm" onClick={() => setComposerMode('edit')} disabled={busy}>
               {strings.toLet.editAction}
             </Button>
-            {listing.effectiveListingStatus === TOLET_STATUS.ACTIVE && (
+            {listing.effectiveListingStatus === TOLET_STATUS.ACTIVE ? (
               <Button variant="secondary" size="sm" onClick={() => void markExpired()} disabled={busy}>
                 {strings.toLet.markExpiredAction}
+              </Button>
+            ) : (
+              <Button variant="secondary" size="sm" onClick={() => void confirmRepost()} disabled={busy}>
+                {strings.toLet.repostAction}
               </Button>
             )}
             <Button variant="danger" size="sm" onClick={() => void removeListing()} disabled={busy}>
@@ -226,12 +263,13 @@ export default function ToLetDetailPage() {
 
       {canManage && (
         <ToLetComposer
-          open={editorOpen}
-          onClose={() => setEditorOpen(false)}
-          listing={listing}
+          open={composerMode !== null}
+          onClose={() => setComposerMode(null)}
+          listing={composerMode === 'edit' ? listing : null}
+          prefillFrom={composerMode === 'repost' ? listing : null}
           defaultContactName={user?.name ?? ''}
           defaultContactPhone={user?.phone ?? ''}
-          onSaved={(updated) => setListing(updated)}
+          onSaved={composerMode === 'repost' ? onReposted : (updated) => setListing(updated)}
         />
       )}
     </PageContainer>

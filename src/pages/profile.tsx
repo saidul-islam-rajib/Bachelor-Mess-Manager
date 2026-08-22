@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import Link from 'next/link';
+import { ToLetComposer } from '@/components/community/ToLetComposer';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useInvitations } from '@/components/InvitationsProvider';
@@ -146,27 +147,42 @@ export default function ProfilePage() {
 function ToLetListingsSection() {
   const toast = useToast();
   const confirm = useConfirm();
+  const { user } = useCurrentUser();
   const [listings, setListings] = useState<CommunityMessageView[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [repostTarget, setRepostTarget] = useState<CommunityMessageView | null>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const data = await api.get<{ listings: CommunityMessageView[] }>('/api/community/messages/mine');
+      setListings(data.listings);
+    } catch {
+      return;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let cancelled = false;
+    void load();
+  }, [load]);
 
-    api
-      .get<{ listings: CommunityMessageView[] }>('/api/community/messages/mine')
-      .then((data) => {
-        if (!cancelled) setListings(data.listings);
-      })
-      .catch(() => undefined)
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+  async function confirmRepost(listing: CommunityMessageView) {
+    const accepted = await confirm({
+      title: strings.toLet.repostConfirmTitle,
+      message: strings.toLet.repostConfirmBody,
+      confirmLabel: strings.toLet.repostAction
+    });
+    if (!accepted) return;
+    setRepostTarget(listing);
+  }
 
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  function onReposted() {
+    setRepostTarget(null);
+    setLoading(true);
+    void load();
+  }
 
   async function markExpired(listing: CommunityMessageView) {
     setBusyId(listing.id);
@@ -236,7 +252,7 @@ function ToLetListingsSection() {
                 </p>
               </div>
               <div className="flex shrink-0 gap-1.5">
-                {listing.effectiveListingStatus === TOLET_STATUS.ACTIVE && (
+                {listing.effectiveListingStatus === TOLET_STATUS.ACTIVE ? (
                   <Button
                     size="sm"
                     variant="secondary"
@@ -244,6 +260,10 @@ function ToLetListingsSection() {
                     disabled={busyId === listing.id}
                   >
                     {strings.toLet.markExpiredAction}
+                  </Button>
+                ) : (
+                  <Button size="sm" variant="secondary" onClick={() => void confirmRepost(listing)} disabled={busyId === listing.id}>
+                    {strings.toLet.repostAction}
                   </Button>
                 )}
                 <Button size="sm" variant="danger" onClick={() => void remove(listing)} disabled={busyId === listing.id}>
@@ -254,6 +274,16 @@ function ToLetListingsSection() {
           ))}
         </ul>
       )}
+
+      <ToLetComposer
+        open={repostTarget !== null}
+        onClose={() => setRepostTarget(null)}
+        listing={null}
+        prefillFrom={repostTarget}
+        defaultContactName={user?.name ?? ''}
+        defaultContactPhone={user?.phone ?? ''}
+        onSaved={onReposted}
+      />
     </Collapsible>
   );
 }

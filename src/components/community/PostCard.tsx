@@ -28,7 +28,8 @@ export function PostCard({
   canDelete,
   canModerate,
   onDelete,
-  onLikeChange
+  onLikeChange,
+  distanceKm
 }: {
   message: CommunityMessage;
   members: Member[];
@@ -37,6 +38,7 @@ export function PostCard({
   canModerate: boolean;
   onDelete: (message: CommunityMessage) => void;
   onLikeChange: (messageId: string, liked: boolean, count: number) => void;
+  distanceKm?: number | null;
 }) {
   const [commentsOpen, setCommentsOpen] = useState(false);
   const typeLabel = strings.community.types[message.type as keyof typeof strings.community.types];
@@ -107,7 +109,16 @@ export function PostCard({
             )}
           </p>
 
-          {message.location && <p className="text-sm text-slate-500">{message.location}</p>}
+          {message.location && (
+            <p className="text-sm text-slate-500">
+              {message.location}
+              {distanceKm !== undefined && distanceKm !== null && (
+                <span className="ml-1.5 text-xs text-slate-400">
+                  · {strings.toLet.search.distanceAway(distanceKm.toFixed(1))}
+                </span>
+              )}
+            </p>
+          )}
 
           {message.text && (
             <MentionText

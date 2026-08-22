@@ -5,6 +5,8 @@ import { ComposerTrigger } from '@/components/community/ComposerTrigger';
 import { PeopleRail } from '@/components/community/PeopleRail';
 import { PostCard, type CommunityMessage } from '@/components/community/PostCard';
 import { ToLetComposer } from '@/components/community/ToLetComposer';
+import { EMPTY_TOLET_SEARCH, ToLetSearchBar, isToLetSearchActive, type ToLetSearchState } from '@/components/community/ToLetSearchBar';
+import { ToLetSearchResults } from '@/components/community/ToLetSearchResults';
 import { useInfiniteScroll } from '@/components/community/useInfiniteScroll';
 import type { Member } from '@/components/MentionInput';
 import { useCommunity } from '@/components/CommunityProvider';
@@ -19,9 +21,13 @@ import {
   PageTitle,
   useConfirm
 } from '@/components/ui';
-import { communityConfig } from '@/config';
+import { communityConfig, toLetConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
+import type { PageMeta } from '@/lib/query';
+import type { ToLetSearchResult } from '@/lib/community';
+
+const EMPTY_SEARCH_META: PageMeta = { page: 1, pageSize: 1, total: 0, totalPages: 0, hasPrevious: false, hasNext: false, from: 0, to: 0 };
 
 type CommunityMember = Member & { profileImage: string | null };
 
@@ -71,6 +77,12 @@ export default function CommunityPage() {
   const [newPostsPending, setNewPostsPending] = useState(0);
   const [composerOpen, setComposerOpen] = useState(false);
   const [toLetComposerOpen, setToLetComposerOpen] = useState(false);
+
+  const [search, setSearch] = useState<ToLetSearchState>(EMPTY_TOLET_SEARCH);
+  const [searchPage, setSearchPage] = useState(1);
+  const [searchResult, setSearchResult] = useState<ToLetSearchResult | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const searching = isToLetSearchActive(search);
 
   const latestSeenAt = useRef<string | null>(feedCache?.messages[0]?.createdAt ?? null);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -159,7 +171,46 @@ export default function CommunityPage() {
     }
   }
 
-  useInfiniteScroll({ target: sentinel, onIntersect: loadMore, enabled: !loading && hasMore, rootMargin: '800px' });
+  useInfiniteScroll({ target: sentinel, onIntersect: loadMore, enabled: !loading && !searching && hasMore, rootMargin: '800px' });
+
+  useEffect(() => {
+    setSearchPage(1);
+  }, [search.q, search.type, search.minRent, search.maxRent]);
+
+  useEffect(() => {
+    if (!searching) {
+      setSearchResult(null);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchLoading(true);
+
+    api
+      .get<{ mode: 'search' } & ToLetSearchResult>('/api/community/messages', {
+        query: {
+          q: search.q || undefined,
+          type: search.type || undefined,
+          minRent: search.minRent || undefined,
+          maxRent: search.maxRent || undefined,
+          page: searchPage,
+          pageSize: toLetConfig.searchPageSize
+        }
+      })
+      .then((data) => {
+        if (!cancelled) setSearchResult(data);
+      })
+      .catch((error) => {
+        if (!cancelled) toast.error(errorMessage(error, strings.toLet.search.loadFailed));
+      })
+      .finally(() => {
+        if (!cancelled) setSearchLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searching, search, searchPage, toast]);
 
   function onPosted(message: CommunityMessage) {
     setMessages((current) => [message, ...current]);
@@ -170,6 +221,14 @@ export default function CommunityPage() {
   function onLikeChange(messageId: string, liked: boolean, count: number) {
     setMessages((current) =>
       current.map((item) => (item.id === messageId ? { ...item, likedByViewer: liked, likeCount: count } : item))
+    );
+    setSearchResult((current) =>
+      current
+        ? {
+            ...current,
+            items: current.items.map((item) => (item.id === messageId ? { ...item, likedByViewer: liked, likeCount: count } : item))
+          }
+        : current
     );
   }
 
@@ -185,6 +244,9 @@ export default function CommunityPage() {
     try {
       await api.delete(`/api/community/messages/${message.id}`);
       setMessages((current) => current.filter((item) => item.id !== message.id));
+      setSearchResult((current) =>
+        current ? { ...current, items: current.items.filter((item) => item.id !== message.id) } : current
+      );
       toast.success(strings.community.deleted);
     } catch (error) {
       toast.error(errorMessage(error));
@@ -201,7 +263,9 @@ export default function CommunityPage() {
 
       <div className="grid gap-4 lg:grid-cols-[65fr_35fr]">
         <div className="min-w-0 space-y-4">
-          {user && (
+          <ToLetSearchBar value={search} onChange={setSearch} />
+
+          {user && !searching && (
             <div className="space-y-2">
               <ComposerTrigger
                 userName={user.name}
@@ -216,38 +280,56 @@ export default function CommunityPage() {
             </div>
           )}
 
-          {newPostsPending > 0 && (
-            <div className="flex justify-center">
-              <Button size="sm" variant="secondary" onClick={() => load()}>
-                {strings.community.newMessages(newPostsPending)} · {strings.community.jumpToLatest}
-              </Button>
-            </div>
-          )}
-
-          {loading ? (
-            <LoadingCard />
-          ) : messages.length === 0 ? (
-            <EmptyState title={strings.community.empty} />
+          {searching ? (
+            <ToLetSearchResults
+              items={searchResult?.items ?? []}
+              meta={searchResult?.meta ?? EMPTY_SEARCH_META}
+              fallback={searchResult?.fallback ?? null}
+              loading={searchLoading}
+              members={members}
+              mentionNames={mentionNames}
+              canModerate={canModerate}
+              canDelete={canDelete}
+              onDelete={remove}
+              onLikeChange={onLikeChange}
+              onPageChange={setSearchPage}
+            />
           ) : (
             <>
-              <ul className="space-y-3">
-                {messages.map((message) => (
-                  <PostCard
-                    key={message.id}
-                    message={message}
-                    members={members}
-                    mentionNames={mentionNames}
-                    canDelete={canDelete(message)}
-                    canModerate={canModerate}
-                    onDelete={remove}
-                    onLikeChange={onLikeChange}
-                  />
-                ))}
-              </ul>
+              {newPostsPending > 0 && (
+                <div className="flex justify-center">
+                  <Button size="sm" variant="secondary" onClick={() => load()}>
+                    {strings.community.newMessages(newPostsPending)} · {strings.community.jumpToLatest}
+                  </Button>
+                </div>
+              )}
 
-              <div ref={sentinel} className="py-6 text-center text-sm text-slate-400">
-                {loadingMore ? strings.community.loadingOlder : !hasMore ? strings.community.endOfFeed : null}
-              </div>
+              {loading ? (
+                <LoadingCard />
+              ) : messages.length === 0 ? (
+                <EmptyState title={strings.community.empty} />
+              ) : (
+                <>
+                  <ul className="space-y-3">
+                    {messages.map((message) => (
+                      <PostCard
+                        key={message.id}
+                        message={message}
+                        members={members}
+                        mentionNames={mentionNames}
+                        canDelete={canDelete(message)}
+                        canModerate={canModerate}
+                        onDelete={remove}
+                        onLikeChange={onLikeChange}
+                      />
+                    ))}
+                  </ul>
+
+                  <div ref={sentinel} className="py-6 text-center text-sm text-slate-400">
+                    {loadingMore ? strings.community.loadingOlder : !hasMore ? strings.community.endOfFeed : null}
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>

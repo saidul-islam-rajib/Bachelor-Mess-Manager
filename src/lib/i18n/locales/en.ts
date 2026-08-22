@@ -1399,6 +1399,7 @@ const en = {
     composer: {
       createTitle: 'Post a to-let',
       editTitle: 'Edit listing',
+      repostTitle: 'Repost listing',
       typeLabel: 'Type',
       titleLabel: 'Title',
       titlePlaceholder: 'e.g. Furnished single room near campus',
@@ -1417,12 +1418,38 @@ const en = {
       expiryOption: (days: number) => (days === 1 ? '1 day' : `${days} days`),
       submitCreate: 'Post listing',
       submitEdit: 'Save changes',
+      submitRepost: 'Repost',
       submitting: 'Saving...',
       photosHint: (max: number) => `Up to ${max} photos.`
     },
 
+    location: {
+      shareAction: 'Share my exact location',
+      sharing: 'Getting your location...',
+      shared: 'Exact location shared',
+      clearAction: 'Remove',
+      shareFailed: 'Could not get your location. You can still type it in below.',
+      unsupported: 'Your browser does not support sharing location.',
+      viewOnMap: 'View on Google Maps'
+    },
+
+    search: {
+      placeholder: 'Search by location, title, or rent...',
+      filtersAction: 'Filters',
+      typeAll: 'All types',
+      typeLabel: 'Type',
+      minRentLabel: 'Min rent',
+      maxRentLabel: 'Max rent',
+      noResults: 'No to-let listings match your search.',
+      noResultsHint: 'Try a different keyword, or clear your filters.',
+      nearestBanner: (query: string) => `No exact matches for "${query}" — showing the nearest to-lets instead.`,
+      distanceAway: (km: string) => `${km} km away`,
+      loadFailed: 'Could not load search results.'
+    },
+
     created: 'Listing posted.',
     updated: 'Listing updated.',
+    reposted: 'Listing reposted.',
     markedExpired: 'Listing marked as expired.',
     deleted: 'Listing deleted.',
     deleteConfirmTitle: 'Delete this listing?',
@@ -1430,8 +1457,11 @@ const en = {
     markExpiredConfirmTitle: 'Mark this listing as expired?',
     markExpiredConfirmBody:
       'It disappears from search and browsing right away. You can still find it from your profile.',
+    repostConfirmTitle: 'Repost this listing?',
+    repostConfirmBody: "Update anything that's changed — it will appear as a new post at the top of the feed.",
     editAction: 'Edit',
     markExpiredAction: 'Mark as expired',
+    repostAction: 'Repost',
     deleteAction: 'Delete',
     viewAction: 'View listing',
     backToBrowse: 'Back to the feed',
