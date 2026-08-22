@@ -29,6 +29,7 @@ export function PostCard({
   canModerate,
   onDelete,
   onLikeChange,
+  onCommentCountChange,
   distanceKm
 }: {
   message: CommunityMessage;
@@ -38,6 +39,7 @@ export function PostCard({
   canModerate: boolean;
   onDelete: (message: CommunityMessage) => void;
   onLikeChange: (messageId: string, liked: boolean, count: number) => void;
+  onCommentCountChange?: (messageId: string, count: number) => void;
   distanceKm?: number | null;
 }) {
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -127,13 +129,6 @@ export function PostCard({
                 className="mt-1.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800 dark:text-slate-200"
               />
             )}
-
-            <Link
-              href={toLetListingPath(message.id)}
-              className="mt-2 block text-right text-sm font-medium text-brand-700 hover:text-brand-800"
-            >
-              {strings.toLet.viewAction}
-            </Link>
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-1">
@@ -148,6 +143,12 @@ export function PostCard({
             <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
               {tenantRestrictionLabel}
             </Badge>
+            <Link
+              href={toLetListingPath(message.id)}
+              className="mt-1 text-sm font-medium text-brand-700 hover:text-brand-800"
+            >
+              {strings.toLet.viewAction}
+            </Link>
           </div>
         </div>
       ) : (
@@ -195,7 +196,11 @@ export function PostCard({
 
           {commentsOpen && (
             <div className="mt-3 border-t border-slate-100 dark:border-slate-700 pt-3">
-              <CommunityComments messageId={message.id} canModerate={canModerate} />
+              <CommunityComments
+                messageId={message.id}
+                canModerate={canModerate}
+                onCountChange={(count) => onCommentCountChange?.(message.id, count)}
+              />
             </div>
           )}
         </div>

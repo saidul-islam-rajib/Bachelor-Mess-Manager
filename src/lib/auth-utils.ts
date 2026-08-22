@@ -5,7 +5,9 @@ import {
   IMPERSONATION_COOKIE_NAME,
   parseCookies,
   setSessionCookie,
-  SESSION_COOKIE_NAME
+  setThemeCookie,
+  SESSION_COOKIE_NAME,
+  THEME_COOKIE_NAME
 } from '@/lib/auth';
 import { readIdentity } from '@/lib/identity';
 import { shouldRefresh, verifyImpersonationToken, verifySessionToken } from '@/lib/session';
@@ -134,25 +136,38 @@ export async function getRealSessionUser(req: NextApiRequest, res?: NextApiRespo
   return toSessionUser(user);
 }
 
+function syncThemeCookie(req: NextApiRequest, res: NextApiResponse | undefined, user: SessionUser) {
+  if (!res) return;
+  if (parseCookies(req.headers.cookie)[THEME_COOKIE_NAME] === user.theme) return;
+  setThemeCookie(res, user.theme);
+}
+
 export async function getSessionUser(req: NextApiRequest, res?: NextApiResponse): Promise<SessionUser | null> {
   const realUser = await getRealSessionUser(req, res);
   if (!realUser) return null;
 
   const impersonation = await verifyImpersonationToken(readImpersonationToken(req));
-  if (!impersonation) return realUser;
+  if (!impersonation) {
+    syncThemeCookie(req, res, realUser);
+    return realUser;
+  }
 
   if (realUser.role !== USER_ROLES.ADMIN || impersonation.aid !== realUser.id) {
     if (res) clearImpersonationCookie(res);
+    syncThemeCookie(req, res, realUser);
     return realUser;
   }
 
   const target = await loadActiveUser(impersonation.uid, impersonation.sv);
   if (!target || target.role === USER_ROLES.ADMIN) {
     if (res) clearImpersonationCookie(res);
+    syncThemeCookie(req, res, realUser);
     return realUser;
   }
 
-  return toSessionUser(target, { id: realUser.id, name: realUser.name, email: realUser.email });
+  const effectiveUser = toSessionUser(target, { id: realUser.id, name: realUser.name, email: realUser.email });
+  syncThemeCookie(req, res, effectiveUser);
+  return effectiveUser;
 }
 
 export function requireAdmin(user: { role?: string } | null) {

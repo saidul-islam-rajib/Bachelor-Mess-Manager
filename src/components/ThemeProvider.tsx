@@ -5,6 +5,8 @@ type Theme = (typeof THEME_OPTIONS)[keyof typeof THEME_OPTIONS];
 type ResolvedTheme = 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'theme';
+const THEME_COOKIE_NAME = 'bachelor_point_theme';
+const THEME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 type ThemeContextValue = {
   theme: Theme;
@@ -22,10 +24,28 @@ export function useTheme() {
   return ctx;
 }
 
+function isTheme(value: string | null): value is Theme {
+  return value === THEME_OPTIONS.LIGHT || value === THEME_OPTIONS.DARK || value === THEME_OPTIONS.SYSTEM;
+}
+
+function readCookieTheme(): Theme | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|; )bachelor_point_theme=([^;]*)/);
+  const value = match ? decodeURIComponent(match[1]) : null;
+  return isTheme(value) ? value : null;
+}
+
+function writeCookieTheme(theme: Theme) {
+  if (typeof document === 'undefined') return;
+  document.cookie = `${THEME_COOKIE_NAME}=${encodeURIComponent(theme)}; Path=/; Max-Age=${THEME_COOKIE_MAX_AGE_SECONDS}; SameSite=Lax`;
+}
+
 function readStoredTheme(): Theme {
   if (typeof window === 'undefined') return THEME_OPTIONS.SYSTEM;
+  const cookieTheme = readCookieTheme();
+  if (cookieTheme) return cookieTheme;
   const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return stored === THEME_OPTIONS.LIGHT || stored === THEME_OPTIONS.DARK ? stored : THEME_OPTIONS.SYSTEM;
+  return isTheme(stored) ? stored : THEME_OPTIONS.SYSTEM;
 }
 
 function prefersDark(): boolean {
@@ -47,6 +67,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);
     window.localStorage.setItem(THEME_STORAGE_KEY, next);
+    writeCookieTheme(next);
     const resolved = resolve(next);
     setResolvedTheme(resolved);
     applyResolvedTheme(resolved);

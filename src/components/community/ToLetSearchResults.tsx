@@ -16,6 +16,7 @@ export function ToLetSearchResults({
   canDelete,
   onDelete,
   onLikeChange,
+  onCommentCountChange,
   onPageChange
 }: {
   items: ToLetSearchItem[];
@@ -28,6 +29,7 @@ export function ToLetSearchResults({
   canDelete: (message: CommunityMessage) => boolean;
   onDelete: (message: CommunityMessage) => void;
   onLikeChange: (messageId: string, liked: boolean, count: number) => void;
+  onCommentCountChange?: (messageId: string, count: number) => void;
   onPageChange: (page: number) => void;
 }) {
   if (loading) return <LoadingCard />;
@@ -51,6 +53,7 @@ export function ToLetSearchResults({
             canModerate={canModerate}
             onDelete={onDelete}
             onLikeChange={onLikeChange}
+            onCommentCountChange={onCommentCountChange}
             distanceKm={item.distanceKm}
           />
         ))}

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { setSessionCookie } from '@/lib/auth';
+import { setSessionCookie, setThemeCookie } from '@/lib/auth';
 import { hashPassword, needsRehash, verifyPassword } from '@/lib/password';
 import { USER_STATUS } from '@/lib/constants';
 import { badRequest, forbidden, methodNotAllowed, ok, tooManyRequests, unauthorized } from '@/lib/http';
@@ -108,6 +108,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   await endSession(user.id, SESSION_END_REASONS.REPLACED);
   await touchSession(user.id, req, { forceNew: true });
   await setSessionCookie(res, user);
+  setThemeCookie(res, user.theme);
 
   return ok(res, {
     user: { id: user.id, name: user.name, email: user.email, role: user.role }

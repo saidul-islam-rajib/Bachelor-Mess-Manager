@@ -4,7 +4,8 @@ import { getActiveMembership, getSessionUser, requireAdmin, requireSupervisorOrA
 import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport, type ReportMember } from '@/lib/group-report';
 import { buildGroupDashboardCard } from '@/lib/dashboard-report';
-import { INVITATION_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
+import { serializeChangeRequest } from '@/lib/meal-edits';
+import { INVITATION_STATUS, REQUEST_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { currentMonthKey, dayToUtcDate, parseMonth, round2, todayKey } from '@/lib/month';
 import { stayDays } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
@@ -70,7 +71,22 @@ async function supervisorReport(supervisorId: string, month: string) {
     orderBy: { createdAt: 'desc' }
   });
 
-  const cards = await Promise.all(groups.map((group) => buildGroupDashboardCard(group, month)));
+  const [cards, pendingMealChangeRows] = await Promise.all([
+    Promise.all(groups.map((group) => buildGroupDashboardCard(group, month))),
+    prisma.mealChangeRequest.findMany({
+      where: { groupId: { in: groups.map((group) => group.id) }, status: REQUEST_STATUS.PENDING },
+      include: {
+        user: { select: { id: true, name: true } },
+        group: { select: { id: true, name: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    })
+  ]);
+
+  const pendingMealChanges = pendingMealChangeRows.map((row) => ({
+    ...serializeChangeRequest(row),
+    groupName: row.group.name
+  }));
 
   const byType: Record<string, number> = {};
   let totalBazar = 0;
@@ -126,6 +142,7 @@ async function supervisorReport(supervisorId: string, month: string) {
 
   return {
     groups: cards,
+    pendingMealChanges,
     totals: {
       groups: groups.length,
       members: totalMembers,

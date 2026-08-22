@@ -8,12 +8,15 @@ import {
   SESSION_MAX_AGE_SECONDS
 } from '@/lib/session';
 import { IDENTITY_COOKIE, identityCookieDomain, issueIdentity, ssoEnabled } from '@/lib/identity';
+import { THEME_OPTION_VALUES } from '@/lib/constants';
 import { sessionConfig } from '@/config';
 
 export { SESSION_COOKIE_NAME, IMPERSONATION_COOKIE_NAME } from '@/lib/session';
 export { IDENTITY_COOKIE } from '@/lib/identity';
 
 export const LEGACY_SESSION_COOKIE_NAME = 'bachelor_point_legacy_session';
+export const THEME_COOKIE_NAME = 'bachelor_point_theme';
+const THEME_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 export function parseCookies(cookieHeader?: string) {
   const cookies: Record<string, string> = {};
@@ -118,4 +121,12 @@ export async function setImpersonationCookie(
 
 export function clearImpersonationCookie(res: NextApiResponse) {
   appendCookie(res, serializeCookie(IMPERSONATION_COOKIE_NAME, '', { maxAge: 0 }));
+}
+
+export function setThemeCookie(res: NextApiResponse, theme: string) {
+  if (!THEME_OPTION_VALUES.includes(theme)) return;
+  appendCookie(
+    res,
+    serializeCookie(THEME_COOKIE_NAME, theme, { maxAge: THEME_COOKIE_MAX_AGE_SECONDS, httpOnly: false })
+  );
 }

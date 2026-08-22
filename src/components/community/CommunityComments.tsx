@@ -8,7 +8,15 @@ import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import type { CommunityCommentReplyView, CommunityCommentView } from '@/lib/community';
 
-export function CommunityComments({ messageId, canModerate }: { messageId: string; canModerate: boolean }) {
+export function CommunityComments({
+  messageId,
+  canModerate,
+  onCountChange
+}: {
+  messageId: string;
+  canModerate: boolean;
+  onCountChange?: (count: number) => void;
+}) {
   const toast = useToast();
   const confirm = useConfirm();
   const { user } = useCurrentUser();
@@ -19,7 +27,6 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
   const [replyFor, setReplyFor] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
   const [replying, setReplying] = useState(false);
-
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -48,7 +55,11 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
       const data = await api.post<{ comment: CommunityCommentView }>(`/api/community/messages/${messageId}/comments`, {
         text: value
       });
-      setComments((current) => [...current, data.comment]);
+      setComments((current) => {
+        const next = [...current, data.comment];
+        onCountChange?.(next.length);
+        return next;
+      });
       setText('');
     } catch (error) {
       toast.error(errorMessage(error));
@@ -92,7 +103,11 @@ export function CommunityComments({ messageId, canModerate }: { messageId: strin
 
     try {
       await api.delete(`/api/community/messages/${messageId}/comments/${comment.id}`);
-      setComments((current) => current.filter((item) => item.id !== comment.id));
+      setComments((current) => {
+        const next = current.filter((item) => item.id !== comment.id);
+        onCountChange?.(next.length);
+        return next;
+      });
       toast.success(strings.community.comments.deleted);
     } catch (error) {
       toast.error(errorMessage(error));

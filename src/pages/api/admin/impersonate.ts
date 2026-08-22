@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getRealSessionUser } from '@/lib/auth-utils';
-import { clearImpersonationCookie, setImpersonationCookie } from '@/lib/auth';
+import { clearImpersonationCookie, setImpersonationCookie, setThemeCookie } from '@/lib/auth';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
@@ -9,7 +9,9 @@ import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'DELETE') {
+    const admin = await getRealSessionUser(req, res);
     clearImpersonationCookie(res);
+    if (admin) setThemeCookie(res, admin.theme);
     return ok(res, { message: strings.admin.impersonation.stopped });
   }
 
@@ -32,7 +34,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const target = await prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, name: true, email: true, role: true, status: true, tokenVersion: true }
+    select: { id: true, name: true, email: true, role: true, status: true, tokenVersion: true, theme: true }
   });
 
   if (!target) {
@@ -49,6 +51,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   await setImpersonationCookie(res, admin.id, target.id, target.tokenVersion);
+  setThemeCookie(res, target.theme);
 
   return ok(res, {
     message: strings.admin.impersonation.started(target.name),

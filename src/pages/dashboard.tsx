@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { Fragment, useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
 import MealRateChart, { type MealRateChartDay } from '@/components/dashboard/MealRateChart';
+import { PendingMealApprovals, type PendingMealChange } from '@/components/meals/PendingMealApprovals';
+import { useToast } from '@/components/ToastProvider';
 import { ActionLink, LinkButton, Listbox } from '@/components/ui';
 import { commentsAnchorPath, groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
@@ -50,6 +52,7 @@ type GroupCard = {
 
 type SupervisorReport = {
   groups: GroupCard[];
+  pendingMealChanges: PendingMealChange[];
   totals: {
     groups: number;
     members: number;
@@ -117,36 +120,46 @@ type DashboardData = {
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useCurrentUser();
+  const toast = useToast();
   const [month, setMonth] = useState(currentMonthKey());
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = useCallback(async () => {
     setLoading(true);
     setError('');
-
-    fetch(`/api/reports/dashboard?month=${month}`)
-      .then(async (res) => {
-        const body = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(body?.error ?? 'Could not load your dashboard.');
-        return body as DashboardData;
-      })
-      .then((body) => {
-        if (!cancelled) setData(body);
-      })
-      .catch((err: Error) => {
-        if (!cancelled) setError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    try {
+      const res = await fetch(`/api/reports/dashboard?month=${month}`);
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? 'Could not load your dashboard.');
+      setData(body as DashboardData);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
   }, [month]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function onDecideMealChange(id: string, status: 'APPROVED' | 'REJECTED') {
+    try {
+      const res = await fetch(`/api/meal-changes/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? strings.meals.decisionFailed);
+      toast.success(status === 'APPROVED' ? strings.meals.changeApproved : strings.meals.changeDeclined);
+      await load();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
@@ -184,7 +197,7 @@ export default function DashboardPage() {
       ) : data.admin ? (
         <AdminDashboard report={data.admin} />
       ) : data.supervisor ? (
-        <SupervisorDashboard report={data.supervisor} />
+        <SupervisorDashboard report={data.supervisor} onDecideMealChange={onDecideMealChange} />
       ) : data.member ? (
         <MemberDashboard report={data.member} currentUserId={user?.id} />
       ) : (
@@ -235,7 +248,13 @@ function AdminDashboard({ report }: { report: AdminReport }) {
   );
 }
 
-function SupervisorDashboard({ report }: { report: SupervisorReport }) {
+function SupervisorDashboard({
+  report,
+  onDecideMealChange
+}: {
+  report: SupervisorReport;
+  onDecideMealChange: (id: string, status: 'APPROVED' | 'REJECTED') => void;
+}) {
   const { totals } = report;
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const allExpanded = report.groups.length > 0 && report.groups.every((group) => openIds.has(group.id));
@@ -251,6 +270,10 @@ function SupervisorDashboard({ report }: { report: SupervisorReport }) {
 
   return (
     <div className="space-y-6">
+      {report.pendingMealChanges.length > 0 && (
+        <PendingMealApprovals changes={report.pendingMealChanges} onDecide={onDecideMealChange} />
+      )}
+
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="grid grid-cols-2 gap-3 lg:col-span-2 sm:gap-4">
           <Stat label={dashboardStrings.yourGroups} value={`${totals.groups} / 10`} />

@@ -5,6 +5,7 @@ import { GroupMonthControls, useGroupMonth } from '@/components/GroupMonthContro
 import MealPromptDispatch from '@/components/MealPromptDispatch';
 import MealRateCard, { type DailyRate } from '@/components/MealRateCard';
 import MealRateTrendChart from '@/components/MealRateTrendChart';
+import { ChangeSummary, PendingMealApprovals, type PendingMealChange } from '@/components/meals/PendingMealApprovals';
 import { PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
 import { daysInMonth, round2, shiftDayKey, todayKey } from '@/lib/month';
@@ -51,20 +52,6 @@ type EditWindow = {
   requiresApproval: boolean;
 };
 
-type MealCounts = { breakfast: number; lunch: number; dinner: number };
-
-type PendingChange = {
-  id: string;
-  userId: string;
-  userName: string | null;
-  date: string;
-  from: MealCounts;
-  to: MealCounts;
-  summary: string;
-  reason: string | null;
-  createdAt: string;
-};
-
 const FIELDS = ['breakfast', 'lunch', 'dinner'] as const;
 const FIELD_LABELS: Record<(typeof FIELDS)[number], string> = {
   breakfast: strings.meals.breakfast,
@@ -97,7 +84,7 @@ export default function MealsPage() {
   const [loading, setLoading] = useState(false);
   const [canManage, setCanManage] = useState(false);
   const [editWindow, setEditWindow] = useState<EditWindow | null>(null);
-  const [pendingChanges, setPendingChanges] = useState<PendingChange[]>([]);
+  const [pendingChanges, setPendingMealChanges] = useState<PendingMealChange[]>([]);
   const [openDay, setOpenDay] = useState('');
   const [showWholeMonth, setShowWholeMonth] = useState(false);
 
@@ -137,7 +124,7 @@ export default function MealsPage() {
       setWeights(meals.weights || null);
       setCanManage(Boolean(meals.canManage));
       setEditWindow(meals.editWindow ?? null);
-      setPendingChanges(meals.pendingChanges || []);
+      setPendingMealChanges(meals.pendingChanges || []);
       const map: Record<string, Entry> = {};
       for (const e of meals.entries || []) map[`${e.userId}|${e.date}`] = e;
       setCells(map);
@@ -293,9 +280,18 @@ export default function MealsPage() {
   const others = members.filter((m) => !isMe(m.id));
   const belongsToGroup = members.some((m) => isMe(m.id));
   const myPending = pendingChanges.filter((c) => c.userId === user?.id);
-  const pendingByCell = useMemo(() => {
+  const pendingByDay = useMemo(() => {
     const set = new Set<string>();
     for (const change of pendingChanges) set.add(`${change.userId}|${change.date}`);
+    return set;
+  }, [pendingChanges]);
+  const pendingByField = useMemo(() => {
+    const set = new Set<string>();
+    for (const change of pendingChanges) {
+      for (const f of FIELDS) {
+        if (change.from[f] !== change.to[f]) set.add(`${change.userId}|${change.date}|${f}`);
+      }
+    }
     return set;
   }, [pendingChanges]);
 
@@ -327,11 +323,11 @@ export default function MealsPage() {
           {canManage && groupId && <MealPromptDispatch groupId={groupId} />}
 
           {canManage && pendingChanges.length > 0 && (
-            <PendingApprovals changes={pendingChanges} onDecide={decideChange} />
+            <PendingMealApprovals changes={pendingChanges} onDecide={decideChange} />
           )}
 
           {!canManage && myPending.length > 0 && (
-            <MyPendingChanges changes={myPending} onWithdraw={withdrawChange} />
+            <MyPendingMealChanges changes={myPending} onWithdraw={withdrawChange} />
           )}
 
           {loading ? (
@@ -368,7 +364,7 @@ export default function MealsPage() {
                 {visibleDays.map((date) => {
                   const info = dayInfo[date];
                   const canEdit = editable(user?.id ?? '', date);
-                  const awaiting = pendingByCell.has(`${user?.id}|${date}`);
+                  const dayAwaiting = pendingByDay.has(`${user?.id}|${date}`);
                   const mine = cell(user?.id ?? '', date);
                   return (
                     <li
@@ -394,7 +390,7 @@ export default function MealsPage() {
                             </p>
                           )}
                         </div>
-                        {awaiting ? (
+                        {dayAwaiting ? (
                           <span className="rounded-full bg-amber-100 dark:bg-amber-500/15 px-2.5 py-0.5 text-xs text-amber-700 dark:text-amber-400">
                             {strings.meals.awaitingApproval}
                           </span>
@@ -406,31 +402,34 @@ export default function MealsPage() {
                       </div>
 
                       <div className="mt-3 grid grid-cols-3 gap-2">
-                        {FIELDS.map((f) => (
-                          <label key={f} className="block">
-                            <span className="text-xs text-slate-500 dark:text-slate-400">{FIELD_LABELS[f]}</span>
-                            {canEdit && !awaiting ? (
-                              <input
-                                type="number"
-                                min={0}
-                                inputMode="numeric"
-                                value={mine[f] || 0}
-                                onChange={(e) => setLocal(user?.id ?? '', date, f, parseInt(e.target.value, 10))}
-                                onBlur={() => saveDay(user?.id ?? '', date)}
-                                className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-2 py-2 text-center text-base"
-                              />
-                            ) : (
-                              <span
-                                title={awaiting ? strings.meals.pendingApprovalTooltip : undefined}
-                                className={`mt-1 block rounded-xl px-2 py-2 text-center text-base ${
-                                  awaiting ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                                }`}
-                              >
-                                {mine[f] || 0}
-                              </span>
-                            )}
-                          </label>
-                        ))}
+                        {FIELDS.map((f) => {
+                          const fieldAwaiting = pendingByField.has(`${user?.id}|${date}|${f}`);
+                          return (
+                            <label key={f} className="block">
+                              <span className="text-xs text-slate-500 dark:text-slate-400">{FIELD_LABELS[f]}</span>
+                              {canEdit && !fieldAwaiting ? (
+                                <input
+                                  type="number"
+                                  min={0}
+                                  inputMode="numeric"
+                                  value={mine[f] || 0}
+                                  onChange={(e) => setLocal(user?.id ?? '', date, f, parseInt(e.target.value, 10))}
+                                  onBlur={() => saveDay(user?.id ?? '', date)}
+                                  className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-2 py-2 text-center text-base"
+                                />
+                              ) : (
+                                <span
+                                  title={fieldAwaiting ? strings.meals.pendingApprovalTooltip : undefined}
+                                  className={`mt-1 block rounded-xl px-2 py-2 text-center text-base ${
+                                    fieldAwaiting ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                                  }`}
+                                >
+                                  {mine[f] || 0}
+                                </span>
+                              )}
+                            </label>
+                          );
+                        })}
                       </div>
 
                       {canEdit && needsApproval(user?.id ?? '', date) && (
@@ -569,10 +568,10 @@ export default function MealsPage() {
                             const c = cell(m.id, date);
                             const mine = isMe(m.id);
                             const canEdit = editable(m.id, date);
-                            const awaiting = pendingByCell.has(`${m.id}|${date}`);
                             return FIELDS.map((f, i) => {
                               const edge = i === 2 ? 'border-r border-slate-200 dark:border-slate-700' : '';
-                              return canEdit && !awaiting ? (
+                              const fieldAwaiting = pendingByField.has(`${m.id}|${date}|${f}`);
+                              return canEdit && !fieldAwaiting ? (
                                 <td key={`${m.id}-${f}`} className={`px-1 py-1.5 ${edge}`}>
                                   <input
                                     type="number"
@@ -587,9 +586,9 @@ export default function MealsPage() {
                               ) : (
                                 <td
                                   key={`${m.id}-${f}`}
-                                  title={awaiting ? strings.meals.pendingApprovalTooltip : undefined}
+                                  title={fieldAwaiting ? strings.meals.pendingApprovalTooltip : undefined}
                                   className={`px-2 py-2 ${edge} ${
-                                    awaiting ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : mine ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'
+                                    fieldAwaiting ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' : mine ? 'text-slate-400 dark:text-slate-500' : 'text-slate-600 dark:text-slate-400'
                                   }`}
                                 >
                                   {c[f] || 0}
@@ -695,69 +694,7 @@ function DayRangeBar({
   );
 }
 
-function ChangeSummary({ change }: { change: PendingChange }) {
-  return (
-    <div className="min-w-0">
-      <p className="text-sm font-medium">
-        {change.userName ? `${change.userName} · ` : ''}
-        {dayLabel(change.date)}
-      </p>
-      <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-400">{change.summary}</p>
-      {change.reason && <p className="mt-1 text-xs italic text-slate-500 dark:text-slate-400">“{change.reason}”</p>}
-    </div>
-  );
-}
-
-function PendingApprovals({
-  changes,
-  onDecide
-}: {
-  changes: PendingChange[];
-  onDecide: (id: string, status: 'APPROVED' | 'REJECTED') => void;
-}) {
-  return (
-    <div className="rounded-3xl border border-amber-300 bg-amber-50 dark:bg-amber-500/10 p-5 shadow-sm sm:p-6">
-      <h2 className="text-lg font-semibold">
-        {strings.meals.waitingForYouTitle}
-        <span className="ml-2 rounded-full bg-white dark:bg-slate-800 px-2.5 py-0.5 text-sm font-medium text-amber-700 dark:text-amber-400 ring-1 ring-amber-300">
-          {changes.length}
-        </span>
-      </h2>
-      <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-        {strings.meals.waitingForYouHint}
-      </p>
-
-      <ul className="mt-4 space-y-3">
-        {changes.map((change) => (
-          <li
-            key={change.id}
-            className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white dark:bg-slate-800 p-4 ring-1 ring-amber-200"
-          >
-            <ChangeSummary change={change} />
-            <div className="flex shrink-0 gap-2">
-              <button
-                type="button"
-                onClick={() => onDecide(change.id, 'APPROVED')}
-                className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700 transition-all active:translate-y-px"
-              >
-                {strings.meals.approve}
-              </button>
-              <button
-                type="button"
-                onClick={() => onDecide(change.id, 'REJECTED')}
-                className="rounded-full border border-slate-300 dark:border-slate-600 px-4 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-              >
-                {strings.meals.decline}
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function MyPendingChanges({ changes, onWithdraw }: { changes: PendingChange[]; onWithdraw: (id: string) => void }) {
+function MyPendingMealChanges({ changes, onWithdraw }: { changes: PendingMealChange[]; onWithdraw: (id: string) => void }) {
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{strings.meals.waitingForSupervisorTitle}</h2>

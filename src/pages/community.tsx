@@ -231,6 +231,15 @@ export default function CommunityPage() {
     );
   }
 
+  function onCommentCountChange(messageId: string, count: number) {
+    setMessages((current) => current.map((item) => (item.id === messageId ? { ...item, commentCount: count } : item)));
+    setSearchResult((current) =>
+      current
+        ? { ...current, items: current.items.map((item) => (item.id === messageId ? { ...item, commentCount: count } : item)) }
+        : current
+    );
+  }
+
   async function remove(message: CommunityMessage) {
     const accepted = await confirm({
       title: strings.community.deleteConfirmTitle,
@@ -286,6 +295,7 @@ export default function CommunityPage() {
               canDelete={canDelete}
               onDelete={remove}
               onLikeChange={onLikeChange}
+              onCommentCountChange={onCommentCountChange}
               onPageChange={setSearchPage}
             />
           ) : (
@@ -315,6 +325,7 @@ export default function CommunityPage() {
                         canModerate={canModerate}
                         onDelete={remove}
                         onLikeChange={onLikeChange}
+                        onCommentCountChange={onCommentCountChange}
                       />
                     ))}
                   </ul>

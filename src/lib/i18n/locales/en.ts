@@ -1471,7 +1471,13 @@ const en = {
       noResultsHint: 'Try a different keyword, or clear your filters.',
       nearestBanner: (query: string) => `No exact matches for "${query}" — showing the nearest to-lets instead.`,
       distanceAway: (km: string) => `${km} km away`,
-      loadFailed: 'Could not load search results.'
+      loadFailed: 'Could not load search results.',
+      filtersAction: 'Filters',
+      typeAll: 'All types',
+      typeLabel: 'Type',
+      minRentLabel: 'Min rent',
+      maxRentLabel: 'Max rent',
+      applyFilters: 'Apply'
     },
 
     created: 'Listing posted.',
@@ -1490,7 +1496,7 @@ const en = {
     markExpiredAction: 'Mark as expired',
     repostAction: 'Repost',
     deleteAction: 'Delete',
-    viewAction: 'View listing',
+    viewAction: '…more',
     backToBrowse: 'Back to the feed',
     detailNotFound: 'This listing is no longer available.',
     expiredNotice: 'This listing has expired. It is hidden from the feed.',

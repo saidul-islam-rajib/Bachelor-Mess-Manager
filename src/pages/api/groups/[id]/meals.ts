@@ -20,6 +20,8 @@ import {
 } from '@/lib/meal-edits';
 import { withAudit } from '@/lib/with-audit';
 
+const MEAL_FIELDS = ['breakfast', 'lunch', 'dinner'] as const;
+
 function normalizeCounts(body: { breakfast?: unknown; lunch?: unknown; dinner?: unknown }): MealCounts {
   const clamp = (value: unknown) => Math.min(9, Math.max(0, Math.trunc(Number(value ?? 0)) || 0));
   return { breakfast: clamp(body.breakfast), lunch: clamp(body.lunch), dinner: clamp(body.dinner) };
@@ -211,12 +213,51 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     };
 
     const existing = await prisma.mealChangeRequest.findFirst({
-      where: { groupId, userId: targetUserId, date, status: REQUEST_STATUS.PENDING },
-      select: { id: true }
+      where: { groupId, userId: targetUserId, date, status: REQUEST_STATUS.PENDING }
     });
 
     if (existing) {
-      return conflict(res, strings.meals.alreadyPendingError);
+      const existingFrom = { breakfast: existing.fromBreakfast, lunch: existing.fromLunch, dinner: existing.fromDinner };
+      const existingTo = { breakfast: existing.toBreakfast, lunch: existing.toLunch, dinner: existing.toDinner };
+      const changedFields = MEAL_FIELDS.filter((f) => next[f] !== previous[f]);
+      const conflictingFields = changedFields.filter((f) => existingFrom[f] !== existingTo[f]);
+
+      if (conflictingFields.length > 0) {
+        return conflict(res, strings.meals.alreadyPendingError);
+      }
+
+      const mergedTo = { ...existingTo };
+      for (const f of changedFields) mergedTo[f] = next[f];
+
+      const merged = await prisma.mealChangeRequest.update({
+        where: { id: existing.id },
+        data: {
+          toBreakfast: mergedTo.breakfast,
+          toLunch: mergedTo.lunch,
+          toDinner: mergedTo.dinner,
+          reason: reason ?? existing.reason,
+          updatedById: sessionUser.id
+        },
+        include: { user: { select: { id: true, name: true } } }
+      });
+
+      const mergedSupervisor = await prisma.user.findUnique({
+        where: { id: group.supervisorId },
+        select: { id: true, name: true, email: true }
+      });
+
+      if (mergedSupervisor && mergedSupervisor.id !== sessionUser.id) {
+        await notifyUsers([mergedSupervisor], {
+          type: NOTIFICATION_TYPES.MEAL_CHANGE_REQUESTED,
+          title: `${sessionUser.name} asked to change meals for ${body.date}`,
+          excerpt: `${describeChange(existingFrom, mergedTo)}. Nothing changes in ${group.name} until you approve it on the meals page.`,
+          link: ROUTES.meals,
+          groupId,
+          actorId: sessionUser.id
+        });
+      }
+
+      return created(res, { applied: false, pending: true, request: serializeChangeRequest(merged) });
     }
 
     const request = await prisma.mealChangeRequest.create({
