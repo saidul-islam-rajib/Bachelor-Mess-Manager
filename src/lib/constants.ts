@@ -49,6 +49,7 @@ export const NOTIFICATION_TYPES = {
   MENTION_COMMUNITY: 'MENTION_COMMUNITY',
   COMMUNITY_ANNOUNCEMENT: 'COMMUNITY_ANNOUNCEMENT',
   COMMUNITY_WELCOME: 'COMMUNITY_WELCOME',
+  COMMUNITY_COMMENT: 'COMMUNITY_COMMENT',
   MEAL_PROMPT: 'MEAL_PROMPT',
   SUPERVISOR_CHANGED: 'SUPERVISOR_CHANGED'
 } as const;
@@ -59,6 +60,7 @@ export const NOTIFICATION_TYPE_VALUES = Object.values(NOTIFICATION_TYPES) as str
 
 export const COMMUNITY_MESSAGE_TYPES = {
   MEMBER: 'MEMBER',
+  TOLET: 'TOLET',
   WELCOME: 'WELCOME',
   ANNOUNCEMENT: 'ANNOUNCEMENT',
   SYSTEM: 'SYSTEM'
@@ -68,9 +70,40 @@ export type CommunityMessageType = (typeof COMMUNITY_MESSAGE_TYPES)[keyof typeof
 
 export const COMMUNITY_MESSAGE_TYPE_VALUES = Object.values(COMMUNITY_MESSAGE_TYPES) as string[];
 
+export const COMMUNITY_INTERACTIVE_TYPES: string[] = [COMMUNITY_MESSAGE_TYPES.MEMBER, COMMUNITY_MESSAGE_TYPES.TOLET];
+
 export const COMMUNITY_SYSTEM_TYPES: string[] = COMMUNITY_MESSAGE_TYPE_VALUES.filter(
-  (type) => type !== COMMUNITY_MESSAGE_TYPES.MEMBER
+  (type) => !COMMUNITY_INTERACTIVE_TYPES.includes(type)
 );
+
+export const TOLET_TYPES = {
+  ROOM: 'ROOM',
+  SEAT: 'SEAT',
+  FLAT: 'FLAT'
+} as const;
+
+export type ToLetType = (typeof TOLET_TYPES)[keyof typeof TOLET_TYPES];
+
+export const TOLET_TYPE_VALUES = Object.values(TOLET_TYPES) as string[];
+
+export const TOLET_STATUS = {
+  ACTIVE: 'ACTIVE',
+  EXPIRED: 'EXPIRED'
+} as const;
+
+export type ToLetStatus = (typeof TOLET_STATUS)[keyof typeof TOLET_STATUS];
+
+export const TOLET_STATUS_VALUES = Object.values(TOLET_STATUS) as string[];
+
+export const TOLET_GENDER_PREFERENCE = {
+  ANY: 'ANY',
+  MALE: 'MALE',
+  FEMALE: 'FEMALE'
+} as const;
+
+export type ToLetGenderPreference = (typeof TOLET_GENDER_PREFERENCE)[keyof typeof TOLET_GENDER_PREFERENCE];
+
+export const TOLET_GENDER_PREFERENCE_VALUES = Object.values(TOLET_GENDER_PREFERENCE) as string[];
 
 export const MEAL_PROMPT_ANSWERS = {
   YES: 'YES',

@@ -1,23 +1,19 @@
+import { useState } from 'react';
+import Link from 'next/link';
+import { CommunityComments } from '@/components/community/CommunityComments';
 import { ImageGrid } from '@/components/community/ImageGrid';
+import { LikeButton } from '@/components/community/LikeButton';
 import { timeAgo } from '@/components/InvitationsProvider';
 import { MentionText, type Member } from '@/components/MentionInput';
 import { Avatar, Badge } from '@/components/ui';
 import { appConfig } from '@/config';
+import { COMMUNITY_MESSAGE_TYPES, TOLET_GENDER_PREFERENCE } from '@/lib/constants';
+import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
+import { toLetListingPath } from '@/lib/routes';
+import type { CommunityMessageView } from '@/lib/community';
 
-export type CommunityMessage = {
-  id: string;
-  type: string;
-  system: boolean;
-  authorId: string | null;
-  authorName: string;
-  authorImage: string | null;
-  title: string | null;
-  text: string;
-  images: string[];
-  pinned: boolean;
-  createdAt: string;
-};
+export type CommunityMessage = CommunityMessageView;
 
 const TYPE_TONES: Record<string, string> = {
   WELCOME: 'border-emerald-200 bg-emerald-50',
@@ -30,15 +26,24 @@ export function PostCard({
   members,
   mentionNames,
   canDelete,
-  onDelete
+  canModerate,
+  onDelete,
+  onLikeChange,
+  distanceKm
 }: {
   message: CommunityMessage;
   members: Member[];
   mentionNames: Record<string, string>;
   canDelete: boolean;
+  canModerate: boolean;
   onDelete: (message: CommunityMessage) => void;
+  onLikeChange: (messageId: string, liked: boolean, count: number) => void;
+  distanceKm?: number | null;
 }) {
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const typeLabel = strings.community.types[message.type as keyof typeof strings.community.types];
+  const isToLet = message.type === COMMUNITY_MESSAGE_TYPES.TOLET;
+  const interactive = !message.system;
 
   return (
     <li
@@ -82,18 +87,69 @@ export function PostCard({
         )}
       </div>
 
-      {(message.title || message.text) && (
+      {isToLet ? (
         <div className="px-4 pb-3 pt-2">
-          {message.title && <p className="text-[15px] font-semibold text-slate-900">{message.title}</p>}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge tone="neutral">
+              {strings.toLet.types[(message.listingType ?? '') as keyof typeof strings.toLet.types]}
+            </Badge>
+            {message.genderPreference && message.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && (
+              <Badge tone="warning">
+                {strings.toLet.genderPreference[message.genderPreference as keyof typeof strings.toLet.genderPreference]}
+              </Badge>
+            )}
+          </div>
+
+          {message.title && <p className="mt-1.5 text-[15px] font-semibold text-slate-900">{message.title}</p>}
+
+          <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-brand-700">
+            {message.rent !== null && strings.toLet.rentPerMonth(formatCurrency(message.rent))}
+            {message.rentNegotiable && (
+              <span className="text-xs font-normal text-slate-400">{strings.toLet.negotiable}</span>
+            )}
+          </p>
+
+          {message.location && (
+            <p className="text-sm text-slate-500">
+              {message.location}
+              {distanceKm !== undefined && distanceKm !== null && (
+                <span className="ml-1.5 text-xs text-slate-400">
+                  · {strings.toLet.search.distanceAway(distanceKm.toFixed(1))}
+                </span>
+              )}
+            </p>
+          )}
+
           {message.text && (
             <MentionText
               text={message.text}
               members={members}
               mentionNames={mentionNames}
-              className="mt-0.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800"
+              className="mt-1.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800"
             />
           )}
+
+          <Link
+            href={toLetListingPath(message.id)}
+            className="mt-2 inline-block text-sm font-medium text-brand-700 hover:text-brand-800"
+          >
+            {strings.toLet.viewAction}
+          </Link>
         </div>
+      ) : (
+        (message.title || message.text) && (
+          <div className="px-4 pb-3 pt-2">
+            {message.title && <p className="text-[15px] font-semibold text-slate-900">{message.title}</p>}
+            {message.text && (
+              <MentionText
+                text={message.text}
+                members={members}
+                mentionNames={mentionNames}
+                className="mt-0.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800"
+              />
+            )}
+          </div>
+        )
       )}
 
       {message.images.length > 0 && (
@@ -102,7 +158,34 @@ export function PostCard({
         </div>
       )}
 
-      {message.images.length === 0 && <div className="pb-1" />}
+      {message.images.length === 0 && !isToLet && <div className="pb-1" />}
+
+      {interactive && (
+        <div className="border-t border-slate-100 px-4 py-3">
+          <div className="flex items-center justify-between gap-2">
+            <LikeButton
+              messageId={message.id}
+              liked={message.likedByViewer}
+              count={message.likeCount}
+              compact
+              onChange={(liked, count) => onLikeChange(message.id, liked, count)}
+            />
+            <button
+              type="button"
+              onClick={() => setCommentsOpen((open) => !open)}
+              className="text-xs font-medium text-slate-500 transition-colors hover:text-slate-700"
+            >
+              {strings.toLet.commentsCount(message.commentCount)}
+            </button>
+          </div>
+
+          {commentsOpen && (
+            <div className="mt-3 border-t border-slate-100 pt-3">
+              <CommunityComments messageId={message.id} canModerate={canModerate} />
+            </div>
+          )}
+        </div>
+      )}
     </li>
   );
 }

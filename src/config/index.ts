@@ -4,6 +4,7 @@ import {
   CACHE_DEFAULTS,
   DATE_DEFAULTS,
   COMMUNITY_DEFAULTS,
+  GEOCODE_DEFAULTS,
   GROUP_DEFAULTS,
   MEAL_PROMPT_DEFAULTS,
   PAGINATION_DEFAULTS,
@@ -12,6 +13,7 @@ import {
   SESSION_DEFAULTS,
   UI_DEFAULTS,
   MAIL_DEFAULTS,
+  TOLET_DEFAULTS,
   UPLOAD_DEFAULTS,
   VALIDATION_DEFAULTS
 } from '@/config/defaults';
@@ -60,6 +62,13 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   COMMUNITY_MESSAGE_MAX_LENGTH: process.env.COMMUNITY_MESSAGE_MAX_LENGTH,
   COMMUNITY_POLL_INTERVAL_MS: process.env.COMMUNITY_POLL_INTERVAL_MS,
   COMMUNITY_MAX_IMAGES_PER_POST: process.env.COMMUNITY_MAX_IMAGES_PER_POST,
+  TOLET_PAGE_SIZE: process.env.TOLET_PAGE_SIZE,
+  TOLET_MAX_IMAGES_PER_LISTING: process.env.TOLET_MAX_IMAGES_PER_LISTING,
+  TOLET_TITLE_MAX_LENGTH: process.env.TOLET_TITLE_MAX_LENGTH,
+  TOLET_DESCRIPTION_MAX_LENGTH: process.env.TOLET_DESCRIPTION_MAX_LENGTH,
+  TOLET_LOCATION_MAX_LENGTH: process.env.TOLET_LOCATION_MAX_LENGTH,
+  TOLET_DEFAULT_EXPIRY_DAYS: process.env.TOLET_DEFAULT_EXPIRY_DAYS,
+  TOLET_COMMENT_MAX_LENGTH: process.env.TOLET_COMMENT_MAX_LENGTH,
   MEAL_PROMPT_DEFAULT_BREAKFAST: process.env.MEAL_PROMPT_DEFAULT_BREAKFAST,
   MEAL_PROMPT_DEFAULT_LUNCH: process.env.MEAL_PROMPT_DEFAULT_LUNCH,
   MEAL_PROMPT_DEFAULT_DINNER: process.env.MEAL_PROMPT_DEFAULT_DINNER,
@@ -254,7 +263,15 @@ export const cacheConfig = {
   sessionUserMs: readInt('CACHE_SESSION_USER_MS', CACHE_DEFAULTS.sessionUserMs, 0),
   billsListMs: readInt('CACHE_BILLS_LIST_MS', CACHE_DEFAULTS.billsListMs, 0),
   dashboardGroupMs: readInt('CACHE_DASHBOARD_GROUP_MS', CACHE_DEFAULTS.dashboardGroupMs, 0),
-  advancesMs: readInt('CACHE_ADVANCES_MS', CACHE_DEFAULTS.advancesMs, 0)
+  advancesMs: readInt('CACHE_ADVANCES_MS', CACHE_DEFAULTS.advancesMs, 0),
+  geocodeMs: readInt('CACHE_GEOCODE_MS', CACHE_DEFAULTS.geocodeMs, 0)
+} as const;
+
+export const geocodeConfig = {
+  baseUrl: readString('GEOCODE_BASE_URL', GEOCODE_DEFAULTS.baseUrl),
+  countryCodes: readString('GEOCODE_COUNTRY_CODES', GEOCODE_DEFAULTS.countryCodes),
+  userAgent: readString('GEOCODE_USER_AGENT', GEOCODE_DEFAULTS.userAgent),
+  timeoutMs: readInt('GEOCODE_TIMEOUT_MS', GEOCODE_DEFAULTS.timeoutMs)
 } as const;
 
 export const databaseConfig = {
@@ -274,6 +291,26 @@ export const communityConfig = {
   everyoneRecipientCap: readInt('COMMUNITY_EVERYONE_CAP', COMMUNITY_DEFAULTS.everyoneRecipientCap),
   maxImagesPerPost: communityMaxImagesPerPost,
   postMaxRequestBodyBytes: communityPostRequestBodyBytes
+} as const;
+
+const toLetMaxImagesPerListing = readInt('TOLET_MAX_IMAGES_PER_LISTING', TOLET_DEFAULTS.maxImagesPerListing);
+const toLetPostRequestBodyBytes = uploadConfig.maxRequestBodyBytes * toLetMaxImagesPerListing;
+
+export const toLetConfig = {
+  pageSize: readInt('TOLET_PAGE_SIZE', TOLET_DEFAULTS.pageSize),
+  maxImagesPerListing: toLetMaxImagesPerListing,
+  maxTitleLength: readInt('TOLET_TITLE_MAX_LENGTH', TOLET_DEFAULTS.maxTitleLength),
+  maxDescriptionLength: readInt('TOLET_DESCRIPTION_MAX_LENGTH', TOLET_DEFAULTS.maxDescriptionLength),
+  maxLocationLength: readInt('TOLET_LOCATION_MAX_LENGTH', TOLET_DEFAULTS.maxLocationLength),
+  defaultExpiryDays: readInt('TOLET_DEFAULT_EXPIRY_DAYS', TOLET_DEFAULTS.defaultExpiryDays),
+  quickExpiryDays: TOLET_DEFAULTS.quickExpiryDays,
+  expiryOptionsDays: TOLET_DEFAULTS.expiryOptionsDays,
+  commentMaxLength: readInt('TOLET_COMMENT_MAX_LENGTH', TOLET_DEFAULTS.commentMaxLength),
+  postMaxRequestBodyBytes: toLetPostRequestBodyBytes,
+  searchPageSize: readInt('TOLET_SEARCH_PAGE_SIZE', TOLET_DEFAULTS.searchPageSize),
+  suggestionCount: readInt('TOLET_SUGGESTION_COUNT', TOLET_DEFAULTS.suggestionCount),
+  nearestResultCount: readInt('TOLET_NEAREST_COUNT', TOLET_DEFAULTS.nearestResultCount),
+  nearestSearchRadiusKm: readInt('TOLET_NEAREST_RADIUS_KM', TOLET_DEFAULTS.nearestSearchRadiusKm)
 } as const;
 
 export const mealPromptConfig = {

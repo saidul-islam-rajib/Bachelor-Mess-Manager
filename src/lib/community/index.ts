@@ -1,13 +1,21 @@
 import { randomUUID } from 'node:crypto';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { appConfig, communityConfig } from '@/config';
+import { appConfig, communityConfig, toLetConfig } from '@/config';
 import { ANNOUNCEMENTS } from '@/lib/community/announcements';
-import { COMMUNITY_MESSAGE_TYPES, NOTIFICATION_TYPES, USER_ROLES, USER_STATUS } from '@/lib/constants';
+import {
+  COMMUNITY_MESSAGE_TYPES,
+  NOTIFICATION_TYPES,
+  TOLET_STATUS,
+  USER_ROLES,
+  USER_STATUS
+} from '@/lib/constants';
+import { geocode, haversineKm } from '@/lib/geo';
 import { strings } from '@/lib/i18n';
 import { mentionIdsIn, mentionsEveryone } from '@/lib/mentions';
 import { createNotifications } from '@/lib/notifications';
-import { ROUTES } from '@/lib/routes';
+import { buildPageMeta, type PageMeta } from '@/lib/query';
+import { ROUTES, toLetListingPath } from '@/lib/routes';
 import { isNotificationEnabled } from '@/lib/settings-service';
 
 const WELCOME_KEY_PREFIX = 'welcome:';
@@ -25,7 +33,54 @@ export type CommunityMessageView = {
   text: string;
   images: string[];
   pinned: boolean;
+  listingType: string | null;
+  rent: number | null;
+  rentNegotiable: boolean;
+  location: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  genderPreference: string | null;
+  contactName: string | null;
+  contactPhone: string | null;
+  listingStatus: string | null;
+  effectiveListingStatus: string | null;
+  expiresAt: string | null;
+  viewCount: number;
+  likeCount: number;
+  commentCount: number;
+  likedByViewer: boolean;
   createdAt: string;
+};
+
+export type ToLetSearchItem = CommunityMessageView & { distanceKm: number | null };
+
+export type ToLetSearchFallback = { query: string } | null;
+
+export type ToLetSearchResult = {
+  items: ToLetSearchItem[];
+  meta: PageMeta;
+  fallback: ToLetSearchFallback;
+};
+
+export type CommunityCommentReplyView = {
+  id: string;
+  commentId: string;
+  userId: string;
+  userName: string;
+  userImage: string | null;
+  text: string;
+  createdAt: string;
+};
+
+export type CommunityCommentView = {
+  id: string;
+  messageId: string;
+  userId: string;
+  userName: string;
+  userImage: string | null;
+  text: string;
+  createdAt: string;
+  replies: CommunityCommentReplyView[];
 };
 
 export type CommunityMember = { id: string; name: string; profileImage: string | null };
@@ -36,19 +91,9 @@ export type CommunityFeed = {
   hasMore: boolean;
 };
 
-type MessageRow = Prisma.CommunityMessageGetPayload<{
-  select: {
-    id: true;
-    type: true;
-    authorId: true;
-    title: true;
-    text: true;
-    pinned: true;
-    createdAt: true;
-    author: { select: { id: true; name: true; profileImage: true } };
-    images: { select: { url: true }; orderBy: { sortOrder: 'asc' } };
-  };
-}>;
+type MessageRow = Prisma.CommunityMessageGetPayload<{ select: typeof MESSAGE_SELECT }>;
+type CommentRow = Prisma.CommunityCommentGetPayload<{ select: typeof COMMENT_SELECT }>;
+type ReplyRow = Prisma.CommunityCommentReplyGetPayload<{ select: typeof REPLY_SELECT }>;
 
 const MESSAGE_SELECT = {
   id: true,
@@ -57,22 +102,69 @@ const MESSAGE_SELECT = {
   title: true,
   text: true,
   pinned: true,
+  listingType: true,
+  rent: true,
+  rentNegotiable: true,
+  location: true,
+  latitude: true,
+  longitude: true,
+  genderPreference: true,
+  contactName: true,
+  contactPhone: true,
+  listingStatus: true,
+  expiresAt: true,
+  viewCount: true,
+  likeCount: true,
+  commentCount: true,
   createdAt: true,
   author: { select: { id: true, name: true, profileImage: true } },
   images: { select: { url: true }, orderBy: { sortOrder: 'asc' } }
 } satisfies Prisma.CommunityMessageSelect;
 
-const VISIBLE: Prisma.CommunityMessageWhereInput = {
-  deletedAt: null,
-  isPublished: true,
-  type: { not: COMMUNITY_MESSAGE_TYPES.WELCOME }
-};
+const COMMENT_SELECT = {
+  id: true,
+  messageId: true,
+  text: true,
+  createdAt: true,
+  user: { select: { id: true, name: true, profileImage: true } }
+} satisfies Prisma.CommunityCommentSelect;
 
-export function isSystemMessage(type: string): boolean {
-  return type !== COMMUNITY_MESSAGE_TYPES.MEMBER;
+const REPLY_SELECT = {
+  id: true,
+  commentId: true,
+  text: true,
+  createdAt: true,
+  user: { select: { id: true, name: true, profileImage: true } }
+} satisfies Prisma.CommunityCommentReplySelect;
+
+function visibleWhere(now: Date): Prisma.CommunityMessageWhereInput {
+  return {
+    deletedAt: null,
+    isPublished: true,
+    type: { not: COMMUNITY_MESSAGE_TYPES.WELCOME },
+    NOT: {
+      AND: [
+        { type: COMMUNITY_MESSAGE_TYPES.TOLET },
+        { OR: [{ listingStatus: { not: TOLET_STATUS.ACTIVE } }, { expiresAt: { lte: now } }] }
+      ]
+    }
+  };
 }
 
-function serialize(row: MessageRow): CommunityMessageView {
+export function isSystemMessage(type: string): boolean {
+  return type !== COMMUNITY_MESSAGE_TYPES.MEMBER && type !== COMMUNITY_MESSAGE_TYPES.TOLET;
+}
+
+export function isListingActive(row: { listingStatus: string | null; expiresAt: Date | null }): boolean {
+  return row.listingStatus === TOLET_STATUS.ACTIVE && Boolean(row.expiresAt) && row.expiresAt!.getTime() > Date.now();
+}
+
+function effectiveListingStatus(row: MessageRow): string | null {
+  if (row.type !== COMMUNITY_MESSAGE_TYPES.TOLET) return null;
+  return isListingActive(row) ? TOLET_STATUS.ACTIVE : TOLET_STATUS.EXPIRED;
+}
+
+function serialize(row: MessageRow, likedByViewer: boolean): CommunityMessageView {
   const system = isSystemMessage(row.type);
 
   return {
@@ -86,8 +178,64 @@ function serialize(row: MessageRow): CommunityMessageView {
     text: row.text,
     images: row.images.map((image) => image.url),
     pinned: row.pinned,
+    listingType: row.listingType,
+    rent: row.rent,
+    rentNegotiable: row.rentNegotiable,
+    location: row.location,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    genderPreference: row.genderPreference,
+    contactName: row.contactName,
+    contactPhone: row.contactPhone,
+    listingStatus: row.listingStatus,
+    effectiveListingStatus: effectiveListingStatus(row),
+    expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
+    viewCount: row.viewCount,
+    likeCount: row.likeCount,
+    commentCount: row.commentCount,
+    likedByViewer,
     createdAt: row.createdAt.toISOString()
   };
+}
+
+function serializeComment(row: CommentRow, replies: ReplyRow[]): CommunityCommentView {
+  return {
+    id: row.id,
+    messageId: row.messageId,
+    userId: row.user.id,
+    userName: row.user.name,
+    userImage: row.user.profileImage,
+    text: row.text,
+    createdAt: row.createdAt.toISOString(),
+    replies: replies.map(serializeReply)
+  };
+}
+
+function serializeReply(row: ReplyRow): CommunityCommentReplyView {
+  return {
+    id: row.id,
+    commentId: row.commentId,
+    userId: row.user.id,
+    userName: row.user.name,
+    userImage: row.user.profileImage,
+    text: row.text,
+    createdAt: row.createdAt.toISOString()
+  };
+}
+
+async function likedMessageIds(messageIds: string[], viewerId?: string | null): Promise<Set<string>> {
+  if (!viewerId || messageIds.length === 0) return new Set();
+
+  const likes = await prisma.communityLike.findMany({
+    where: { messageId: { in: messageIds }, userId: viewerId },
+    select: { messageId: true }
+  });
+  return new Set(likes.map((like) => like.messageId));
+}
+
+export function computeExpiresAt(days: number): Date {
+  const safeDays = Math.max(1, Math.trunc(days));
+  return new Date(Date.now() + safeDays * 24 * 60 * 60 * 1000);
 }
 
 function clampLimit(limit?: number): number {
@@ -112,13 +260,19 @@ async function mentionNamesFor(rows: CommunityMessageView[]): Promise<Record<str
   return Object.fromEntries(users.map((user) => [user.id, user.name]));
 }
 
-export async function readFeed(options: { before?: string; after?: string; limit?: number }): Promise<CommunityFeed> {
+export async function readFeed(options: {
+  before?: string;
+  after?: string;
+  limit?: number;
+  viewerId?: string | null;
+}): Promise<CommunityFeed> {
   const take = clampLimit(options.limit);
   const before = parseCursor(options.before);
   const after = parseCursor(options.after);
+  const now = new Date();
 
   const where: Prisma.CommunityMessageWhereInput = {
-    ...VISIBLE,
+    ...visibleWhere(now),
     ...(before ? { createdAt: { lt: before } } : {}),
     ...(after ? { createdAt: { gt: after } } : {})
   };
@@ -132,7 +286,8 @@ export async function readFeed(options: { before?: string; after?: string; limit
 
   const hasMore = rows.length > take;
   const page = hasMore ? rows.slice(0, take) : rows;
-  const messages = page.map(serialize);
+  const liked = await likedMessageIds(page.map((row) => row.id), options.viewerId);
+  const messages = page.map((row) => serialize(row, liked.has(row.id)));
 
   return {
     messages,
@@ -141,18 +296,54 @@ export async function readFeed(options: { before?: string; after?: string; limit
   };
 }
 
-export async function postMessage(params: {
-  authorId: string;
-  text: string;
-  images?: string[];
-}): Promise<CommunityMessageView> {
-  const row = await prisma.communityMessage.create({
+export type PostMessageToLetInput = {
+  listingType: string;
+  rent: number;
+  rentNegotiable: boolean;
+  location: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  genderPreference: string;
+  contactName: string | null;
+  contactPhone: string | null;
+  expiryDays: number;
+};
+
+async function createMessageRow(
+  db: Pick<typeof prisma, 'communityMessage'>,
+  params: {
+    authorId: string;
+    text: string;
+    images?: string[];
+    title?: string | null;
+    toLet?: PostMessageToLetInput;
+  }
+): Promise<MessageRow> {
+  return db.communityMessage.create({
     data: {
       key: `${MEMBER_KEY_PREFIX}${randomUUID()}`,
-      type: COMMUNITY_MESSAGE_TYPES.MEMBER,
+      type: params.toLet ? COMMUNITY_MESSAGE_TYPES.TOLET : COMMUNITY_MESSAGE_TYPES.MEMBER,
       authorId: params.authorId,
+      title: params.title ?? null,
       text: params.text,
       publishedAt: new Date(),
+      createdById: params.authorId,
+      updatedById: params.authorId,
+      ...(params.toLet
+        ? {
+            listingType: params.toLet.listingType,
+            rent: params.toLet.rent,
+            rentNegotiable: params.toLet.rentNegotiable,
+            location: params.toLet.location,
+            latitude: params.toLet.latitude ?? null,
+            longitude: params.toLet.longitude ?? null,
+            genderPreference: params.toLet.genderPreference,
+            contactName: params.toLet.contactName,
+            contactPhone: params.toLet.contactPhone,
+            listingStatus: TOLET_STATUS.ACTIVE,
+            expiresAt: computeExpiresAt(params.toLet.expiryDays)
+          }
+        : {}),
       images: params.images?.length
         ? {
             create: params.images.map((url, index) => ({
@@ -166,8 +357,239 @@ export async function postMessage(params: {
     },
     select: MESSAGE_SELECT
   });
+}
 
-  return serialize(row);
+export async function postMessage(params: {
+  authorId: string;
+  text: string;
+  images?: string[];
+  title?: string | null;
+  toLet?: PostMessageToLetInput;
+}): Promise<CommunityMessageView> {
+  const row = await createMessageRow(prisma, params);
+  return serialize(row, false);
+}
+
+export async function repostListing(
+  oldId: string,
+  params: { authorId: string; text: string; images: string[]; title: string; toLet: PostMessageToLetInput },
+  actorId: string
+): Promise<CommunityMessageView> {
+  const row = await prisma.$transaction(async (tx) => {
+    await tx.communityMessage.update({ where: { id: oldId }, data: { deletedAt: new Date(), updatedById: actorId } });
+    return createMessageRow(tx, params);
+  });
+
+  return serialize(row, false);
+}
+
+export type UpdateListingInput = Partial<{
+  listingType: string;
+  title: string;
+  text: string;
+  rent: number;
+  rentNegotiable: boolean;
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
+  genderPreference: string;
+  contactName: string | null;
+  contactPhone: string | null;
+  listingStatus: string;
+  expiresAt: Date;
+  images: string[];
+}>;
+
+export async function updateListing(id: string, input: UpdateListingInput, actorId: string): Promise<CommunityMessageView> {
+  const { images, ...fields } = input;
+
+  const row = await prisma.$transaction(async (tx) => {
+    if (images) {
+      await tx.communityMessageImage.deleteMany({ where: { messageId: id } });
+      if (images.length > 0) {
+        await tx.communityMessageImage.createMany({
+          data: images.map((url, index) => ({
+            messageId: id,
+            url,
+            sortOrder: index,
+            createdById: actorId,
+            updatedById: actorId
+          }))
+        });
+      }
+    }
+
+    return tx.communityMessage.update({
+      where: { id },
+      data: { ...fields, updatedById: actorId },
+      select: MESSAGE_SELECT
+    });
+  });
+
+  const liked = await likedMessageIds([row.id], actorId);
+  return serialize(row, liked.has(row.id));
+}
+
+export async function markListingExpired(id: string, actorId: string): Promise<void> {
+  await prisma.communityMessage.update({
+    where: { id },
+    data: { listingStatus: TOLET_STATUS.EXPIRED, updatedById: actorId }
+  });
+}
+
+export async function incrementView(id: string): Promise<void> {
+  await prisma.communityMessage
+    .update({ where: { id }, data: { viewCount: { increment: 1 } } })
+    .catch(() => undefined);
+}
+
+export async function myListings(userId: string): Promise<CommunityMessageView[]> {
+  const rows = await prisma.communityMessage.findMany({
+    where: { authorId: userId, type: COMMUNITY_MESSAGE_TYPES.TOLET, deletedAt: null },
+    select: MESSAGE_SELECT,
+    orderBy: { createdAt: 'desc' }
+  });
+  return rows.map((row) => serialize(row, false));
+}
+
+const TOLET_ACTIVE_SQL = Prisma.sql`
+  "type" = ${COMMUNITY_MESSAGE_TYPES.TOLET}
+  AND "deletedAt" IS NULL
+  AND "isPublished" = true
+  AND "listingStatus" = ${TOLET_STATUS.ACTIVE}
+  AND "expiresAt" > NOW()
+`;
+
+export async function suggestLocations(q: string): Promise<string[]> {
+  const value = q.trim();
+  if (value.length < 2) return [];
+
+  const rows = await prisma.$queryRaw<Array<{ location: string; score: number }>>(Prisma.sql`
+    SELECT DISTINCT "location", similarity("location", ${value}) AS score FROM "CommunityMessage"
+    WHERE ${TOLET_ACTIVE_SQL}
+      AND "location" IS NOT NULL
+      AND (similarity("location", ${value}) > 0.2 OR "location" ILIKE ${`${value}%`})
+    ORDER BY score DESC
+    LIMIT ${toLetConfig.suggestionCount}
+  `);
+
+  return rows.map((row) => row.location).filter(Boolean);
+}
+
+export async function searchListings(options: {
+  q?: string;
+  type?: string;
+  minRent?: number;
+  maxRent?: number;
+  page?: number;
+  pageSize?: number;
+  viewerId?: string | null;
+}): Promise<ToLetSearchResult> {
+  const page = Math.max(1, options.page ?? 1);
+  const pageSize = Math.min(Math.max(1, options.pageSize ?? toLetConfig.searchPageSize), toLetConfig.searchPageSize);
+  const q = options.q?.trim() ?? '';
+
+  const conditions: Prisma.Sql[] = [TOLET_ACTIVE_SQL];
+  if (options.type) conditions.push(Prisma.sql`"listingType" = ${options.type}`);
+  if (options.minRent !== undefined) conditions.push(Prisma.sql`"rent" >= ${options.minRent}`);
+  if (options.maxRent !== undefined) conditions.push(Prisma.sql`"rent" <= ${options.maxRent}`);
+
+  const searchCondition = q
+    ? Prisma.sql`AND (
+        similarity(COALESCE("title", ''), ${q}) > 0.15 OR
+        similarity(COALESCE("location", ''), ${q}) > 0.15 OR
+        similarity(COALESCE("text", ''), ${q}) > 0.1 OR
+        "title" ILIKE ${`%${q}%`} OR
+        "location" ILIKE ${`%${q}%`} OR
+        "text" ILIKE ${`%${q}%`}
+      )`
+    : Prisma.empty;
+
+  const scoreExpr = q
+    ? Prisma.sql`(
+        GREATEST(similarity(COALESCE("title", ''), ${q}), 0) * 3 +
+        GREATEST(similarity(COALESCE("location", ''), ${q}), 0) * 2.5 +
+        GREATEST(similarity(COALESCE("text", ''), ${q}), 0) +
+        CASE WHEN "title" ILIKE ${`%${q}%`} THEN 2 ELSE 0 END +
+        CASE WHEN "location" ILIKE ${`%${q}%`} THEN 1.5 ELSE 0 END
+      )`
+    : Prisma.sql`0`;
+
+  const whereSql = Prisma.join(conditions, ' AND ');
+
+  const ranked = await prisma.$queryRaw<Array<{ id: string }>>(Prisma.sql`
+    SELECT "id" FROM "CommunityMessage"
+    WHERE ${whereSql} ${searchCondition}
+    ORDER BY ${scoreExpr} DESC, "createdAt" DESC
+  `);
+
+  let ids = ranked.map((row) => row.id);
+  let fallback: ToLetSearchFallback = null;
+  const distanceById = new Map<string, number>();
+  let total = ids.length;
+
+  if (ids.length === 0 && q) {
+    const point = await geocode(q);
+    if (point) {
+      const candidates = await prisma.communityMessage.findMany({
+        where: {
+          type: COMMUNITY_MESSAGE_TYPES.TOLET,
+          deletedAt: null,
+          isPublished: true,
+          listingStatus: TOLET_STATUS.ACTIVE,
+          expiresAt: { gt: new Date() },
+          latitude: { not: null },
+          longitude: { not: null },
+          ...(options.type ? { listingType: options.type } : {}),
+          ...(options.minRent !== undefined ? { rent: { gte: options.minRent } } : {}),
+          ...(options.maxRent !== undefined ? { rent: { lte: options.maxRent } } : {})
+        },
+        select: { id: true, latitude: true, longitude: true }
+      });
+
+      const nearest = candidates
+        .map((candidate) => ({
+          id: candidate.id,
+          distanceKm: haversineKm(point, { lat: candidate.latitude!, lng: candidate.longitude! })
+        }))
+        .filter((candidate) => candidate.distanceKm <= toLetConfig.nearestSearchRadiusKm)
+        .sort((a, b) => a.distanceKm - b.distanceKm)
+        .slice(0, toLetConfig.nearestResultCount);
+
+      for (const candidate of nearest) distanceById.set(candidate.id, candidate.distanceKm);
+      ids = nearest.map((candidate) => candidate.id);
+      total = ids.length;
+      if (ids.length > 0) fallback = { query: q };
+    }
+  }
+
+  const pageIds = fallback ? ids : ids.slice((page - 1) * pageSize, page * pageSize);
+
+  const rows =
+    pageIds.length > 0
+      ? await prisma.communityMessage.findMany({ where: { id: { in: pageIds } }, select: MESSAGE_SELECT })
+      : [];
+  const rowsById = new Map(rows.map((row) => [row.id, row]));
+  const liked = await likedMessageIds(pageIds, options.viewerId);
+
+  const items: ToLetSearchItem[] = pageIds
+    .map((id) => rowsById.get(id))
+    .filter((row): row is MessageRow => Boolean(row))
+    .map((row) => ({ ...serialize(row, liked.has(row.id)), distanceKm: distanceById.get(row.id) ?? null }));
+
+  return {
+    items,
+    meta: buildPageMeta(page, fallback ? Math.max(items.length, 1) : pageSize, fallback ? items.length : total),
+    fallback
+  };
+}
+
+export async function getMessageForView(id: string, viewerId?: string | null): Promise<CommunityMessageView | null> {
+  const row = await prisma.communityMessage.findFirst({ where: { id, deletedAt: null }, select: MESSAGE_SELECT });
+  if (!row) return null;
+
+  const liked = await likedMessageIds([row.id], viewerId);
+  return serialize(row, liked.has(row.id));
 }
 
 export async function deleteMessage(id: string): Promise<void> {
@@ -177,8 +599,147 @@ export async function deleteMessage(id: string): Promise<void> {
 export async function findMessage(id: string) {
   return prisma.communityMessage.findFirst({
     where: { id, deletedAt: null },
-    select: { id: true, authorId: true, type: true }
+    select: { id: true, authorId: true, type: true, title: true }
   });
+}
+
+export async function toggleLike(messageId: string, userId: string): Promise<{ liked: boolean; likeCount: number }> {
+  const existing = await prisma.communityLike.findUnique({
+    where: { messageId_userId: { messageId, userId } },
+    select: { id: true }
+  });
+
+  if (existing) {
+    const [, message] = await prisma.$transaction([
+      prisma.communityLike.delete({ where: { id: existing.id } }),
+      prisma.communityMessage.update({
+        where: { id: messageId },
+        data: { likeCount: { decrement: 1 } },
+        select: { likeCount: true }
+      })
+    ]);
+    return { liked: false, likeCount: Math.max(0, message.likeCount) };
+  }
+
+  const [, message] = await prisma.$transaction([
+    prisma.communityLike.create({ data: { messageId, userId } }),
+    prisma.communityMessage.update({
+      where: { id: messageId },
+      data: { likeCount: { increment: 1 } },
+      select: { likeCount: true }
+    })
+  ]);
+  return { liked: true, likeCount: message.likeCount };
+}
+
+export async function listComments(messageId: string): Promise<CommunityCommentView[]> {
+  const comments = await prisma.communityComment.findMany({
+    where: { messageId, deletedAt: null },
+    select: COMMENT_SELECT,
+    orderBy: { createdAt: 'asc' }
+  });
+  if (comments.length === 0) return [];
+
+  const replies = await prisma.communityCommentReply.findMany({
+    where: { commentId: { in: comments.map((comment) => comment.id) }, deletedAt: null },
+    select: REPLY_SELECT,
+    orderBy: { createdAt: 'asc' }
+  });
+
+  const repliesByComment = new Map<string, ReplyRow[]>();
+  for (const reply of replies) {
+    const list = repliesByComment.get(reply.commentId) ?? [];
+    list.push(reply);
+    repliesByComment.set(reply.commentId, list);
+  }
+
+  return comments.map((comment) => serializeComment(comment, repliesByComment.get(comment.id) ?? []));
+}
+
+export async function addComment(params: { messageId: string; userId: string; text: string }): Promise<CommunityCommentView> {
+  const [row] = await prisma.$transaction([
+    prisma.communityComment.create({
+      data: {
+        messageId: params.messageId,
+        userId: params.userId,
+        text: params.text,
+        createdById: params.userId,
+        updatedById: params.userId
+      },
+      select: COMMENT_SELECT
+    }),
+    prisma.communityMessage.update({ where: { id: params.messageId }, data: { commentCount: { increment: 1 } } })
+  ]);
+
+  return serializeComment(row, []);
+}
+
+export async function findComment(id: string) {
+  return prisma.communityComment.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, userId: true, messageId: true }
+  });
+}
+
+export async function deleteComment(id: string, messageId: string, actorId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.communityComment.update({ where: { id }, data: { deletedAt: new Date(), updatedById: actorId } }),
+    prisma.communityMessage.update({ where: { id: messageId }, data: { commentCount: { decrement: 1 } } })
+  ]);
+}
+
+export async function addReply(params: { commentId: string; userId: string; text: string }): Promise<CommunityCommentReplyView> {
+  const row = await prisma.communityCommentReply.create({
+    data: {
+      commentId: params.commentId,
+      userId: params.userId,
+      text: params.text,
+      createdById: params.userId,
+      updatedById: params.userId
+    },
+    select: REPLY_SELECT
+  });
+
+  return serializeReply(row);
+}
+
+export async function findReply(id: string) {
+  return prisma.communityCommentReply.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, userId: true, commentId: true }
+  });
+}
+
+export async function deleteReply(id: string, actorId: string): Promise<void> {
+  await prisma.communityCommentReply.update({ where: { id }, data: { deletedAt: new Date(), updatedById: actorId } });
+}
+
+export async function notifyNewComment(params: {
+  message: { id: string; authorId: string | null; title: string | null; type: string };
+  commenterId: string;
+  text: string;
+}): Promise<void> {
+  if (!params.message.authorId || params.message.authorId === params.commenterId) return;
+
+  try {
+    const title =
+      params.message.type === COMMUNITY_MESSAGE_TYPES.TOLET && params.message.title
+        ? strings.community.comments.notificationTitleListing(params.message.title)
+        : strings.community.comments.notificationTitlePost;
+
+    await createNotifications([params.message.authorId], {
+      type: NOTIFICATION_TYPES.COMMUNITY_COMMENT,
+      title,
+      excerpt: params.text,
+      link:
+        params.message.type === COMMUNITY_MESSAGE_TYPES.TOLET
+          ? toLetListingPath(params.message.id)
+          : ROUTES.community,
+      actorId: params.commenterId
+    });
+  } catch {
+    return;
+  }
 }
 
 export async function notifyMentions(params: { text: string; actorId: string; canMentionEveryone: boolean }) {
@@ -282,7 +843,7 @@ export async function unreadCount(userId: string): Promise<number> {
 
   return prisma.communityMessage.count({
     where: {
-      ...VISIBLE,
+      ...visibleWhere(new Date()),
       OR: [{ authorId: null }, { authorId: { not: userId } }],
       ...(marker ? { createdAt: { gt: marker.lastReadAt } } : {})
     }

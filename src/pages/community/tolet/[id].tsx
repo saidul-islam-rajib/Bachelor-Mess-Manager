@@ -1,0 +1,277 @@
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { CommunityComments } from '@/components/community/CommunityComments';
+import { ToLetComposer } from '@/components/community/ToLetComposer';
+import { ToLetGallery } from '@/components/community/ToLetGallery';
+import { LikeButton } from '@/components/community/LikeButton';
+import { useCurrentUser } from '@/components/UserProvider';
+import { useToast } from '@/components/ToastProvider';
+import {
+  Alert,
+  Badge,
+  Button,
+  EmptyState,
+  LoadingCard,
+  PageContainer,
+  PageTitle,
+  ShareButtons,
+  useConfirm
+} from '@/components/ui';
+import { TOLET_GENDER_PREFERENCE, TOLET_STATUS, USER_ROLES } from '@/lib/constants';
+import { api, errorMessage } from '@/lib/api-client';
+import { formatCurrency, formatDate } from '@/lib/format';
+import { googleMapsLink } from '@/lib/geo';
+import { strings } from '@/lib/i18n';
+import { ROUTES, toLetListingPath } from '@/lib/routes';
+import type { CommunityMessageView } from '@/lib/community';
+
+export default function ToLetDetailPage() {
+  const router = useRouter();
+  const toast = useToast();
+  const confirm = useConfirm();
+  const { user } = useCurrentUser();
+  const id = typeof router.query.id === 'string' ? router.query.id : undefined;
+
+  const [listing, setListing] = useState<CommunityMessageView | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [composerMode, setComposerMode] = useState<'edit' | 'repost' | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+
+    api
+      .get<{ message: CommunityMessageView }>(`/api/community/messages/${id}`)
+      .then((data) => {
+        if (!cancelled) setListing(data.message);
+      })
+      .catch(() => {
+        if (!cancelled) setNotFound(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  function onLikeChange(liked: boolean, count: number) {
+    setListing((current) => (current ? { ...current, likedByViewer: liked, likeCount: count } : current));
+  }
+
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
+  const isOwner = Boolean(user && listing && user.id === listing.authorId);
+  const canManage = isOwner || isAdmin;
+
+  async function markExpired() {
+    if (!listing) return;
+    const accepted = await confirm({
+      title: strings.toLet.markExpiredConfirmTitle,
+      message: strings.toLet.markExpiredConfirmBody,
+      confirmLabel: strings.toLet.markExpiredAction
+    });
+    if (!accepted) return;
+
+    setBusy(true);
+    try {
+      const data = await api.patch<{ message: CommunityMessageView }>(`/api/community/messages/${listing.id}`, {
+        markExpired: true
+      });
+      setListing(data.message);
+      toast.success(strings.toLet.markedExpired);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmRepost() {
+    if (!listing) return;
+    const accepted = await confirm({
+      title: strings.toLet.repostConfirmTitle,
+      message: strings.toLet.repostConfirmBody,
+      confirmLabel: strings.toLet.repostAction
+    });
+    if (!accepted) return;
+    setComposerMode('repost');
+  }
+
+  function onReposted(updated: CommunityMessageView) {
+    setComposerMode(null);
+    void router.push(toLetListingPath(updated.id));
+  }
+
+  async function removeListing() {
+    if (!listing) return;
+    const accepted = await confirm({
+      title: strings.toLet.deleteConfirmTitle,
+      message: strings.toLet.deleteConfirmBody,
+      confirmLabel: strings.common.delete,
+      destructive: true
+    });
+    if (!accepted) return;
+
+    setBusy(true);
+    try {
+      await api.delete(`/api/community/messages/${listing.id}`);
+      toast.success(strings.toLet.deleted);
+      void router.push(ROUTES.community);
+    } catch (error) {
+      toast.error(errorMessage(error));
+      setBusy(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <PageContainer width="medium">
+        <LoadingCard />
+      </PageContainer>
+    );
+  }
+
+  if (notFound || !listing) {
+    return (
+      <PageContainer width="medium">
+        <EmptyState
+          title={strings.toLet.detailNotFound}
+          action={
+            <Link href={ROUTES.community} className="text-sm font-medium text-brand-700 hover:text-brand-800">
+              {strings.toLet.backToBrowse}
+            </Link>
+          }
+        />
+      </PageContainer>
+    );
+  }
+
+  const typeLabel = strings.toLet.types[(listing.listingType ?? '') as keyof typeof strings.toLet.types];
+  const genderLabel =
+    listing.genderPreference && (strings.toLet.genderPreference[listing.genderPreference as keyof typeof strings.toLet.genderPreference] ?? null);
+  const mapsLink = googleMapsLink(
+    listing.latitude !== null && listing.longitude !== null ? { lat: listing.latitude, lng: listing.longitude } : null,
+    listing.location
+  );
+
+  return (
+    <PageContainer width="medium">
+      <PageTitle title={listing.title ?? strings.toLet.postAction} description={listing.text} />
+
+      <Link
+        href={ROUTES.community}
+        className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"
+      >
+        <span aria-hidden="true">&larr;</span> {strings.toLet.backToBrowse}
+      </Link>
+
+      {listing.effectiveListingStatus !== TOLET_STATUS.ACTIVE && (
+        <Alert tone="warning" className="mb-4">
+          {strings.toLet.expiredNotice}
+        </Alert>
+      )}
+
+      <div className="space-y-5">
+        <ToLetGallery images={listing.images} title={listing.title ?? ''} />
+
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <Badge tone="neutral">{typeLabel}</Badge>
+              {listing.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && genderLabel && (
+                <Badge tone="warning">{genderLabel}</Badge>
+              )}
+            </div>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-900">{listing.title}</h1>
+            <p className="mt-1 text-sm text-slate-500">
+              {listing.location}
+              {mapsLink && (
+                <a
+                  href={mapsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1.5 font-medium text-brand-700 hover:text-brand-800"
+                >
+                  {strings.toLet.location.viewOnMap}
+                </a>
+              )}
+            </p>
+          </div>
+
+          <div className="shrink-0 text-right">
+            <p className="text-2xl font-semibold text-brand-700">
+              {listing.rent !== null && strings.toLet.rentPerMonth(formatCurrency(listing.rent))}
+            </p>
+            {listing.rentNegotiable && <p className="text-xs text-slate-400">{strings.toLet.negotiable}</p>}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <LikeButton messageId={listing.id} liked={listing.likedByViewer} count={listing.likeCount} onChange={onLikeChange} />
+          <ShareButtons url={toLetListingPath(listing.id)} title={listing.title ?? ''} />
+          <span className="text-xs text-slate-400">{strings.toLet.viewsCount(listing.viewCount)}</span>
+        </div>
+
+        <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800">{listing.text}</p>
+
+        <dl className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.toLet.contactTitle}</dt>
+            <dd className="mt-1 text-sm font-medium text-slate-800">
+              {listing.contactName ?? listing.authorName}
+              {listing.contactPhone ? ` · ${listing.contactPhone}` : ` · ${strings.toLet.noContactPhone}`}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.toLet.postedBy(listing.authorName)}</dt>
+            <dd className="mt-1 text-sm font-medium text-slate-800">{strings.toLet.postedOn(formatDate(listing.createdAt))}</dd>
+          </div>
+        </dl>
+
+        {canManage && (
+          <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+            <Button variant="secondary" size="sm" onClick={() => setComposerMode('edit')} disabled={busy}>
+              {strings.toLet.editAction}
+            </Button>
+            {listing.effectiveListingStatus === TOLET_STATUS.ACTIVE ? (
+              <Button variant="secondary" size="sm" onClick={() => void markExpired()} disabled={busy}>
+                {strings.toLet.markExpiredAction}
+              </Button>
+            ) : (
+              <Button variant="secondary" size="sm" onClick={() => void confirmRepost()} disabled={busy}>
+                {strings.toLet.repostAction}
+              </Button>
+            )}
+            <Button variant="danger" size="sm" onClick={() => void removeListing()} disabled={busy}>
+              {strings.toLet.deleteAction}
+            </Button>
+          </div>
+        )}
+
+        <div className="border-t border-slate-100 pt-5">
+          <h2 className="mb-3 text-lg font-semibold">{strings.community.comments.title}</h2>
+          <CommunityComments messageId={listing.id} canModerate={isAdmin} />
+        </div>
+      </div>
+
+      {canManage && (
+        <ToLetComposer
+          open={composerMode !== null}
+          onClose={() => setComposerMode(null)}
+          listing={composerMode === 'edit' ? listing : null}
+          prefillFrom={composerMode === 'repost' ? listing : null}
+          defaultContactName={user?.name ?? ''}
+          defaultContactPhone={user?.phone ?? ''}
+          onSaved={composerMode === 'repost' ? onReposted : (updated) => setListing(updated)}
+        />
+      )}
+    </PageContainer>
+  );
+}

@@ -16,7 +16,7 @@ export const DATE_DEFAULTS = {
 
 export const AUTHOR = {
   name: 'Saidul Islam Rajib',
-  email: 'saidul.is.rajib@gmail.com',
+  email: 'support@team-sober.com',
   role: 'Author & Lead Developer',
   license: 'MIT',
   copyrightStartYear: 2026,
@@ -109,7 +109,8 @@ export const CACHE_DEFAULTS = {
   sessionUserMs: 5_000,
   billsListMs: 15_000,
   dashboardGroupMs: 20_000,
-  advancesMs: 15_000
+  advancesMs: 15_000,
+  geocodeMs: 86_400_000
 } as const;
 
 export const COMMUNITY_DEFAULTS = {
@@ -120,6 +121,29 @@ export const COMMUNITY_DEFAULTS = {
   mentionRecipientCap: 25,
   everyoneRecipientCap: 500,
   maxImagesPerPost: 4
+} as const;
+
+export const TOLET_DEFAULTS = {
+  pageSize: 12,
+  maxImagesPerListing: 6,
+  maxTitleLength: 100,
+  maxDescriptionLength: 2000,
+  maxLocationLength: 200,
+  defaultExpiryDays: 30,
+  quickExpiryDays: 1,
+  expiryOptionsDays: [1, 7, 30, 90],
+  commentMaxLength: 500,
+  searchPageSize: 9,
+  suggestionCount: 6,
+  nearestResultCount: 6,
+  nearestSearchRadiusKm: 60
+} as const;
+
+export const GEOCODE_DEFAULTS = {
+  baseUrl: 'https://nominatim.openstreetmap.org',
+  countryCodes: 'bd',
+  userAgent: 'BachelorPoint/1.0 (+https://team-sober.com)',
+  timeoutMs: 5000
 } as const;
 
 export const MEAL_PROMPT_DEFAULTS = {

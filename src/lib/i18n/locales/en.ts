@@ -1348,7 +1348,157 @@ const en = {
         title: 'Answer your meals in one tap',
         body: 'You now get a daily "are you eating today?" ask. Tap Yes or No from your phone and your meals are recorded, no sign-in needed.'
       }
+    },
+    like: 'Like',
+    unlike: 'Unlike',
+    comments: {
+      title: 'Comments',
+      placeholder: 'Write a comment...',
+      submit: 'Comment',
+      submitting: 'Posting...',
+      empty: 'No comments yet.',
+      required: 'Write a comment first.',
+      tooLong: (max: number) => `Keep it under ${max} characters.`,
+      reply: 'Reply',
+      replyPlaceholder: 'Write a reply...',
+      sendReply: 'Send',
+      sending: 'Sending...',
+      deleteComment: 'Delete comment',
+      deleteReply: 'Delete reply',
+      deleteConfirmTitle: 'Delete this comment?',
+      deleteConfirmBody: 'It disappears for everyone.',
+      deleteReplyConfirmTitle: 'Delete this reply?',
+      deleted: 'Comment deleted.',
+      replyDeleted: 'Reply deleted.',
+      notificationTitlePost: 'New comment on your post',
+      notificationTitleListing: (title: string) => `New comment on "${title}"`
     }
+  },
+  toLet: {
+    postAction: 'Post a to-let',
+    types: {
+      ROOM: 'Room',
+      SEAT: 'Seat',
+      FLAT: 'Flat'
+    },
+    genderPreference: {
+      ANY: 'Any',
+      MALE: 'Male only',
+      FEMALE: 'Female only'
+    },
+    negotiable: 'Negotiable',
+    rentPerMonth: (amount: string) => `${amount}/mo`,
+    postedBy: (name: string) => `Posted by ${name}`,
+    postedOn: (date: string) => `Posted ${date}`,
+    viewsCount: (count: number) => `${count} view${count === 1 ? '' : 's'}`,
+    likesCount: (count: number) => `${count} like${count === 1 ? '' : 's'}`,
+    commentsCount: (count: number) => `${count} comment${count === 1 ? '' : 's'}`,
+    noPhotos: 'No photos yet.',
+    photoAlt: (title: string, index: number) => `Photo ${index + 1} of ${title}`,
+
+    composer: {
+      createTitle: 'Post a to-let',
+      editTitle: 'Edit listing',
+      repostTitle: 'Repost listing',
+      typeLabel: 'Type',
+      titleLabel: 'Title',
+      titlePlaceholder: 'e.g. Furnished single room near campus',
+      descriptionLabel: 'Description',
+      descriptionPlaceholder: 'Describe the place, facilities, and anything a member should know...',
+      rentLabel: 'Monthly rent',
+      negotiableLabel: 'Rent is negotiable',
+      locationLabel: 'Location',
+      locationPlaceholder: 'Area, road, and any nearby landmark',
+      genderPreferenceLabel: 'Preferred for',
+      contactNameLabel: 'Contact name',
+      contactNameHint: 'Defaults to your account name.',
+      contactPhoneLabel: 'Contact phone',
+      contactPhoneHint: 'Defaults to your profile phone.',
+      expiryLabel: 'Show this listing for',
+      expiryOption: (days: number) => (days === 1 ? '1 day' : `${days} days`),
+      submitCreate: 'Post listing',
+      submitEdit: 'Save changes',
+      submitRepost: 'Repost',
+      submitting: 'Saving...',
+      photosHint: (max: number) => `Up to ${max} photos.`
+    },
+
+    location: {
+      shareAction: 'Share my exact location',
+      sharing: 'Getting your location...',
+      shared: 'Exact location shared',
+      clearAction: 'Remove',
+      shareFailed: 'Could not get your location. You can still type it in below.',
+      unsupported: 'Your browser does not support sharing location.',
+      viewOnMap: 'View on Google Maps'
+    },
+
+    search: {
+      placeholder: 'Search by location, title, or rent...',
+      filtersAction: 'Filters',
+      typeAll: 'All types',
+      typeLabel: 'Type',
+      minRentLabel: 'Min rent',
+      maxRentLabel: 'Max rent',
+      noResults: 'No to-let listings match your search.',
+      noResultsHint: 'Try a different keyword, or clear your filters.',
+      nearestBanner: (query: string) => `No exact matches for "${query}" — showing the nearest to-lets instead.`,
+      distanceAway: (km: string) => `${km} km away`,
+      loadFailed: 'Could not load search results.'
+    },
+
+    created: 'Listing posted.',
+    updated: 'Listing updated.',
+    reposted: 'Listing reposted.',
+    markedExpired: 'Listing marked as expired.',
+    deleted: 'Listing deleted.',
+    deleteConfirmTitle: 'Delete this listing?',
+    deleteConfirmBody: 'This removes it for everyone, including anyone who already has the link.',
+    markExpiredConfirmTitle: 'Mark this listing as expired?',
+    markExpiredConfirmBody:
+      'It disappears from search and browsing right away. You can still find it from your profile.',
+    repostConfirmTitle: 'Repost this listing?',
+    repostConfirmBody: "Update anything that's changed — it will appear as a new post at the top of the feed.",
+    editAction: 'Edit',
+    markExpiredAction: 'Mark as expired',
+    repostAction: 'Repost',
+    deleteAction: 'Delete',
+    viewAction: 'View listing',
+    backToBrowse: 'Back to the feed',
+    detailNotFound: 'This listing is no longer available.',
+    expiredNotice: 'This listing has expired. It is hidden from the feed.',
+    contactTitle: 'Contact',
+    noContactPhone: 'No phone number provided.',
+
+    profile: {
+      title: 'My to-let listings',
+      subtitle: "Manage what you've posted, or mark a place as taken.",
+      empty: "You haven't posted any to-let listings yet.",
+      emptyHint: 'Post one from the Community page.'
+    },
+
+    signedOut: 'Sign in to post a to-let.',
+    notFound: 'Listing not found.',
+    forbidden: 'You can only manage your own listings.',
+    idRequired: 'Listing ID is required.',
+    typeInvalid: 'Choose a listing type.',
+    genderPreferenceInvalid: 'Choose a valid preference.',
+    titleRequired: 'Give the listing a title.',
+    titleTooLong: (max: number) => `Keep the title under ${max} characters.`,
+    descriptionRequired: 'Add a short description.',
+    descriptionTooLong: (max: number) => `Keep the description under ${max} characters.`,
+    locationRequired: 'Add a location.',
+    locationTooLong: (max: number) => `Keep the location under ${max} characters.`,
+    expiryInvalid: 'Choose a valid expiry.',
+    tooManyPhotos: (max: number) => `You can attach up to ${max} photos.`
+  },
+  share: {
+    action: 'Share',
+    copyLink: 'Copy link',
+    linkCopied: 'Link copied to clipboard.',
+    linkCopyFailed: 'Could not copy the link.',
+    facebook: 'Share on Facebook',
+    whatsapp: 'Share on WhatsApp'
   },
   mealPrompt: {
     title: 'Quick meal reply',
@@ -2197,7 +2347,8 @@ const en = {
     INACTIVE: 'Inactive',
     ACCEPTED: 'Accepted',
     PAID: 'Paid',
-    PARTIAL: 'Partial'
+    PARTIAL: 'Partial',
+    EXPIRED: 'Expired'
   },
   roles: {
     ADMIN: 'Administrator',
