@@ -45,7 +45,7 @@ export function PhotoLightbox({ images, index, onIndexChange, onClose, altFor }:
         </svg>
       </button>
 
-      <div className="relative flex flex-1 items-center justify-center px-3 py-14 sm:px-16">
+      <div className="relative flex min-h-0 flex-1 items-center justify-center px-3 py-14 sm:px-16">
         {count > 1 && (
           <button
             type="button"
@@ -66,7 +66,7 @@ export function PhotoLightbox({ images, index, onIndexChange, onClose, altFor }:
           src={images[safeIndex]}
           alt={altFor(safeIndex)}
           onClick={(event) => event.stopPropagation()}
-          className="max-h-full max-w-full cursor-default select-none object-contain"
+          className="max-h-[82vh] max-w-[92vw] cursor-default select-none object-contain sm:max-w-[80vw]"
         />
 
         {count > 1 && (
