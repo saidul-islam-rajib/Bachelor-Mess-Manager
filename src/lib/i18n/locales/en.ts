@@ -559,7 +559,6 @@ const en = {
       supervisor: 'Supervisor',
       activeSince: (date: string) => `Active since ${date}`,
       leftOn: (date: string) => `Left ${date}`,
-      photoTitle: (name: string) => `${name}'s photo`,
       editMine: 'Edit my profile'
     },
     current: 'Current members',

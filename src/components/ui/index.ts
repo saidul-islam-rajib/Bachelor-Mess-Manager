@@ -38,6 +38,9 @@ export type { CollapsibleProps } from '@/components/ui/Collapsible';
 export { ImageViewer } from '@/components/ui/ImageViewer';
 export type { ImageViewerProps } from '@/components/ui/ImageViewer';
 
+export { PhotoLightbox } from '@/components/ui/PhotoLightbox';
+export type { PhotoLightboxProps } from '@/components/ui/PhotoLightbox';
+
 export {
   Alert,
   Badge,

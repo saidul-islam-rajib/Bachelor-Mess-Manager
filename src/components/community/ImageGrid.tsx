@@ -1,5 +1,8 @@
-import { ImageViewer } from '@/components/ui';
+import { useState } from 'react';
+import { PhotoLightbox } from '@/components/ui';
 import { strings } from '@/lib/i18n';
+
+const MAX_VISIBLE = 4;
 
 const LAYOUT: Record<number, string> = {
   1: 'grid-cols-1',
@@ -20,33 +23,50 @@ function aspectClassName(count: number, index: number): string {
 }
 
 export function ImageGrid({ images, authorName }: { images: string[]; authorName: string }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
   if (images.length === 0) return null;
 
+  const visible = images.slice(0, MAX_VISIBLE);
+  const hiddenCount = images.length - visible.length;
+
   return (
-    <div className={`grid gap-px bg-slate-100 ${LAYOUT[images.length] ?? 'grid-cols-2'}`}>
-      {images.map((src, index) => (
-        <ImageViewer
-          key={src}
-          src={src}
-          alt={strings.community.postImageAlt(authorName, index)}
-          title={strings.community.postImageAlt(authorName, index)}
-        >
-          {(open) => (
+    <>
+      <div className={`grid gap-px bg-slate-100 ${LAYOUT[visible.length] ?? 'grid-cols-2'}`}>
+        {visible.map((src, index) => {
+          const isLastTile = hiddenCount > 0 && index === visible.length - 1;
+          return (
             <button
+              key={src}
               type="button"
-              onClick={open}
-              className={`block w-full cursor-zoom-in bg-slate-100 ${cellClassName(images.length, index)}`}
+              onClick={() => setOpenIndex(index)}
+              className={`relative block w-full cursor-zoom-in bg-slate-100 ${cellClassName(visible.length, index)}`}
             >
               <img
                 src={src}
                 alt={strings.community.postImageAlt(authorName, index)}
-                className={`h-full w-full object-cover ${aspectClassName(images.length, index)}`}
+                className={`h-full w-full object-cover ${aspectClassName(visible.length, index)}`}
               />
+              {isLastTile && (
+                <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-xl font-semibold text-white">
+                  +{hiddenCount}
+                </span>
+              )}
             </button>
-          )}
-        </ImageViewer>
-      ))}
-    </div>
+          );
+        })}
+      </div>
+
+      {openIndex !== null && (
+        <PhotoLightbox
+          images={images}
+          index={openIndex}
+          onIndexChange={setOpenIndex}
+          onClose={() => setOpenIndex(null)}
+          altFor={(index) => strings.community.postImageAlt(authorName, index)}
+        />
+      )}
+    </>
   );
 }
 

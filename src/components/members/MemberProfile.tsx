@@ -99,11 +99,7 @@ export default function MemberProfile({ userId, onClose }: MemberProfileProps) {
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             {member.profileImage ? (
-              <ImageViewer
-                src={member.profileImage}
-                alt={member.name}
-                title={copy.photoTitle(member.name)}
-              >
+              <ImageViewer src={member.profileImage} alt={member.name}>
                 {(open) => (
                   <button
                     type="button"

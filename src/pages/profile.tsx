@@ -539,7 +539,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
     <>
       <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6">
         {image ? (
-          <ImageViewer src={image} alt={name} title={strings.profile.photo}>
+          <ImageViewer src={image} alt={name}>
             {(open) => (
               <button
                 type="button"

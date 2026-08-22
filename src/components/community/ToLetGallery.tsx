@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ImageViewer } from '@/components/ui';
+import { PhotoLightbox } from '@/components/ui';
 import { strings } from '@/lib/i18n';
 
 export function ToLetGallery({ images, title }: { images: string[]; title: string }) {
   const [active, setActive] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   if (images.length === 0) {
     return (
@@ -19,17 +20,13 @@ export function ToLetGallery({ images, title }: { images: string[]; title: strin
 
   return (
     <div>
-      <ImageViewer src={src} alt={alt} title={title}>
-        {(open) => (
-          <button
-            type="button"
-            onClick={open}
-            className="block w-full cursor-zoom-in overflow-hidden rounded-3xl bg-slate-100"
-          >
-            <img src={src} alt={alt} className="aspect-[16/10] w-full object-cover" />
-          </button>
-        )}
-      </ImageViewer>
+      <button
+        type="button"
+        onClick={() => setLightboxOpen(true)}
+        className="block w-full cursor-zoom-in overflow-hidden rounded-3xl bg-slate-100"
+      >
+        <img src={src} alt={alt} className="aspect-[16/10] w-full object-cover" />
+      </button>
 
       {images.length > 1 && (
         <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
@@ -48,6 +45,16 @@ export function ToLetGallery({ images, title }: { images: string[]; title: strin
             </button>
           ))}
         </div>
+      )}
+
+      {lightboxOpen && (
+        <PhotoLightbox
+          images={images}
+          index={index}
+          onIndexChange={setActive}
+          onClose={() => setLightboxOpen(false)}
+          altFor={(i) => strings.toLet.photoAlt(title, i)}
+        />
       )}
     </div>
   );
