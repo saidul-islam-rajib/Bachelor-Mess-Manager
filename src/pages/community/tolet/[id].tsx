@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ToLetComments } from '@/components/tolet/ToLetComments';
-import { ToLetComposer } from '@/components/tolet/ToLetComposer';
-import { ToLetGallery } from '@/components/tolet/ToLetGallery';
-import { LikeButton } from '@/components/tolet/LikeButton';
+import { CommunityComments } from '@/components/community/CommunityComments';
+import { ToLetComposer } from '@/components/community/ToLetComposer';
+import { ToLetGallery } from '@/components/community/ToLetGallery';
+import { LikeButton } from '@/components/community/LikeButton';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import {
@@ -23,7 +23,7 @@ import { api, errorMessage } from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 import { ROUTES, toLetListingPath } from '@/lib/routes';
-import type { ToLetListingView } from '@/lib/tolet';
+import type { CommunityMessageView } from '@/lib/community';
 
 export default function ToLetDetailPage() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function ToLetDetailPage() {
   const { user } = useCurrentUser();
   const id = typeof router.query.id === 'string' ? router.query.id : undefined;
 
-  const [listing, setListing] = useState<ToLetListingView | null>(null);
+  const [listing, setListing] = useState<CommunityMessageView | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -45,9 +45,9 @@ export default function ToLetDetailPage() {
     setNotFound(false);
 
     api
-      .get<{ listing: ToLetListingView }>(`/api/tolet/${id}`)
+      .get<{ message: CommunityMessageView }>(`/api/community/messages/${id}`)
       .then((data) => {
-        if (!cancelled) setListing(data.listing);
+        if (!cancelled) setListing(data.message);
       })
       .catch(() => {
         if (!cancelled) setNotFound(true);
@@ -80,8 +80,10 @@ export default function ToLetDetailPage() {
 
     setBusy(true);
     try {
-      const data = await api.patch<{ listing: ToLetListingView }>(`/api/tolet/${listing.id}`, { markExpired: true });
-      setListing(data.listing);
+      const data = await api.patch<{ message: CommunityMessageView }>(`/api/community/messages/${listing.id}`, {
+        markExpired: true
+      });
+      setListing(data.message);
       toast.success(strings.toLet.markedExpired);
     } catch (error) {
       toast.error(errorMessage(error));
@@ -102,9 +104,9 @@ export default function ToLetDetailPage() {
 
     setBusy(true);
     try {
-      await api.delete(`/api/tolet/${listing.id}`);
+      await api.delete(`/api/community/messages/${listing.id}`);
       toast.success(strings.toLet.deleted);
-      void router.push(`${ROUTES.community}?tab=tolet`);
+      void router.push(ROUTES.community);
     } catch (error) {
       toast.error(errorMessage(error));
       setBusy(false);
@@ -125,10 +127,7 @@ export default function ToLetDetailPage() {
         <EmptyState
           title={strings.toLet.detailNotFound}
           action={
-            <Link
-              href={`${ROUTES.community}?tab=tolet`}
-              className="text-sm font-medium text-brand-700 hover:text-brand-800"
-            >
+            <Link href={ROUTES.community} className="text-sm font-medium text-brand-700 hover:text-brand-800">
               {strings.toLet.backToBrowse}
             </Link>
           }
@@ -137,34 +136,37 @@ export default function ToLetDetailPage() {
     );
   }
 
-  const typeLabel = strings.toLet.types[listing.type as keyof typeof strings.toLet.types];
-  const genderLabel = strings.toLet.genderPreference[listing.genderPreference as keyof typeof strings.toLet.genderPreference];
+  const typeLabel = strings.toLet.types[(listing.listingType ?? '') as keyof typeof strings.toLet.types];
+  const genderLabel =
+    listing.genderPreference && (strings.toLet.genderPreference[listing.genderPreference as keyof typeof strings.toLet.genderPreference] ?? null);
 
   return (
     <PageContainer width="medium">
-      <PageTitle title={listing.title} description={listing.description} />
+      <PageTitle title={listing.title ?? strings.toLet.postAction} description={listing.text} />
 
       <Link
-        href={`${ROUTES.community}?tab=tolet`}
+        href={ROUTES.community}
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-700"
       >
         <span aria-hidden="true">&larr;</span> {strings.toLet.backToBrowse}
       </Link>
 
-      {listing.effectiveStatus !== TOLET_STATUS.ACTIVE && (
+      {listing.effectiveListingStatus !== TOLET_STATUS.ACTIVE && (
         <Alert tone="warning" className="mb-4">
           {strings.toLet.expiredNotice}
         </Alert>
       )}
 
       <div className="space-y-5">
-        <ToLetGallery images={listing.images} title={listing.title} />
+        <ToLetGallery images={listing.images} title={listing.title ?? ''} />
 
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge tone="neutral">{typeLabel}</Badge>
-              {listing.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && <Badge tone="warning">{genderLabel}</Badge>}
+              {listing.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && genderLabel && (
+                <Badge tone="warning">{genderLabel}</Badge>
+              )}
             </div>
             <h1 className="mt-2 text-2xl font-semibold text-slate-900">{listing.title}</h1>
             <p className="mt-1 text-sm text-slate-500">{listing.location}</p>
@@ -172,29 +174,21 @@ export default function ToLetDetailPage() {
 
           <div className="shrink-0 text-right">
             <p className="text-2xl font-semibold text-brand-700">
-              {strings.toLet.rentPerMonth(formatCurrency(listing.rent))}
+              {listing.rent !== null && strings.toLet.rentPerMonth(formatCurrency(listing.rent))}
             </p>
             {listing.rentNegotiable && <p className="text-xs text-slate-400">{strings.toLet.negotiable}</p>}
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <LikeButton listingId={listing.id} liked={listing.likedByViewer} count={listing.likeCount} onChange={onLikeChange} />
-          <ShareButtons url={toLetListingPath(listing.id)} title={listing.title} />
+          <LikeButton messageId={listing.id} liked={listing.likedByViewer} count={listing.likeCount} onChange={onLikeChange} />
+          <ShareButtons url={toLetListingPath(listing.id)} title={listing.title ?? ''} />
           <span className="text-xs text-slate-400">{strings.toLet.viewsCount(listing.viewCount)}</span>
         </div>
 
-        <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800">{listing.description}</p>
+        <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800">{listing.text}</p>
 
         <dl className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:grid-cols-2">
-          <div>
-            <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.toLet.composer.availableFromLabel}</dt>
-            <dd className="mt-1 text-sm font-medium text-slate-800">
-              {listing.availableFrom
-                ? strings.toLet.availableFromValue(formatDate(listing.availableFrom))
-                : strings.toLet.availableNow}
-            </dd>
-          </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.toLet.contactTitle}</dt>
             <dd className="mt-1 text-sm font-medium text-slate-800">
@@ -202,18 +196,18 @@ export default function ToLetDetailPage() {
               {listing.contactPhone ? ` · ${listing.contactPhone}` : ` · ${strings.toLet.noContactPhone}`}
             </dd>
           </div>
+          <div>
+            <dt className="text-xs uppercase tracking-wide text-slate-500">{strings.toLet.postedBy(listing.authorName)}</dt>
+            <dd className="mt-1 text-sm font-medium text-slate-800">{strings.toLet.postedOn(formatDate(listing.createdAt))}</dd>
+          </div>
         </dl>
-
-        <p className="text-xs text-slate-400">
-          {strings.toLet.postedBy(listing.authorName)} · {strings.toLet.postedOn(formatDate(listing.createdAt))}
-        </p>
 
         {canManage && (
           <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-4">
             <Button variant="secondary" size="sm" onClick={() => setEditorOpen(true)} disabled={busy}>
               {strings.toLet.editAction}
             </Button>
-            {listing.effectiveStatus === TOLET_STATUS.ACTIVE && (
+            {listing.effectiveListingStatus === TOLET_STATUS.ACTIVE && (
               <Button variant="secondary" size="sm" onClick={() => void markExpired()} disabled={busy}>
                 {strings.toLet.markExpiredAction}
               </Button>
@@ -225,7 +219,8 @@ export default function ToLetDetailPage() {
         )}
 
         <div className="border-t border-slate-100 pt-5">
-          <ToLetComments listingId={listing.id} canModerate={isAdmin} />
+          <h2 className="mb-3 text-lg font-semibold">{strings.community.comments.title}</h2>
+          <CommunityComments messageId={listing.id} canModerate={isAdmin} />
         </div>
       </div>
 

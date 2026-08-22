@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser } from '@/lib/auth-utils';
 import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
-import { myListings } from '@/lib/tolet';
+import { myListings } from '@/lib/community';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 

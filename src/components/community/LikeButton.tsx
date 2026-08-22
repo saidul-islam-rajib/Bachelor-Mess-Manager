@@ -5,13 +5,13 @@ import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 
 export function LikeButton({
-  listingId,
+  messageId,
   liked,
   count,
   compact = false,
   onChange
 }: {
-  listingId: string;
+  messageId: string;
   liked: boolean;
   count: number;
   compact?: boolean;
@@ -29,7 +29,7 @@ export function LikeButton({
     onChange(!liked, liked ? Math.max(0, count - 1) : count + 1);
 
     try {
-      const result = await api.post<{ liked: boolean; likeCount: number }>(`/api/tolet/${listingId}/like`);
+      const result = await api.post<{ liked: boolean; likeCount: number }>(`/api/community/messages/${messageId}/like`);
       onChange(result.liked, result.likeCount);
     } catch (error) {
       onChange(previous.liked, previous.count);
@@ -49,8 +49,8 @@ export function LikeButton({
       }}
       disabled={!user || busy}
       aria-pressed={liked}
-      aria-label={liked ? strings.toLet.unlike : strings.toLet.like}
-      title={liked ? strings.toLet.unlike : strings.toLet.like}
+      aria-label={liked ? strings.community.unlike : strings.community.like}
+      title={liked ? strings.community.unlike : strings.community.like}
       className={`inline-flex items-center gap-1.5 rounded-full border font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
         compact ? 'px-3 py-1.5 text-xs' : 'px-4 py-2 text-sm'
       } ${liked ? 'border-red-200 bg-red-50 text-red-600' : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}

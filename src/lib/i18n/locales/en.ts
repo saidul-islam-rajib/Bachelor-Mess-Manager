@@ -1348,22 +1348,34 @@ const en = {
         title: 'Answer your meals in one tap',
         body: 'You now get a daily "are you eating today?" ask. Tap Yes or No from your phone and your meals are recorded, no sign-in needed.'
       }
+    },
+    like: 'Like',
+    unlike: 'Unlike',
+    comments: {
+      title: 'Comments',
+      placeholder: 'Write a comment...',
+      submit: 'Comment',
+      submitting: 'Posting...',
+      empty: 'No comments yet.',
+      required: 'Write a comment first.',
+      tooLong: (max: number) => `Keep it under ${max} characters.`,
+      reply: 'Reply',
+      replyPlaceholder: 'Write a reply...',
+      sendReply: 'Send',
+      sending: 'Sending...',
+      deleteComment: 'Delete comment',
+      deleteReply: 'Delete reply',
+      deleteConfirmTitle: 'Delete this comment?',
+      deleteConfirmBody: 'It disappears for everyone.',
+      deleteReplyConfirmTitle: 'Delete this reply?',
+      deleted: 'Comment deleted.',
+      replyDeleted: 'Reply deleted.',
+      notificationTitlePost: 'New comment on your post',
+      notificationTitleListing: (title: string) => `New comment on "${title}"`
     }
   },
   toLet: {
-    tabFeed: 'Feed',
-    tabToLet: 'To-Let',
-    browseTitle: 'To-let listings',
-    browseSubtitle: 'Rooms, seats, and flats members are offering right now.',
     postAction: 'Post a to-let',
-    searchPlaceholder: 'Search by title, location, or keyword...',
-    typeAll: 'All types',
-    typeLabel: 'Type',
-    minRentLabel: 'Min rent',
-    maxRentLabel: 'Max rent',
-    empty: 'No to-let listings match your search.',
-    emptyHint: 'Try a different keyword, or be the first to post one.',
-    loadFailed: 'Could not load to-let listings.',
     types: {
       ROOM: 'Room',
       SEAT: 'Seat',
@@ -1381,8 +1393,6 @@ const en = {
     viewsCount: (count: number) => `${count} view${count === 1 ? '' : 's'}`,
     likesCount: (count: number) => `${count} like${count === 1 ? '' : 's'}`,
     commentsCount: (count: number) => `${count} comment${count === 1 ? '' : 's'}`,
-    availableFromValue: (date: string) => `Available from ${date}`,
-    availableNow: 'Available now',
     noPhotos: 'No photos yet.',
     photoAlt: (title: string, index: number) => `Photo ${index + 1} of ${title}`,
 
@@ -1399,8 +1409,6 @@ const en = {
       locationLabel: 'Location',
       locationPlaceholder: 'Area, road, and any nearby landmark',
       genderPreferenceLabel: 'Preferred for',
-      availableFromLabel: 'Available from',
-      availableFromHint: 'Leave blank if available now.',
       contactNameLabel: 'Contact name',
       contactNameHint: 'Defaults to your account name.',
       contactPhoneLabel: 'Contact phone',
@@ -1426,29 +1434,11 @@ const en = {
     markExpiredAction: 'Mark as expired',
     deleteAction: 'Delete',
     viewAction: 'View listing',
-    backToBrowse: 'Back to listings',
+    backToBrowse: 'Back to the feed',
     detailNotFound: 'This listing is no longer available.',
-    expiredNotice: 'This listing has expired. It is hidden from search and browsing.',
+    expiredNotice: 'This listing has expired. It is hidden from the feed.',
     contactTitle: 'Contact',
     noContactPhone: 'No phone number provided.',
-
-    like: 'Like',
-    unlike: 'Unlike',
-
-    comments: {
-      title: 'Comments',
-      placeholder: 'Ask a question about this place...',
-      submit: 'Comment',
-      submitting: 'Posting...',
-      empty: 'No comments yet. Ask the poster something.',
-      required: 'Write a comment first.',
-      tooLong: (max: number) => `Keep it under ${max} characters.`,
-      deleteAction: 'Delete comment',
-      deleteConfirmTitle: 'Delete this comment?',
-      deleteConfirmBody: 'It disappears for everyone.',
-      deleted: 'Comment deleted.',
-      notificationTitle: (title: string) => `New comment on "${title}"`
-    },
 
     profile: {
       title: 'My to-let listings',
@@ -1470,7 +1460,6 @@ const en = {
     locationRequired: 'Add a location.',
     locationTooLong: (max: number) => `Keep the location under ${max} characters.`,
     expiryInvalid: 'Choose a valid expiry.',
-    availableFromInvalid: 'Choose a valid date.',
     tooManyPhotos: (max: number) => `You can attach up to ${max} photos.`
   },
   share: {

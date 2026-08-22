@@ -7,7 +7,7 @@ import { strings } from '@/lib/i18n';
 import { TOLET_GENDER_PREFERENCE, TOLET_GENDER_PREFERENCE_VALUES, TOLET_TYPE_VALUES } from '@/lib/constants';
 import { formatBytes } from '@/lib/format';
 import { ACCEPTED_IMAGE_MIMES } from '@/lib/uploads.client';
-import type { ToLetListingView } from '@/lib/tolet';
+import type { CommunityMessageView } from '@/lib/community';
 
 function readAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -19,14 +19,13 @@ function readAsDataUrl(file: File): Promise<string> {
 }
 
 type FormState = {
-  type: string;
+  listingType: string;
   title: string;
-  description: string;
+  text: string;
   rent: string;
   rentNegotiable: boolean;
   location: string;
   genderPreference: string;
-  availableFrom: string;
   contactName: string;
   contactPhone: string;
   expiryDays: number;
@@ -35,14 +34,13 @@ type FormState = {
 
 function emptyForm(defaultContactName: string, defaultContactPhone: string): FormState {
   return {
-    type: TOLET_TYPE_VALUES[0],
+    listingType: TOLET_TYPE_VALUES[0],
     title: '',
-    description: '',
+    text: '',
     rent: '',
     rentNegotiable: false,
     location: '',
     genderPreference: TOLET_GENDER_PREFERENCE.ANY,
-    availableFrom: '',
     contactName: defaultContactName,
     contactPhone: defaultContactPhone,
     expiryDays: toLetConfig.defaultExpiryDays,
@@ -60,10 +58,10 @@ export function ToLetComposer({
 }: {
   open: boolean;
   onClose: () => void;
-  listing?: ToLetListingView | null;
+  listing?: CommunityMessageView | null;
   defaultContactName: string;
   defaultContactPhone: string;
-  onSaved: (listing: ToLetListingView) => void;
+  onSaved: (listing: CommunityMessageView) => void;
 }) {
   const toast = useToast();
   const fileInput = useRef<HTMLInputElement>(null);
@@ -79,14 +77,13 @@ export function ToLetComposer({
     setForm(
       listing
         ? {
-            type: listing.type,
-            title: listing.title,
-            description: listing.description,
-            rent: String(listing.rent),
+            listingType: listing.listingType ?? TOLET_TYPE_VALUES[0],
+            title: listing.title ?? '',
+            text: listing.text,
+            rent: listing.rent !== null ? String(listing.rent) : '',
             rentNegotiable: listing.rentNegotiable,
-            location: listing.location,
-            genderPreference: listing.genderPreference,
-            availableFrom: listing.availableFrom ? listing.availableFrom.slice(0, 10) : '',
+            location: listing.location ?? '',
+            genderPreference: listing.genderPreference ?? TOLET_GENDER_PREFERENCE.ANY,
             contactName: listing.contactName ?? defaultContactName,
             contactPhone: listing.contactPhone ?? defaultContactPhone,
             expiryDays: toLetConfig.defaultExpiryDays,
@@ -160,19 +157,18 @@ export function ToLetComposer({
 
   async function submit() {
     if (saving) return;
-    if (!form.title.trim() || !form.description.trim() || !form.location.trim() || !form.rent.trim()) return;
+    if (!form.title.trim() || !form.text.trim() || !form.location.trim() || !form.rent.trim()) return;
 
     setSaving(true);
     try {
       const payload = {
-        type: form.type,
+        listingType: form.listingType,
         title: form.title.trim(),
-        description: form.description.trim(),
+        text: form.text.trim(),
         rent: Number(form.rent),
         rentNegotiable: form.rentNegotiable,
         location: form.location.trim(),
         genderPreference: form.genderPreference,
-        availableFrom: form.availableFrom || null,
         contactName: form.contactName.trim() || null,
         contactPhone: form.contactPhone.trim() || null,
         expiryDays: form.expiryDays,
@@ -181,10 +177,10 @@ export function ToLetComposer({
 
       const data =
         editing && listing
-          ? await api.patch<{ listing: ToLetListingView }>(`/api/tolet/${listing.id}`, payload)
-          : await api.post<{ listing: ToLetListingView }>('/api/tolet', payload);
+          ? await api.patch<{ message: CommunityMessageView }>(`/api/community/messages/${listing.id}`, payload)
+          : await api.post<{ message: CommunityMessageView }>('/api/community/messages', payload);
 
-      onSaved(data.listing);
+      onSaved(data.message);
       toast.success(editing ? strings.toLet.updated : strings.toLet.created);
       onClose();
     } catch (error) {
@@ -207,7 +203,7 @@ export function ToLetComposer({
     label: strings.toLet.composer.expiryOption(days)
   }));
 
-  const canSubmit = Boolean(form.title.trim() && form.description.trim() && form.location.trim() && form.rent.trim());
+  const canSubmit = Boolean(form.title.trim() && form.text.trim() && form.location.trim() && form.rent.trim());
 
   return (
     <Modal
@@ -228,8 +224,8 @@ export function ToLetComposer({
       <div className="space-y-5">
         <RadioGroup
           legend={strings.toLet.composer.typeLabel}
-          value={form.type}
-          onChange={(value) => update('type', value)}
+          value={form.listingType}
+          onChange={(value) => update('listingType', value)}
           options={typeOptions}
           variant="pills"
         />
@@ -244,8 +240,8 @@ export function ToLetComposer({
 
         <Textarea
           label={strings.toLet.composer.descriptionLabel}
-          value={form.description}
-          onChange={(value) => update('description', value)}
+          value={form.text}
+          onChange={(value) => update('text', value)}
           placeholder={strings.toLet.composer.descriptionPlaceholder}
           rows={4}
           maxLength={toLetConfig.maxDescriptionLength}
@@ -283,15 +279,6 @@ export function ToLetComposer({
           onChange={(value) => update('location', value)}
           placeholder={strings.toLet.composer.locationPlaceholder}
           maxLength={toLetConfig.maxLocationLength}
-        />
-
-        <Input
-          type="date"
-          label={strings.toLet.composer.availableFromLabel}
-          value={form.availableFrom}
-          onChange={(value) => update('availableFrom', value)}
-          hint={strings.toLet.composer.availableFromHint}
-          optional
         />
 
         <div className="grid gap-4 sm:grid-cols-2">

@@ -132,9 +132,9 @@ model User {
   closingLines        ClosingLine[]
   communityMessages   CommunityMessage[]  @relation("CommunityAuthor")
   communityRead       CommunityRead?
-  toLetListings       ToLetListing[]      @relation("ToLetAuthor")
-  toLetLikes          ToLetLike[]         @relation("ToLetLikeUser")
-  toLetComments       ToLetComment[]      @relation("ToLetCommentUser")
+  communityLikes         CommunityLike[]         @relation("CommunityLikeUser")
+  communityComments      CommunityComment[]      @relation("CommunityCommentUser")
+  communityCommentReplies CommunityCommentReply[] @relation("CommunityCommentReplyUser")
   mealPrompts         MealPrompt[]
   sessions            UserSession[]
   permissionOverrides UserPermission[]    @relation("UserPermissionSubject")
@@ -870,26 +870,41 @@ model CommentImage {
 }
 
 model CommunityMessage {
-  id            String                  @id @default(uuid())
-  type          String                  @default("MEMBER")
-  key           String                  @unique
-  author        User?                   @relation("CommunityAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  authorId      String?
-  title         String?
-  text          String
-  pinned        Boolean                 @default(false)
-  deletedAt     DateTime?
-  images        CommunityMessageImage[]
-  createdAt     DateTime                @default(now())
-  createdById   String?
-  updatedAt     DateTime                @default(now()) @updatedAt
-  updatedById   String?
-  isPublished   Boolean                 @default(true)
-  publishedAt   DateTime?
-  unpublishedAt DateTime?
+  id               String                  @id @default(uuid())
+  type             String                  @default("MEMBER")
+  key              String                  @unique
+  author           User?                   @relation("CommunityAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  authorId         String?
+  title            String?
+  text             String
+  pinned           Boolean                 @default(false)
+  listingType      String?
+  rent             Float?
+  rentNegotiable   Boolean                 @default(false)
+  location         String?
+  genderPreference String?
+  contactName      String?
+  contactPhone     String?
+  listingStatus    String?
+  expiresAt        DateTime?
+  viewCount        Int                     @default(0)
+  likeCount        Int                     @default(0)
+  commentCount     Int                     @default(0)
+  deletedAt        DateTime?
+  images           CommunityMessageImage[]
+  likes            CommunityLike[]
+  comments         CommunityComment[]
+  createdAt        DateTime                @default(now())
+  createdById      String?
+  updatedAt        DateTime                @default(now()) @updatedAt
+  updatedById      String?
+  isPublished      Boolean                 @default(true)
+  publishedAt      DateTime?
+  unpublishedAt    DateTime?
 
   @@index([createdAt])
   @@index([pinned, createdAt])
+  @@index([type, listingStatus, expiresAt])
 }
 
 model CommunityMessageImage {
@@ -923,89 +938,55 @@ model CommunityRead {
   unpublishedAt DateTime?
 }
 
-model ToLetListing {
-  id               String         @id @default(uuid())
-  author           User           @relation("ToLetAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  authorId         String
-  type             String
-  title            String
-  description      String
-  rent             Float
-  rentNegotiable   Boolean        @default(false)
-  location         String
-  genderPreference String         @default("ANY")
-  availableFrom    DateTime?
-  contactPhone     String?
-  contactName      String?
-  status           String         @default("ACTIVE")
-  expiresAt        DateTime
-  viewCount        Int            @default(0)
-  likeCount        Int            @default(0)
-  commentCount     Int            @default(0)
-  deletedAt        DateTime?
-  images           ToLetImage[]
-  likes            ToLetLike[]
-  comments         ToLetComment[]
-  createdAt        DateTime       @default(now())
-  createdById      String?
-  updatedAt        DateTime       @default(now()) @updatedAt
-  updatedById      String?
-  isPublished      Boolean        @default(true)
-  publishedAt      DateTime?
-  unpublishedAt    DateTime?
-
-  @@index([status, expiresAt])
-  @@index([authorId])
-  @@index([createdAt])
-  @@index([type])
-}
-
-model ToLetImage {
-  id            String       @id @default(uuid())
-  listing       ToLetListing @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  listingId     String
-  url           String
-  sortOrder     Int          @default(0)
-  createdAt     DateTime     @default(now())
-  createdById   String?
-  updatedAt     DateTime     @default(now()) @updatedAt
-  updatedById   String?
-  isPublished   Boolean      @default(true)
-  publishedAt   DateTime?
-  unpublishedAt DateTime?
-
-  @@index([listingId])
-}
-
-model ToLetLike {
-  id        String       @id @default(uuid())
-  listing   ToLetListing @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  listingId String
-  user      User         @relation("ToLetLikeUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+model CommunityLike {
+  id        String           @id @default(uuid())
+  message   CommunityMessage @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  messageId String
+  user      User             @relation("CommunityLikeUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   userId    String
-  createdAt DateTime     @default(now())
+  createdAt DateTime         @default(now())
 
-  @@unique([listingId, userId])
+  @@unique([messageId, userId])
   @@index([userId])
 }
 
-model ToLetComment {
-  id            String       @id @default(uuid())
-  listing       ToLetListing @relation(fields: [listingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  listingId     String
-  user          User         @relation("ToLetCommentUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model CommunityComment {
+  id            String                  @id @default(uuid())
+  message       CommunityMessage        @relation(fields: [messageId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  messageId     String
+  user          User                    @relation("CommunityCommentUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userId        String
   text          String
   deletedAt     DateTime?
-  createdAt     DateTime     @default(now())
+  replies       CommunityCommentReply[]
+  createdAt     DateTime                @default(now())
   createdById   String?
-  updatedAt     DateTime     @default(now()) @updatedAt
+  updatedAt     DateTime                @default(now()) @updatedAt
   updatedById   String?
-  isPublished   Boolean      @default(true)
+  isPublished   Boolean                 @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
 
-  @@index([listingId, createdAt])
+  @@index([messageId, createdAt])
+}
+
+model CommunityCommentReply {
+  id            String           @id @default(uuid())
+  comment       CommunityComment @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  commentId     String
+  user          User             @relation("CommunityCommentReplyUser", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  text          String
+  deletedAt     DateTime?
+  createdAt     DateTime         @default(now())
+  createdById   String?
+  updatedAt     DateTime         @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean          @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@index([commentId])
 }
 
 model MealPrompt {

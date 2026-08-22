@@ -20,7 +20,7 @@ import { uploadConfig } from '@/config';
 import { PERMISSIONS } from '@/lib/permissions';
 import { TOLET_STATUS } from '@/lib/constants';
 import { toLetListingPath } from '@/lib/routes';
-import type { ToLetListingView } from '@/lib/tolet';
+import type { CommunityMessageView } from '@/lib/community';
 
 const ACCEPTED_IMAGE_TYPES = ACCEPTED_IMAGE_MIMES;
 
@@ -146,7 +146,7 @@ export default function ProfilePage() {
 function ToLetListingsSection() {
   const toast = useToast();
   const confirm = useConfirm();
-  const [listings, setListings] = useState<ToLetListingView[]>([]);
+  const [listings, setListings] = useState<CommunityMessageView[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -154,7 +154,7 @@ function ToLetListingsSection() {
     let cancelled = false;
 
     api
-      .get<{ listings: ToLetListingView[] }>('/api/tolet/mine')
+      .get<{ listings: CommunityMessageView[] }>('/api/community/messages/mine')
       .then((data) => {
         if (!cancelled) setListings(data.listings);
       })
@@ -168,13 +168,15 @@ function ToLetListingsSection() {
     };
   }, []);
 
-  async function markExpired(listing: ToLetListingView) {
+  async function markExpired(listing: CommunityMessageView) {
     setBusyId(listing.id);
     try {
-      await api.patch(`/api/tolet/${listing.id}`, { markExpired: true });
+      await api.patch(`/api/community/messages/${listing.id}`, { markExpired: true });
       setListings((current) =>
         current.map((item) =>
-          item.id === listing.id ? { ...item, status: TOLET_STATUS.EXPIRED, effectiveStatus: TOLET_STATUS.EXPIRED } : item
+          item.id === listing.id
+            ? { ...item, listingStatus: TOLET_STATUS.EXPIRED, effectiveListingStatus: TOLET_STATUS.EXPIRED }
+            : item
         )
       );
       toast.success(strings.toLet.markedExpired);
@@ -185,7 +187,7 @@ function ToLetListingsSection() {
     }
   }
 
-  async function remove(listing: ToLetListingView) {
+  async function remove(listing: CommunityMessageView) {
     const accepted = await confirm({
       title: strings.toLet.deleteConfirmTitle,
       message: strings.toLet.deleteConfirmBody,
@@ -196,7 +198,7 @@ function ToLetListingsSection() {
 
     setBusyId(listing.id);
     try {
-      await api.delete(`/api/tolet/${listing.id}`);
+      await api.delete(`/api/community/messages/${listing.id}`);
       setListings((current) => current.filter((item) => item.id !== listing.id));
       toast.success(strings.toLet.deleted);
     } catch (error) {
@@ -227,14 +229,14 @@ function ToLetListingsSection() {
                   >
                     {listing.title}
                   </Link>
-                  <StatusBadge status={listing.effectiveStatus} />
+                  <StatusBadge status={listing.effectiveListingStatus ?? TOLET_STATUS.EXPIRED} />
                 </div>
                 <p className="text-xs text-slate-500">
-                  {strings.toLet.rentPerMonth(formatCurrency(listing.rent))} · {listing.location}
+                  {listing.rent !== null && strings.toLet.rentPerMonth(formatCurrency(listing.rent))} · {listing.location}
                 </p>
               </div>
               <div className="flex shrink-0 gap-1.5">
-                {listing.effectiveStatus === TOLET_STATUS.ACTIVE && (
+                {listing.effectiveListingStatus === TOLET_STATUS.ACTIVE && (
                   <Button
                     size="sm"
                     variant="secondary"
