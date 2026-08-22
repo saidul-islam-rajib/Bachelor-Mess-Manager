@@ -54,7 +54,7 @@ function Hero() {
 
       <div className="relative mx-auto grid max-w-content gap-10 px-4 py-12 sm:gap-12 sm:py-24 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-16">
         <div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 shadow-sm backdrop-blur">
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-400 shadow-sm backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
             {landing.hero.eyebrow}
           </span>
@@ -340,7 +340,7 @@ function RoleGuide() {
                 aria-controls={`role-panel-${item.role}`}
                 onClick={() => setActive(index)}
                 className={`rounded-full px-5 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${
-                  active === index ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-white'
+                  active === index ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'
                 }`}
               >
                 {strings.roles[item.role as keyof typeof strings.roles]}

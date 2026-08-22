@@ -369,7 +369,7 @@ export default function ExpensesPage() {
                                 {index === 0 && (
                                   <td
                                     rowSpan={list.length}
-                                    className="bg-slate-50/60 px-3 py-3 text-center align-middle font-medium"
+                                    className="bg-slate-50/60 dark:bg-slate-900/60 px-3 py-3 text-center align-middle font-medium"
                                   >
                                     {longDate(day)}
                                     <span className="mt-1 block text-xs font-normal text-slate-500 dark:text-slate-400">

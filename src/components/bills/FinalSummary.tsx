@@ -103,7 +103,7 @@ export function FinalSummary({
       )}
 
       {settlement.transfers.length > 0 && (
-        <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 p-3.5 sm:p-4">
+        <div className="mt-4 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/70 p-3.5 sm:p-4">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
             {finalSummary.settleUpIn(settlement.transfers.length)}
           </h3>

@@ -285,7 +285,7 @@ export default function BillsPage() {
                           {billsByType(grouped[kind]).map((group) => (
                             <div
                               key={group.type}
-                              className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 p-2.5 sm:p-4"
+                              className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60 p-2.5 sm:p-4"
                             >
                               <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                                 <h4 className="font-semibold text-slate-900 dark:text-slate-100">
@@ -712,7 +712,7 @@ function AdvancesSection({
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
                     required
-                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
                   />
                 </label>
               </div>
@@ -724,7 +724,7 @@ function AdvancesSection({
                     value={note}
                     onChange={(event) => setNote(event.target.value)}
                     placeholder={strings.bills.advances.notePlaceholder}
-                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
                   />
                 </label>
               </div>
@@ -1459,7 +1459,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             required
-            className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+            className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
           />
         </label>
 
@@ -1470,7 +1470,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
             value={date}
             onChange={(e) => setDate(e.target.value)}
             required
-            className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+            className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
           />
         </label>
 
@@ -1491,7 +1491,7 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder={strings.bills.notePlaceholder}
-          className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white"
+          className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
         />
       </label>
 
@@ -1726,7 +1726,7 @@ function CategoryManager({
           onChange={(e) => setLabel(e.target.value)}
           maxLength={40}
           placeholder={strings.bills.addCostTypePlaceholder}
-          className="min-w-0 flex-1 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white"
+          className="min-w-0 flex-1 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2 text-sm outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
         />
         <button
           type="submit"

@@ -554,7 +554,7 @@ export default function MealsPage() {
                       return (
                         <tr
                           key={date}
-                          className={`border-b border-slate-100 dark:border-slate-700 last:border-0 ${isToday ? 'bg-amber-50 dark:bg-amber-500/10' : 'hover:bg-slate-50/70'}`}
+                          className={`border-b border-slate-100 dark:border-slate-700 last:border-0 ${isToday ? 'bg-amber-50 dark:bg-amber-500/10' : 'hover:bg-slate-50/70 dark:hover:bg-slate-700/70'}`}
                         >
                           <td
                             className={`sticky left-0 z-10 border-r border-slate-200 dark:border-slate-700 px-4 py-2 text-left font-medium ${

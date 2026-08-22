@@ -149,12 +149,12 @@ export function MemberRow({
   const position = positionOf(row.net);
 
   return (
-    <li className={row.isCurrentUser ? 'bg-brand-50/40' : row.net > 0 ? 'bg-teal-50/40' : 'bg-white dark:bg-slate-800'}>
+    <li className={row.isCurrentUser ? 'bg-brand-50/40 dark:bg-brand-500/10' : row.net > 0 ? 'bg-teal-50/40 dark:bg-teal-500/10' : 'bg-white dark:bg-slate-800'}>
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
         aria-expanded={open}
-        className="w-full px-3.5 py-3 text-left transition-colors hover:bg-slate-50/70 sm:px-4"
+        className="w-full px-3.5 py-3 text-left transition-colors hover:bg-slate-50/70 dark:hover:bg-slate-700/70 sm:px-4"
       >
         <span className="flex items-start justify-between gap-3">
           <span className="block min-w-0">
@@ -173,7 +173,7 @@ export function MemberRow({
           </span>
         </span>
 
-        <span className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-xl bg-slate-50/80 px-3 py-2 sm:grid-cols-4 sm:bg-transparent sm:px-0 sm:py-0">
+        <span className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/80 px-3 py-2 sm:grid-cols-4 sm:bg-transparent sm:px-0 sm:py-0">
           <Figure label={strings.bills.colShare} value={taka(row.share)} />
           <Figure label={strings.bills.colPaid} value={taka(row.paid)} className="text-slate-900 dark:text-slate-100" />
           <Figure
@@ -186,7 +186,7 @@ export function MemberRow({
       </button>
 
       {open && (
-        <div className="border-t border-slate-100 dark:border-slate-700 bg-slate-50/60 px-3.5 py-3 sm:px-4">
+        <div className="border-t border-slate-100 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-900/60 px-3.5 py-3 sm:px-4">
           <p className="text-xs text-slate-600 dark:text-slate-400">
             {memberTable.shareMinusPaid(taka(row.share), taka(row.paid))}{' '}
             <span className={`font-semibold ${position.text}`}>

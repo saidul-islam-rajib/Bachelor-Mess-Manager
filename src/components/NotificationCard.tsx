@@ -22,7 +22,7 @@ export default function NotificationCard({
         onNavigate?.();
       }}
       className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 ${
-        notification.read ? '' : 'bg-slate-50/70'
+        notification.read ? '' : 'bg-slate-50/70 dark:bg-slate-700/40'
       }`}
     >
       <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white">

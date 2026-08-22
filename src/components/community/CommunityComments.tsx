@@ -157,16 +157,18 @@ export function CommunityComments({
                   </div>
 
                   <div className="mt-1 flex items-center gap-3 px-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setReplyFor(comment.id);
-                        setReplyText('');
-                      }}
-                      className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700"
-                    >
-                      {strings.community.comments.reply}
-                    </button>
+                    {user && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setReplyFor(comment.id);
+                          setReplyText('');
+                        }}
+                        className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700"
+                      >
+                        {strings.community.comments.reply}
+                      </button>
+                    )}
                     {(canModerate || comment.userId === user?.id) && (
                       <button
                         type="button"
@@ -213,7 +215,7 @@ export function CommunityComments({
                         onChange={(event) => setReplyText(event.target.value)}
                         rows={1}
                         placeholder={strings.community.comments.replyPlaceholder}
-                        className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+                        className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3.5 py-2 text-sm outline-none transition focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
                       />
                       <Button
                         size="sm"
@@ -242,7 +244,7 @@ export function CommunityComments({
               rows={2}
               maxLength={communityConfig.maxMessageLength}
               placeholder={strings.community.comments.placeholder}
-              className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+              className="w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
             />
             <div className="mt-2 flex justify-end">
               <Button size="sm" onClick={() => void submit()} disabled={!text.trim()} loading={posting}>
