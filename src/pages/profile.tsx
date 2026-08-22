@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { useInvitations } from '@/components/InvitationsProvider';
@@ -7,15 +8,19 @@ import RoleRequestPanel from '@/components/RoleRequestPanel';
 import { ProfilePhotoCropModal } from '@/components/ProfilePhotoCropModal';
 import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
-import { Badge, Collapsible, EmptyState, ImageViewer, PageTitle } from '@/components/ui';
+import { Badge, Button, Collapsible, EmptyState, ImageViewer, PageTitle, StatusBadge, useConfirm } from '@/components/ui';
 import MealPlanCard from '@/components/MealPlanCard';
+import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 import { validateName, validatePhone } from '@/lib/validation';
 import { ACCEPTED_IMAGE_MIMES, evictCachedUpload } from '@/lib/uploads.client';
-import { formatBytes } from '@/lib/format';
+import { formatBytes, formatCurrency } from '@/lib/format';
 import { uploadConfig } from '@/config';
 import { PERMISSIONS } from '@/lib/permissions';
+import { TOLET_STATUS } from '@/lib/constants';
+import { toLetListingPath } from '@/lib/routes';
+import type { ToLetListingView } from '@/lib/tolet';
 
 const ACCEPTED_IMAGE_TYPES = ACCEPTED_IMAGE_MIMES;
 
@@ -130,10 +135,124 @@ export default function ProfilePage() {
           <PasswordSection />
 
           <RoleRequestPanel />
+          <ToLetListingsSection />
           <InvitationsSection />
         </div>
       )}
     </section>
+  );
+}
+
+function ToLetListingsSection() {
+  const toast = useToast();
+  const confirm = useConfirm();
+  const [listings, setListings] = useState<ToLetListingView[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    api
+      .get<{ listings: ToLetListingView[] }>('/api/tolet/mine')
+      .then((data) => {
+        if (!cancelled) setListings(data.listings);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function markExpired(listing: ToLetListingView) {
+    setBusyId(listing.id);
+    try {
+      await api.patch(`/api/tolet/${listing.id}`, { markExpired: true });
+      setListings((current) =>
+        current.map((item) =>
+          item.id === listing.id ? { ...item, status: TOLET_STATUS.EXPIRED, effectiveStatus: TOLET_STATUS.EXPIRED } : item
+        )
+      );
+      toast.success(strings.toLet.markedExpired);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function remove(listing: ToLetListingView) {
+    const accepted = await confirm({
+      title: strings.toLet.deleteConfirmTitle,
+      message: strings.toLet.deleteConfirmBody,
+      confirmLabel: strings.common.delete,
+      destructive: true
+    });
+    if (!accepted) return;
+
+    setBusyId(listing.id);
+    try {
+      await api.delete(`/api/tolet/${listing.id}`);
+      setListings((current) => current.filter((item) => item.id !== listing.id));
+      toast.success(strings.toLet.deleted);
+    } catch (error) {
+      toast.error(errorMessage(error));
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <Collapsible title={strings.toLet.profile.title} description={strings.toLet.profile.subtitle}>
+      {loading ? (
+        <p className="text-sm text-slate-400">{strings.common.loading}</p>
+      ) : listings.length === 0 ? (
+        <EmptyState title={strings.toLet.profile.empty} description={strings.toLet.profile.emptyHint} />
+      ) : (
+        <ul className="space-y-3">
+          {listings.map((listing) => (
+            <li key={listing.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 p-3">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                {listing.images[0] && <img src={listing.images[0]} alt="" className="h-full w-full object-cover" />}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={toLetListingPath(listing.id)}
+                    className="truncate text-sm font-semibold text-slate-900 hover:text-brand-700"
+                  >
+                    {listing.title}
+                  </Link>
+                  <StatusBadge status={listing.effectiveStatus} />
+                </div>
+                <p className="text-xs text-slate-500">
+                  {strings.toLet.rentPerMonth(formatCurrency(listing.rent))} · {listing.location}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-1.5">
+                {listing.effectiveStatus === TOLET_STATUS.ACTIVE && (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => void markExpired(listing)}
+                    disabled={busyId === listing.id}
+                  >
+                    {strings.toLet.markExpiredAction}
+                  </Button>
+                )}
+                <Button size="sm" variant="danger" onClick={() => void remove(listing)} disabled={busyId === listing.id}>
+                  {strings.toLet.deleteAction}
+                </Button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Collapsible>
   );
 }
 

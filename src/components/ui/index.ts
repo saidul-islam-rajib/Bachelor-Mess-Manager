@@ -63,3 +63,6 @@ export { Pagination } from '@/components/ui/Pagination';
 export type { PaginationProps } from '@/components/ui/Pagination';
 
 export { FilterBar, SearchInput, useDebouncedValue } from '@/components/ui/FilterBar';
+
+export { ShareButtons } from '@/components/ui/ShareButtons';
+export type { ShareButtonsProps } from '@/components/ui/ShareButtons';

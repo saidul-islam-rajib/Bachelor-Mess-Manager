@@ -12,6 +12,7 @@ import {
   SESSION_DEFAULTS,
   UI_DEFAULTS,
   MAIL_DEFAULTS,
+  TOLET_DEFAULTS,
   UPLOAD_DEFAULTS,
   VALIDATION_DEFAULTS
 } from '@/config/defaults';
@@ -60,6 +61,13 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   COMMUNITY_MESSAGE_MAX_LENGTH: process.env.COMMUNITY_MESSAGE_MAX_LENGTH,
   COMMUNITY_POLL_INTERVAL_MS: process.env.COMMUNITY_POLL_INTERVAL_MS,
   COMMUNITY_MAX_IMAGES_PER_POST: process.env.COMMUNITY_MAX_IMAGES_PER_POST,
+  TOLET_PAGE_SIZE: process.env.TOLET_PAGE_SIZE,
+  TOLET_MAX_IMAGES_PER_LISTING: process.env.TOLET_MAX_IMAGES_PER_LISTING,
+  TOLET_TITLE_MAX_LENGTH: process.env.TOLET_TITLE_MAX_LENGTH,
+  TOLET_DESCRIPTION_MAX_LENGTH: process.env.TOLET_DESCRIPTION_MAX_LENGTH,
+  TOLET_LOCATION_MAX_LENGTH: process.env.TOLET_LOCATION_MAX_LENGTH,
+  TOLET_DEFAULT_EXPIRY_DAYS: process.env.TOLET_DEFAULT_EXPIRY_DAYS,
+  TOLET_COMMENT_MAX_LENGTH: process.env.TOLET_COMMENT_MAX_LENGTH,
   MEAL_PROMPT_DEFAULT_BREAKFAST: process.env.MEAL_PROMPT_DEFAULT_BREAKFAST,
   MEAL_PROMPT_DEFAULT_LUNCH: process.env.MEAL_PROMPT_DEFAULT_LUNCH,
   MEAL_PROMPT_DEFAULT_DINNER: process.env.MEAL_PROMPT_DEFAULT_DINNER,
@@ -274,6 +282,22 @@ export const communityConfig = {
   everyoneRecipientCap: readInt('COMMUNITY_EVERYONE_CAP', COMMUNITY_DEFAULTS.everyoneRecipientCap),
   maxImagesPerPost: communityMaxImagesPerPost,
   postMaxRequestBodyBytes: communityPostRequestBodyBytes
+} as const;
+
+const toLetMaxImagesPerListing = readInt('TOLET_MAX_IMAGES_PER_LISTING', TOLET_DEFAULTS.maxImagesPerListing);
+const toLetPostRequestBodyBytes = uploadConfig.maxRequestBodyBytes * toLetMaxImagesPerListing;
+
+export const toLetConfig = {
+  pageSize: readInt('TOLET_PAGE_SIZE', TOLET_DEFAULTS.pageSize),
+  maxImagesPerListing: toLetMaxImagesPerListing,
+  maxTitleLength: readInt('TOLET_TITLE_MAX_LENGTH', TOLET_DEFAULTS.maxTitleLength),
+  maxDescriptionLength: readInt('TOLET_DESCRIPTION_MAX_LENGTH', TOLET_DEFAULTS.maxDescriptionLength),
+  maxLocationLength: readInt('TOLET_LOCATION_MAX_LENGTH', TOLET_DEFAULTS.maxLocationLength),
+  defaultExpiryDays: readInt('TOLET_DEFAULT_EXPIRY_DAYS', TOLET_DEFAULTS.defaultExpiryDays),
+  quickExpiryDays: TOLET_DEFAULTS.quickExpiryDays,
+  expiryOptionsDays: TOLET_DEFAULTS.expiryOptionsDays,
+  commentMaxLength: readInt('TOLET_COMMENT_MAX_LENGTH', TOLET_DEFAULTS.commentMaxLength),
+  postMaxRequestBodyBytes: toLetPostRequestBodyBytes
 } as const;
 
 export const mealPromptConfig = {

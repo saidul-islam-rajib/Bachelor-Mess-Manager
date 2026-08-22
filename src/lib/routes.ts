@@ -15,6 +15,7 @@ export const ROUTES = {
   profile: '/profile',
   comments: '/comments',
   community: '/community',
+  toLet: '/community/tolet',
   notifications: '/notifications',
   mealReply: '/meal-reply',
   admin: '/admin',
@@ -51,4 +52,8 @@ export function mealReplyPath(token: string, answer?: string): string {
 
 export function mealReplyApiPath(token: string): string {
   return `/api${ROUTES.mealReply}/${encodeURIComponent(token)}`;
+}
+
+export function toLetListingPath(id: string): string {
+  return `${ROUTES.toLet}/${encodeURIComponent(id)}`;
 }

@@ -44,7 +44,8 @@ const STATUS_TONES: Record<string, Tone> = {
   PARTIAL: 'warning',
   PENDING: 'warning',
   REJECTED: 'danger',
-  INACTIVE: 'neutral'
+  INACTIVE: 'neutral',
+  EXPIRED: 'neutral'
 };
 
 export function StatusBadge({ status }: { status: string }) {
