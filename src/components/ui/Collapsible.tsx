@@ -18,7 +18,9 @@ function PlusMinus({ expanded }: { expanded: boolean }) {
     <span
       aria-hidden="true"
       className={`relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors ${
-        expanded ? 'border-brand-200 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-500'
+        expanded
+          ? 'border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400'
+          : 'border-slate-200 text-slate-500 dark:border-slate-600 dark:text-slate-400'
       }`}
     >
       <span className="absolute h-0.5 w-3.5 rounded-full bg-current" />
@@ -62,18 +64,18 @@ export function Collapsible({
   }
 
   return (
-    <section id={id} className={`rounded-3xl border border-slate-200 bg-white shadow-sm ${className}`}>
+    <section id={id} className={`rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 ${className}`}>
       <h2 id={headingId}>
         <button
           type="button"
           onClick={toggle}
           aria-expanded={expanded}
           aria-controls={panelId}
-          className="flex w-full items-center gap-3 rounded-3xl px-5 py-4 text-left transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:px-6"
+          className="flex w-full items-center gap-3 rounded-3xl px-5 py-4 text-left transition-colors hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:hover:bg-slate-700/50 sm:px-6"
         >
           <span className="min-w-0 flex-1">
-            <span className="block text-lg font-semibold text-slate-900">{title}</span>
-            {description && <span className="mt-0.5 block text-sm text-slate-500">{description}</span>}
+            <span className="block text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</span>
+            {description && <span className="mt-0.5 block text-sm text-slate-500 dark:text-slate-400">{description}</span>}
           </span>
           {badge}
           {icon === 'plus' ? (
@@ -89,7 +91,7 @@ export function Collapsible({
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden="true"
-              className={`shrink-0 text-slate-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+              className={`shrink-0 text-slate-400 transition-transform duration-200 dark:text-slate-500 ${expanded ? 'rotate-180' : ''}`}
             >
               <path d="m6 9 6 6 6-6" />
             </svg>
@@ -103,7 +105,7 @@ export function Collapsible({
         aria-labelledby={headingId}
         className={
           expanded
-            ? 'border-t border-slate-100 px-5 pb-5 pt-5 motion-safe:animate-fade-up sm:px-6'
+            ? 'border-t border-slate-100 px-5 pb-5 pt-5 motion-safe:animate-fade-up dark:border-slate-700 sm:px-6'
             : 'hidden'
         }
       >

@@ -6,6 +6,7 @@ import { hashPassword, validatePassword, verifyPassword } from '@/lib/password';
 import { badRequest, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { deleteImage, saveImage } from '@/lib/uploads';
 import { validateName, validatePhone } from '@/lib/validation';
+import { THEME_OPTION_VALUES } from '@/lib/constants';
 import { uploadConfig } from '@/config';
 import { withAudit } from '@/lib/with-audit';
 
@@ -25,7 +26,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return unauthorized(res, 'You must be signed in.');
   }
 
-  const { name, phone, password, currentPassword, image, removeImage } = req.body as Record<string, unknown>;
+  const { name, phone, password, currentPassword, image, removeImage, theme } = req.body as Record<string, unknown>;
 
   const data: {
     name?: string;
@@ -33,6 +34,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     password?: string;
     tokenVersion?: { increment: number };
     profileImage?: string | null;
+    theme?: string;
   } = {};
 
   if (name !== undefined) {
@@ -45,6 +47,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const check = validatePhone(phone);
     if (!check.ok) return badRequest(res, check.error);
     data.phone = check.value;
+  }
+
+  if (theme !== undefined) {
+    if (typeof theme !== 'string' || !THEME_OPTION_VALUES.includes(theme)) {
+      return badRequest(res, 'Choose a valid theme.');
+    }
+    data.theme = theme;
   }
 
   if (password !== undefined && password !== '') {
@@ -93,6 +102,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       role: true,
       phone: true,
       profileImage: true,
+      theme: true,
       tokenVersion: true
     }
   });

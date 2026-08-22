@@ -14,6 +14,7 @@ export type CurrentUser = {
   role: string;
   phone?: string | null;
   profileImage?: string | null;
+  theme?: string;
   permissions?: string[];
   impersonatedBy?: ImpersonatedBy;
 } | null;

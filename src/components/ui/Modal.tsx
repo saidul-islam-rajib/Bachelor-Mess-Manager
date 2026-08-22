@@ -120,20 +120,20 @@ export function Modal({
         aria-modal="true"
         aria-labelledby={titleId}
         tabIndex={-1}
-        className={`relative flex max-h-full ${SIZE_CLASSES[size]} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl outline-none`}
+        className={`relative flex max-h-full ${SIZE_CLASSES[size]} flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl outline-none dark:border-slate-700 dark:bg-slate-800`}
       >
         <div className="relative shrink-0 p-5 pb-4 sm:p-6 sm:pb-4">
           <div className="min-w-0 px-8 text-center">
-            <h2 id={titleId} className="text-lg font-semibold">
+            <h2 id={titleId} className="text-lg font-semibold dark:text-slate-100">
               {title}
             </h2>
-            {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+            {description && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label={strings.common.close}
-            className="absolute right-4 top-4 rounded-full p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 sm:right-5 sm:top-5"
+            className="absolute right-4 top-4 rounded-full p-1 text-xl leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:hover:bg-slate-700 dark:hover:text-slate-200 sm:right-5 sm:top-5"
           >
             &times;
           </button>
@@ -143,7 +143,7 @@ export function Modal({
           <div className={`flex-1 overflow-y-auto overscroll-contain ${bodyClassName}`}>{children}</div>
         )}
         {footer && (
-          <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-100 bg-white p-5 sm:px-6 sm:py-4">
+          <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-100 bg-white p-5 dark:border-slate-700 dark:bg-slate-800 sm:px-6 sm:py-4">
             {footer}
           </div>
         )}

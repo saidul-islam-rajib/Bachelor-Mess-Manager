@@ -99,7 +99,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="safe-bottom border-t border-slate-200 bg-white">
+    <footer className="safe-bottom border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-content px-4 py-10">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-4">
@@ -112,39 +112,39 @@ export default function Footer() {
               <Logo className="h-10 w-auto" />
               <span className="text-lg font-semibold">{companyName}</span>
             </a>
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-500 dark:text-slate-400">
               {settings?.tagline || appConfig.tagline}
             </p>
           </div>
 
-          <nav aria-label={strings.footer.ariaLabel} className="text-sm text-slate-600 lg:col-span-2">
-            <h3 className="font-semibold text-slate-900">{strings.footer.explore}</h3>
+          <nav aria-label={strings.footer.ariaLabel} className="text-sm text-slate-600 dark:text-slate-400 lg:col-span-2">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">{strings.footer.explore}</h3>
             <ul className="mt-3 space-y-2">
               <li>
-                <Link href={ROUTES.guide} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                <Link href={ROUTES.guide} className="inline-block py-1 transition-colors hover:text-slate-900 dark:hover:text-slate-100 hover:underline">
                   {strings.footer.howItWorks}
                 </Link>
               </li>
               <li>
-                <Link href={ROUTES.home} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                <Link href={ROUTES.home} className="inline-block py-1 transition-colors hover:text-slate-900 dark:hover:text-slate-100 hover:underline">
                   {strings.footer.home}
                 </Link>
               </li>
               {user ? (
                 <li>
-                  <Link href={ROUTES.dashboard} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                  <Link href={ROUTES.dashboard} className="inline-block py-1 transition-colors hover:text-slate-900 dark:hover:text-slate-100 hover:underline">
                     {strings.nav.dashboard}
                   </Link>
                 </li>
               ) : (
                 <>
                   <li>
-                    <Link href={ROUTES.auth.login} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                    <Link href={ROUTES.auth.login} className="inline-block py-1 transition-colors hover:text-slate-900 dark:hover:text-slate-100 hover:underline">
                       {strings.footer.signIn}
                     </Link>
                   </li>
                   <li>
-                    <Link href={ROUTES.auth.register} className="inline-block py-1 transition-colors hover:text-slate-900 hover:underline">
+                    <Link href={ROUTES.auth.register} className="inline-block py-1 transition-colors hover:text-slate-900 dark:hover:text-slate-100 hover:underline">
                       {strings.footer.createAccount}
                     </Link>
                   </li>
@@ -153,8 +153,8 @@ export default function Footer() {
             </ul>
           </nav>
 
-          <div className="text-sm text-slate-600 lg:col-span-3">
-            <h3 className="font-semibold text-slate-900">{strings.footer.contact}</h3>
+          <div className="text-sm text-slate-600 dark:text-slate-400 lg:col-span-3">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">{strings.footer.contact}</h3>
             <ul className="mt-3 space-y-2">
               {settings?.address && <li>{settings.address}</li>}
               {settings?.contactEmail && (
@@ -166,18 +166,18 @@ export default function Footer() {
               )}
               {settings?.contactPhone && <li>{settings.contactPhone}</li>}
               {!settings?.address && !settings?.contactEmail && !settings?.contactPhone && (
-                <li className="text-slate-400">{strings.footer.contactComingSoon}</li>
+                <li className="text-slate-400 dark:text-slate-500">{strings.footer.contactComingSoon}</li>
               )}
             </ul>
             {(settings?.facebookUrl || settings?.twitterUrl) && (
               <div className="mt-4 flex gap-4">
                 {settings?.facebookUrl && (
-                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
+                  <a href={settings.facebookUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 dark:hover:text-slate-100 hover:underline">
                     {strings.footer.facebook}
                   </a>
                 )}
                 {settings?.twitterUrl && (
-                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 hover:underline">
+                  <a href={settings.twitterUrl} target="_blank" rel="noreferrer" className="inline-block py-1 hover:text-slate-900 dark:hover:text-slate-100 hover:underline">
                     {strings.footer.twitter}
                   </a>
                 )}
@@ -187,8 +187,8 @@ export default function Footer() {
 
           {showNewsletter && (
             <div className="lg:col-span-3">
-              <h3 className="font-semibold text-slate-900">{strings.footer.newsletter}</h3>
-              <p className="mt-3 text-sm text-slate-500">
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100">{strings.footer.newsletter}</h3>
+              <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
                 {user && subscribed
                   ? strings.footer.subscribedAs(user.email)
                   : user
@@ -207,7 +207,7 @@ export default function Footer() {
                     aria-label={strings.footer.emailLabel}
                     required
                     placeholder={strings.footer.emailPlaceholder}
-                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+                    className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 text-sm outline-none transition focus:border-brand-500 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:focus:bg-slate-900"
                   />
                 )}
                 <Button type="submit" loading={subscribing} variant={subscribed ? 'secondary' : 'primary'}>
@@ -224,21 +224,21 @@ export default function Footer() {
           )}
         </div>
 
-        <div className="mt-8 space-y-1 border-t border-slate-100 pt-6 text-center text-sm text-slate-500">
+        <div className="mt-8 space-y-1 border-t border-slate-100 pt-6 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
           <p>
             &copy; {authorConfig.copyrightStartYear === year ? year : `${authorConfig.copyrightStartYear}-${year}`}{' '}
-            <a href={authorConfig.url} target="_blank" rel="noreferrer" className="font-medium text-slate-600 hover:underline">
+            <a href={authorConfig.url} target="_blank" rel="noreferrer" className="font-medium text-slate-600 hover:underline dark:text-slate-300">
               {copyrightOwner}
             </a>
             . {strings.footer.rights}
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-400 dark:text-slate-500">
             {strings.footer.builtByLabel}{' '}
             <a
               href={authorConfig.profileUrl}
               target="_blank"
               rel="noreferrer"
-              className="font-medium text-slate-500 hover:text-brand-700 hover:underline"
+              className="font-medium text-slate-500 hover:text-brand-700 hover:underline dark:text-slate-400 dark:hover:text-brand-400"
             >
               {authorConfig.name}
             </a>{' '}

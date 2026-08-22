@@ -84,11 +84,11 @@ export function Checkbox({ label, checked, onChange, disabled = false, hint, cla
           checked={checked}
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
-          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+          className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800"
         />
         <span className="text-sm">{label}</span>
       </label>
-      {hint && <p className="ml-7 mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="ml-7 mt-1 text-xs text-slate-500 dark:text-slate-400">{hint}</p>}
     </div>
   );
 }
@@ -118,7 +118,7 @@ export function RadioGroup({
 
   return (
     <fieldset className={className}>
-      <legend className="text-xs font-medium uppercase tracking-wide text-slate-500">{legend}</legend>
+      <legend className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{legend}</legend>
 
       {variant === 'pills' ? (
         <div className="mt-2 flex flex-wrap gap-2">
@@ -132,7 +132,7 @@ export function RadioGroup({
               className={`rounded-full px-4 py-2 text-sm transition disabled:opacity-50 ${
                 value === option.value
                   ? 'bg-brand-600 font-medium text-white'
-                  : 'border border-slate-200 text-slate-700 hover:bg-slate-50'
+                  : 'border border-slate-200 text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
             >
               {option.label}
@@ -150,18 +150,18 @@ export function RadioGroup({
                 checked={value === option.value}
                 disabled={option.disabled}
                 onChange={() => onChange(option.value)}
-                className="mt-0.5 h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500"
+                className="mt-0.5 h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500 dark:border-slate-600 dark:bg-slate-800"
               />
               <span>
                 <span className="block text-sm">{option.label}</span>
-                {option.hint && <span className="block text-xs text-slate-500">{option.hint}</span>}
+                {option.hint && <span className="block text-xs text-slate-500 dark:text-slate-400">{option.hint}</span>}
               </span>
             </label>
           ))}
         </div>
       )}
 
-      {hint && <p className="mt-2 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{hint}</p>}
     </fieldset>
   );
 }

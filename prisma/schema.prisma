@@ -88,6 +88,7 @@ model User {
   password            String
   phone               String?
   profileImage        String?
+  theme               String              @default("system")
   role                String              @default("MEMBER")
   roleRef             Role                @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
   status              String              @default("PENDING")

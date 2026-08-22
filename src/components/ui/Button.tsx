@@ -16,12 +16,13 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     'bg-brand-600 text-white shadow-sm shadow-brand-600/20 hover:bg-brand-700 hover:shadow-brand-700/25 disabled:hover:bg-brand-600 disabled:shadow-none focus-visible:outline-brand-600',
   secondary:
-    'border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 disabled:hover:bg-white disabled:hover:border-slate-300 focus-visible:outline-brand-600',
+    'border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 disabled:hover:bg-white disabled:hover:border-slate-300 focus-visible:outline-brand-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-700 dark:disabled:hover:bg-slate-800',
   danger:
-    'border border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 disabled:hover:bg-transparent focus-visible:outline-red-600',
-  ghost: 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-brand-600',
+    'border border-red-200 text-red-600 hover:border-red-300 hover:bg-red-50 disabled:hover:bg-transparent focus-visible:outline-red-600 dark:border-red-500/30 dark:text-red-400 dark:hover:border-red-500/50 dark:hover:bg-red-500/10',
+  ghost:
+    'text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100',
   dashed:
-    'w-full border border-dashed border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-brand-600',
+    'w-full border border-dashed border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50 focus-visible:outline-brand-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-700',
   inverse: 'bg-white text-slate-900 hover:bg-slate-200 disabled:hover:bg-white focus-visible:outline-white',
   inverseSecondary:
     'border border-slate-500 text-white hover:border-slate-300 hover:bg-white/10 disabled:hover:bg-transparent focus-visible:outline-white'
@@ -106,7 +107,7 @@ export function ActionLink({ href, children, onClick, className = '' }: ActionLi
     <Link
       href={href}
       onClick={onClick}
-      className={`group inline-flex min-h-[2rem] items-center gap-1 rounded-md py-1.5 text-sm font-semibold text-brand-700 transition-colors hover:text-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 ${className}`}
+      className={`group inline-flex min-h-[2rem] items-center gap-1 rounded-md py-1.5 text-sm font-semibold text-brand-700 transition-colors hover:text-brand-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-brand-400 dark:hover:text-brand-300 ${className}`}
     >
       {children}
       <svg

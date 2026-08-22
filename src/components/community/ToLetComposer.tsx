@@ -26,10 +26,37 @@ function readAsDataUrl(file: File): Promise<string> {
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="space-y-4 border-t border-slate-100 pt-5 first:border-t-0 first:pt-0">
+    <div className="space-y-3 border-t border-slate-100 pt-4 first:border-t-0 first:pt-0">
       <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
       {children}
     </div>
+  );
+}
+
+function MoreOptionsToggle({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={open}
+      className="flex w-full items-center justify-between rounded-xl border-t border-slate-100 py-3 text-sm font-medium text-brand-700 transition-colors hover:text-brand-800"
+    >
+      {open ? strings.toLet.composer.fewerOptions : strings.toLet.composer.moreOptions}
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+        className={`transition-transform ${open ? 'rotate-180' : ''}`}
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
   );
 }
 
@@ -114,6 +141,7 @@ export function ToLetComposer({
   const [maxImageBytes, setMaxImageBytes] = useState(uploadConfig.maxImageBytes);
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [showMore, setShowMore] = useState(false);
 
   const editing = Boolean(listing);
   const reposting = !editing && Boolean(prefillFrom);
@@ -126,6 +154,14 @@ export function ToLetComposer({
       source
         ? formFromSource(source, defaultContactName, defaultContactPhone)
         : emptyForm(defaultContactName, defaultContactPhone)
+    );
+    setShowMore(
+      Boolean(
+        source &&
+          (source.availableMonth ||
+            (source.genderPreference && source.genderPreference !== TOLET_GENDER_PREFERENCE.ANY) ||
+            (source.tenantRestriction && source.tenantRestriction !== TOLET_TENANT_RESTRICTION.ANY))
+      )
     );
   }, [open, source, defaultContactName, defaultContactPhone]);
 
@@ -322,52 +358,40 @@ export function ToLetComposer({
         </Button>
       }
     >
-      <div className="space-y-5">
-        <Section title={strings.toLet.composer.sectionListing}>
-          <RadioGroup
-            legend={strings.toLet.composer.typeLabel}
-            value={form.listingType}
-            onChange={(value) => update('listingType', value)}
-            options={typeOptions}
-            variant="pills"
+      <div className="space-y-4">
+        <RadioGroup
+          legend={strings.toLet.composer.typeLabel}
+          value={form.listingType}
+          onChange={(value) => update('listingType', value)}
+          options={typeOptions}
+          variant="pills"
+        />
+
+        <Input
+          label={strings.toLet.composer.titleLabel}
+          value={form.title}
+          onChange={(value) => update('title', value)}
+          placeholder={strings.toLet.composer.titlePlaceholder}
+          maxLength={toLetConfig.maxTitleLength}
+        />
+
+        <Textarea
+          label={strings.toLet.composer.descriptionLabel}
+          value={form.text}
+          onChange={(value) => update('text', value)}
+          placeholder={strings.toLet.composer.descriptionPlaceholder}
+          rows={3}
+          maxLength={toLetConfig.maxDescriptionLength}
+        />
+
+        <div className="grid grid-cols-[1fr_auto] items-end gap-3">
+          <NumberInput
+            label={strings.toLet.composer.rentLabel}
+            value={form.rent}
+            onChange={(value) => update('rent', value)}
+            min={0}
           />
-
-          <Input
-            label={strings.toLet.composer.titleLabel}
-            value={form.title}
-            onChange={(value) => update('title', value)}
-            placeholder={strings.toLet.composer.titlePlaceholder}
-            maxLength={toLetConfig.maxTitleLength}
-          />
-
-          <Textarea
-            label={strings.toLet.composer.descriptionLabel}
-            value={form.text}
-            onChange={(value) => update('text', value)}
-            placeholder={strings.toLet.composer.descriptionPlaceholder}
-            rows={4}
-            maxLength={toLetConfig.maxDescriptionLength}
-          />
-        </Section>
-
-        <Section title={strings.toLet.composer.sectionPricing}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <NumberInput
-              label={strings.toLet.composer.rentLabel}
-              value={form.rent}
-              onChange={(value) => update('rent', value)}
-              min={0}
-            />
-            <Select
-              label={strings.toLet.composer.availableMonthLabel}
-              value={form.availableMonth}
-              onChange={(value) => update('availableMonth', value)}
-              options={monthOptions}
-              compact
-            />
-          </div>
-
-          <label className="flex items-center gap-2 text-sm text-slate-700">
+          <label className="flex items-center gap-1.5 pb-2.5 text-sm text-slate-700">
             <input
               type="checkbox"
               checked={form.rentNegotiable}
@@ -376,17 +400,9 @@ export function ToLetComposer({
             />
             {strings.toLet.composer.negotiableLabel}
           </label>
+        </div>
 
-          <RadioGroup
-            legend={strings.toLet.composer.expiryLabel}
-            value={String(form.expiryDays)}
-            onChange={(value) => update('expiryDays', Number(value))}
-            options={expiryOptions}
-            variant="pills"
-          />
-        </Section>
-
-        <Section title={strings.toLet.composer.sectionLocation}>
+        <div>
           <Input
             label={strings.toLet.composer.locationLabel}
             value={form.location}
@@ -395,7 +411,7 @@ export function ToLetComposer({
             maxLength={toLetConfig.maxLocationLength}
           />
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={shareLocation}
@@ -424,47 +440,65 @@ export function ToLetComposer({
               </span>
             )}
           </div>
-        </Section>
+        </div>
 
-        <Section title={strings.toLet.composer.sectionWhoFor}>
-          <Select
-            label={strings.toLet.composer.genderPreferenceLabel}
-            value={form.genderPreference}
-            onChange={(value) => update('genderPreference', value)}
-            options={genderOptions}
-            compact
-          />
+        <MoreOptionsToggle open={showMore} onToggle={() => setShowMore((current) => !current)} />
 
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              checked={form.tenantRestriction === TOLET_TENANT_RESTRICTION.FAMILY}
-              onChange={(event) =>
-                update('tenantRestriction', event.target.checked ? TOLET_TENANT_RESTRICTION.FAMILY : TOLET_TENANT_RESTRICTION.ANY)
-              }
-              className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+        {showMore && (
+          <div className="space-y-4">
+            <Select
+              label={strings.toLet.composer.availableMonthLabel}
+              value={form.availableMonth}
+              onChange={(value) => update('availableMonth', value)}
+              options={monthOptions}
+              compact
             />
-            {strings.toLet.composer.familyOnlyLabel}
-          </label>
-        </Section>
 
-        <Section title={strings.toLet.composer.sectionContact}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label={strings.toLet.composer.contactNameLabel}
-              value={form.contactName}
-              onChange={(value) => update('contactName', value)}
-              hint={strings.toLet.composer.contactNameHint}
+            <Select
+              label={strings.toLet.composer.genderPreferenceLabel}
+              value={form.genderPreference}
+              onChange={(value) => update('genderPreference', value)}
+              options={genderOptions}
+              compact
             />
-            <Input
-              type="tel"
-              label={strings.toLet.composer.contactPhoneLabel}
-              value={form.contactPhone}
-              onChange={(value) => update('contactPhone', value)}
-              hint={strings.toLet.composer.contactPhoneHint}
+
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.tenantRestriction === TOLET_TENANT_RESTRICTION.FAMILY}
+                onChange={(event) =>
+                  update('tenantRestriction', event.target.checked ? TOLET_TENANT_RESTRICTION.FAMILY : TOLET_TENANT_RESTRICTION.ANY)
+                }
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+              />
+              {strings.toLet.composer.familyOnlyLabel}
+            </label>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                label={strings.toLet.composer.contactNameLabel}
+                value={form.contactName}
+                onChange={(value) => update('contactName', value)}
+                hint={strings.toLet.composer.contactNameHint}
+              />
+              <Input
+                type="tel"
+                label={strings.toLet.composer.contactPhoneLabel}
+                value={form.contactPhone}
+                onChange={(value) => update('contactPhone', value)}
+                hint={strings.toLet.composer.contactPhoneHint}
+              />
+            </div>
+
+            <RadioGroup
+              legend={strings.toLet.composer.expiryLabel}
+              value={String(form.expiryDays)}
+              onChange={(value) => update('expiryDays', Number(value))}
+              options={expiryOptions}
+              variant="pills"
             />
           </div>
-        </Section>
+        )}
 
         <Section title={strings.toLet.composer.sectionPhotos}>
           <div className="flex flex-wrap gap-2">

@@ -91,8 +91,52 @@ export function PostCard({
       </div>
 
       {isToLet ? (
-        <div className="px-4 pb-3 pt-2">
-          <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex gap-3 px-4 pb-3 pt-2">
+          <div className="min-w-0 flex-1">
+            {message.title && <p className="text-[15px] font-semibold text-slate-900">{message.title}</p>}
+
+            <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-brand-700">
+              {message.rent !== null && strings.toLet.rentPerMonth(formatCurrency(message.rent))}
+              {message.rentNegotiable && (
+                <span className="text-xs font-normal text-slate-400">{strings.toLet.negotiable}</span>
+              )}
+            </p>
+
+            {message.location && (
+              <p className="text-sm text-slate-500">
+                {message.location}
+                {distanceKm !== undefined && distanceKm !== null && (
+                  <span className="ml-1.5 text-xs text-slate-400">
+                    · {strings.toLet.search.distanceAway(distanceKm.toFixed(1))}
+                  </span>
+                )}
+              </p>
+            )}
+
+            {message.availableMonth && (
+              <p className="text-xs text-slate-400">
+                {strings.toLet.availableFromMonth(strings.toLet.months[message.availableMonth as keyof typeof strings.toLet.months])}
+              </p>
+            )}
+
+            {message.text && (
+              <MentionText
+                text={message.text}
+                members={members}
+                mentionNames={mentionNames}
+                className="mt-1.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800"
+              />
+            )}
+
+            <Link
+              href={toLetListingPath(message.id)}
+              className="mt-2 block text-right text-sm font-medium text-brand-700 hover:text-brand-800"
+            >
+              {strings.toLet.viewAction}
+            </Link>
+          </div>
+
+          <div className="flex shrink-0 flex-col items-end gap-1">
             <Badge tone="neutral">
               {strings.toLet.types[(message.listingType ?? '') as keyof typeof strings.toLet.types]}
             </Badge>
@@ -105,48 +149,6 @@ export function PostCard({
               {tenantRestrictionLabel}
             </Badge>
           </div>
-
-          {message.title && <p className="mt-1.5 text-[15px] font-semibold text-slate-900">{message.title}</p>}
-
-          <p className="mt-0.5 flex items-baseline gap-1.5 text-lg font-semibold text-brand-700">
-            {message.rent !== null && strings.toLet.rentPerMonth(formatCurrency(message.rent))}
-            {message.rentNegotiable && (
-              <span className="text-xs font-normal text-slate-400">{strings.toLet.negotiable}</span>
-            )}
-          </p>
-
-          {message.location && (
-            <p className="text-sm text-slate-500">
-              {message.location}
-              {distanceKm !== undefined && distanceKm !== null && (
-                <span className="ml-1.5 text-xs text-slate-400">
-                  · {strings.toLet.search.distanceAway(distanceKm.toFixed(1))}
-                </span>
-              )}
-            </p>
-          )}
-
-          {message.availableMonth && (
-            <p className="text-xs text-slate-400">
-              {strings.toLet.availableFromMonth(strings.toLet.months[message.availableMonth as keyof typeof strings.toLet.months])}
-            </p>
-          )}
-
-          {message.text && (
-            <MentionText
-              text={message.text}
-              members={members}
-              mentionNames={mentionNames}
-              className="mt-1.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800"
-            />
-          )}
-
-          <Link
-            href={toLetListingPath(message.id)}
-            className="mt-2 inline-block text-sm font-medium text-brand-700 hover:text-brand-800"
-          >
-            {strings.toLet.viewAction}
-          </Link>
         </div>
       ) : (
         (message.title || message.text) && (

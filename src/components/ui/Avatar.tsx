@@ -34,7 +34,7 @@ export function Avatar({ name, image, size = 'md', muted = false, className = ''
     <span
       aria-hidden="true"
       className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full font-medium ${
-        muted ? 'bg-slate-100 text-slate-400' : 'bg-slate-200 text-slate-600'
+        muted ? 'bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-500' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300'
       } ${className}`}
     >
       {initialsOf(name)}

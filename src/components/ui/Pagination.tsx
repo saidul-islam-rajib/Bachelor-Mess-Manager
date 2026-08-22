@@ -15,12 +15,12 @@ export function Pagination({ meta, onPageChange, onPageSizeChange, disabled = fa
   if (meta.total === 0) return null;
 
   return (
-    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
-      <p className="text-sm text-slate-500">{strings.pagination.showing(meta.from, meta.to, meta.total)}</p>
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
+      <p className="text-sm text-slate-500 dark:text-slate-400">{strings.pagination.showing(meta.from, meta.to, meta.total)}</p>
 
       <div className="flex flex-wrap items-center gap-2">
         {onPageSizeChange && (
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             <span id="pagination-page-size-label">{strings.common.perPage}</span>
             <ListboxControl
               className="w-24"
@@ -46,7 +46,7 @@ export function Pagination({ meta, onPageChange, onPageSizeChange, disabled = fa
           {strings.pagination.previous}
         </Button>
 
-        <span className="px-1 text-sm text-slate-600">
+        <span className="px-1 text-sm text-slate-600 dark:text-slate-400">
           {strings.pagination.page} {meta.page} {strings.common.of} {meta.totalPages}
         </span>
 

@@ -25,7 +25,7 @@ function MenuIcon({ children }: { children: ReactNode }) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className="shrink-0 text-slate-400"
+      className="shrink-0 text-slate-400 dark:text-slate-500"
     >
       {children}
     </svg>
@@ -97,7 +97,7 @@ export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) 
         onClick={() => void share()}
         aria-haspopup="true"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+        className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
       >
         <MenuIcon>
           <path d="M12 3v13" />
@@ -108,13 +108,13 @@ export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) 
       </button>
 
       {open && (
-        <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+        <div className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-700 dark:bg-slate-800">
           <a
             href={facebookHref}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-100"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             <MenuIcon>
               <path d="M17 2h-3a5 5 0 0 0-5 5v3H6v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
@@ -126,7 +126,7 @@ export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-100"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             <MenuIcon>
               <path d="M21 11.5a8.5 8.5 0 0 1-12.36 7.58L4 20l1.02-4.5A8.5 8.5 0 1 1 21 11.5Z" />
@@ -137,7 +137,7 @@ export function ShareButtons({ url, title, className = '' }: ShareButtonsProps) 
           <button
             type="button"
             onClick={() => void copyLink()}
-            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100"
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             <MenuIcon>
               <path d="M9 12a3 3 0 0 0 3 3h1a3 3 0 0 0 0-6h-1" />

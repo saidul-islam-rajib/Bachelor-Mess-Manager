@@ -138,16 +138,16 @@ export default function MealPlanCard({
       : onDays.map((d) => WEEKDAYS[d.weekday].short).join(', ');
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold">{mealPlan.title(groupName ?? '')}</h2>
-          <p className="mt-1 text-sm text-slate-500">
+          <h2 className="text-lg font-semibold dark:text-slate-100">{mealPlan.title(groupName ?? '')}</h2>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             {mealPlan.subtitle}
           </p>
           <p className="mt-2 text-sm">
-            <span className="text-slate-500">{mealPlan.repeats}</span>
-            <span className={`font-medium ${isActive && onDays.length > 0 ? 'text-slate-900' : 'text-slate-400'}`}>
+            <span className="text-slate-500 dark:text-slate-400">{mealPlan.repeats}</span>
+            <span className={`font-medium ${isActive && onDays.length > 0 ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
               {loading ? mealPlan.loading : summary}
             </span>
           </p>
@@ -161,7 +161,7 @@ export default function MealPlanCard({
             aria-expanded={open}
             aria-label={open ? mealPlan.closeEditor : mealPlan.editPlan}
             title={open ? mealPlan.close : mealPlan.editPlan}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-slate-100"
           >
             {open ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -178,7 +178,7 @@ export default function MealPlanCard({
       </div>
 
       {open && !loading && (
-        <div className="mt-5 border-t border-slate-100 pt-5">
+        <div className="mt-5 border-t border-slate-100 pt-5 dark:border-slate-700">
           <div className="mb-4 flex flex-wrap gap-2">
             <QuickButton onClick={() => setDays((p) => p.map((d) => ({ ...d, enabled: true })))}>
               {mealPlan.turnAllOn}
@@ -196,7 +196,9 @@ export default function MealPlanCard({
                 <li
                   key={d.weekday}
                   className={`rounded-2xl border p-3 transition-colors sm:p-4 ${
-                    d.enabled ? 'border-slate-300 bg-white' : 'border-slate-200 bg-slate-50'
+                    d.enabled
+                      ? 'border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-800'
+                      : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
                   }`}
                 >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -206,16 +208,16 @@ export default function MealPlanCard({
                         onChange={(v) => setDay(d.weekday, { enabled: v })}
                         label={mealPlan.dayMeals(weekday.label)}
                       />
-                      <span className={`font-medium ${d.enabled ? 'text-slate-900' : 'text-slate-400'}`}>
+                      <span className={`font-medium ${d.enabled ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'}`}>
                         {weekday.label}
                       </span>
-                      {!d.enabled && <span className="text-xs text-slate-400">{mealPlan.offNoMeals}</span>}
+                      {!d.enabled && <span className="text-xs text-slate-400 dark:text-slate-500">{mealPlan.offNoMeals}</span>}
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 sm:w-auto sm:gap-3">
                       {MEAL_FIELDS.map((f) => (
                         <label key={f} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
-                          <span className={`text-xs ${d.enabled ? 'text-slate-500' : 'text-slate-300'}`}>
+                          <span className={`text-xs ${d.enabled ? 'text-slate-500 dark:text-slate-400' : 'text-slate-300 dark:text-slate-600'}`}>
                             <span className="sm:hidden">{FIELD_LABELS[f]}</span>
                             <span className="hidden sm:inline">{FIELD_SHORT[f]}</span>
                           </span>
@@ -229,7 +231,7 @@ export default function MealPlanCard({
                             onChange={(e) =>
                               setDay(d.weekday, { [f]: Math.max(0, parseInt(e.target.value, 10) || 0) } as Partial<PlanDay>)
                             }
-                            className="w-full rounded-xl border border-slate-300 bg-slate-50 px-2 py-1.5 text-center disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300 sm:w-14"
+                            className="w-full rounded-xl border border-slate-300 bg-slate-50 px-2 py-1.5 text-center disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-300 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 dark:disabled:text-slate-600 sm:w-14"
                           />
                         </label>
                       ))}
@@ -240,16 +242,16 @@ export default function MealPlanCard({
             })}
           </ul>
 
-          <label className="mt-4 flex items-start gap-2 text-sm text-slate-600">
+          <label className="mt-4 flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
             <input
               type="checkbox"
               checked={overwriteEdited}
               onChange={(e) => setOverwriteEdited(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-600 dark:bg-slate-900"
             />
             <span>
               {mealPlan.replaceEditedDays}
-              <span className="block text-xs text-slate-400">
+              <span className="block text-xs text-slate-400 dark:text-slate-500">
                 {mealPlan.replaceEditedDaysHint}
               </span>
             </span>
@@ -270,7 +272,7 @@ export default function MealPlanCard({
                 setOverwriteEdited(false);
                 load();
               }}
-              className="rounded-full border border-slate-300 px-6 py-2 text-sm text-slate-600 hover:bg-slate-100"
+              className="rounded-full border border-slate-300 px-6 py-2 text-sm text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
             >
               {mealPlan.reset}
             </button>
@@ -301,7 +303,7 @@ function Switch({
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors after:absolute after:inset-x-0 after:-inset-y-2 after:content-[''] focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${
-        checked ? 'bg-green-600' : 'bg-slate-300'
+        checked ? 'bg-green-600' : 'bg-slate-300 dark:bg-slate-600'
       }`}
     >
       <span
@@ -318,7 +320,7 @@ function QuickButton({ onClick, children }: { onClick: () => void; children: Rea
     <button
       type="button"
       onClick={onClick}
-      className="rounded-full border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100"
+      className="rounded-full border border-slate-300 px-3 py-1.5 text-xs text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
     >
       {children}
     </button>

@@ -3,7 +3,11 @@ import { PageTitle } from '@/components/ui/PageTitle';
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ${className}`}>{children}</div>
+    <div
+      className={`rounded-3xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-6 ${className}`}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -19,8 +23,8 @@ export function CardHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+        <h2 className="text-lg font-semibold dark:text-slate-100">{title}</h2>
+        {description && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
       {action}
     </div>
@@ -56,7 +60,7 @@ export function PageHeader({
       )}
       <div>
         <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
-        {description && <p className="mt-1 text-slate-600">{description}</p>}
+        {description && <p className="mt-1 text-slate-600 dark:text-slate-400">{description}</p>}
       </div>
       {action}
     </div>
@@ -76,16 +80,16 @@ export function StatCard({
 }) {
   const color =
     tone === 'green'
-      ? 'text-green-600'
+      ? 'text-green-600 dark:text-green-400'
       : tone === 'red'
-        ? 'text-red-600'
+        ? 'text-red-600 dark:text-red-400'
         : tone === 'amber'
-          ? 'text-amber-600'
-          : 'text-slate-900';
+          ? 'text-amber-600 dark:text-amber-400'
+          : 'text-slate-900 dark:text-slate-100';
 
   return (
-    <div className={`rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5 ${className}`}>
-      <div className="text-xs uppercase tracking-wide text-slate-500">{label}</div>
+    <div className={`rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5 ${className}`}>
+      <div className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</div>
       <div className={`mt-2 text-xl font-semibold sm:text-2xl ${color}`}>{value}</div>
     </div>
   );
@@ -111,11 +115,12 @@ export function DescriptionItem({
   value: ReactNode;
   tone?: 'green' | 'red';
 }) {
-  const color = tone === 'green' ? 'text-green-600' : tone === 'red' ? 'text-red-600' : '';
+  const color =
+    tone === 'green' ? 'text-green-600 dark:text-green-400' : tone === 'red' ? 'text-red-600 dark:text-red-400' : '';
   return (
     <div>
-      <dt className="text-xs uppercase tracking-wide text-slate-500">{label}</dt>
-      <dd className={`mt-1 text-base font-semibold ${color}`}>{value}</dd>
+      <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</dt>
+      <dd className={`mt-1 text-base font-semibold ${color || 'dark:text-slate-100'}`}>{value}</dd>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { strings } from '@/lib/i18n';
 import { passwordStrength } from '@/lib/validation';
 
 type Props = {
@@ -15,7 +16,13 @@ type Props = {
 };
 
 const METER_COLORS = ['bg-slate-200', 'bg-red-500', 'bg-amber-500', 'bg-lime-500', 'bg-green-600'];
-const LABEL_COLORS = ['text-slate-400', 'text-red-600', 'text-amber-600', 'text-lime-700', 'text-green-700'];
+const LABEL_COLORS = [
+  'text-slate-400 dark:text-slate-500',
+  'text-red-600 dark:text-red-400',
+  'text-amber-600 dark:text-amber-400',
+  'text-lime-700 dark:text-lime-400',
+  'text-green-700 dark:text-green-400'
+];
 
 export function PasswordField({
   label,
@@ -35,7 +42,7 @@ export function PasswordField({
 
   return (
     <div>
-      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700 dark:text-slate-300">
         {label}
       </label>
       <div className="relative mt-2">
@@ -50,18 +57,17 @@ export function PasswordField({
           required={required}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${id}-error` : undefined}
-          className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 pr-16 outline-none transition focus:border-brand-500 focus:bg-white ${
-            error ? 'border-red-400' : 'border-slate-300'
+          className={`w-full rounded-2xl border bg-slate-50 px-4 py-3 pr-16 outline-none transition focus:border-brand-500 focus:bg-white dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-800 ${
+            error ? 'border-red-400 dark:border-red-500/60' : 'border-slate-300 dark:border-slate-600'
           }`}
         />
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-
-          aria-label={visible ? 'Hide password' : 'Show password'}
-          className="absolute inset-y-0 right-0 px-4 text-sm font-medium text-slate-500 hover:text-slate-900"
+          aria-label={visible ? strings.auth.hidePassword : strings.auth.showPassword}
+          className="absolute inset-y-0 right-0 px-4 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
         >
-          {visible ? 'Hide' : 'Show'}
+          {visible ? strings.common.hide : strings.common.show}
         </button>
       </div>
 
@@ -72,23 +78,23 @@ export function PasswordField({
               <span
                 key={step}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  step <= strength.score ? METER_COLORS[strength.score] : 'bg-slate-200'
+                  step <= strength.score ? METER_COLORS[strength.score] : 'bg-slate-200 dark:bg-slate-700'
                 }`}
               />
             ))}
           </div>
           <p className={`mt-1 text-xs font-medium ${LABEL_COLORS[strength.score]}`}>
-            Password strength: {strength.label}
+            {strings.auth.passwordStrength.label}: {strength.label}
           </p>
         </div>
       )}
 
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 text-sm text-red-600">
+        <p id={`${id}-error`} className="mt-1.5 text-sm text-red-600 dark:text-red-400">
           {error}
         </p>
       ) : hint ? (
-        <p className="mt-1.5 text-xs text-slate-500">{hint}</p>
+        <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">{hint}</p>
       ) : null}
     </div>
   );

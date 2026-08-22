@@ -31,6 +31,7 @@ export type SessionUser = {
   status: string;
   phone: string | null;
   profileImage: string | null;
+  theme: string;
   permissions: string[];
   impersonatedBy?: ImpersonatedBy;
 };
@@ -45,6 +46,7 @@ const SESSION_USER_SELECT = {
   status: true,
   phone: true,
   profileImage: true,
+  theme: true,
   tokenVersion: true,
   permissionOverrides: { select: { permissionCode: true, effect: true } }
 } as const;

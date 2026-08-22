@@ -50,7 +50,7 @@ export function DataTable<T>({
       <div className={`overflow-x-auto ${renderCard ? 'hidden md:block' : ''}`}>
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
+            <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -64,7 +64,7 @@ export function DataTable<T>({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={rowKey(row)} className="border-b border-slate-100 last:border-0">
+              <tr key={rowKey(row)} className="border-b border-slate-100 last:border-0 dark:border-slate-700">
                 {columns.map((column) => (
                   <td
                     key={column.key}

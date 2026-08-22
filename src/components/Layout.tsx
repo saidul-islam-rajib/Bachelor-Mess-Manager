@@ -32,7 +32,9 @@ function NavBadge({ count }: { count: number }) {
 
 function MobileNavHeading({ children }: { children: ReactNode }) {
   return (
-    <p className="mt-3 px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400 first:mt-0">{children}</p>
+    <p className="mt-3 px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-400 first:mt-0 dark:text-slate-500">
+      {children}
+    </p>
   );
 }
 
@@ -51,7 +53,9 @@ function MobileNavLink({
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={`flex items-center rounded-xl px-3 py-2.5 transition-colors ${FOCUS_RING} ${
-        active ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
+        active
+          ? 'bg-brand-50 font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-400'
+          : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-500/10 dark:hover:text-brand-400'
       }`}
     >
       {link.label}
@@ -66,7 +70,9 @@ function DesktopNavLink({ link, active }: { link: NavLink; active: boolean }) {
       href={link.href}
       aria-current={active ? 'page' : undefined}
       className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-2 transition-colors xl:px-3 ${FOCUS_RING} ${
-        active ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700'
+        active
+          ? 'bg-brand-50 font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-400'
+          : 'text-slate-600 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-500/10 dark:hover:text-brand-400'
       }`}
     >
       {link.label}
@@ -134,7 +140,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const impersonating = user?.impersonatedBy;
 
   return (
-    <div className="safe-x flex min-h-screen flex-col bg-slate-50 text-slate-900">
+    <div className="safe-x flex min-h-screen flex-col bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-full focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg"
@@ -143,7 +149,10 @@ export default function Layout({ children }: { children: ReactNode }) {
       </a>
       <UpdateBanner />
       <InstallAppBanner />
-      <header ref={headerRef} className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur">
+      <header
+        ref={headerRef}
+        className="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/90 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/90"
+      >
         {impersonating && (
           <div className="bg-amber-500 text-amber-950">
             <div className="mx-auto flex max-w-content flex-wrap items-center justify-between gap-2 px-4 py-1.5 text-sm">
@@ -165,7 +174,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <div className="mx-auto flex h-16 max-w-content items-center justify-between gap-4 px-4 lg:h-20">
           <Link
             href={user ? ROUTES.dashboard : ROUTES.home}
-            className={`flex shrink-0 items-center gap-2 rounded-xl text-lg font-semibold text-slate-900 ${FOCUS_RING}`}
+            className={`flex shrink-0 items-center gap-2 rounded-xl text-lg font-semibold text-slate-900 dark:text-slate-100 ${FOCUS_RING}`}
             onClick={() => setOpen(false)}
           >
             <Logo className="h-9 w-auto lg:h-10" />
@@ -176,22 +185,22 @@ export default function Layout({ children }: { children: ReactNode }) {
             {messLinks.map((link) => (
               <DesktopNavLink key={link.href} link={link} active={isActive(link.href)} />
             ))}
-            {messLinks.length > 0 && appLinks.length > 0 && <span className="mx-1 h-6 w-px bg-slate-200" />}
+            {messLinks.length > 0 && appLinks.length > 0 && <span className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700" />}
             {appLinks.map((link) => (
               <DesktopNavLink key={link.href} link={link} active={isActive(link.href)} />
             ))}
             {user ? (
               <>
-                <span className="mx-1 h-6 w-px bg-slate-200" />
+                <span className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700" />
                 <NotificationBell />
                 <ProfileMenu />
               </>
             ) : showAuthLinks ? (
               <>
-                {appLinks.length > 0 && <span className="mx-1 h-6 w-px bg-slate-200" />}
+                {appLinks.length > 0 && <span className="mx-1 h-6 w-px bg-slate-200 dark:bg-slate-700" />}
                 <Link
                   href={ROUTES.auth.login}
-                  className={`rounded-full px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 ${FOCUS_RING}`}
+                  className={`rounded-full px-3 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-slate-100 ${FOCUS_RING}`}
                 >
                   {strings.nav.login}
                 </Link>
@@ -214,7 +223,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                 aria-label={strings.nav.toggleMenu}
                 aria-expanded={open}
                 aria-controls="mobile-nav"
-                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 ${FOCUS_RING}`}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -227,7 +236,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         {open && (
           <nav
             id="mobile-nav"
-            className="safe-bottom max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-slate-100 bg-white px-4 pb-6 pt-3 text-sm lg:hidden"
+            className="safe-bottom max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain border-t border-slate-100 bg-white px-4 pb-6 pt-3 text-sm dark:border-slate-800 dark:bg-slate-900 lg:hidden"
           >
             <div className="mx-auto flex max-w-content flex-col gap-1">
               {messLinks.length > 0 && <MobileNavHeading>{strings.nav.sectionMess}</MobileNavHeading>}
@@ -251,7 +260,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               ))}
 
               {(user || showAuthLinks) && (appLinks.length > 0 || messLinks.length > 0) && (
-                <div className="my-2 border-t border-slate-100" />
+                <div className="my-2 border-t border-slate-100 dark:border-slate-800" />
               )}
 
               {user ? (
@@ -261,7 +270,9 @@ export default function Layout({ children }: { children: ReactNode }) {
                     onClick={() => setOpen(false)}
                     aria-current={isActive(ROUTES.profile) ? 'page' : undefined}
                     className={`rounded-xl px-3 py-2.5 transition-colors ${FOCUS_RING} ${
-                      isActive(ROUTES.profile) ? 'bg-brand-50 font-semibold text-brand-700' : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700'
+                      isActive(ROUTES.profile)
+                        ? 'bg-brand-50 font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-400'
+                        : 'text-slate-700 hover:bg-brand-50 hover:text-brand-700 dark:text-slate-300 dark:hover:bg-brand-500/10 dark:hover:text-brand-400'
                     }`}
                   >
                     {strings.nav.profile}
@@ -271,7 +282,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                       setOpen(false);
                       logout();
                     }}
-                    className={`mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}
+                    className={`mt-1 rounded-xl border border-slate-300 px-3 py-2.5 text-left text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 ${FOCUS_RING}`}
                   >
                     {strings.nav.logout}
                   </button>
@@ -281,7 +292,7 @@ export default function Layout({ children }: { children: ReactNode }) {
                   <Link
                     href={ROUTES.auth.login}
                     onClick={() => setOpen(false)}
-                    className={`rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-100 ${FOCUS_RING}`}
+                    className={`rounded-xl px-3 py-2.5 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 ${FOCUS_RING}`}
                   >
                     {strings.nav.login}
                   </Link>

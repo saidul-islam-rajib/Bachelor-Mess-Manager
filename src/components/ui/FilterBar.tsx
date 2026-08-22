@@ -33,7 +33,7 @@ export function SearchInput({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 pl-10 text-sm outline-none transition focus:border-brand-500 focus:bg-white"
+        className="w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-2.5 pl-10 text-sm outline-none transition focus:border-brand-500 focus:bg-white dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:focus:bg-slate-800"
       />
       <svg
         aria-hidden="true"
@@ -41,7 +41,7 @@ export function SearchInput({
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
-        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
       >
         <circle cx="11" cy="11" r="7" />
         <path d="m20 20-3.5-3.5" strokeLinecap="round" />
@@ -60,11 +60,11 @@ export function FilterBar({
   activeCount?: number;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5">
       <div className="flex flex-wrap items-end gap-3">{children}</div>
       {onClear && activeCount > 0 && (
-        <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3">
-          <span className="text-xs text-slate-500">
+        <div className="mt-3 flex items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {activeCount} {activeCount === 1 ? strings.common.filter : strings.common.filters}
           </span>
           <Button size="sm" variant="ghost" onClick={onClear}>

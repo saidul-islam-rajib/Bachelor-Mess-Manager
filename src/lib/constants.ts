@@ -21,6 +21,16 @@ export type UserStatus = (typeof USER_STATUS)[keyof typeof USER_STATUS];
 
 export const USER_STATUS_VALUES = Object.values(USER_STATUS) as string[];
 
+export const THEME_OPTIONS = {
+  SYSTEM: 'system',
+  LIGHT: 'light',
+  DARK: 'dark'
+} as const;
+
+export type ThemeOption = (typeof THEME_OPTIONS)[keyof typeof THEME_OPTIONS];
+
+export const THEME_OPTION_VALUES = Object.values(THEME_OPTIONS) as string[];
+
 export const GROUP_STATUS = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE'

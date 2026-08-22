@@ -9,6 +9,8 @@ import { NotificationsProvider } from '@/components/NotificationsProvider';
 import { CommunityProvider } from '@/components/CommunityProvider';
 import { PwaProvider } from '@/components/PwaProvider';
 import PresenceTracker from '@/components/PresenceTracker';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import ThemeSync from '@/components/ThemeSync';
 import { ConfirmProvider } from '@/components/ui';
 import { appConfig } from '@/config';
 
@@ -22,7 +24,6 @@ export default function App({ Component, pageProps }: AppProps) {
 
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0f172a" />
-        <meta name="color-scheme" content="light" />
 
         <link rel="icon" href="/icons/favicon-32.png" sizes="32x32" />
         <link rel="icon" href="/icons/icon-192.png" sizes="192x192" />
@@ -35,24 +36,27 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="apple-mobile-web-app-title" content={appConfig.name} />
         <meta name="format-detection" content="telephone=no" />
       </Head>
-      <ToastProvider>
-        <ConfirmProvider>
-          <UserProvider>
-            <InvitationsProvider>
-              <NotificationsProvider>
-                <CommunityProvider>
-                  <PwaProvider>
-                    <PresenceTracker />
-                    <Layout>
-                      <Component {...pageProps} />
-                    </Layout>
-                  </PwaProvider>
-                </CommunityProvider>
-              </NotificationsProvider>
-            </InvitationsProvider>
-          </UserProvider>
-        </ConfirmProvider>
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <ConfirmProvider>
+            <UserProvider>
+              <ThemeSync />
+              <InvitationsProvider>
+                <NotificationsProvider>
+                  <CommunityProvider>
+                    <PwaProvider>
+                      <PresenceTracker />
+                      <Layout>
+                        <Component {...pageProps} />
+                      </Layout>
+                    </PwaProvider>
+                  </CommunityProvider>
+                </NotificationsProvider>
+              </InvitationsProvider>
+            </UserProvider>
+          </ConfirmProvider>
+        </ToastProvider>
+      </ThemeProvider>
     </>
   );
 }

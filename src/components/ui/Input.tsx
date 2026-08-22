@@ -90,7 +90,13 @@ export function Textarea({
 }
 
 const METER_COLORS = ['bg-slate-200', 'bg-red-500', 'bg-amber-500', 'bg-lime-500', 'bg-green-600'];
-const LABEL_COLORS = ['text-slate-400', 'text-red-600', 'text-amber-600', 'text-lime-700', 'text-green-700'];
+const LABEL_COLORS = [
+  'text-slate-400 dark:text-slate-500',
+  'text-red-600 dark:text-red-400',
+  'text-amber-600 dark:text-amber-400',
+  'text-lime-700 dark:text-lime-400',
+  'text-green-700 dark:text-green-400'
+];
 
 export type PasswordInputProps = SharedProps & {
   value: string;
@@ -139,7 +145,7 @@ export function PasswordInput({
           type="button"
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? strings.auth.hidePassword : strings.auth.showPassword}
-          className="absolute inset-y-0 right-0 px-4 text-sm font-medium text-slate-500 hover:text-slate-900"
+          className="absolute inset-y-0 right-0 px-4 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
         >
           {visible ? strings.common.hide : strings.common.show}
         </button>
@@ -152,7 +158,7 @@ export function PasswordInput({
               <span
                 key={step}
                 className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  step <= strength.score ? METER_COLORS[strength.score] : 'bg-slate-200'
+                  step <= strength.score ? METER_COLORS[strength.score] : 'bg-slate-200 dark:bg-slate-700'
                 }`}
               />
             ))}

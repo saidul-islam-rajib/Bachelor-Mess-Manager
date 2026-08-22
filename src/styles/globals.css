@@ -6,12 +6,16 @@
   color-scheme: light;
 }
 
+:root.dark {
+  color-scheme: dark;
+}
+
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-900 dark:text-slate-100;
 }
 
 * {
@@ -60,6 +64,10 @@ body {
     scrollbar-color: #cbd5e1 transparent;
   }
 
+  .dark .scrollbar-thin {
+    scrollbar-color: #475569 transparent;
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -74,8 +82,16 @@ body {
     border-radius: 9999px;
   }
 
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #475569;
+  }
+
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background-color: #94a3b8;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: #64748b;
   }
 }
 

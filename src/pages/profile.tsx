@@ -9,8 +9,9 @@ import RoleRequestPanel from '@/components/RoleRequestPanel';
 import { ProfilePhotoCropModal } from '@/components/ProfilePhotoCropModal';
 import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
-import { Badge, Button, Collapsible, EmptyState, ImageViewer, PageTitle, StatusBadge, useConfirm } from '@/components/ui';
+import { Badge, Button, Collapsible, EmptyState, ImageViewer, PageTitle, RadioGroup, StatusBadge, useConfirm } from '@/components/ui';
 import MealPlanCard from '@/components/MealPlanCard';
+import { useTheme } from '@/components/ThemeProvider';
 import { api, errorMessage } from '@/lib/api-client';
 import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
@@ -19,7 +20,7 @@ import { ACCEPTED_IMAGE_MIMES, evictCachedUpload } from '@/lib/uploads.client';
 import { formatBytes, formatCurrency } from '@/lib/format';
 import { uploadConfig } from '@/config';
 import { PERMISSIONS } from '@/lib/permissions';
-import { TOLET_STATUS } from '@/lib/constants';
+import { THEME_OPTIONS, TOLET_STATUS } from '@/lib/constants';
 import { toLetListingPath } from '@/lib/routes';
 import type { CommunityMessageView } from '@/lib/community';
 
@@ -76,22 +77,22 @@ export default function ProfilePage() {
       <PageTitle title={strings.profile.title} />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold sm:text-3xl">{strings.profile.title}</h1>
-        <p className="mt-1 text-slate-600">{strings.profile.subtitle}</p>
+        <p className="mt-1 text-slate-600 dark:text-slate-400">{strings.profile.subtitle}</p>
       </div>
 
       {loading ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">{strings.common.loading}</div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400">{strings.common.loading}</div>
       ) : !user ? (
-        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow-sm">
+        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 text-amber-800 shadow-sm dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-300">
           {strings.profile.signInPrompt}
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-            <h2 className="text-lg font-semibold">{strings.profile.yourDetails}</h2>
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-              <span className="rounded-full bg-slate-100 px-3 py-1">{user.email}</span>
-              <span className="rounded-full bg-slate-100 px-3 py-1">{user.role}</span>
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-8">
+            <h2 className="text-lg font-semibold dark:text-slate-100">{strings.profile.yourDetails}</h2>
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-700">{user.email}</span>
+              <span className="rounded-full bg-slate-100 px-3 py-1 dark:bg-slate-700">{user.role}</span>
             </div>
 
             <PhotoSection name={user.name} image={user.profileImage ?? null} onChanged={refresh} />
@@ -131,6 +132,7 @@ export default function ProfilePage() {
             </form>
           </div>
 
+          <ThemeSection />
           <DefaultMealPlanSection />
           <PastMealEditingSection />
           <PasswordSection />
@@ -227,27 +229,27 @@ function ToLetListingsSection() {
   return (
     <Collapsible title={strings.toLet.profile.title} description={strings.toLet.profile.subtitle}>
       {loading ? (
-        <p className="text-sm text-slate-400">{strings.common.loading}</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500">{strings.common.loading}</p>
       ) : listings.length === 0 ? (
         <EmptyState title={strings.toLet.profile.empty} description={strings.toLet.profile.emptyHint} />
       ) : (
         <ul className="space-y-3">
           {listings.map((listing) => (
-            <li key={listing.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 p-3">
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+            <li key={listing.id} className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-100 p-3 dark:border-slate-700">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-700">
                 {listing.images[0] && <img src={listing.images[0]} alt="" className="h-full w-full object-cover" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
                     href={toLetListingPath(listing.id)}
-                    className="truncate text-sm font-semibold text-slate-900 hover:text-brand-700"
+                    className="truncate text-sm font-semibold text-slate-900 hover:text-brand-700 dark:text-slate-100 dark:hover:text-brand-400"
                   >
                     {listing.title}
                   </Link>
                   <StatusBadge status={listing.effectiveListingStatus ?? TOLET_STATUS.EXPIRED} />
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {listing.rent !== null && strings.toLet.rentPerMonth(formatCurrency(listing.rent))} · {listing.location}
                 </p>
               </div>
@@ -325,6 +327,36 @@ function useOwnGroup(excludeSupervisorId?: string): { group: OwnGroup | null; lo
   }, [excludeSupervisorId]);
 
   return { group, loading };
+}
+
+const THEME_OPTIONS_LIST = [
+  { value: THEME_OPTIONS.SYSTEM, label: strings.profile.themeSystem },
+  { value: THEME_OPTIONS.LIGHT, label: strings.profile.themeLight },
+  { value: THEME_OPTIONS.DARK, label: strings.profile.themeDark }
+];
+
+function ThemeSection() {
+  const { user } = useCurrentUser();
+  const { theme, setTheme } = useTheme();
+
+  function handleChange(value: string) {
+    setTheme(value as typeof theme);
+    if (user) {
+      void api.patch('/api/profile', { theme: value }).catch(() => undefined);
+    }
+  }
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5">
+      <RadioGroup
+        legend={strings.profile.appearance}
+        value={theme}
+        onChange={handleChange}
+        options={THEME_OPTIONS_LIST}
+        variant="pills"
+      />
+    </div>
+  );
 }
 
 function DefaultMealPlanSection() {
@@ -414,11 +446,17 @@ function PastMealEditingSection() {
     remaining === null ? null : `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
 
   return (
-    <div className={`rounded-3xl border p-6 shadow-sm sm:p-8 ${state.open ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-white'}`}>
+    <div
+      className={`rounded-3xl border p-6 shadow-sm sm:p-8 ${
+        state.open
+          ? 'border-amber-300 bg-amber-50 dark:border-amber-500/30 dark:bg-amber-500/10'
+          : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800'
+      }`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <h2 className="text-lg font-semibold">{strings.profile.editingPastMeals}</h2>
+        <h2 className="text-lg font-semibold dark:text-slate-100">{strings.profile.editingPastMeals}</h2>
         {state.open && (
-          <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold tabular-nums text-amber-700 ring-1 ring-amber-300">
+          <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold tabular-nums text-amber-700 ring-1 ring-amber-300 dark:bg-slate-800 dark:text-amber-400 dark:ring-amber-500/30">
             {state.unlimited || !countdown ? strings.profile.noTimeLimit : strings.profile.timeLeft(countdown)}
           </span>
         )}
@@ -430,11 +468,11 @@ function PastMealEditingSection() {
           checked={state.open}
           disabled={busy}
           onChange={(e) => toggle(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900"
         />
         <span>
           <span className="text-sm font-medium">{strings.profile.letMeEdit(group.name)}</span>
-          <span className="mt-1 block text-sm text-slate-600">
+          <span className="mt-1 block text-sm text-slate-600 dark:text-slate-400">
             {state.unlimited
               ? strings.profile.staysOnUntilOff
               : strings.profile.unlocksForMinutes(state.windowMinutes)}{' '}
@@ -537,7 +575,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
 
   return (
     <>
-      <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-4 border-t border-slate-100 pt-6 dark:border-slate-700">
         {image ? (
           <ImageViewer src={image} alt={name}>
             {(open) => (
@@ -570,20 +608,20 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
             )}
           </ImageViewer>
         ) : (
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-xl font-medium text-slate-600">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-200 text-xl font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
             {initials || '?'}
           </span>
         )}
 
         <div>
-          <p className="text-sm font-medium text-slate-700">{strings.profile.photo}</p>
-          <p className="text-xs text-slate-500">{strings.profile.photoHint(formatBytes(maxBytes))}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{strings.profile.photo}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{strings.profile.photoHint(formatBytes(maxBytes))}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={busy}
-              className="rounded-full border border-slate-300 px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              className="rounded-full border border-slate-300 px-4 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
             >
               {busy ? strings.profile.working : image ? strings.profile.changePhoto : strings.profile.uploadPhoto}
             </button>
@@ -592,7 +630,7 @@ function PhotoSection({ name, image, onChanged }: { name: string; image: string 
                 type="button"
                 onClick={remove}
                 disabled={busy}
-                className="rounded-full border border-red-200 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                className="rounded-full border border-red-200 px-4 py-1.5 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
               >
                 {strings.profile.removePhoto}
               </button>
@@ -730,7 +768,7 @@ function InvitationsSection() {
       badge={count > 0 ? <Badge tone="danger">{strings.invitations.pendingBadge(count)}</Badge> : null}
     >
       {loading ? (
-        <p className="text-sm text-slate-400">{strings.common.loading}</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500">{strings.common.loading}</p>
       ) : count === 0 ? (
         <EmptyState title={strings.invitations.none} description={strings.invitations.noneHint} />
       ) : (

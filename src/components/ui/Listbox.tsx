@@ -163,8 +163,8 @@ export function ListboxControl({
         disabled={disabled}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={onKeyDown}
-        className={`flex min-h-[2.75rem] w-full items-center justify-between gap-2 rounded-2xl border bg-white px-4 py-2.5 text-left text-slate-900 transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-60 ${
-          invalid ? 'border-red-400' : 'border-slate-300'
+        className={`flex min-h-[2.75rem] w-full items-center justify-between gap-2 rounded-2xl border bg-white px-4 py-2.5 text-left text-slate-900 transition focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:opacity-60 dark:bg-slate-900 dark:text-slate-100 dark:disabled:bg-slate-800 ${
+          invalid ? 'border-red-400 dark:border-red-500/60' : 'border-slate-300 dark:border-slate-600'
         } ${buttonClassName}`}
       >
         <span id={`${baseId}-value`} className="min-w-0 flex-1 truncate">
@@ -180,7 +180,7 @@ export function ListboxControl({
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
-          className={`shrink-0 text-slate-500 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`shrink-0 text-slate-500 transition-transform duration-200 dark:text-slate-400 ${open ? 'rotate-180' : ''}`}
         >
           <path d="m6 9 6 6 6-6" />
         </svg>
@@ -193,10 +193,10 @@ export function ListboxControl({
           role="listbox"
           aria-labelledby={labelledBy}
           tabIndex={-1}
-          className="absolute left-0 right-0 z-30 mt-2 max-h-64 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white py-1 shadow-xl"
+          className="absolute left-0 right-0 z-30 mt-2 max-h-64 overflow-y-auto overscroll-contain rounded-2xl border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-700 dark:bg-slate-800"
         >
           {options.length === 0 && (
-            <li className="px-4 py-3 text-sm text-slate-400">{placeholder ?? strings.common.none}</li>
+            <li className="px-4 py-3 text-sm text-slate-400 dark:text-slate-500">{placeholder ?? strings.common.none}</li>
           )}
           {options.map((option, index) => {
             const isSelected = option.value === value;
@@ -209,9 +209,9 @@ export function ListboxControl({
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => pick(index)}
                 className={`flex min-h-[2.75rem] cursor-pointer items-center justify-between gap-2 px-4 py-2.5 text-sm ${
-                  option.disabled ? 'cursor-not-allowed text-slate-300' : 'text-slate-700'
-                } ${index === activeIndex && !option.disabled ? 'bg-brand-50 text-brand-800' : ''} ${
-                  isSelected ? 'font-semibold text-brand-700' : ''
+                  option.disabled ? 'cursor-not-allowed text-slate-300 dark:text-slate-600' : 'text-slate-700 dark:text-slate-300'
+                } ${index === activeIndex && !option.disabled ? 'bg-brand-50 text-brand-800 dark:bg-brand-500/10 dark:text-brand-300' : ''} ${
+                  isSelected ? 'font-semibold text-brand-700 dark:text-brand-400' : ''
                 }`}
               >
                 <span className="min-w-0 truncate">{option.label}</span>
@@ -245,7 +245,7 @@ export function Listbox({ label, className = '', ...rest }: ListboxProps) {
 
   return (
     <div className={className}>
-      <span id={`${id}-label`} className="text-xs font-medium uppercase tracking-wide text-slate-500">
+      <span id={`${id}-label`} className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
         {label}
       </span>
       <ListboxControl id={id} labelledBy={`${id}-label`} className="mt-1" {...rest} />
