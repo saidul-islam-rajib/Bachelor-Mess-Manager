@@ -1,11 +1,11 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser, requireAdmin } from '@/lib/auth-utils';
-import { badRequest, created, methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { badRequest, created, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { communityConfig, toLetConfig } from '@/config';
 import { directory, ensureWelcomeMessage, notifyMentions, postMessage, readFeed, searchListings, unreadCount } from '@/lib/community';
 import { geocode } from '@/lib/geo';
 import { strings } from '@/lib/i18n';
-import { TOLET_TYPE_VALUES } from '@/lib/constants';
+import { COMMUNITY_MESSAGE_TYPES, TOLET_TYPE_VALUES } from '@/lib/constants';
 import { queryInt, queryString } from '@/lib/query';
 import { parseToLetFields } from '@/lib/tolet-validation';
 import { saveImage } from '@/lib/uploads';
@@ -78,10 +78,37 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === 'POST') {
     const body = req.body as Record<string, unknown>;
-    const { text, images, listingType } = body;
+    const { text, images, listingType, type, title } = body;
     const value = typeof text === 'string' ? text.trim() : '';
     const imageInputs = Array.isArray(images) ? images.filter((item): item is string => typeof item === 'string') : [];
     const isToLet = listingType !== undefined;
+    const isAnnouncement = type === COMMUNITY_MESSAGE_TYPES.ANNOUNCEMENT;
+
+    if (isAnnouncement) {
+      if (!canMentionEveryone) return forbidden(res, strings.community.announcement.adminOnly);
+
+      const titleValue = typeof title === 'string' ? title.trim() : '';
+      if (!titleValue) return badRequest(res, strings.community.announcement.titleRequired);
+      if (titleValue.length > communityConfig.maxAnnouncementTitleLength) {
+        return badRequest(res, strings.community.announcement.titleTooLong(communityConfig.maxAnnouncementTitleLength));
+      }
+      if (!value) return badRequest(res, strings.community.textRequired);
+      if (value.length > communityConfig.maxMessageLength) {
+        return badRequest(res, strings.community.tooLong(communityConfig.maxMessageLength));
+      }
+      if (findXssField({ title: titleValue, text: value })) {
+        return badRequest(res, strings.errors.suspiciousInput);
+      }
+
+      const message = await postMessage({
+        authorId: sessionUser.id,
+        title: titleValue,
+        text: value,
+        isAnnouncement: true
+      });
+
+      return created(res, { message });
+    }
 
     if (isToLet) {
       if (imageInputs.length > toLetConfig.maxImagesPerListing) {

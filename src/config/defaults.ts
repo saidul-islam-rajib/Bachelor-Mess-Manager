@@ -117,6 +117,7 @@ export const CACHE_DEFAULTS = {
 export const COMMUNITY_DEFAULTS = {
   pageSize: 30,
   maxMessageLength: 1000,
+  maxAnnouncementTitleLength: 120,
   pollIntervalMs: 45_000,
   directorySize: 200,
   mentionRecipientCap: 25,

@@ -5,24 +5,43 @@ import { strings } from '@/lib/i18n';
 
 const VISIBLE_COUNT = 3;
 
-export function AnnouncementsRail({ messages }: { messages: CommunityMessage[] }) {
+export function AnnouncementsRail({
+  messages,
+  isAdmin,
+  onCreate
+}: {
+  messages: CommunityMessage[];
+  isAdmin: boolean;
+  onCreate: () => void;
+}) {
   const announcements = messages.filter((message) => message.type === 'ANNOUNCEMENT').slice(0, VISIBLE_COUNT);
-  if (announcements.length === 0) return null;
+  if (announcements.length === 0 && !isAdmin) return null;
 
   return (
     <Card>
-      <CardHeader title={strings.community.announcementsTitle} />
-      <ul className="mt-3 space-y-2.5">
-        {announcements.map((announcement) => (
-          <li key={announcement.id} className="rounded-xl bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5">
-            {announcement.title && (
-              <p className="text-sm font-semibold leading-tight text-slate-900 dark:text-slate-100">{announcement.title}</p>
-            )}
-            <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-600 dark:text-slate-400">{announcement.text}</p>
-            <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">{timeAgo(announcement.createdAt)}</p>
-          </li>
-        ))}
-      </ul>
+      <CardHeader
+        title={strings.community.announcementsTitle}
+        action={
+          isAdmin && (
+            <button type="button" onClick={onCreate} className="text-sm font-medium text-brand-700 hover:text-brand-800">
+              + {strings.community.announcement.createAction}
+            </button>
+          )
+        }
+      />
+      {announcements.length > 0 && (
+        <ul className="mt-3 space-y-2.5">
+          {announcements.map((announcement) => (
+            <li key={announcement.id} className="rounded-xl bg-amber-50 dark:bg-amber-500/10 px-3 py-2.5">
+              {announcement.title && (
+                <p className="text-sm font-semibold leading-tight text-slate-900 dark:text-slate-100">{announcement.title}</p>
+              )}
+              <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-600 dark:text-slate-400">{announcement.text}</p>
+              <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">{timeAgo(announcement.createdAt)}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </Card>
   );
 }

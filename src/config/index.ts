@@ -286,6 +286,7 @@ const communityPostRequestBodyBytes = uploadConfig.maxRequestBodyBytes * communi
 export const communityConfig = {
   pageSize: readInt('COMMUNITY_PAGE_SIZE', COMMUNITY_DEFAULTS.pageSize),
   maxMessageLength: readInt('COMMUNITY_MESSAGE_MAX_LENGTH', COMMUNITY_DEFAULTS.maxMessageLength),
+  maxAnnouncementTitleLength: readInt('COMMUNITY_ANNOUNCEMENT_TITLE_MAX_LENGTH', COMMUNITY_DEFAULTS.maxAnnouncementTitleLength),
   pollIntervalMs: readInt('COMMUNITY_POLL_INTERVAL_MS', COMMUNITY_DEFAULTS.pollIntervalMs),
   directorySize: readInt('COMMUNITY_DIRECTORY_SIZE', COMMUNITY_DEFAULTS.directorySize),
   mentionRecipientCap: readInt('COMMUNITY_MENTION_CAP', COMMUNITY_DEFAULTS.mentionRecipientCap),

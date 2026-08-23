@@ -24,7 +24,8 @@ export function ToLetSearchBar({
   userImage,
   onOpenComposer,
   onOpenToLet,
-  onOpenImport
+  onOpenImport,
+  onOpenAnnouncement
 }: {
   value: ToLetSearchState;
   onChange: (next: ToLetSearchState) => void;
@@ -34,6 +35,7 @@ export function ToLetSearchBar({
   onOpenComposer?: () => void;
   onOpenToLet?: () => void;
   onOpenImport?: () => void;
+  onOpenAnnouncement?: () => void;
 }) {
   const router = useRouter();
   const [inputValue, setInputValue] = useState(value.q);
@@ -201,6 +203,21 @@ export function ToLetSearchBar({
             <path d="M12 3v12" />
             <path d="m7 10 5 5 5-5" />
             <path d="M5 19h14" />
+          </svg>
+        </button>
+      )}
+
+      {onOpenAnnouncement && (
+        <button
+          type="button"
+          onClick={onOpenAnnouncement}
+          aria-label={strings.community.announcement.createAction}
+          title={strings.community.announcement.createAction}
+          className="shrink-0 rounded-full p-2.5 text-amber-600 dark:text-amber-400 transition-colors hover:bg-amber-50 dark:hover:bg-amber-500/10"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 11l18-5v12L3 14v-3z" />
+            <path d="M11.6 16.8a2 2 0 1 1-3.2 2.4" />
           </svg>
         </button>
       )}

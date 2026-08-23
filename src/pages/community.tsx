@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AnnouncementModal } from '@/components/community/AnnouncementModal';
 import { AnnouncementsRail } from '@/components/community/AnnouncementsRail';
 import { Composer } from '@/components/community/Composer';
 import { PeopleRail } from '@/components/community/PeopleRail';
@@ -81,6 +82,7 @@ export default function CommunityPage() {
   const [toLetComposerOpen, setToLetComposerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [importedFields, setImportedFields] = useState<Partial<ToLetFormState> | null>(null);
+  const [announcementOpen, setAnnouncementOpen] = useState(false);
   const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   const [search, setSearch] = useState<ToLetSearchState>(EMPTY_TOLET_SEARCH);
@@ -287,6 +289,7 @@ export default function CommunityPage() {
               onOpenComposer={user ? () => setComposerOpen(true) : undefined}
               onOpenToLet={user ? () => setToLetComposerOpen(true) : undefined}
               onOpenImport={isAdmin ? () => setImportOpen(true) : undefined}
+              onOpenAnnouncement={isAdmin ? () => setAnnouncementOpen(true) : undefined}
             />
           </div>
 
@@ -348,7 +351,7 @@ export default function CommunityPage() {
 
         <div className="hidden lg:block">
           <div className="sticky top-24 space-y-4 pb-4">
-            <AnnouncementsRail messages={messages} />
+            <AnnouncementsRail messages={messages} isAdmin={isAdmin} onCreate={() => setAnnouncementOpen(true)} />
             <PeopleRail members={members} />
           </div>
         </div>
@@ -391,6 +394,10 @@ export default function CommunityPage() {
             setToLetComposerOpen(true);
           }}
         />
+      )}
+
+      {isAdmin && (
+        <AnnouncementModal open={announcementOpen} onClose={() => setAnnouncementOpen(false)} onPosted={onPosted} />
       )}
     </PageContainer>
   );

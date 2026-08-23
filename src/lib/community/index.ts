@@ -409,12 +409,18 @@ async function createMessageRow(
     images?: string[];
     title?: string | null;
     toLet?: PostMessageToLetInput;
+    isAnnouncement?: boolean;
   }
 ): Promise<MessageRow> {
   return db.communityMessage.create({
     data: {
       key: `${MEMBER_KEY_PREFIX}${randomUUID()}`,
-      type: params.toLet ? COMMUNITY_MESSAGE_TYPES.TOLET : COMMUNITY_MESSAGE_TYPES.MEMBER,
+      type: params.toLet
+        ? COMMUNITY_MESSAGE_TYPES.TOLET
+        : params.isAnnouncement
+          ? COMMUNITY_MESSAGE_TYPES.ANNOUNCEMENT
+          : COMMUNITY_MESSAGE_TYPES.MEMBER,
+      pinned: Boolean(params.isAnnouncement),
       authorId: params.authorId,
       title: params.title ?? null,
       text: params.text,
@@ -480,6 +486,7 @@ export async function postMessage(params: {
   images?: string[];
   title?: string | null;
   toLet?: PostMessageToLetInput;
+  isAnnouncement?: boolean;
 }): Promise<CommunityMessageView> {
   const row = await createMessageRow(prisma, params);
   return serialize(row, false);
