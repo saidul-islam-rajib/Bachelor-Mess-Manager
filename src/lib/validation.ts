@@ -62,18 +62,12 @@ export function validatePhone(phone: unknown): ValidationResult<string | null> {
   return { ok: true, value: digits };
 }
 
-const FACEBOOK_LINK_PATTERN = /^https?:\/\/(www\.)?(facebook\.com|fb\.com|m\.me|messenger\.com)\/.+/i;
-
 export function validateFacebookLink(value: unknown): ValidationResult<string | null> {
-  if (value === undefined || value === null) return { ok: true, value: null };
-  if (typeof value !== 'string') return { ok: false, error: strings.validation.facebookLinkInvalid };
+  if (typeof value !== 'string') return { ok: true, value: null };
 
   const trimmed = value.trim();
   if (!trimmed) return { ok: true, value: null };
-  if (trimmed.length > validationConfig.facebookLinkMaxLength || !FACEBOOK_LINK_PATTERN.test(trimmed)) {
-    return { ok: false, error: strings.validation.facebookLinkInvalid };
-  }
-  return { ok: true, value: trimmed };
+  return { ok: true, value: trimmed.slice(0, validationConfig.facebookLinkMaxLength) };
 }
 
 export function validateText(value: unknown, maxLength: number, required = false): ValidationResult<string> {

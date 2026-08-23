@@ -204,7 +204,6 @@ const en = {
     emailInvalid: 'Enter a valid email address.',
     phoneInvalid: (min: number, max: number) =>
       `Enter a valid phone number (${min}-${max} digits, optionally starting with +).`,
-    facebookLinkInvalid: 'Enter a valid Facebook or Messenger link (e.g. facebook.com/... or m.me/...).',
     passwordRequired: 'Password is required.',
     passwordTooShort: (min: number) => `Password must be at least ${min} characters.`,
     passwordTooLong: (max: number) => `Password must be at most ${max} characters.`,
