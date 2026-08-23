@@ -132,6 +132,7 @@ export function useToLetForm({
   open,
   listing,
   prefillFrom,
+  importedFields,
   defaultContactName,
   defaultContactPhone,
   onSaved,
@@ -140,6 +141,7 @@ export function useToLetForm({
   open: boolean;
   listing?: CommunityMessageView | null;
   prefillFrom?: CommunityMessageView | null;
+  importedFields?: Partial<ToLetFormState> | null;
   defaultContactName: string;
   defaultContactPhone: string;
   onSaved: (listing: CommunityMessageView) => void;
@@ -165,8 +167,9 @@ export function useToLetForm({
     setForm(
       source
         ? formFromSource(source, defaultContactName, defaultContactPhone)
-        : emptyForm(defaultContactName, defaultContactPhone)
+        : { ...emptyForm(defaultContactName, defaultContactPhone), ...importedFields }
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, source, defaultContactName, defaultContactPhone]);
 
   useEffect(() => {

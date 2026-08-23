@@ -1533,6 +1533,16 @@ const en = {
       loadFailed: 'Could not load search results.'
     },
 
+    import: {
+      action: 'Import from text',
+      title: 'Import a to-let post',
+      hint: "Paste a post you found elsewhere — we'll try to fill in the fields below for you to review before posting.",
+      textareaLabel: 'Post text',
+      placeholder: 'Paste the post text here...',
+      parseAction: 'Parse & continue',
+      textRequired: 'Paste some text first.'
+    },
+
     created: 'Listing posted.',
     updated: 'Listing updated.',
     reposted: 'Listing reposted.',

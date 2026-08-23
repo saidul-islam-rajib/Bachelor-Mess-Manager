@@ -4,6 +4,7 @@ import { Composer } from '@/components/community/Composer';
 import { PeopleRail } from '@/components/community/PeopleRail';
 import { PostCard, type CommunityMessage } from '@/components/community/PostCard';
 import { ToLetComposer } from '@/components/community/ToLetComposer';
+import { ToLetImportModal } from '@/components/community/ToLetImportModal';
 import { EMPTY_TOLET_SEARCH, ToLetSearchBar, isToLetSearchActive, type ToLetSearchState } from '@/components/community/ToLetSearchBar';
 import { ToLetSearchResults } from '@/components/community/ToLetSearchResults';
 import { useInfiniteScroll } from '@/components/community/useInfiniteScroll';
@@ -22,9 +23,11 @@ import {
 } from '@/components/ui';
 import { communityConfig, toLetConfig } from '@/config';
 import { api, errorMessage } from '@/lib/api-client';
+import { USER_ROLES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
 import type { ToLetSearchResult } from '@/lib/community';
+import type { ToLetImportResult } from '@/lib/tolet-import-parser';
 
 const EMPTY_SEARCH_META: PageMeta = { page: 1, pageSize: 1, total: 0, totalPages: 0, hasPrevious: false, hasNext: false, from: 0, to: 0 };
 
@@ -76,6 +79,9 @@ export default function CommunityPage() {
   const [newPostsPending, setNewPostsPending] = useState(0);
   const [composerOpen, setComposerOpen] = useState(false);
   const [toLetComposerOpen, setToLetComposerOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importedFields, setImportedFields] = useState<ToLetImportResult | null>(null);
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   const [search, setSearch] = useState<ToLetSearchState>(EMPTY_TOLET_SEARCH);
   const [searchPage, setSearchPage] = useState(1);
@@ -280,6 +286,7 @@ export default function CommunityPage() {
               userImage={user?.profileImage}
               onOpenComposer={user ? () => setComposerOpen(true) : undefined}
               onOpenToLet={user ? () => setToLetComposerOpen(true) : undefined}
+              onOpenImport={isAdmin ? () => setImportOpen(true) : undefined}
             />
           </div>
 
@@ -362,11 +369,27 @@ export default function CommunityPage() {
       {user && (
         <ToLetComposer
           open={toLetComposerOpen}
-          onClose={() => setToLetComposerOpen(false)}
+          onClose={() => {
+            setToLetComposerOpen(false);
+            setImportedFields(null);
+          }}
           listing={null}
+          importedFields={importedFields}
           defaultContactName={user.name}
           defaultContactPhone={user.phone ?? ''}
           onSaved={onPosted}
+        />
+      )}
+
+      {isAdmin && (
+        <ToLetImportModal
+          open={importOpen}
+          onClose={() => setImportOpen(false)}
+          onParsed={(result) => {
+            setImportedFields(result);
+            setImportOpen(false);
+            setToLetComposerOpen(true);
+          }}
         />
       )}
     </PageContainer>

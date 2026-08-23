@@ -8,12 +8,14 @@ import { SignboardComposer } from '@/components/community/composers/SignboardCom
 import { WalkthroughComposer, WalkthroughFooter } from '@/components/community/composers/WalkthroughComposer';
 import { ToLetComposerFooter } from '@/components/community/composers/ToLetComposerShared';
 import type { CommunityMessageView } from '@/lib/community';
+import type { ToLetFormState } from '@/components/community/useToLetForm';
 
 export function ToLetComposer({
   open,
   onClose,
   listing,
   prefillFrom,
+  importedFields,
   defaultContactName,
   defaultContactPhone,
   onSaved
@@ -22,13 +24,14 @@ export function ToLetComposer({
   onClose: () => void;
   listing?: CommunityMessageView | null;
   prefillFrom?: CommunityMessageView | null;
+  importedFields?: Partial<ToLetFormState> | null;
   defaultContactName: string;
   defaultContactPhone: string;
   onSaved: (listing: CommunityMessageView) => void;
 }) {
   const layout = useToLetPostLayout();
   const [step, setStep] = useState(1);
-  const form = useToLetForm({ open, listing, prefillFrom, defaultContactName, defaultContactPhone, onSaved, onClose });
+  const form = useToLetForm({ open, listing, prefillFrom, importedFields, defaultContactName, defaultContactPhone, onSaved, onClose });
 
   useEffect(() => {
     if (open) setStep(1);
