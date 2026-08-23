@@ -73,7 +73,8 @@ export const VALIDATION_DEFAULTS = {
   phoneMaxDigits: 15,
   noteMaxLength: 500,
   commentMaxLength: 2000,
-  maxMoneyAmount: 100_000_000
+  maxMoneyAmount: 100_000_000,
+  facebookLinkMaxLength: 300
 } as const;
 
 export const UPLOAD_DEFAULTS = {

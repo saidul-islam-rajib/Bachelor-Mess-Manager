@@ -107,6 +107,88 @@ export function ToLetContactFields({ form }: { form: ToLetFormApi }) {
           hint={strings.toLet.composer.whatsappHint}
         />
       )}
+
+      <Input
+        label={strings.toLet.composer.facebookLinkLabel}
+        value={form.form.contactFacebook}
+        onChange={(value) => form.update('contactFacebook', value)}
+        hint={strings.toLet.composer.facebookLinkHint}
+      />
+
+      {form.form.hasContact2 ? (
+        <div className="space-y-3 rounded-xl border border-slate-200 dark:border-slate-600 p-3.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              {strings.toLet.composer.contact2Title}
+            </span>
+            <button
+              type="button"
+              onClick={form.removeContact2}
+              className="text-xs font-medium text-red-600 hover:text-red-800 dark:text-red-400"
+            >
+              {strings.toLet.composer.removeContactAction}
+            </button>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              label={strings.toLet.composer.contactNameLabel}
+              value={form.form.contact2Name}
+              onChange={(value) => form.update('contact2Name', value)}
+            />
+            <Input
+              type="tel"
+              label={strings.toLet.composer.contactPhoneLabel}
+              value={form.form.contact2Phone}
+              onChange={(value) => form.update('contact2Phone', value)}
+            />
+          </div>
+
+          <label className="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300">
+            <input
+              type="checkbox"
+              checked={form.form.contact2WhatsappSameAsPhone}
+              onChange={(event) => form.update('contact2WhatsappSameAsPhone', event.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
+            />
+            {strings.toLet.composer.whatsappSameLabel}
+          </label>
+
+          {!form.form.contact2WhatsappSameAsPhone && (
+            <Input
+              type="tel"
+              label={strings.toLet.composer.whatsappLabel}
+              value={form.form.contact2Whatsapp}
+              onChange={(value) => form.update('contact2Whatsapp', value)}
+            />
+          )}
+
+          <Input
+            label={strings.toLet.composer.facebookLinkLabel}
+            value={form.form.contact2Facebook}
+            onChange={(value) => form.update('contact2Facebook', value)}
+            hint={strings.toLet.composer.facebookLinkHint}
+          />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={form.addContact2}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-800"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14" />
+          </svg>
+          {strings.toLet.composer.addContactAction}
+        </button>
+      )}
+
+      <Input
+        label={strings.toLet.composer.sourceUrlLabel}
+        value={form.form.sourceUrl}
+        onChange={(value) => form.update('sourceUrl', value)}
+        hint={strings.toLet.composer.sourceUrlHint}
+      />
     </div>
   );
 }

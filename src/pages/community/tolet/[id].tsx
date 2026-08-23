@@ -256,6 +256,16 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
               )}
             </p>
             {availableMonthLabel && <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{availableMonthLabel}</p>}
+            {listing.sourceUrl && (
+              <a
+                href={listing.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-0.5 inline-block text-xs font-medium text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
+              >
+                {strings.toLet.sourceFacebookLabel}
+              </a>
+            )}
           </div>
 
           <div className="shrink-0 text-right">
@@ -308,7 +318,50 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
             {listing.contactWhatsapp && (
               <dd className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{strings.toLet.composer.whatsappLabel}: {listing.contactWhatsapp}</dd>
             )}
+            {listing.contactFacebook && (
+              <dd className="mt-1">
+                <a
+                  href={listing.contactFacebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-brand-700 hover:text-brand-800"
+                >
+                  {strings.toLet.facebookChatAction}
+                </a>
+              </dd>
+            )}
           </div>
+
+          {(listing.contact2Name || listing.contact2Phone || listing.contact2Facebook) && (
+            <div>
+              <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                {strings.toLet.composer.contact2Title}
+              </dt>
+              {(listing.contact2Name || listing.contact2Phone) && (
+                <dd className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">
+                  {[listing.contact2Name, listing.contact2Phone].filter(Boolean).join(' · ')}
+                </dd>
+              )}
+              {listing.contact2Whatsapp && (
+                <dd className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                  {strings.toLet.composer.whatsappLabel}: {listing.contact2Whatsapp}
+                </dd>
+              )}
+              {listing.contact2Facebook && (
+                <dd className="mt-1">
+                  <a
+                    href={listing.contact2Facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-brand-700 hover:text-brand-800"
+                  >
+                    {strings.toLet.facebookChatAction}
+                  </a>
+                </dd>
+              )}
+            </div>
+          )}
+
           <div>
             <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.toLet.postedBy(listing.authorName)}</dt>
             <dd className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">{strings.toLet.postedOn(formatDate(listing.createdAt))}</dd>

@@ -210,7 +210,8 @@ export const validationConfig = {
   phoneMaxDigits: readInt('VALIDATION_PHONE_MAX_DIGITS', VALIDATION_DEFAULTS.phoneMaxDigits),
   noteMaxLength: readInt('VALIDATION_NOTE_MAX_LENGTH', VALIDATION_DEFAULTS.noteMaxLength),
   commentMaxLength: readInt('VALIDATION_COMMENT_MAX_LENGTH', VALIDATION_DEFAULTS.commentMaxLength),
-  maxMoneyAmount: readNumber('VALIDATION_MAX_MONEY_AMOUNT', VALIDATION_DEFAULTS.maxMoneyAmount)
+  maxMoneyAmount: readNumber('VALIDATION_MAX_MONEY_AMOUNT', VALIDATION_DEFAULTS.maxMoneyAmount),
+  facebookLinkMaxLength: readInt('VALIDATION_FACEBOOK_LINK_MAX_LENGTH', VALIDATION_DEFAULTS.facebookLinkMaxLength)
 } as const;
 
 const maxConfigurableImageBytes = readInt(

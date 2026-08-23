@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Button, Modal, Textarea } from '@/components/ui';
+import { Button, Input, Modal, Textarea } from '@/components/ui';
 import { strings } from '@/lib/i18n';
-import { parseToLetImportText, type ToLetImportResult } from '@/lib/tolet-import-parser';
+import { parseToLetImportText } from '@/lib/tolet-import-parser';
+import type { ToLetFormState } from '@/components/community/useToLetForm';
 
 export function ToLetImportModal({
   open,
@@ -10,14 +11,20 @@ export function ToLetImportModal({
 }: {
   open: boolean;
   onClose: () => void;
-  onParsed: (result: ToLetImportResult) => void;
+  onParsed: (result: Partial<ToLetFormState>) => void;
 }) {
   const [text, setText] = useState('');
+  const [sourceUrl, setSourceUrl] = useState('');
   const [error, setError] = useState('');
 
-  function handleClose() {
+  function reset() {
     setText('');
+    setSourceUrl('');
     setError('');
+  }
+
+  function handleClose() {
+    reset();
     onClose();
   }
 
@@ -26,9 +33,8 @@ export function ToLetImportModal({
       setError(strings.toLet.import.textRequired);
       return;
     }
-    onParsed(parseToLetImportText(text));
-    setText('');
-    setError('');
+    onParsed({ ...parseToLetImportText(text), sourceUrl: sourceUrl.trim() });
+    reset();
   }
 
   return (
@@ -51,6 +57,12 @@ export function ToLetImportModal({
           placeholder={strings.toLet.import.placeholder}
           rows={10}
           error={error}
+        />
+        <Input
+          label={strings.toLet.import.sourceUrlLabel}
+          value={sourceUrl}
+          onChange={setSourceUrl}
+          hint={strings.toLet.import.sourceUrlHint}
         />
       </div>
     </Modal>

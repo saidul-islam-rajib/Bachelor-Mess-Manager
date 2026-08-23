@@ -138,9 +138,15 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       amenities: toLetCheck.value.amenities,
       mealsProvided: toLetCheck.value.mealsProvided,
       contactWhatsapp: toLetCheck.value.contactWhatsapp,
+      contactFacebook: toLetCheck.value.contactFacebook,
       availableMonth: toLetCheck.value.availableMonth,
       contactName: toLetCheck.value.contactName,
       contactPhone: toLetCheck.value.contactPhone,
+      contact2Name: toLetCheck.value.contact2Name,
+      contact2Phone: toLetCheck.value.contact2Phone,
+      contact2Whatsapp: toLetCheck.value.contact2Whatsapp,
+      contact2Facebook: toLetCheck.value.contact2Facebook,
+      sourceUrl: toLetCheck.value.sourceUrl,
       expiresAt: computeExpiresAt(toLetCheck.value.expiryDays),
       listingStatus: TOLET_STATUS.ACTIVE
     };

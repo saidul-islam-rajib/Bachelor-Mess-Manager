@@ -898,9 +898,15 @@ model CommunityMessage {
   amenities        String[]                @default([])
   mealsProvided    Boolean                 @default(false)
   contactWhatsapp  String?
+  contactFacebook  String?
   availableMonth   String?
   contactName      String?
   contactPhone     String?
+  contact2Name     String?
+  contact2Phone    String?
+  contact2Whatsapp String?
+  contact2Facebook String?
+  sourceUrl        String?
   listingStatus    String?
   expiresAt        DateTime?
   viewCount        Int                     @default(0)

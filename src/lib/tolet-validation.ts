@@ -9,7 +9,7 @@ import {
   TOLET_TYPE_VALUES
 } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
-import { validateAmount, validatePhone } from '@/lib/validation';
+import { validateAmount, validateFacebookLink, validatePhone } from '@/lib/validation';
 import type { PostMessageToLetInput } from '@/lib/community';
 
 export type ToLetFieldsCheck =
@@ -43,9 +43,15 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     amenities,
     mealsProvided,
     contactWhatsapp,
+    contactFacebook,
     availableMonth,
     contactName,
     contactPhone,
+    contact2Name,
+    contact2Phone,
+    contact2Whatsapp,
+    contact2Facebook,
+    sourceUrl,
     expiryDays
   } = body;
 
@@ -117,6 +123,18 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
   const whatsappCheck = validatePhone(contactWhatsapp);
   if (!whatsappCheck.ok) return { ok: false, error: whatsappCheck.error };
 
+  const facebookCheck = validateFacebookLink(contactFacebook);
+  if (!facebookCheck.ok) return { ok: false, error: facebookCheck.error };
+
+  const contact2WhatsappCheck = validatePhone(contact2Whatsapp);
+  if (!contact2WhatsappCheck.ok) return { ok: false, error: contact2WhatsappCheck.error };
+
+  const contact2FacebookCheck = validateFacebookLink(contact2Facebook);
+  if (!contact2FacebookCheck.ok) return { ok: false, error: contact2FacebookCheck.error };
+
+  const sourceUrlCheck = validateFacebookLink(sourceUrl);
+  if (!sourceUrlCheck.ok) return { ok: false, error: sourceUrlCheck.error };
+
   let availableMonthValue: string | null = null;
   if (availableMonth !== undefined && availableMonth !== null && availableMonth !== '') {
     if (typeof availableMonth !== 'string' || !(TOLET_MONTHS as readonly string[]).includes(availableMonth)) {
@@ -131,11 +149,18 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     return { ok: false, error: strings.toLet.locationTooLong(toLetConfig.maxLocationLength) };
   }
 
-  const rentCheck = validateAmount(rent);
-  if (!rentCheck.ok) return { ok: false, error: rentCheck.error };
+  let rentValue: number | null = null;
+  if (rent !== undefined && rent !== null && rent !== '') {
+    const rentCheck = validateAmount(rent);
+    if (!rentCheck.ok) return { ok: false, error: rentCheck.error };
+    rentValue = rentCheck.value;
+  }
 
   const phoneCheck = validatePhone(contactPhone);
   if (!phoneCheck.ok) return { ok: false, error: phoneCheck.error };
+
+  const contact2PhoneCheck = validatePhone(contact2Phone);
+  if (!contact2PhoneCheck.ok) return { ok: false, error: contact2PhoneCheck.error };
 
   const expiryDaysValue = Number(expiryDays);
   if (!(toLetConfig.expiryOptionsDays as readonly number[]).includes(expiryDaysValue)) {
@@ -148,7 +173,7 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     text: textValue,
     value: {
       listingType,
-      rent: rentCheck.value,
+      rent: rentValue,
       rentNegotiable: Boolean(rentNegotiable),
       location: locationValue,
       latitude: parseCoordinate(latitude) ?? null,
@@ -165,9 +190,15 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
       amenities: amenitiesValue,
       mealsProvided: Boolean(mealsProvided),
       contactWhatsapp: whatsappCheck.value,
+      contactFacebook: facebookCheck.value,
       availableMonth: availableMonthValue,
       contactName: typeof contactName === 'string' && contactName.trim() ? contactName.trim() : null,
       contactPhone: phoneCheck.value,
+      contact2Name: typeof contact2Name === 'string' && contact2Name.trim() ? contact2Name.trim() : null,
+      contact2Phone: contact2PhoneCheck.value,
+      contact2Whatsapp: contact2WhatsappCheck.value,
+      contact2Facebook: contact2FacebookCheck.value,
+      sourceUrl: sourceUrlCheck.value,
       expiryDays: expiryDaysValue
     }
   };

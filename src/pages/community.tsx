@@ -27,7 +27,7 @@ import { USER_ROLES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 import type { PageMeta } from '@/lib/query';
 import type { ToLetSearchResult } from '@/lib/community';
-import type { ToLetImportResult } from '@/lib/tolet-import-parser';
+import type { ToLetFormState } from '@/components/community/useToLetForm';
 
 const EMPTY_SEARCH_META: PageMeta = { page: 1, pageSize: 1, total: 0, totalPages: 0, hasPrevious: false, hasNext: false, from: 0, to: 0 };
 
@@ -80,7 +80,7 @@ export default function CommunityPage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [toLetComposerOpen, setToLetComposerOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
-  const [importedFields, setImportedFields] = useState<ToLetImportResult | null>(null);
+  const [importedFields, setImportedFields] = useState<Partial<ToLetFormState> | null>(null);
   const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   const [search, setSearch] = useState<ToLetSearchState>(EMPTY_TOLET_SEARCH);

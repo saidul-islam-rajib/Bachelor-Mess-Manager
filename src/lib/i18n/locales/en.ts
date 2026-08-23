@@ -204,6 +204,7 @@ const en = {
     emailInvalid: 'Enter a valid email address.',
     phoneInvalid: (min: number, max: number) =>
       `Enter a valid phone number (${min}-${max} digits, optionally starting with +).`,
+    facebookLinkInvalid: 'Enter a valid Facebook or Messenger link (e.g. facebook.com/... or m.me/...).',
     passwordRequired: 'Password is required.',
     passwordTooShort: (min: number) => `Password must be at least ${min} characters.`,
     passwordTooLong: (max: number) => `Password must be at most ${max} characters.`,
@@ -1473,6 +1474,13 @@ const en = {
       contactNameHint: 'Defaults to your account name.',
       contactPhoneLabel: 'Contact phone',
       contactPhoneHint: 'Defaults to your profile phone.',
+      facebookLinkLabel: 'Facebook chat link',
+      facebookLinkHint: 'Optional — e.g. facebook.com/yourname or m.me/yourname',
+      addContactAction: 'Add another contact',
+      removeContactAction: 'Remove this contact',
+      contact2Title: 'Alternate contact',
+      sourceUrlLabel: 'Original post link',
+      sourceUrlHint: 'Optional — shown on the listing as where it was sourced from.',
       expiryLabel: 'Show this listing for',
       expiryOption: (days: number) => (days === 1 ? '1 day' : `${days} days`),
       submitCreate: 'Post listing',
@@ -1539,6 +1547,8 @@ const en = {
       hint: "Paste a post you found elsewhere — we'll try to fill in the fields below for you to review before posting.",
       textareaLabel: 'Post text',
       placeholder: 'Paste the post text here...',
+      sourceUrlLabel: 'Facebook post link (optional)',
+      sourceUrlHint: 'Shown on the listing so people can see where it came from.',
       parseAction: 'Parse & continue',
       textRequired: 'Paste some text first.'
     },
@@ -1565,6 +1575,8 @@ const en = {
     expiredNotice: 'This listing has expired. It is hidden from the feed.',
     contactTitle: 'Contact',
     noContactPhone: 'No phone number provided.',
+    facebookChatAction: 'Chat on Facebook',
+    sourceFacebookLabel: 'Source: Facebook',
 
     profile: {
       title: 'My to-let listings',

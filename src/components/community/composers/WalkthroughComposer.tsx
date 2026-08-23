@@ -155,6 +155,7 @@ function StepMoneyAndRules({ form }: { form: ToLetFormApi }) {
           value={form.form.rent}
           onChange={(value) => form.update('rent', value)}
           min={0}
+          optional
         />
         <Select
           label={strings.toLet.composer.advanceMonthsLabel}

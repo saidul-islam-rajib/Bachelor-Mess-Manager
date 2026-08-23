@@ -46,6 +46,14 @@ export type ToLetFormState = {
   contactPhone: string;
   contactWhatsapp: string;
   whatsappSameAsPhone: boolean;
+  contactFacebook: string;
+  hasContact2: boolean;
+  contact2Name: string;
+  contact2Phone: string;
+  contact2Whatsapp: string;
+  contact2WhatsappSameAsPhone: boolean;
+  contact2Facebook: string;
+  sourceUrl: string;
   expiryDays: number;
   images: string[];
 };
@@ -85,6 +93,14 @@ function emptyForm(defaultContactName: string, defaultContactPhone: string): ToL
     contactPhone: defaultContactPhone,
     contactWhatsapp: '',
     whatsappSameAsPhone: true,
+    contactFacebook: '',
+    hasContact2: false,
+    contact2Name: '',
+    contact2Phone: '',
+    contact2Whatsapp: '',
+    contact2WhatsappSameAsPhone: true,
+    contact2Facebook: '',
+    sourceUrl: '',
     expiryDays: toLetConfig.defaultExpiryDays,
     images: []
   };
@@ -123,6 +139,14 @@ function formFromSource(
     contactPhone: source.contactPhone ?? defaultContactPhone,
     contactWhatsapp: source.contactWhatsapp ?? '',
     whatsappSameAsPhone: !source.contactWhatsapp || source.contactWhatsapp === source.contactPhone,
+    contactFacebook: source.contactFacebook ?? '',
+    hasContact2: Boolean(source.contact2Name || source.contact2Phone || source.contact2Facebook),
+    contact2Name: source.contact2Name ?? '',
+    contact2Phone: source.contact2Phone ?? '',
+    contact2Whatsapp: source.contact2Whatsapp ?? '',
+    contact2WhatsappSameAsPhone: !source.contact2Whatsapp || source.contact2Whatsapp === source.contact2Phone,
+    contact2Facebook: source.contact2Facebook ?? '',
+    sourceUrl: source.sourceUrl ?? '',
     expiryDays: toLetConfig.defaultExpiryDays,
     images: source.images
   };
@@ -233,6 +257,22 @@ export function useToLetForm({
     setLocationSuggestions([]);
   }
 
+  function addContact2() {
+    update('hasContact2', true);
+  }
+
+  function removeContact2() {
+    setForm((current) => ({
+      ...current,
+      hasContact2: false,
+      contact2Name: '',
+      contact2Phone: '',
+      contact2Whatsapp: '',
+      contact2WhatsappSameAsPhone: true,
+      contact2Facebook: ''
+    }));
+  }
+
   function toggleAmenity(amenity: string) {
     setForm((current) => ({
       ...current,
@@ -326,7 +366,7 @@ export function useToLetForm({
 
   async function submit() {
     if (saving) return;
-    if (!form.title.trim() || !form.text.trim() || !form.location.trim() || !form.rent.trim()) return;
+    if (!form.title.trim() || !form.text.trim() || !form.location.trim()) return;
 
     setSaving(true);
     try {
@@ -334,7 +374,7 @@ export function useToLetForm({
         listingType: form.listingType,
         title: form.title.trim(),
         text: form.text.trim(),
-        rent: Number(form.rent),
+        rent: form.rent.trim() ? Number(form.rent) : null,
         rentNegotiable: form.rentNegotiable,
         location: form.location.trim(),
         latitude: form.latitude,
@@ -354,6 +394,16 @@ export function useToLetForm({
         contactName: form.contactName.trim() || null,
         contactPhone: form.contactPhone.trim() || null,
         contactWhatsapp: form.whatsappSameAsPhone ? form.contactPhone.trim() || null : form.contactWhatsapp.trim() || null,
+        contactFacebook: form.contactFacebook.trim() || null,
+        contact2Name: form.hasContact2 ? form.contact2Name.trim() || null : null,
+        contact2Phone: form.hasContact2 ? form.contact2Phone.trim() || null : null,
+        contact2Whatsapp: form.hasContact2
+          ? form.contact2WhatsappSameAsPhone
+            ? form.contact2Phone.trim() || null
+            : form.contact2Whatsapp.trim() || null
+          : null,
+        contact2Facebook: form.hasContact2 ? form.contact2Facebook.trim() || null : null,
+        sourceUrl: form.sourceUrl.trim() || null,
         expiryDays: form.expiryDays,
         images: form.images
       };
@@ -406,7 +456,7 @@ export function useToLetForm({
     label: strings.toLet.composer.advanceMonthsOption(months)
   }));
 
-  const canSubmit = Boolean(form.title.trim() && form.text.trim() && form.location.trim() && form.rent.trim());
+  const canSubmit = Boolean(form.title.trim() && form.text.trim() && form.location.trim());
   const hasSharedLocation = form.latitude !== null && form.longitude !== null;
 
   return {
@@ -416,6 +466,8 @@ export function useToLetForm({
     locationSuggestions,
     searchingLocation,
     selectLocationSuggestion,
+    addContact2,
+    removeContact2,
     toggleAmenity,
     editing,
     reposting,

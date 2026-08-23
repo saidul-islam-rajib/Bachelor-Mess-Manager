@@ -51,9 +51,15 @@ export type CommunityMessageView = {
   amenities: string[];
   mealsProvided: boolean;
   contactWhatsapp: string | null;
+  contactFacebook: string | null;
   availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  contact2Name: string | null;
+  contact2Phone: string | null;
+  contact2Whatsapp: string | null;
+  contact2Facebook: string | null;
+  sourceUrl: string | null;
   listingStatus: string | null;
   effectiveListingStatus: string | null;
   expiresAt: string | null;
@@ -132,9 +138,15 @@ const MESSAGE_SELECT = {
   amenities: true,
   mealsProvided: true,
   contactWhatsapp: true,
+  contactFacebook: true,
   availableMonth: true,
   contactName: true,
   contactPhone: true,
+  contact2Name: true,
+  contact2Phone: true,
+  contact2Whatsapp: true,
+  contact2Facebook: true,
+  sourceUrl: true,
   listingStatus: true,
   expiresAt: true,
   viewCount: true,
@@ -220,9 +232,15 @@ function serialize(row: MessageRow, likedByViewer: boolean): CommunityMessageVie
     amenities: row.amenities,
     mealsProvided: row.mealsProvided,
     contactWhatsapp: row.contactWhatsapp,
+    contactFacebook: row.contactFacebook,
     availableMonth: row.availableMonth,
     contactName: row.contactName,
     contactPhone: row.contactPhone,
+    contact2Name: row.contact2Name,
+    contact2Phone: row.contact2Phone,
+    contact2Whatsapp: row.contact2Whatsapp,
+    contact2Facebook: row.contact2Facebook,
+    sourceUrl: row.sourceUrl,
     listingStatus: row.listingStatus,
     effectiveListingStatus: effectiveListingStatus(row),
     expiresAt: row.expiresAt ? row.expiresAt.toISOString() : null,
@@ -334,7 +352,7 @@ export async function readFeed(options: {
 
 export type PostMessageToLetInput = {
   listingType: string;
-  rent: number;
+  rent: number | null;
   rentNegotiable: boolean;
   location: string;
   latitude?: number | null;
@@ -351,9 +369,15 @@ export type PostMessageToLetInput = {
   amenities: string[];
   mealsProvided: boolean;
   contactWhatsapp: string | null;
+  contactFacebook: string | null;
   availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  contact2Name: string | null;
+  contact2Phone: string | null;
+  contact2Whatsapp: string | null;
+  contact2Facebook: string | null;
+  sourceUrl: string | null;
   expiryDays: number;
 };
 
@@ -397,9 +421,15 @@ async function createMessageRow(
             amenities: params.toLet.amenities,
             mealsProvided: params.toLet.mealsProvided,
             contactWhatsapp: params.toLet.contactWhatsapp,
+            contactFacebook: params.toLet.contactFacebook,
             availableMonth: params.toLet.availableMonth,
             contactName: params.toLet.contactName,
             contactPhone: params.toLet.contactPhone,
+            contact2Name: params.toLet.contact2Name,
+            contact2Phone: params.toLet.contact2Phone,
+            contact2Whatsapp: params.toLet.contact2Whatsapp,
+            contact2Facebook: params.toLet.contact2Facebook,
+            sourceUrl: params.toLet.sourceUrl,
             listingStatus: TOLET_STATUS.ACTIVE,
             expiresAt: computeExpiresAt(params.toLet.expiryDays)
           }
@@ -447,7 +477,7 @@ export type UpdateListingInput = Partial<{
   listingType: string;
   title: string;
   text: string;
-  rent: number;
+  rent: number | null;
   rentNegotiable: boolean;
   location: string;
   latitude: number | null;
@@ -464,9 +494,15 @@ export type UpdateListingInput = Partial<{
   amenities: string[];
   mealsProvided: boolean;
   contactWhatsapp: string | null;
+  contactFacebook: string | null;
   availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
+  contact2Name: string | null;
+  contact2Phone: string | null;
+  contact2Whatsapp: string | null;
+  contact2Facebook: string | null;
+  sourceUrl: string | null;
   listingStatus: string;
   expiresAt: Date;
   images: string[];
