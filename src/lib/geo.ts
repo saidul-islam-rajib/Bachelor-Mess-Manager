@@ -48,6 +48,32 @@ export async function geocode(query: string): Promise<GeoPoint | null> {
   });
 }
 
+export type GeoSuggestion = { label: string; lat: number; lng: number };
+
+export async function searchLocations(query: string, limit = 5): Promise<GeoSuggestion[]> {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  return cached(`location-search:${limit}:${trimmed.toLowerCase()}`, cacheConfig.geocodeMs, async () => {
+    const results = await fetchNominatim<Array<NominatimSearchResult & { display_name: string }>>('/search', {
+      q: trimmed,
+      countrycodes: geocodeConfig.countryCodes,
+      addressdetails: '0',
+      limit: String(limit)
+    });
+
+    if (!results) return [];
+
+    return results
+      .map((result) => {
+        const lat = Number(result.lat);
+        const lng = Number(result.lon);
+        return Number.isFinite(lat) && Number.isFinite(lng) ? { label: result.display_name, lat, lng } : null;
+      })
+      .filter((suggestion): suggestion is GeoSuggestion => suggestion !== null);
+  });
+}
+
 export async function reverseGeocode(point: GeoPoint): Promise<string | null> {
   return cached(`reverse-geocode:${point.lat.toFixed(5)},${point.lng.toFixed(5)}`, cacheConfig.geocodeMs, async () => {
     const result = await fetchNominatim<NominatimReverseResult>('/reverse', {

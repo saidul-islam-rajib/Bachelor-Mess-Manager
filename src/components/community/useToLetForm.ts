@@ -10,11 +10,16 @@ import {
   TOLET_HOUSE_RULES,
   TOLET_MONTHS,
   TOLET_TENANT_RESTRICTION,
+  TOLET_TYPES,
   TOLET_TYPE_VALUES
 } from '@/lib/constants';
 import { formatBytes } from '@/lib/format';
 import { ACCEPTED_IMAGE_MIMES } from '@/lib/uploads.client';
 import type { CommunityMessageView } from '@/lib/community';
+import type { GeoSuggestion } from '@/lib/geo';
+
+const LOCATION_SEARCH_MIN_LENGTH = 3;
+const LOCATION_SEARCH_DEBOUNCE_MS = 400;
 
 export type ToLetFormState = {
   listingType: string;
@@ -28,6 +33,7 @@ export type ToLetFormState = {
   genderPreference: string;
   tenantRestriction: string;
   houseRules: string;
+  isSublet: boolean;
   seatsAvailable: string;
   attachedBath: boolean;
   attachedBalcony: boolean;
@@ -39,6 +45,7 @@ export type ToLetFormState = {
   contactName: string;
   contactPhone: string;
   contactWhatsapp: string;
+  whatsappSameAsPhone: boolean;
   expiryDays: number;
   images: string[];
 };
@@ -65,6 +72,7 @@ function emptyForm(defaultContactName: string, defaultContactPhone: string): ToL
     genderPreference: TOLET_GENDER_PREFERENCE.MALE,
     tenantRestriction: TOLET_TENANT_RESTRICTION.BACHELOR,
     houseRules: TOLET_HOUSE_RULES.FLEXIBLE,
+    isSublet: false,
     seatsAvailable: '',
     attachedBath: false,
     attachedBalcony: false,
@@ -76,6 +84,7 @@ function emptyForm(defaultContactName: string, defaultContactPhone: string): ToL
     contactName: defaultContactName,
     contactPhone: defaultContactPhone,
     contactWhatsapp: '',
+    whatsappSameAsPhone: true,
     expiryDays: toLetConfig.defaultExpiryDays,
     images: []
   };
@@ -101,6 +110,7 @@ function formFromSource(
         ? source.tenantRestriction
         : TOLET_TENANT_RESTRICTION.BACHELOR,
     houseRules: source.houseRules ?? TOLET_HOUSE_RULES.FLEXIBLE,
+    isSublet: source.isSublet,
     seatsAvailable: source.seatsAvailable !== null ? String(source.seatsAvailable) : '',
     attachedBath: source.attachedBath,
     attachedBalcony: source.attachedBalcony,
@@ -112,6 +122,7 @@ function formFromSource(
     contactName: source.contactName ?? defaultContactName,
     contactPhone: source.contactPhone ?? defaultContactPhone,
     contactWhatsapp: source.contactWhatsapp ?? '',
+    whatsappSameAsPhone: !source.contactWhatsapp || source.contactWhatsapp === source.contactPhone,
     expiryDays: toLetConfig.defaultExpiryDays,
     images: source.images
   };
@@ -140,10 +151,14 @@ export function useToLetForm({
   const [maxImageBytes, setMaxImageBytes] = useState(uploadConfig.maxImageBytes);
   const [saving, setSaving] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState<GeoSuggestion[]>([]);
+  const [searchingLocation, setSearchingLocation] = useState(false);
+  const locationSearchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editing = Boolean(listing);
   const reposting = !editing && Boolean(prefillFrom);
   const source = listing ?? prefillFrom ?? null;
+  const isBachelor = form.tenantRestriction === TOLET_TENANT_RESTRICTION.BACHELOR;
 
   useEffect(() => {
     if (!open) return;
@@ -170,8 +185,49 @@ export function useToLetForm({
     };
   }, []);
 
+  useEffect(() => {
+    if (!isBachelor && form.listingType === TOLET_TYPES.SEAT) {
+      setForm((current) => ({ ...current, listingType: TOLET_TYPE_VALUES.find((type) => type !== TOLET_TYPES.SEAT) ?? TOLET_TYPE_VALUES[0] }));
+    }
+  }, [isBachelor, form.listingType]);
+
+  useEffect(() => {
+    return () => {
+      if (locationSearchTimer.current) clearTimeout(locationSearchTimer.current);
+    };
+  }, []);
+
   function update<K extends keyof ToLetFormState>(key: K, value: ToLetFormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  function searchLocationSuggestions(query: string) {
+    if (locationSearchTimer.current) clearTimeout(locationSearchTimer.current);
+
+    if (query.trim().length < LOCATION_SEARCH_MIN_LENGTH) {
+      setLocationSuggestions([]);
+      setSearchingLocation(false);
+      return;
+    }
+
+    setSearchingLocation(true);
+    locationSearchTimer.current = setTimeout(() => {
+      api
+        .get<{ results: GeoSuggestion[] }>('/api/community/messages/location-search', { query: { q: query } })
+        .then((data) => setLocationSuggestions(data.results))
+        .catch(() => setLocationSuggestions([]))
+        .finally(() => setSearchingLocation(false));
+    }, LOCATION_SEARCH_DEBOUNCE_MS);
+  }
+
+  function updateLocation(value: string) {
+    update('location', value);
+    searchLocationSuggestions(value);
+  }
+
+  function selectLocationSuggestion(suggestion: GeoSuggestion) {
+    setForm((current) => ({ ...current, location: suggestion.label, latitude: suggestion.lat, longitude: suggestion.lng }));
+    setLocationSuggestions([]);
   }
 
   function toggleAmenity(amenity: string) {
@@ -271,7 +327,6 @@ export function useToLetForm({
 
     setSaving(true);
     try {
-      const isBachelor = form.tenantRestriction === TOLET_TENANT_RESTRICTION.BACHELOR;
       const payload = {
         listingType: form.listingType,
         title: form.title.trim(),
@@ -284,6 +339,7 @@ export function useToLetForm({
         genderPreference: isBachelor ? form.genderPreference : null,
         tenantRestriction: form.tenantRestriction,
         houseRules: isBachelor ? form.houseRules : null,
+        isSublet: form.isSublet,
         seatsAvailable: form.seatsAvailable ? Number(form.seatsAvailable) : null,
         attachedBath: form.attachedBath,
         attachedBalcony: form.attachedBalcony,
@@ -294,7 +350,7 @@ export function useToLetForm({
         availableMonth: form.availableMonth || null,
         contactName: form.contactName.trim() || null,
         contactPhone: form.contactPhone.trim() || null,
-        contactWhatsapp: form.contactWhatsapp.trim() || null,
+        contactWhatsapp: form.whatsappSameAsPhone ? form.contactPhone.trim() || null : form.contactWhatsapp.trim() || null,
         expiryDays: form.expiryDays,
         images: form.images
       };
@@ -316,7 +372,7 @@ export function useToLetForm({
     }
   }
 
-  const typeOptions = TOLET_TYPE_VALUES.map((type) => ({
+  const typeOptions = TOLET_TYPE_VALUES.filter((type) => isBachelor || type !== TOLET_TYPES.SEAT).map((type) => ({
     value: type,
     label: strings.toLet.types[type as keyof typeof strings.toLet.types]
   }));
@@ -349,11 +405,14 @@ export function useToLetForm({
 
   const canSubmit = Boolean(form.title.trim() && form.text.trim() && form.location.trim() && form.rent.trim());
   const hasSharedLocation = form.latitude !== null && form.longitude !== null;
-  const isBachelor = form.tenantRestriction === TOLET_TENANT_RESTRICTION.BACHELOR;
 
   return {
     form,
     update,
+    updateLocation,
+    locationSuggestions,
+    searchingLocation,
+    selectLocationSuggestion,
     toggleAmenity,
     editing,
     reposting,

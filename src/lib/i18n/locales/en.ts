@@ -1403,6 +1403,7 @@ const en = {
       FLEXIBLE: 'Open gate, guests welcome, smoking okay'
     },
     amenities: {
+      FURNISHED: 'Furnished',
       LIFT: 'Lift',
       GENERATOR: 'Generator',
       WIFI: 'WiFi',
@@ -1410,7 +1411,8 @@ const en = {
       FRIDGE: 'Fridge',
       GAS: 'Gas',
       SECURITY: '24/7 security',
-      MAID_SERVICE: 'Maid service'
+      MAID_SERVICE: 'Maid service',
+      DINING_SPACE: 'Dining space'
     },
     months: {
       JANUARY: 'January',
@@ -1439,6 +1441,7 @@ const en = {
     photoAlt: (title: string, index: number) => `Photo ${index + 1} of ${title}`,
     sharedForCount: (count: number) => `Shared · ${count}`,
     seatsOpen: (count: number) => `${count} seat${count === 1 ? '' : 's'} open`,
+    sublet: 'Sublet',
     attachedBathShort: 'Attached bath',
     attachedBalconyShort: 'Attached balcony',
     mealsProvidedShort: 'Meals provided',
@@ -1480,6 +1483,8 @@ const en = {
 
       categoryLabel: 'Category',
       categoryHint: 'Family listings skip the gender and house-rules fields below.',
+      subletLabel: 'This is a sublet',
+      subletHint: "You're renting out a room from a place you already rent — not the property owner.",
       houseRulesLabel: 'House rules',
       roomLabel: 'Room',
       seatsAvailableLabel: 'Seats available',
@@ -1491,6 +1496,7 @@ const en = {
       advanceMonthsOption: (months: number) => (months === 0 ? 'None' : months === 1 ? '1 month' : `${months} months`),
       amenitiesLabel: 'Amenities',
       mealsProvidedLabel: 'Meals provided',
+      whatsappSameLabel: 'Also reachable on WhatsApp',
       whatsappLabel: 'WhatsApp number',
       whatsappHint: 'Optional, if different from your contact phone.',
 
@@ -1513,7 +1519,9 @@ const en = {
       timedOut: 'Getting your location took too long. Try again, or type it in below.',
       insecureContext: 'Location sharing needs a secure (https) connection. You can still type it in below.',
       unsupported: 'Your browser does not support sharing location.',
-      viewOnMap: 'View on Google Maps'
+      viewOnMap: 'View on Google Maps',
+      searching: 'Searching...',
+      noSuggestions: 'No matches found.'
     },
 
     search: {

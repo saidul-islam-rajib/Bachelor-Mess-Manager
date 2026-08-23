@@ -1,8 +1,115 @@
-import { Button } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 import { toLetConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import { ACCEPTED_IMAGE_MIMES } from '@/lib/uploads.client';
 import type { ToLetFormApi } from '@/components/community/useToLetForm';
+
+export function ToLetLocationField({ form }: { form: ToLetFormApi }) {
+  return (
+    <div className="relative">
+      <Input
+        label={strings.toLet.composer.locationLabel}
+        value={form.form.location}
+        onChange={form.updateLocation}
+        placeholder={strings.toLet.composer.locationPlaceholder}
+        maxLength={toLetConfig.maxLocationLength}
+        autoComplete="off"
+      />
+
+      {(form.searchingLocation || form.locationSuggestions.length > 0) && (
+        <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm shadow-lg">
+          {form.searchingLocation && (
+            <li className="px-3.5 py-2 text-slate-400 dark:text-slate-500">{strings.toLet.location.searching}</li>
+          )}
+          {!form.searchingLocation &&
+            form.locationSuggestions.map((suggestion) => (
+              <li key={`${suggestion.lat},${suggestion.lng}`}>
+                <button
+                  type="button"
+                  onClick={() => form.selectLocationSuggestion(suggestion)}
+                  className="block w-full truncate px-3.5 py-2 text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                >
+                  {suggestion.label}
+                </button>
+              </li>
+            ))}
+        </ul>
+      )}
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={form.shareLocation}
+          disabled={form.locating}
+          className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" />
+            <circle cx="12" cy="10" r="2.5" />
+          </svg>
+          {form.locating ? strings.toLet.location.sharing : strings.toLet.location.shareAction}
+        </button>
+
+        {form.hasSharedLocation && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+            📍 {strings.toLet.location.shared}
+            <button
+              type="button"
+              onClick={form.clearSharedLocation}
+              className="text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-200"
+              aria-label={strings.toLet.location.clearAction}
+              title={strings.toLet.location.clearAction}
+            >
+              &times;
+            </button>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ToLetContactFields({ form }: { form: ToLetFormApi }) {
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input
+          label={strings.toLet.composer.contactNameLabel}
+          value={form.form.contactName}
+          onChange={(value) => form.update('contactName', value)}
+          hint={strings.toLet.composer.contactNameHint}
+        />
+        <Input
+          type="tel"
+          label={strings.toLet.composer.contactPhoneLabel}
+          value={form.form.contactPhone}
+          onChange={(value) => form.update('contactPhone', value)}
+          hint={strings.toLet.composer.contactPhoneHint}
+        />
+      </div>
+
+      <label className="flex items-center gap-1.5 text-sm text-slate-700 dark:text-slate-300">
+        <input
+          type="checkbox"
+          checked={form.form.whatsappSameAsPhone}
+          onChange={(event) => form.update('whatsappSameAsPhone', event.target.checked)}
+          className="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
+        />
+        {strings.toLet.composer.whatsappSameLabel}
+      </label>
+
+      {!form.form.whatsappSameAsPhone && (
+        <Input
+          type="tel"
+          label={strings.toLet.composer.whatsappLabel}
+          value={form.form.contactWhatsapp}
+          onChange={(value) => form.update('contactWhatsapp', value)}
+          hint={strings.toLet.composer.whatsappHint}
+        />
+      )}
+    </div>
+  );
+}
 
 export function ToLetPhotoPicker({ form }: { form: ToLetFormApi }) {
   return (

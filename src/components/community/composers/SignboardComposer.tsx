@@ -3,7 +3,7 @@ import { Input, NumberInput, RadioGroup, Select, Textarea } from '@/components/u
 import { toLetConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import { TOLET_HOUSE_RULES, TOLET_TENANT_RESTRICTION } from '@/lib/constants';
-import { ToLetPhotoPicker } from '@/components/community/composers/ToLetComposerShared';
+import { ToLetContactFields, ToLetLocationField, ToLetPhotoPicker } from '@/components/community/composers/ToLetComposerShared';
 import type { ToLetFormApi } from '@/components/community/useToLetForm';
 
 function AmenityChips({ form }: { form: ToLetFormApi }) {
@@ -57,6 +57,19 @@ export function SignboardComposer({ form }: { form: ToLetFormApi }) {
         variant="pills"
       />
 
+      <label className="flex items-start gap-2.5 rounded-xl border border-slate-200 dark:border-slate-600 px-3.5 py-2.5 text-sm text-slate-700 dark:text-slate-300">
+        <input
+          type="checkbox"
+          checked={form.form.isSublet}
+          onChange={(event) => form.update('isSublet', event.target.checked)}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500"
+        />
+        <span>
+          <span className="block font-medium">{strings.toLet.composer.subletLabel}</span>
+          <span className="block text-xs text-slate-500 dark:text-slate-400">{strings.toLet.composer.subletHint}</span>
+        </span>
+      </label>
+
       {form.isBachelor && (
         <div className="flex flex-wrap gap-2">
           {form.genderOptions.map((option) => (
@@ -93,12 +106,12 @@ export function SignboardComposer({ form }: { form: ToLetFormApi }) {
         </div>
       )}
 
-      <RadioGroup
-        legend={strings.toLet.composer.roomLabel}
+      <Select
+        label={strings.toLet.composer.roomLabel}
         value={form.form.listingType}
         onChange={(value) => form.update('listingType', value)}
         options={form.typeOptions}
-        variant="pills"
+        compact
       />
 
       <Input
@@ -118,7 +131,7 @@ export function SignboardComposer({ form }: { form: ToLetFormApi }) {
         maxLength={toLetConfig.maxDescriptionLength}
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className={`grid grid-cols-2 gap-3 ${form.isBachelor ? 'sm:grid-cols-3' : ''}`}>
         <NumberInput
           label={strings.toLet.composer.rentLabel}
           value={form.form.rent}
@@ -132,12 +145,14 @@ export function SignboardComposer({ form }: { form: ToLetFormApi }) {
           options={form.advanceOptions}
           compact
         />
-        <NumberInput
-          label={strings.toLet.composer.seatsAvailableLabel}
-          value={form.form.seatsAvailable}
-          onChange={(value) => form.update('seatsAvailable', value)}
-          min={1}
-        />
+        {form.isBachelor && (
+          <NumberInput
+            label={strings.toLet.composer.seatsAvailableLabel}
+            value={form.form.seatsAvailable}
+            onChange={(value) => form.update('seatsAvailable', value)}
+            min={1}
+          />
+        )}
       </div>
 
       <div className="flex flex-wrap gap-x-5 gap-y-2">
@@ -188,45 +203,7 @@ export function SignboardComposer({ form }: { form: ToLetFormApi }) {
         </label>
       </div>
 
-      <div>
-        <Input
-          label={strings.toLet.composer.locationLabel}
-          value={form.form.location}
-          onChange={(value) => form.update('location', value)}
-          placeholder={strings.toLet.composer.locationPlaceholder}
-          maxLength={toLetConfig.maxLocationLength}
-        />
-
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={form.shareLocation}
-            disabled={form.locating}
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 transition-colors hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z" />
-              <circle cx="12" cy="10" r="2.5" />
-            </svg>
-            {form.locating ? strings.toLet.location.sharing : strings.toLet.location.shareAction}
-          </button>
-
-          {form.hasSharedLocation && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-              📍 {strings.toLet.location.shared}
-              <button
-                type="button"
-                onClick={form.clearSharedLocation}
-                className="text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-200"
-                aria-label={strings.toLet.location.clearAction}
-                title={strings.toLet.location.clearAction}
-              >
-                &times;
-              </button>
-            </span>
-          )}
-        </div>
-      </div>
+      <ToLetLocationField form={form} />
 
       <AmenityChips form={form} />
 
@@ -263,29 +240,7 @@ export function SignboardComposer({ form }: { form: ToLetFormApi }) {
             compact
           />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label={strings.toLet.composer.contactNameLabel}
-              value={form.form.contactName}
-              onChange={(value) => form.update('contactName', value)}
-              hint={strings.toLet.composer.contactNameHint}
-            />
-            <Input
-              type="tel"
-              label={strings.toLet.composer.contactPhoneLabel}
-              value={form.form.contactPhone}
-              onChange={(value) => form.update('contactPhone', value)}
-              hint={strings.toLet.composer.contactPhoneHint}
-            />
-          </div>
-
-          <Input
-            type="tel"
-            label={strings.toLet.composer.whatsappLabel}
-            value={form.form.contactWhatsapp}
-            onChange={(value) => form.update('contactWhatsapp', value)}
-            hint={strings.toLet.composer.whatsappHint}
-          />
+          <ToLetContactFields form={form} />
 
           <RadioGroup
             legend={strings.toLet.composer.expiryLabel}

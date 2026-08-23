@@ -66,6 +66,7 @@ function ToLetBadges({ message }: { message: CommunityMessage }) {
 
   return (
     <div className="flex shrink-0 flex-col items-end gap-1">
+      {message.isSublet && <Badge tone="warning">{strings.toLet.sublet}</Badge>}
       <Badge tone="neutral">{strings.toLet.types[(message.listingType ?? '') as keyof typeof strings.toLet.types]}</Badge>
       <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
         {tenantRestrictionLabel}

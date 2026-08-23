@@ -139,6 +139,7 @@ export type ToLetHouseRules = (typeof TOLET_HOUSE_RULES)[keyof typeof TOLET_HOUS
 export const TOLET_HOUSE_RULES_VALUES = Object.values(TOLET_HOUSE_RULES) as string[];
 
 export const TOLET_AMENITIES = {
+  FURNISHED: 'FURNISHED',
   LIFT: 'LIFT',
   GENERATOR: 'GENERATOR',
   WIFI: 'WIFI',
@@ -146,7 +147,8 @@ export const TOLET_AMENITIES = {
   FRIDGE: 'FRIDGE',
   GAS: 'GAS',
   SECURITY: 'SECURITY',
-  MAID_SERVICE: 'MAID_SERVICE'
+  MAID_SERVICE: 'MAID_SERVICE',
+  DINING_SPACE: 'DINING_SPACE'
 } as const;
 
 export type ToLetAmenity = (typeof TOLET_AMENITIES)[keyof typeof TOLET_AMENITIES];

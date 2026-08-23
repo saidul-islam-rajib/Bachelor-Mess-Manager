@@ -42,6 +42,7 @@ export type CommunityMessageView = {
   genderPreference: string | null;
   tenantRestriction: string | null;
   houseRules: string | null;
+  isSublet: boolean;
   seatsAvailable: number | null;
   attachedBath: boolean;
   attachedBalcony: boolean;
@@ -122,6 +123,7 @@ const MESSAGE_SELECT = {
   genderPreference: true,
   tenantRestriction: true,
   houseRules: true,
+  isSublet: true,
   seatsAvailable: true,
   attachedBath: true,
   attachedBalcony: true,
@@ -209,6 +211,7 @@ function serialize(row: MessageRow, likedByViewer: boolean): CommunityMessageVie
     genderPreference: row.genderPreference,
     tenantRestriction: row.tenantRestriction,
     houseRules: row.houseRules,
+    isSublet: row.isSublet,
     seatsAvailable: row.seatsAvailable,
     attachedBath: row.attachedBath,
     attachedBalcony: row.attachedBalcony,
@@ -339,6 +342,7 @@ export type PostMessageToLetInput = {
   genderPreference: string | null;
   tenantRestriction: string;
   houseRules: string | null;
+  isSublet: boolean;
   seatsAvailable: number | null;
   attachedBath: boolean;
   attachedBalcony: boolean;
@@ -384,6 +388,7 @@ async function createMessageRow(
             genderPreference: params.toLet.genderPreference,
             tenantRestriction: params.toLet.tenantRestriction,
             houseRules: params.toLet.houseRules,
+            isSublet: params.toLet.isSublet,
             seatsAvailable: params.toLet.seatsAvailable,
             attachedBath: params.toLet.attachedBath,
             attachedBalcony: params.toLet.attachedBalcony,
@@ -450,6 +455,7 @@ export type UpdateListingInput = Partial<{
   genderPreference: string | null;
   tenantRestriction: string;
   houseRules: string | null;
+  isSublet: boolean;
   seatsAvailable: number | null;
   attachedBath: boolean;
   attachedBalcony: boolean;

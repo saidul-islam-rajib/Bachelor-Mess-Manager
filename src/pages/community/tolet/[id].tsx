@@ -227,6 +227,7 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
+              {listing.isSublet && <Badge tone="warning">{strings.toLet.sublet}</Badge>}
               <Badge tone="neutral">{typeLabel}</Badge>
               <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
                 {restrictionLabel}

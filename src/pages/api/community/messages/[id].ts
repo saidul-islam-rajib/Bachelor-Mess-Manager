@@ -129,6 +129,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       genderPreference: toLetCheck.value.genderPreference,
       tenantRestriction: toLetCheck.value.tenantRestriction,
       houseRules: toLetCheck.value.houseRules,
+      isSublet: toLetCheck.value.isSublet,
       seatsAvailable: toLetCheck.value.seatsAvailable,
       attachedBath: toLetCheck.value.attachedBath,
       attachedBalcony: toLetCheck.value.attachedBalcony,
