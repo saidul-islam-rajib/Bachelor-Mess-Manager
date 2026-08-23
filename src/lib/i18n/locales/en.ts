@@ -1471,13 +1471,7 @@ const en = {
       noResultsHint: 'Try a different keyword, or clear your filters.',
       nearestBanner: (query: string) => `No exact matches for "${query}" — showing the nearest to-lets instead.`,
       distanceAway: (km: string) => `${km} km away`,
-      loadFailed: 'Could not load search results.',
-      filtersAction: 'Filters',
-      typeAll: 'All types',
-      typeLabel: 'Type',
-      minRentLabel: 'Min rent',
-      maxRentLabel: 'Max rent',
-      applyFilters: 'Apply'
+      loadFailed: 'Could not load search results.'
     },
 
     created: 'Listing posted.',

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useRouter } from 'next/router';
-import { Avatar, Listbox, NumberInput, useDebouncedValue } from '@/components/ui';
-import { TOLET_TYPE_VALUES } from '@/lib/constants';
+import { Avatar, useDebouncedValue } from '@/components/ui';
 import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 import { toLetListingPath } from '@/lib/routes';
@@ -15,15 +14,7 @@ export function isToLetSearchActive(value: ToLetSearchState): boolean {
   return Boolean(value.q || value.type || value.minRent || value.maxRent);
 }
 
-function isFilterActive(value: ToLetSearchState): boolean {
-  return Boolean(value.type || value.minRent || value.maxRent);
-}
-
 const PREVIEW_LIMIT = 5;
-const TYPE_OPTIONS = [
-  { value: '', label: strings.toLet.search.typeAll },
-  ...TOLET_TYPE_VALUES.map((type) => ({ value: type, label: strings.toLet.types[type as keyof typeof strings.toLet.types] }))
-];
 
 export function ToLetSearchBar({
   value,
@@ -46,12 +37,7 @@ export function ToLetSearchBar({
   const [inputValue, setInputValue] = useState(value.q);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const [draftType, setDraftType] = useState(value.type);
-  const [draftMinRent, setDraftMinRent] = useState(value.minRent);
-  const [draftMaxRent, setDraftMaxRent] = useState(value.maxRent);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const filtersRef = useRef<HTMLDivElement>(null);
   const debouncedInput = useDebouncedValue(inputValue);
   const latest = useRef({ value, onChange });
   latest.current = { value, onChange };
@@ -73,42 +59,9 @@ export function ToLetSearchBar({
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, [previewOpen]);
 
-  useEffect(() => {
-    if (filtersOpen) {
-      setDraftType(value.type);
-      setDraftMinRent(value.minRent);
-      setDraftMaxRent(value.maxRent);
-    }
-  }, [filtersOpen, value.type, value.minRent, value.maxRent]);
-
-  useEffect(() => {
-    if (!filtersOpen) return undefined;
-
-    function onPointerDown(event: MouseEvent) {
-      if (filtersRef.current && !filtersRef.current.contains(event.target as Node)) setFiltersOpen(false);
-    }
-
-    document.addEventListener('mousedown', onPointerDown);
-    return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [filtersOpen]);
-
-  function applyFilters() {
-    onChange({ ...value, type: draftType, minRent: draftMinRent, maxRent: draftMaxRent });
-    setFiltersOpen(false);
-  }
-
-  function clearFilters() {
-    setDraftType('');
-    setDraftMinRent('');
-    setDraftMaxRent('');
-    onChange({ ...value, type: '', minRent: '', maxRent: '' });
-    setFiltersOpen(false);
-  }
-
   const preview = previewItems.slice(0, PREVIEW_LIMIT);
   const showPreview = previewOpen && inputValue.trim().length >= 2 && preview.length > 0;
   const showComposerIcons = Boolean(onOpenComposer && onOpenToLet);
-  const filterActive = isFilterActive(value);
 
   function goToActive() {
     const target = activeIndex >= 0 ? preview[activeIndex] : preview[0];
@@ -201,64 +154,6 @@ export function ToLetSearchBar({
               </li>
             ))}
           </ul>
-        )}
-      </div>
-
-      <div ref={filtersRef} className="relative shrink-0">
-        <button
-          type="button"
-          onClick={() => setFiltersOpen((open) => !open)}
-          aria-label={strings.toLet.search.filtersAction}
-          aria-expanded={filtersOpen}
-          title={strings.toLet.search.filtersAction}
-          className={`relative rounded-full p-2.5 transition-colors ${
-            filterActive
-              ? 'text-brand-600 hover:bg-brand-50 dark:text-brand-400 dark:hover:bg-brand-500/10'
-              : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
-          }`}
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 6h16M7 12h10M10 18h4" />
-          </svg>
-          {filterActive && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-brand-600" aria-hidden="true" />}
-        </button>
-
-        {filtersOpen && (
-          <div className="absolute right-0 top-full z-30 mt-1.5 w-72 space-y-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-xl">
-            <Listbox label={strings.toLet.search.typeLabel} value={draftType} onChange={setDraftType} options={TYPE_OPTIONS} />
-
-            <div className="grid grid-cols-2 gap-2">
-              <NumberInput
-                label={strings.toLet.search.minRentLabel}
-                value={draftMinRent}
-                onChange={setDraftMinRent}
-                min={0}
-              />
-              <NumberInput
-                label={strings.toLet.search.maxRentLabel}
-                value={draftMaxRent}
-                onChange={setDraftMaxRent}
-                min={0}
-              />
-            </div>
-
-            <div className="flex items-center justify-between pt-1">
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-              >
-                {strings.common.clearFilters}
-              </button>
-              <button
-                type="button"
-                onClick={applyFilters}
-                className="rounded-full bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
-              >
-                {strings.toLet.search.applyFilters}
-              </button>
-            </div>
-          </div>
         )}
       </div>
 
