@@ -481,6 +481,7 @@ model SiteSettings {
   maxSupervisorsPerGroup    Int     @default(1)
   notificationsEnabled      Boolean @default(true)
   disabledNotificationTypes String  @default("")
+  toLetPostLayout           String  @default("SIGNBOARD")
 
   createdAt     DateTime  @default(now())
   createdById   String?
@@ -887,6 +888,15 @@ model CommunityMessage {
   longitude        Float?
   genderPreference String?
   tenantRestriction String?
+  houseRules       String?
+  seatsAvailable   Int?
+  attachedBath     Boolean                 @default(false)
+  attachedBalcony  Boolean                 @default(false)
+  serviceChargeIncluded Boolean            @default(false)
+  advanceMonths    Int?
+  amenities        String[]                @default([])
+  mealsProvided    Boolean                 @default(false)
+  contactWhatsapp  String?
   availableMonth   String?
   contactName      String?
   contactPhone     String?

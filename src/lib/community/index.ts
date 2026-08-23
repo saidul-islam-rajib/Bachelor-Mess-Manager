@@ -41,6 +41,15 @@ export type CommunityMessageView = {
   longitude: number | null;
   genderPreference: string | null;
   tenantRestriction: string | null;
+  houseRules: string | null;
+  seatsAvailable: number | null;
+  attachedBath: boolean;
+  attachedBalcony: boolean;
+  serviceChargeIncluded: boolean;
+  advanceMonths: number | null;
+  amenities: string[];
+  mealsProvided: boolean;
+  contactWhatsapp: string | null;
   availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
@@ -112,6 +121,15 @@ const MESSAGE_SELECT = {
   longitude: true,
   genderPreference: true,
   tenantRestriction: true,
+  houseRules: true,
+  seatsAvailable: true,
+  attachedBath: true,
+  attachedBalcony: true,
+  serviceChargeIncluded: true,
+  advanceMonths: true,
+  amenities: true,
+  mealsProvided: true,
+  contactWhatsapp: true,
   availableMonth: true,
   contactName: true,
   contactPhone: true,
@@ -190,6 +208,15 @@ function serialize(row: MessageRow, likedByViewer: boolean): CommunityMessageVie
     longitude: row.longitude,
     genderPreference: row.genderPreference,
     tenantRestriction: row.tenantRestriction,
+    houseRules: row.houseRules,
+    seatsAvailable: row.seatsAvailable,
+    attachedBath: row.attachedBath,
+    attachedBalcony: row.attachedBalcony,
+    serviceChargeIncluded: row.serviceChargeIncluded,
+    advanceMonths: row.advanceMonths,
+    amenities: row.amenities,
+    mealsProvided: row.mealsProvided,
+    contactWhatsapp: row.contactWhatsapp,
     availableMonth: row.availableMonth,
     contactName: row.contactName,
     contactPhone: row.contactPhone,
@@ -309,8 +336,17 @@ export type PostMessageToLetInput = {
   location: string;
   latitude?: number | null;
   longitude?: number | null;
-  genderPreference: string;
+  genderPreference: string | null;
   tenantRestriction: string;
+  houseRules: string | null;
+  seatsAvailable: number | null;
+  attachedBath: boolean;
+  attachedBalcony: boolean;
+  serviceChargeIncluded: boolean;
+  advanceMonths: number | null;
+  amenities: string[];
+  mealsProvided: boolean;
+  contactWhatsapp: string | null;
   availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;
@@ -347,6 +383,15 @@ async function createMessageRow(
             longitude: params.toLet.longitude ?? null,
             genderPreference: params.toLet.genderPreference,
             tenantRestriction: params.toLet.tenantRestriction,
+            houseRules: params.toLet.houseRules,
+            seatsAvailable: params.toLet.seatsAvailable,
+            attachedBath: params.toLet.attachedBath,
+            attachedBalcony: params.toLet.attachedBalcony,
+            serviceChargeIncluded: params.toLet.serviceChargeIncluded,
+            advanceMonths: params.toLet.advanceMonths,
+            amenities: params.toLet.amenities,
+            mealsProvided: params.toLet.mealsProvided,
+            contactWhatsapp: params.toLet.contactWhatsapp,
             availableMonth: params.toLet.availableMonth,
             contactName: params.toLet.contactName,
             contactPhone: params.toLet.contactPhone,
@@ -402,8 +447,17 @@ export type UpdateListingInput = Partial<{
   location: string;
   latitude: number | null;
   longitude: number | null;
-  genderPreference: string;
+  genderPreference: string | null;
   tenantRestriction: string;
+  houseRules: string | null;
+  seatsAvailable: number | null;
+  attachedBath: boolean;
+  attachedBalcony: boolean;
+  serviceChargeIncluded: boolean;
+  advanceMonths: number | null;
+  amenities: string[];
+  mealsProvided: boolean;
+  contactWhatsapp: string | null;
   availableMonth: string | null;
   contactName: string | null;
   contactPhone: string | null;

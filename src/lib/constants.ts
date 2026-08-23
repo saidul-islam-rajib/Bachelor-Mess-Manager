@@ -87,6 +87,9 @@ export const COMMUNITY_SYSTEM_TYPES: string[] = COMMUNITY_MESSAGE_TYPE_VALUES.fi
 );
 
 export const TOLET_TYPES = {
+  MASTER_BED: 'MASTER_BED',
+  SEMI_MASTER: 'SEMI_MASTER',
+  SINGLE_ROOM: 'SINGLE_ROOM',
   ROOM: 'ROOM',
   SEAT: 'SEAT',
   FLAT: 'FLAT'
@@ -106,7 +109,6 @@ export type ToLetStatus = (typeof TOLET_STATUS)[keyof typeof TOLET_STATUS];
 export const TOLET_STATUS_VALUES = Object.values(TOLET_STATUS) as string[];
 
 export const TOLET_GENDER_PREFERENCE = {
-  ANY: 'ANY',
   MALE: 'MALE',
   FEMALE: 'FEMALE'
 } as const;
@@ -124,6 +126,41 @@ export const TOLET_TENANT_RESTRICTION = {
 export type ToLetTenantRestriction = (typeof TOLET_TENANT_RESTRICTION)[keyof typeof TOLET_TENANT_RESTRICTION];
 
 export const TOLET_TENANT_RESTRICTION_VALUES = Object.values(TOLET_TENANT_RESTRICTION) as string[];
+
+export const TOLET_CATEGORY_VALUES: string[] = [TOLET_TENANT_RESTRICTION.BACHELOR, TOLET_TENANT_RESTRICTION.FAMILY];
+
+export const TOLET_HOUSE_RULES = {
+  STRICT: 'STRICT',
+  FLEXIBLE: 'FLEXIBLE'
+} as const;
+
+export type ToLetHouseRules = (typeof TOLET_HOUSE_RULES)[keyof typeof TOLET_HOUSE_RULES];
+
+export const TOLET_HOUSE_RULES_VALUES = Object.values(TOLET_HOUSE_RULES) as string[];
+
+export const TOLET_AMENITIES = {
+  LIFT: 'LIFT',
+  GENERATOR: 'GENERATOR',
+  WIFI: 'WIFI',
+  WATER_FILTER: 'WATER_FILTER',
+  FRIDGE: 'FRIDGE',
+  GAS: 'GAS',
+  SECURITY: 'SECURITY',
+  MAID_SERVICE: 'MAID_SERVICE'
+} as const;
+
+export type ToLetAmenity = (typeof TOLET_AMENITIES)[keyof typeof TOLET_AMENITIES];
+
+export const TOLET_AMENITY_VALUES = Object.values(TOLET_AMENITIES) as string[];
+
+export const TOLET_POST_LAYOUTS = {
+  SIGNBOARD: 'SIGNBOARD',
+  WALKTHROUGH: 'WALKTHROUGH'
+} as const;
+
+export type ToLetPostLayout = (typeof TOLET_POST_LAYOUTS)[keyof typeof TOLET_POST_LAYOUTS];
+
+export const TOLET_POST_LAYOUT_VALUES = Object.values(TOLET_POST_LAYOUTS) as string[];
 
 export const TOLET_MONTHS = [
   'JANUARY',

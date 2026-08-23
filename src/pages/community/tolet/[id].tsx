@@ -19,7 +19,7 @@ import {
   ShareButtons,
   useConfirm
 } from '@/components/ui';
-import { COMMUNITY_MESSAGE_TYPES, TOLET_GENDER_PREFERENCE, TOLET_STATUS, TOLET_TENANT_RESTRICTION, USER_ROLES } from '@/lib/constants';
+import { COMMUNITY_MESSAGE_TYPES, TOLET_STATUS, TOLET_TENANT_RESTRICTION, USER_ROLES } from '@/lib/constants';
 import { api, errorMessage } from '@/lib/api-client';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { googleMapsLink } from '@/lib/geo';
@@ -190,6 +190,15 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
     listing.location
   );
 
+  const detailFacts: { label: string; value: string }[] = [
+    ...(listing.seatsAvailable ? [{ label: strings.toLet.composer.seatsAvailableLabel, value: strings.toLet.seatsOpen(listing.seatsAvailable) }] : []),
+    ...(listing.attachedBath ? [{ label: strings.toLet.composer.attachedBathLabel, value: strings.common.yes }] : []),
+    ...(listing.attachedBalcony ? [{ label: strings.toLet.composer.attachedBalconyLabel, value: strings.common.yes }] : []),
+    ...(listing.advanceMonths !== null ? [{ label: strings.toLet.composer.advanceMonthsLabel, value: strings.toLet.composer.advanceMonthsOption(listing.advanceMonths) }] : []),
+    { label: strings.toLet.composer.serviceChargeLabel, value: listing.serviceChargeIncluded ? strings.common.yes : strings.common.no },
+    ...(listing.mealsProvided ? [{ label: strings.toLet.composer.mealsProvidedLabel, value: strings.common.yes }] : [])
+  ];
+
   return (
     <PageContainer width="medium">
       <PageTitle
@@ -219,12 +228,17 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
               <Badge tone="neutral">{typeLabel}</Badge>
-              {listing.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && genderLabel && (
-                <Badge tone="warning">{genderLabel}</Badge>
-              )}
               <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
                 {restrictionLabel}
               </Badge>
+              {listing.genderPreference !== 'ANY' && genderLabel && (
+                <Badge tone="warning">{genderLabel}</Badge>
+              )}
+              {listing.houseRules && (
+                <Badge tone={listing.houseRules === 'STRICT' ? 'danger' : 'success'}>
+                  {strings.toLet.houseRules[listing.houseRules as keyof typeof strings.toLet.houseRules]}
+                </Badge>
+              )}
             </div>
             <h1 className="mt-2 text-2xl font-semibold text-slate-900 dark:text-slate-100">{listing.title}</h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
@@ -259,6 +273,30 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
 
         <p className="whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800 dark:text-slate-200">{listing.text}</p>
 
+        {detailFacts.length > 0 && (
+          <dl className="grid grid-cols-2 gap-4 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:grid-cols-3">
+            {detailFacts.map((fact) => (
+              <div key={fact.label}>
+                <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{fact.label}</dt>
+                <dd className="mt-1 text-sm font-medium text-slate-800 dark:text-slate-200">{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+
+        {listing.amenities.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {listing.amenities.map((amenity) => (
+              <span
+                key={amenity}
+                className="rounded-full bg-slate-100 dark:bg-slate-700 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300"
+              >
+                {strings.toLet.amenities[amenity as keyof typeof strings.toLet.amenities] ?? amenity}
+              </span>
+            ))}
+          </div>
+        )}
+
         <dl className="grid gap-4 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:grid-cols-2">
           <div>
             <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.toLet.contactTitle}</dt>
@@ -266,6 +304,9 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
               {listing.contactName ?? listing.authorName}
               {listing.contactPhone ? ` · ${listing.contactPhone}` : ` · ${strings.toLet.noContactPhone}`}
             </dd>
+            {listing.contactWhatsapp && (
+              <dd className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{strings.toLet.composer.whatsappLabel}: {listing.contactWhatsapp}</dd>
+            )}
           </div>
           <div>
             <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.toLet.postedBy(listing.authorName)}</dt>

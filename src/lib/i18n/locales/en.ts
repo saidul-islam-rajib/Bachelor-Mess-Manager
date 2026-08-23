@@ -1378,19 +1378,39 @@ const en = {
   toLet: {
     postAction: 'Post a to-let',
     types: {
+      MASTER_BED: 'Master bed',
+      SEMI_MASTER: 'Semi-master',
+      SINGLE_ROOM: 'Single room',
       ROOM: 'Room',
       SEAT: 'Seat',
       FLAT: 'Flat'
     },
     genderPreference: {
-      ANY: 'Any',
       MALE: 'Male only',
       FEMALE: 'Female only'
     },
     tenantRestriction: {
-      ANY: 'Restriction-less',
-      BACHELOR: 'Bachelor allowed',
-      FAMILY: 'Family only'
+      ANY: 'Open to all',
+      BACHELOR: 'Bachelor',
+      FAMILY: 'Family'
+    },
+    houseRules: {
+      STRICT: 'Strict rules',
+      FLEXIBLE: 'Flexible rules'
+    },
+    houseRulesHint: {
+      STRICT: 'Fixed gate-close time, no opposite-gender guests, no smoking',
+      FLEXIBLE: 'Open gate, guests welcome, smoking okay'
+    },
+    amenities: {
+      LIFT: 'Lift',
+      GENERATOR: 'Generator',
+      WIFI: 'WiFi',
+      WATER_FILTER: 'Water filter',
+      FRIDGE: 'Fridge',
+      GAS: 'Gas',
+      SECURITY: '24/7 security',
+      MAID_SERVICE: 'Maid service'
     },
     months: {
       JANUARY: 'January',
@@ -1417,6 +1437,14 @@ const en = {
     commentsCount: (count: number) => `${count} comment${count === 1 ? '' : 's'}`,
     noPhotos: 'No photos yet.',
     photoAlt: (title: string, index: number) => `Photo ${index + 1} of ${title}`,
+    sharedForCount: (count: number) => `Shared · ${count}`,
+    seatsOpen: (count: number) => `${count} seat${count === 1 ? '' : 's'} open`,
+    attachedBathShort: 'Attached bath',
+    attachedBalconyShort: 'Attached balcony',
+    mealsProvidedShort: 'Meals provided',
+    excludesService: 'excl. service',
+    includesService: 'incl. service',
+    moreAmenities: (count: number) => `+${count} more`,
 
     composer: {
       createTitle: 'Post a to-let',
@@ -1448,7 +1476,30 @@ const en = {
       submitEdit: 'Save changes',
       submitRepost: 'Repost',
       submitting: 'Saving...',
-      photosHint: (max: number) => `Up to ${max} photos.`
+      photosHint: (max: number) => `Up to ${max} photos.`,
+
+      categoryLabel: 'Category',
+      categoryHint: 'Family listings skip the gender and house-rules fields below.',
+      houseRulesLabel: 'House rules',
+      roomLabel: 'Room',
+      seatsAvailableLabel: 'Seats available',
+      seatsAvailableHint: 'How many people can move in',
+      attachedBathLabel: 'Attached bath',
+      attachedBalconyLabel: 'Attached balcony',
+      serviceChargeLabel: 'Rent includes service charge',
+      advanceMonthsLabel: 'Advance required',
+      advanceMonthsOption: (months: number) => (months === 0 ? 'None' : months === 1 ? '1 month' : `${months} months`),
+      amenitiesLabel: 'Amenities',
+      mealsProvidedLabel: 'Meals provided',
+      whatsappLabel: 'WhatsApp number',
+      whatsappHint: 'Optional, if different from your contact phone.',
+
+      stepOf: (current: number, total: number) => `Step ${current} of ${total}`,
+      step1Title: 'What is it',
+      step2Title: 'Money & rules',
+      step3Title: 'Photos & contact',
+      backAction: 'Back',
+      nextAction: 'Next'
     },
 
     location: {
@@ -1511,6 +1562,10 @@ const en = {
     typeInvalid: 'Choose a listing type.',
     genderPreferenceInvalid: 'Choose a valid preference.',
     tenantRestrictionInvalid: 'Choose a valid tenant type.',
+    houseRulesInvalid: 'Choose a valid house-rules option.',
+    seatsAvailableInvalid: (max: number) => `Seats available must be between 1 and ${max}.`,
+    advanceMonthsInvalid: (max: number) => `Advance required must be between 0 and ${max} months.`,
+    amenitiesInvalid: 'One of the selected amenities is not valid.',
     availableMonthInvalid: 'Choose a valid month.',
     titleRequired: 'Give the listing a title.',
     titleTooLong: (max: number) => `Keep the title under ${max} characters.`,
@@ -2001,7 +2056,20 @@ const en = {
       oneSupervisorPerMess: '1 — one supervisor per mess',
       allowSecondSupervisor: '2 — allow a second supervisor',
       supervisorLimitHint:
-        'This is the starting point for every mess. Below you can give individual messes a different limit — the default applies to every mess you do not list. Lowering a limit is refused while a mess is over it.'
+        'This is the starting point for every mess. Below you can give individual messes a different limit — the default applies to every mess you do not list. Lowering a limit is refused while a mess is over it.',
+      postLayoutTitle: 'To-let post layout',
+      postLayoutHint: 'Choose how the to-let composer and feed cards look for everyone on the site.',
+      postLayoutInvalid: 'Choose a valid to-let post layout.',
+      postLayoutOptions: {
+        SIGNBOARD: {
+          label: 'Signboard',
+          description: 'One dense screen of tappable tags — fastest for repeat posters.'
+        },
+        WALKTHROUGH: {
+          label: 'Walkthrough',
+          description: 'Three short guided steps — friendliest for first-time posters on a phone.'
+        }
+      }
     }
   },
   landing: {

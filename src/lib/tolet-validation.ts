@@ -1,7 +1,8 @@
 import { toLetConfig } from '@/config';
 import {
-  TOLET_GENDER_PREFERENCE,
+  TOLET_AMENITY_VALUES,
   TOLET_GENDER_PREFERENCE_VALUES,
+  TOLET_HOUSE_RULES_VALUES,
   TOLET_MONTHS,
   TOLET_TENANT_RESTRICTION,
   TOLET_TENANT_RESTRICTION_VALUES,
@@ -32,6 +33,15 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     longitude,
     genderPreference,
     tenantRestriction,
+    houseRules,
+    seatsAvailable,
+    attachedBath,
+    attachedBalcony,
+    serviceChargeIncluded,
+    advanceMonths,
+    amenities,
+    mealsProvided,
+    contactWhatsapp,
     availableMonth,
     contactName,
     contactPhone,
@@ -54,14 +64,6 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     return { ok: false, error: strings.toLet.typeInvalid };
   }
 
-  let genderPref: string = TOLET_GENDER_PREFERENCE.ANY;
-  if (genderPreference !== undefined && genderPreference !== null && genderPreference !== '') {
-    if (typeof genderPreference !== 'string' || !TOLET_GENDER_PREFERENCE_VALUES.includes(genderPreference)) {
-      return { ok: false, error: strings.toLet.genderPreferenceInvalid };
-    }
-    genderPref = genderPreference;
-  }
-
   let tenantRestrictionValue: string = TOLET_TENANT_RESTRICTION.ANY;
   if (tenantRestriction !== undefined && tenantRestriction !== null && tenantRestriction !== '') {
     if (typeof tenantRestriction !== 'string' || !TOLET_TENANT_RESTRICTION_VALUES.includes(tenantRestriction)) {
@@ -69,6 +71,50 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     }
     tenantRestrictionValue = tenantRestriction;
   }
+
+  let genderPref: string | null = null;
+  if (tenantRestrictionValue === TOLET_TENANT_RESTRICTION.BACHELOR) {
+    if (typeof genderPreference !== 'string' || !TOLET_GENDER_PREFERENCE_VALUES.includes(genderPreference)) {
+      return { ok: false, error: strings.toLet.genderPreferenceInvalid };
+    }
+    genderPref = genderPreference;
+  }
+
+  let houseRulesValue: string | null = null;
+  if (houseRules !== undefined && houseRules !== null && houseRules !== '') {
+    if (typeof houseRules !== 'string' || !TOLET_HOUSE_RULES_VALUES.includes(houseRules)) {
+      return { ok: false, error: strings.toLet.houseRulesInvalid };
+    }
+    houseRulesValue = houseRules;
+  }
+
+  let seatsAvailableValue: number | null = null;
+  if (seatsAvailable !== undefined && seatsAvailable !== null && seatsAvailable !== '') {
+    const parsed = Number(seatsAvailable);
+    if (!Number.isInteger(parsed) || parsed < 1 || parsed > toLetConfig.maxSeatsAvailable) {
+      return { ok: false, error: strings.toLet.seatsAvailableInvalid(toLetConfig.maxSeatsAvailable) };
+    }
+    seatsAvailableValue = parsed;
+  }
+
+  let advanceMonthsValue: number | null = null;
+  if (advanceMonths !== undefined && advanceMonths !== null && advanceMonths !== '') {
+    const parsed = Number(advanceMonths);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > toLetConfig.maxAdvanceMonths) {
+      return { ok: false, error: strings.toLet.advanceMonthsInvalid(toLetConfig.maxAdvanceMonths) };
+    }
+    advanceMonthsValue = parsed;
+  }
+
+  const amenitiesList = Array.isArray(amenities) ? amenities : [];
+  const invalidAmenity = amenitiesList.find((item) => typeof item !== 'string' || !TOLET_AMENITY_VALUES.includes(item));
+  if (invalidAmenity !== undefined) {
+    return { ok: false, error: strings.toLet.amenitiesInvalid };
+  }
+  const amenitiesValue = [...new Set(amenitiesList as string[])];
+
+  const whatsappCheck = validatePhone(contactWhatsapp);
+  if (!whatsappCheck.ok) return { ok: false, error: whatsappCheck.error };
 
   let availableMonthValue: string | null = null;
   if (availableMonth !== undefined && availableMonth !== null && availableMonth !== '') {
@@ -108,6 +154,15 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
       longitude: parseCoordinate(longitude) ?? null,
       genderPreference: genderPref,
       tenantRestriction: tenantRestrictionValue,
+      houseRules: tenantRestrictionValue === TOLET_TENANT_RESTRICTION.BACHELOR ? houseRulesValue : null,
+      seatsAvailable: seatsAvailableValue,
+      attachedBath: Boolean(attachedBath),
+      attachedBalcony: Boolean(attachedBalcony),
+      serviceChargeIncluded: Boolean(serviceChargeIncluded),
+      advanceMonths: advanceMonthsValue,
+      amenities: amenitiesValue,
+      mealsProvided: Boolean(mealsProvided),
+      contactWhatsapp: whatsappCheck.value,
       availableMonth: availableMonthValue,
       contactName: typeof contactName === 'string' && contactName.trim() ? contactName.trim() : null,
       contactPhone: phoneCheck.value,

@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { appConfig, securityConfig, uploadConfig } from '@/config';
-import { SETTINGS_SINGLETON_ID } from '@/lib/constants';
+import { SETTINGS_SINGLETON_ID, TOLET_POST_LAYOUTS, TOLET_POST_LAYOUT_VALUES } from '@/lib/constants';
 
 export type SecurityPolicy = {
   maxLoginAttempts: number;
@@ -164,12 +164,35 @@ export async function getUploadPolicy(): Promise<UploadPolicy> {
   }
 }
 
+const globalForToLetLayout = globalThis as unknown as {
+  toLetPostLayoutCache?: { value: string; expiresAt: number } | null;
+};
+
+export async function getToLetPostLayout(): Promise<string> {
+  const cached = globalForToLetLayout.toLetPostLayoutCache;
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  try {
+    const settings = await getSiteSettings();
+    const value = TOLET_POST_LAYOUT_VALUES.includes(settings.toLetPostLayout)
+      ? settings.toLetPostLayout
+      : TOLET_POST_LAYOUTS.SIGNBOARD;
+    globalForToLetLayout.toLetPostLayoutCache = { value, expiresAt: Date.now() + CACHE_TTL_MS };
+    return value;
+  } catch {
+    return TOLET_POST_LAYOUTS.SIGNBOARD;
+  }
+}
+
 export function invalidateSecurityPolicyCache() {
   globalForSettings.securityPolicyCache = null;
   globalForMealEdit.mealEditPolicyCache = null;
   globalForUpload.uploadPolicyCache = null;
   globalForSupervisors.supervisorPolicyCache = null;
   globalForNotifications.notificationPolicyCache = null;
+  globalForToLetLayout.toLetPostLayoutCache = null;
 }
 
 export async function getSupervisorPolicy(groupId?: string): Promise<SupervisorPolicy> {

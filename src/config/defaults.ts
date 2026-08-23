@@ -136,7 +136,9 @@ export const TOLET_DEFAULTS = {
   searchPageSize: 9,
   suggestionCount: 6,
   nearestResultCount: 6,
-  nearestSearchRadiusKm: 60
+  nearestSearchRadiusKm: 60,
+  maxSeatsAvailable: 20,
+  maxAdvanceMonths: 12
 } as const;
 
 export const GEOCODE_DEFAULTS = {

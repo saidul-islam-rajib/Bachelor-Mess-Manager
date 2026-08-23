@@ -38,6 +38,7 @@ import {
   GROUP_STATUS,
   GROUP_STATUS_VALUES,
   NOTIFICATION_TYPE_VALUES,
+  TOLET_POST_LAYOUT_VALUES,
   USER_ROLES,
   USER_ROLE_VALUES,
   USER_STATUS,
@@ -1457,6 +1458,7 @@ type SiteSettings = {
   maxSupervisorsPerGroup: number;
   notificationsEnabled: boolean;
   disabledNotificationTypes: string;
+  toLetPostLayout: string;
 };
 
 const BYTES_PER_KB = 1024;
@@ -1798,6 +1800,34 @@ function SettingsPanel() {
         </p>
 
         <SupervisorLimitManager siteMax={settings.maxSupervisorsPerGroup} />
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 sm:p-5">
+        <h3 className="text-sm font-semibold">{strings.admin.settings.postLayoutTitle}</h3>
+        <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{strings.admin.settings.postLayoutHint}</p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {TOLET_POST_LAYOUT_VALUES.map((value) => {
+            const option = strings.admin.settings.postLayoutOptions[value as keyof typeof strings.admin.settings.postLayoutOptions];
+            const active = settings.toLetPostLayout === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={active}
+                onClick={() => update('toLetPostLayout', value)}
+                className={`rounded-2xl border p-4 text-left transition-colors ${
+                  active
+                    ? 'border-brand-500 bg-brand-50 dark:border-brand-400 dark:bg-brand-500/10'
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600'
+                }`}
+              >
+                <p className={`text-sm font-semibold ${active ? 'text-brand-700 dark:text-brand-400' : ''}`}>{option.label}</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{option.description}</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mt-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-4 sm:p-5">

@@ -9,7 +9,7 @@ import {
   SUPERVISORS_PER_GROUP_MIN,
   uploadPolicyFallback
 } from '@/lib/settings-service';
-import { NOTIFICATION_TYPE_VALUES } from '@/lib/constants';
+import { NOTIFICATION_TYPE_VALUES, TOLET_POST_LAYOUT_VALUES } from '@/lib/constants';
 import { groupsOverSupervisorCap } from '@/lib/supervisors';
 import { cached, invalidate } from '@/lib/cache';
 import { cacheConfig } from '@/config';
@@ -30,7 +30,8 @@ const PUBLIC_FIELDS = [
   'facebookUrl',
   'twitterUrl',
   'newsletterEnabled',
-  'maxProfileImageBytes'
+  'maxProfileImageBytes',
+  'toLetPostLayout'
 ] as const;
 
 async function getSettings() {
@@ -169,6 +170,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
 
       data.maxSupervisorsPerGroup = cap;
+    }
+    if (body.toLetPostLayout !== undefined) {
+      if (typeof body.toLetPostLayout !== 'string' || !TOLET_POST_LAYOUT_VALUES.includes(body.toLetPostLayout)) {
+        return badRequest(res, strings.admin.settings.postLayoutInvalid);
+      }
+      data.toLetPostLayout = body.toLetPostLayout;
     }
 
     const settings = await prisma.siteSettings.upsert({

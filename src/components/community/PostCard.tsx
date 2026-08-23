@@ -7,10 +7,11 @@ import { timeAgo } from '@/components/InvitationsProvider';
 import { MentionText, type Member } from '@/components/MentionInput';
 import { Avatar, Badge } from '@/components/ui';
 import { appConfig } from '@/config';
-import { COMMUNITY_MESSAGE_TYPES, TOLET_GENDER_PREFERENCE, TOLET_TENANT_RESTRICTION } from '@/lib/constants';
+import { COMMUNITY_MESSAGE_TYPES, TOLET_POST_LAYOUTS, TOLET_TENANT_RESTRICTION } from '@/lib/constants';
 import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 import { toLetListingPath } from '@/lib/routes';
+import { useToLetPostLayout } from '@/lib/useToLetPostLayout';
 import type { CommunityMessageView } from '@/lib/community';
 
 export type CommunityMessage = CommunityMessageView;
@@ -20,6 +21,115 @@ const TYPE_TONES: Record<string, string> = {
   ANNOUNCEMENT: 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10',
   SYSTEM: 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900'
 };
+
+const BATH_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 10l8-6 8 6v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" />
+  </svg>
+);
+const BALCONY_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="8" width="18" height="4" />
+    <path d="M5 12v8M19 12v8" />
+  </svg>
+);
+const SEATS_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="3" />
+    <path d="M5 21v-2a7 7 0 0 1 14 0v2" />
+  </svg>
+);
+const MEALS_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 11h18" />
+    <path d="M5 11a7 7 0 0 1 14 0" />
+    <path d="M4 15h16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z" />
+  </svg>
+);
+
+type FactItem = { icon: React.ReactNode; label: string };
+
+function toLetFacts(message: CommunityMessage): FactItem[] {
+  const facts: FactItem[] = [];
+  if (message.seatsAvailable) facts.push({ icon: SEATS_ICON, label: strings.toLet.seatsOpen(message.seatsAvailable) });
+  if (message.attachedBath) facts.push({ icon: BATH_ICON, label: strings.toLet.attachedBathShort });
+  if (message.attachedBalcony) facts.push({ icon: BALCONY_ICON, label: strings.toLet.attachedBalconyShort });
+  if (message.mealsProvided) facts.push({ icon: MEALS_ICON, label: strings.toLet.mealsProvidedShort });
+  return facts;
+}
+
+function ToLetBadges({ message }: { message: CommunityMessage }) {
+  const tenantRestrictionValue = message.tenantRestriction ?? TOLET_TENANT_RESTRICTION.ANY;
+  const isBachelor = tenantRestrictionValue === TOLET_TENANT_RESTRICTION.BACHELOR;
+  const tenantRestrictionLabel =
+    strings.toLet.tenantRestriction[tenantRestrictionValue as keyof typeof strings.toLet.tenantRestriction];
+
+  return (
+    <div className="flex shrink-0 flex-col items-end gap-1">
+      <Badge tone="neutral">{strings.toLet.types[(message.listingType ?? '') as keyof typeof strings.toLet.types]}</Badge>
+      <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
+        {tenantRestrictionLabel}
+      </Badge>
+      {isBachelor && message.genderPreference && message.genderPreference !== 'ANY' && (
+        <Badge tone="warning">
+          {strings.toLet.genderPreference[message.genderPreference as keyof typeof strings.toLet.genderPreference]}
+        </Badge>
+      )}
+      {isBachelor && message.houseRules && (
+        <Badge tone={message.houseRules === 'STRICT' ? 'danger' : 'success'}>
+          {strings.toLet.houseRules[message.houseRules as keyof typeof strings.toLet.houseRules]}
+        </Badge>
+      )}
+      <Link href={toLetListingPath(message.id)} className="mt-1 text-sm font-medium text-brand-700 hover:text-brand-800">
+        {strings.toLet.viewAction}
+      </Link>
+    </div>
+  );
+}
+
+function ToLetAmenityChips({ amenities }: { amenities: string[] }) {
+  if (amenities.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {amenities.map((amenity) => (
+        <span
+          key={amenity}
+          className="rounded-full bg-slate-100 dark:bg-slate-700 px-2.5 py-0.5 text-[11px] font-medium text-slate-600 dark:text-slate-300"
+        >
+          {strings.toLet.amenities[amenity as keyof typeof strings.toLet.amenities] ?? amenity}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function SignboardFactsRow({ facts }: { facts: FactItem[] }) {
+  if (facts.length === 0) return null;
+  return (
+    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-y border-dashed border-slate-100 dark:border-slate-700 py-2">
+      {facts.map((fact) => (
+        <span key={fact.label} className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <span className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500">{fact.icon}</span>
+          {fact.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function WalkthroughFactsRow({ facts }: { facts: FactItem[] }) {
+  if (facts.length === 0) return null;
+  return (
+    <p className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 border-y border-dashed border-slate-100 dark:border-slate-700 py-2 text-xs text-slate-500 dark:text-slate-400">
+      {facts.map((fact, index) => (
+        <span key={fact.label}>
+          {index > 0 && <span className="mr-3 text-slate-300 dark:text-slate-600">&middot;</span>}
+          {fact.label}
+        </span>
+      ))}
+    </p>
+  );
+}
 
 export function PostCard({
   message,
@@ -43,12 +153,11 @@ export function PostCard({
   distanceKm?: number | null;
 }) {
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const layout = useToLetPostLayout();
   const typeLabel = strings.community.types[message.type as keyof typeof strings.community.types];
   const isToLet = message.type === COMMUNITY_MESSAGE_TYPES.TOLET;
   const interactive = !message.system;
-  const tenantRestrictionValue = message.tenantRestriction ?? TOLET_TENANT_RESTRICTION.ANY;
-  const tenantRestrictionLabel =
-    strings.toLet.tenantRestriction[tenantRestrictionValue as keyof typeof strings.toLet.tenantRestriction];
+  const facts = isToLet ? toLetFacts(message) : [];
 
   return (
     <li
@@ -102,6 +211,13 @@ export function PostCard({
               {message.rentNegotiable && (
                 <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{strings.toLet.negotiable}</span>
               )}
+              {message.serviceChargeIncluded ? (
+                <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{strings.toLet.includesService}</span>
+              ) : (
+                message.rent !== null && (
+                  <span className="text-xs font-normal text-slate-400 dark:text-slate-500">{strings.toLet.excludesService}</span>
+                )
+              )}
             </p>
 
             {message.location && (
@@ -121,6 +237,12 @@ export function PostCard({
               </p>
             )}
 
+            {layout === TOLET_POST_LAYOUTS.WALKTHROUGH ? (
+              <WalkthroughFactsRow facts={facts} />
+            ) : (
+              <SignboardFactsRow facts={facts} />
+            )}
+
             {message.text && (
               <MentionText
                 text={message.text}
@@ -129,27 +251,11 @@ export function PostCard({
                 className="mt-1.5 whitespace-pre-wrap break-words text-[15px] leading-relaxed text-slate-800 dark:text-slate-200"
               />
             )}
+
+            <ToLetAmenityChips amenities={message.amenities} />
           </div>
 
-          <div className="flex shrink-0 flex-col items-end gap-1">
-            <Badge tone="neutral">
-              {strings.toLet.types[(message.listingType ?? '') as keyof typeof strings.toLet.types]}
-            </Badge>
-            {message.genderPreference && message.genderPreference !== TOLET_GENDER_PREFERENCE.ANY && (
-              <Badge tone="warning">
-                {strings.toLet.genderPreference[message.genderPreference as keyof typeof strings.toLet.genderPreference]}
-              </Badge>
-            )}
-            <Badge tone={tenantRestrictionValue === TOLET_TENANT_RESTRICTION.ANY ? 'neutral' : 'info'}>
-              {tenantRestrictionLabel}
-            </Badge>
-            <Link
-              href={toLetListingPath(message.id)}
-              className="mt-1 text-sm font-medium text-brand-700 hover:text-brand-800"
-            >
-              {strings.toLet.viewAction}
-            </Link>
-          </div>
+          <ToLetBadges message={message} />
         </div>
       ) : (
         (message.title || message.text) && (

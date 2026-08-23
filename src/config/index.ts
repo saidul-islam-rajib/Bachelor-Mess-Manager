@@ -310,7 +310,9 @@ export const toLetConfig = {
   searchPageSize: readInt('TOLET_SEARCH_PAGE_SIZE', TOLET_DEFAULTS.searchPageSize),
   suggestionCount: readInt('TOLET_SUGGESTION_COUNT', TOLET_DEFAULTS.suggestionCount),
   nearestResultCount: readInt('TOLET_NEAREST_COUNT', TOLET_DEFAULTS.nearestResultCount),
-  nearestSearchRadiusKm: readInt('TOLET_NEAREST_RADIUS_KM', TOLET_DEFAULTS.nearestSearchRadiusKm)
+  nearestSearchRadiusKm: readInt('TOLET_NEAREST_RADIUS_KM', TOLET_DEFAULTS.nearestSearchRadiusKm),
+  maxSeatsAvailable: readInt('TOLET_MAX_SEATS_AVAILABLE', TOLET_DEFAULTS.maxSeatsAvailable),
+  maxAdvanceMonths: readInt('TOLET_MAX_ADVANCE_MONTHS', TOLET_DEFAULTS.maxAdvanceMonths)
 } as const;
 
 export const mealPromptConfig = {
