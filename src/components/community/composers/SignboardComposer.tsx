@@ -3,7 +3,12 @@ import { Input, NumberInput, RadioGroup, Select, Textarea } from '@/components/u
 import { toLetConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import { TOLET_HOUSE_RULES, TOLET_TENANT_RESTRICTION } from '@/lib/constants';
-import { ToLetContactFields, ToLetLocationField, ToLetPhotoPicker } from '@/components/community/composers/ToLetComposerShared';
+import {
+  ToLetContactFields,
+  ToLetLocationField,
+  ToLetPhotoPicker,
+  ToLetUnitDetailsFields
+} from '@/components/community/composers/ToLetComposerShared';
 import type { ToLetFormApi } from '@/components/community/useToLetForm';
 
 function AmenityChips({ form }: { form: ToLetFormApi }) {
@@ -113,6 +118,8 @@ export function SignboardComposer({ form }: { form: ToLetFormApi }) {
         options={form.typeOptions}
         compact
       />
+
+      <ToLetUnitDetailsFields form={form} />
 
       <Input
         label={strings.toLet.composer.titleLabel}

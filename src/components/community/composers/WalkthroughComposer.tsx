@@ -2,7 +2,12 @@ import { Button, Input, NumberInput, RadioGroup, Select, Textarea } from '@/comp
 import { toLetConfig } from '@/config';
 import { strings } from '@/lib/i18n';
 import { TOLET_HOUSE_RULES, TOLET_TENANT_RESTRICTION } from '@/lib/constants';
-import { ToLetContactFields, ToLetLocationField, ToLetPhotoPicker } from '@/components/community/composers/ToLetComposerShared';
+import {
+  ToLetContactFields,
+  ToLetLocationField,
+  ToLetPhotoPicker,
+  ToLetUnitDetailsFields
+} from '@/components/community/composers/ToLetComposerShared';
 import type { ToLetFormApi } from '@/components/community/useToLetForm';
 
 export const WALKTHROUGH_STEP_COUNT = 3;
@@ -93,6 +98,8 @@ function StepWhatIsIt({ form }: { form: ToLetFormApi }) {
         options={form.typeOptions}
         compact
       />
+
+      <ToLetUnitDetailsFields form={form} />
 
       <Input
         label={strings.toLet.composer.titleLabel}

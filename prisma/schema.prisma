@@ -893,6 +893,11 @@ model CommunityMessage {
   seatsAvailable   Int?
   attachedBath     Boolean                 @default(false)
   attachedBalcony  Boolean                 @default(false)
+  roomCount        Int?
+  balconyCount     Int?
+  bathroomCount    Int?
+  attachedBathroomCount Int?
+  floorNumber      Int?
   serviceChargeIncluded Boolean            @default(false)
   advanceMonths    Int?
   amenities        String[]                @default([])

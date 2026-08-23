@@ -21,6 +21,15 @@ function parseCoordinate(value: unknown): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
+type OptionalIntCheck = { ok: true; value: number | null } | { ok: false; error: string };
+
+function parseOptionalInt(value: unknown, min: number, max: number, error: string): OptionalIntCheck {
+  if (value === undefined || value === null || value === '') return { ok: true, value: null };
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) return { ok: false, error };
+  return { ok: true, value: parsed };
+}
+
 export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsCheck {
   const {
     title,
@@ -38,6 +47,11 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     seatsAvailable,
     attachedBath,
     attachedBalcony,
+    roomCount,
+    balconyCount,
+    bathroomCount,
+    attachedBathroomCount,
+    floorNumber,
     serviceChargeIncluded,
     advanceMonths,
     amenities,
@@ -113,6 +127,26 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
     advanceMonthsValue = parsed;
   }
 
+  const roomCountCheck = parseOptionalInt(roomCount, 1, toLetConfig.maxRoomCount, strings.toLet.roomCountInvalid(toLetConfig.maxRoomCount));
+  if (!roomCountCheck.ok) return { ok: false, error: roomCountCheck.error };
+
+  const balconyCountCheck = parseOptionalInt(balconyCount, 0, toLetConfig.maxBalconyCount, strings.toLet.balconyCountInvalid(toLetConfig.maxBalconyCount));
+  if (!balconyCountCheck.ok) return { ok: false, error: balconyCountCheck.error };
+
+  const bathroomCountCheck = parseOptionalInt(bathroomCount, 0, toLetConfig.maxBathroomCount, strings.toLet.bathroomCountInvalid(toLetConfig.maxBathroomCount));
+  if (!bathroomCountCheck.ok) return { ok: false, error: bathroomCountCheck.error };
+
+  const attachedBathroomCountCheck = parseOptionalInt(
+    attachedBathroomCount,
+    0,
+    toLetConfig.maxBathroomCount,
+    strings.toLet.attachedBathroomCountInvalid(toLetConfig.maxBathroomCount)
+  );
+  if (!attachedBathroomCountCheck.ok) return { ok: false, error: attachedBathroomCountCheck.error };
+
+  const floorNumberCheck = parseOptionalInt(floorNumber, 0, toLetConfig.maxFloorNumber, strings.toLet.floorNumberInvalid(toLetConfig.maxFloorNumber));
+  if (!floorNumberCheck.ok) return { ok: false, error: floorNumberCheck.error };
+
   const amenitiesList = Array.isArray(amenities) ? amenities : [];
   const invalidAmenity = amenitiesList.find((item) => typeof item !== 'string' || !TOLET_AMENITY_VALUES.includes(item));
   if (invalidAmenity !== undefined) {
@@ -185,6 +219,11 @@ export function parseToLetFields(body: Record<string, unknown>): ToLetFieldsChec
       seatsAvailable: seatsAvailableValue,
       attachedBath: Boolean(attachedBath),
       attachedBalcony: Boolean(attachedBalcony),
+      roomCount: roomCountCheck.value,
+      balconyCount: balconyCountCheck.value,
+      bathroomCount: bathroomCountCheck.value,
+      attachedBathroomCount: attachedBathroomCountCheck.value,
+      floorNumber: floorNumberCheck.value,
       serviceChargeIncluded: Boolean(serviceChargeIncluded),
       advanceMonths: advanceMonthsValue,
       amenities: amenitiesValue,

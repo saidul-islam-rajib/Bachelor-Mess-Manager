@@ -37,6 +37,11 @@ export type ToLetFormState = {
   seatsAvailable: string;
   attachedBath: boolean;
   attachedBalcony: boolean;
+  roomCount: string;
+  balconyCount: string;
+  bathroomCount: string;
+  attachedBathroomCount: string;
+  floorNumber: string;
   serviceChargeIncluded: boolean;
   advanceMonths: string;
   amenities: string[];
@@ -84,6 +89,11 @@ function emptyForm(defaultContactName: string, defaultContactPhone: string): ToL
     seatsAvailable: '',
     attachedBath: false,
     attachedBalcony: false,
+    roomCount: '',
+    balconyCount: '',
+    bathroomCount: '',
+    attachedBathroomCount: '',
+    floorNumber: '',
     serviceChargeIncluded: false,
     advanceMonths: '',
     amenities: [],
@@ -130,6 +140,11 @@ function formFromSource(
     seatsAvailable: source.seatsAvailable !== null ? String(source.seatsAvailable) : '',
     attachedBath: source.attachedBath,
     attachedBalcony: source.attachedBalcony,
+    roomCount: source.roomCount !== null ? String(source.roomCount) : '',
+    balconyCount: source.balconyCount !== null ? String(source.balconyCount) : '',
+    bathroomCount: source.bathroomCount !== null ? String(source.bathroomCount) : '',
+    attachedBathroomCount: source.attachedBathroomCount !== null ? String(source.attachedBathroomCount) : '',
+    floorNumber: source.floorNumber !== null ? String(source.floorNumber) : '',
     serviceChargeIncluded: source.serviceChargeIncluded,
     advanceMonths: source.advanceMonths !== null ? String(source.advanceMonths) : '',
     amenities: source.amenities,
@@ -386,6 +401,11 @@ export function useToLetForm({
         seatsAvailable: form.seatsAvailable ? Number(form.seatsAvailable) : null,
         attachedBath: form.attachedBath,
         attachedBalcony: form.attachedBalcony,
+        roomCount: form.roomCount ? Number(form.roomCount) : null,
+        balconyCount: form.balconyCount ? Number(form.balconyCount) : null,
+        bathroomCount: form.bathroomCount ? Number(form.bathroomCount) : null,
+        attachedBathroomCount: form.attachedBathroomCount ? Number(form.attachedBathroomCount) : null,
+        floorNumber: form.floorNumber ? Number(form.floorNumber) : null,
         serviceChargeIncluded: form.serviceChargeIncluded,
         advanceMonths: form.advanceMonths ? Number(form.advanceMonths) : null,
         amenities: form.amenities,

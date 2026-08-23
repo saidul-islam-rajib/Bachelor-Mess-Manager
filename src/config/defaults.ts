@@ -139,7 +139,11 @@ export const TOLET_DEFAULTS = {
   nearestResultCount: 6,
   nearestSearchRadiusKm: 60,
   maxSeatsAvailable: 20,
-  maxAdvanceMonths: 12
+  maxAdvanceMonths: 12,
+  maxRoomCount: 20,
+  maxBalconyCount: 10,
+  maxBathroomCount: 10,
+  maxFloorNumber: 100
 } as const;
 
 export const GEOCODE_DEFAULTS = {

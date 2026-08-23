@@ -313,7 +313,11 @@ export const toLetConfig = {
   nearestResultCount: readInt('TOLET_NEAREST_COUNT', TOLET_DEFAULTS.nearestResultCount),
   nearestSearchRadiusKm: readInt('TOLET_NEAREST_RADIUS_KM', TOLET_DEFAULTS.nearestSearchRadiusKm),
   maxSeatsAvailable: readInt('TOLET_MAX_SEATS_AVAILABLE', TOLET_DEFAULTS.maxSeatsAvailable),
-  maxAdvanceMonths: readInt('TOLET_MAX_ADVANCE_MONTHS', TOLET_DEFAULTS.maxAdvanceMonths)
+  maxAdvanceMonths: readInt('TOLET_MAX_ADVANCE_MONTHS', TOLET_DEFAULTS.maxAdvanceMonths),
+  maxRoomCount: readInt('TOLET_MAX_ROOM_COUNT', TOLET_DEFAULTS.maxRoomCount),
+  maxBalconyCount: readInt('TOLET_MAX_BALCONY_COUNT', TOLET_DEFAULTS.maxBalconyCount),
+  maxBathroomCount: readInt('TOLET_MAX_BATHROOM_COUNT', TOLET_DEFAULTS.maxBathroomCount),
+  maxFloorNumber: readInt('TOLET_MAX_FLOOR_NUMBER', TOLET_DEFAULTS.maxFloorNumber)
 } as const;
 
 export const mealPromptConfig = {

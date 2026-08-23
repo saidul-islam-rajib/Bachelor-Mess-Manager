@@ -1,8 +1,58 @@
-import { Button, Input } from '@/components/ui';
+import { Button, Input, NumberInput } from '@/components/ui';
 import { toLetConfig } from '@/config';
 import { strings } from '@/lib/i18n';
+import { TOLET_TYPES } from '@/lib/constants';
 import { ACCEPTED_IMAGE_MIMES } from '@/lib/uploads.client';
 import type { ToLetFormApi } from '@/components/community/useToLetForm';
+
+export function ToLetUnitDetailsFields({ form }: { form: ToLetFormApi }) {
+  if (form.isBachelor && form.form.listingType !== TOLET_TYPES.FLAT) return null;
+
+  return (
+    <div>
+      <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+        {strings.toLet.composer.unitDetailsTitle}
+      </span>
+      <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <NumberInput
+          label={strings.toLet.composer.roomCountLabel}
+          value={form.form.roomCount}
+          onChange={(value) => form.update('roomCount', value)}
+          min={1}
+          optional
+        />
+        <NumberInput
+          label={strings.toLet.composer.balconyCountLabel}
+          value={form.form.balconyCount}
+          onChange={(value) => form.update('balconyCount', value)}
+          min={0}
+          optional
+        />
+        <NumberInput
+          label={strings.toLet.composer.bathroomCountLabel}
+          value={form.form.bathroomCount}
+          onChange={(value) => form.update('bathroomCount', value)}
+          min={0}
+          optional
+        />
+        <NumberInput
+          label={strings.toLet.composer.attachedBathroomCountLabel}
+          value={form.form.attachedBathroomCount}
+          onChange={(value) => form.update('attachedBathroomCount', value)}
+          min={0}
+          optional
+        />
+        <NumberInput
+          label={strings.toLet.composer.floorNumberLabel}
+          value={form.form.floorNumber}
+          onChange={(value) => form.update('floorNumber', value)}
+          min={0}
+          optional
+        />
+      </div>
+    </div>
+  );
+}
 
 export function ToLetLocationField({ form }: { form: ToLetFormApi }) {
   return (

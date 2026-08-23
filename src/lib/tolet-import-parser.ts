@@ -1,6 +1,8 @@
 import { TOLET_AMENITIES, TOLET_GENDER_PREFERENCE, TOLET_MONTHS, TOLET_TENANT_RESTRICTION, TOLET_TYPES } from '@/lib/constants';
+import { strings } from '@/lib/i18n';
 
 export type ToLetImportResult = {
+  title: string;
   text: string;
   listingType: string;
   tenantRestriction: string;
@@ -12,6 +14,11 @@ export type ToLetImportResult = {
   availableMonth: string;
   attachedBath: boolean;
   attachedBalcony: boolean;
+  roomCount: string;
+  balconyCount: string;
+  bathroomCount: string;
+  attachedBathroomCount: string;
+  floorNumber: string;
   mealsProvided: boolean;
   serviceChargeIncluded: boolean;
   amenities: string[];
@@ -115,8 +122,12 @@ function extractAmount(normalizedText: string, keywords: string[], min: number, 
 
     const start = match.index;
     const end = start + raw.length;
-    const before = normalizedText.slice(Math.max(0, start - 25), start).toLowerCase();
-    const after = normalizedText.slice(end, Math.min(normalizedText.length, end + 25)).toLowerCase();
+    const beforeRaw = normalizedText.slice(Math.max(0, start - 25), start);
+    const afterRaw = normalizedText.slice(end, Math.min(normalizedText.length, end + 25));
+    const beforeNewline = beforeRaw.lastIndexOf('\n');
+    const afterNewline = afterRaw.indexOf('\n');
+    const before = (beforeNewline === -1 ? beforeRaw : beforeRaw.slice(beforeNewline + 1)).toLowerCase();
+    const after = (afterNewline === -1 ? afterRaw : afterRaw.slice(0, afterNewline)).toLowerCase();
 
     const followedBySlashMonth =
       /^\s*\//.test(after) &&
@@ -125,7 +136,9 @@ function extractAmount(normalizedText: string, keywords: string[], min: number, 
     if (followedBySlashMonth) continue;
 
     const hasCurrencyMarker = /৳\s*$/.test(before) || /^\s*৳/.test(after) || /^\s*(টাকা|taka|tk\b)/.test(after) || /^\s*\/[-=]/.test(after);
-    const hasKeyword = keywords.some((keyword) => before.includes(keyword) || after.includes(keyword));
+    const hasKeyword = keywords.some(
+      (keyword) => findStandaloneIndex(before, keyword) !== -1 || findStandaloneIndex(after, keyword) !== -1
+    );
     const looksLikeYear = value >= 1900 && value <= 2099 && raw.length === 4;
 
     if (looksLikeYear && !hasCurrencyMarker) continue;
@@ -147,7 +160,7 @@ function detectListingType(text: string): string {
   if (includesAny(text, ['সেমি মাস্টার', 'semi master', 'semi-master'])) return TOLET_TYPES.SEMI_MASTER;
   if (includesAny(text, ['সিঙ্গেল রুম', 'single room'])) return TOLET_TYPES.SINGLE_ROOM;
   if (includesAny(text, ['ফ্ল্যাট', 'apartment', 'flat'])) return TOLET_TYPES.FLAT;
-  if (includesAny(text, ['সিট']) || /\bseat\b/.test(text)) return TOLET_TYPES.SEAT;
+  if (findStandaloneIndex(text, 'সিট') !== -1 || /\bseat\b/.test(text)) return TOLET_TYPES.SEAT;
   return TOLET_TYPES.ROOM;
 }
 
@@ -213,7 +226,28 @@ function detectAmenities(text: string): string[] {
   if (includesAny(text, ['বুয়া', 'maid'])) found.add(TOLET_AMENITIES.MAID_SERVICE);
   if (includesAny(text, ['ফার্নিচার', 'furnished', 'furniture'])) found.add(TOLET_AMENITIES.FURNISHED);
   if (includesAny(text, ['ডাইনিং', 'dining'])) found.add(TOLET_AMENITIES.DINING_SPACE);
+  if (includesAny(text, ['মসজিদ', 'mosque'])) found.add(TOLET_AMENITIES.NEAR_MOSQUE);
+  if (includesAny(text, ['খেলার মাঠ', 'মাঠ', 'playground', 'park'])) found.add(TOLET_AMENITIES.NEAR_PLAYGROUND);
   return [...found];
+}
+
+function buildTitle(result: {
+  listingType: string;
+  tenantRestriction: string;
+  genderPreference: string;
+  isSublet: boolean;
+  seatsAvailable: string;
+}): string {
+  const roomLabel = strings.toLet.types[result.listingType as keyof typeof strings.toLet.types];
+  const prefix = result.isSublet ? `${strings.toLet.sublet} ` : '';
+
+  if (result.tenantRestriction === TOLET_TENANT_RESTRICTION.FAMILY) {
+    return `${prefix}${roomLabel} — ${strings.toLet.tenantRestriction.FAMILY}`;
+  }
+
+  const genderLabel = strings.toLet.genderPreference[result.genderPreference as keyof typeof strings.toLet.genderPreference];
+  const seatsPrefix = result.listingType === TOLET_TYPES.SEAT && result.seatsAvailable ? `${result.seatsAvailable} ` : '';
+  return `${prefix}${seatsPrefix}${roomLabel} — ${genderLabel} ${strings.toLet.tenantRestriction.BACHELOR}`;
 }
 
 export function parseToLetImportText(rawText: string): ToLetImportResult {
@@ -225,20 +259,30 @@ export function parseToLetImportText(rawText: string): ToLetImportResult {
   const lower = cleaned.toLowerCase();
   const normalized = normalizeDigits(lower);
 
+  const listingType = detectListingType(lower);
   const tenantRestriction = detectTenantRestriction(lower);
+  const genderPreference = detectGenderPreference(lower);
+  const isSublet = includesAny(lower, ['সাবলেট', 'sublet']);
+  const seatsAvailable = extractAmount(normalized, ['সিট', 'seat'], 1, 20);
 
   return {
+    title: buildTitle({ listingType, tenantRestriction, genderPreference, isSublet, seatsAvailable }),
     text: cleaned,
-    listingType: detectListingType(lower),
+    listingType,
     tenantRestriction,
-    genderPreference: detectGenderPreference(lower),
-    isSublet: includesAny(lower, ['সাবলেট', 'sublet']),
+    genderPreference,
+    isSublet,
     rent: extractAmount(normalized, ['ভাড়া', 'rent'], 500, 500000),
     advanceMonths: extractAmount(normalized, ['অগ্রিম', 'advance'], 0, 12),
-    seatsAvailable: extractAmount(normalized, ['সিট', 'seat'], 1, 20),
+    seatsAvailable,
     availableMonth: detectAvailableMonth(cleaned, lower),
     attachedBath: includesAny(lower, ['ওয়াশরুম', 'বাথরুম', 'attached bath', 'attach bath']),
     attachedBalcony: includesAny(lower, ['বারান্দা', 'balcony']),
+    roomCount: extractAmount(normalized, ['বেডরুম', 'বেড রুম', 'bedroom', 'রুম', 'room'], 1, 20),
+    balconyCount: extractAmount(normalized, ['বারান্দা', 'balcony'], 0, 10),
+    bathroomCount: extractAmount(normalized, ['বাথরুম', 'ওয়াশরুম', 'bathroom', 'washroom'], 0, 10),
+    attachedBathroomCount: extractAmount(normalized, ['এটাচ', 'attached bath', 'attach bath'], 0, 10),
+    floorNumber: extractAmount(normalized, ['তলা', 'floor'], 0, 100),
     mealsProvided: includesAny(lower, ['মেসের খাবার', 'রান্নার ব্যবস্থা', 'meal provided', 'meals provided']),
     serviceChargeIncluded: includesAny(lower, ['সার্ভিস চার্জ সহ', 'including service charge', 'service charge included']),
     amenities: detectAmenities(lower),

@@ -194,6 +194,13 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
     ...(listing.seatsAvailable ? [{ label: strings.toLet.composer.seatsAvailableLabel, value: strings.toLet.seatsOpen(listing.seatsAvailable) }] : []),
     ...(listing.attachedBath ? [{ label: strings.toLet.composer.attachedBathLabel, value: strings.common.yes }] : []),
     ...(listing.attachedBalcony ? [{ label: strings.toLet.composer.attachedBalconyLabel, value: strings.common.yes }] : []),
+    ...(listing.roomCount !== null ? [{ label: strings.toLet.composer.roomCountLabel, value: String(listing.roomCount) }] : []),
+    ...(listing.balconyCount !== null ? [{ label: strings.toLet.composer.balconyCountLabel, value: String(listing.balconyCount) }] : []),
+    ...(listing.bathroomCount !== null ? [{ label: strings.toLet.composer.bathroomCountLabel, value: String(listing.bathroomCount) }] : []),
+    ...(listing.attachedBathroomCount !== null
+      ? [{ label: strings.toLet.composer.attachedBathroomCountLabel, value: String(listing.attachedBathroomCount) }]
+      : []),
+    ...(listing.floorNumber !== null ? [{ label: strings.toLet.composer.floorNumberLabel, value: String(listing.floorNumber) }] : []),
     ...(listing.advanceMonths !== null ? [{ label: strings.toLet.composer.advanceMonthsLabel, value: strings.toLet.composer.advanceMonthsOption(listing.advanceMonths) }] : []),
     { label: strings.toLet.composer.serviceChargeLabel, value: listing.serviceChargeIncluded ? strings.common.yes : strings.common.no },
     ...(listing.mealsProvided ? [{ label: strings.toLet.composer.mealsProvidedLabel, value: strings.common.yes }] : [])
@@ -206,6 +213,7 @@ export default function ToLetDetailPage({ initialListing, pageUrl, ogImage }: Pa
         description={listing.text.length > 200 ? `${listing.text.slice(0, 197)}...` : listing.text}
         image={ogImage ?? undefined}
         url={pageUrl}
+        hideSocialSummary
       />
 
       <Link

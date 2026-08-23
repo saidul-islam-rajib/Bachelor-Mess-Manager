@@ -46,6 +46,11 @@ export type CommunityMessageView = {
   seatsAvailable: number | null;
   attachedBath: boolean;
   attachedBalcony: boolean;
+  roomCount: number | null;
+  balconyCount: number | null;
+  bathroomCount: number | null;
+  attachedBathroomCount: number | null;
+  floorNumber: number | null;
   serviceChargeIncluded: boolean;
   advanceMonths: number | null;
   amenities: string[];
@@ -133,6 +138,11 @@ const MESSAGE_SELECT = {
   seatsAvailable: true,
   attachedBath: true,
   attachedBalcony: true,
+  roomCount: true,
+  balconyCount: true,
+  bathroomCount: true,
+  attachedBathroomCount: true,
+  floorNumber: true,
   serviceChargeIncluded: true,
   advanceMonths: true,
   amenities: true,
@@ -227,6 +237,11 @@ function serialize(row: MessageRow, likedByViewer: boolean): CommunityMessageVie
     seatsAvailable: row.seatsAvailable,
     attachedBath: row.attachedBath,
     attachedBalcony: row.attachedBalcony,
+    roomCount: row.roomCount,
+    balconyCount: row.balconyCount,
+    bathroomCount: row.bathroomCount,
+    attachedBathroomCount: row.attachedBathroomCount,
+    floorNumber: row.floorNumber,
     serviceChargeIncluded: row.serviceChargeIncluded,
     advanceMonths: row.advanceMonths,
     amenities: row.amenities,
@@ -364,6 +379,11 @@ export type PostMessageToLetInput = {
   seatsAvailable: number | null;
   attachedBath: boolean;
   attachedBalcony: boolean;
+  roomCount: number | null;
+  balconyCount: number | null;
+  bathroomCount: number | null;
+  attachedBathroomCount: number | null;
+  floorNumber: number | null;
   serviceChargeIncluded: boolean;
   advanceMonths: number | null;
   amenities: string[];
@@ -416,6 +436,11 @@ async function createMessageRow(
             seatsAvailable: params.toLet.seatsAvailable,
             attachedBath: params.toLet.attachedBath,
             attachedBalcony: params.toLet.attachedBalcony,
+            roomCount: params.toLet.roomCount,
+            balconyCount: params.toLet.balconyCount,
+            bathroomCount: params.toLet.bathroomCount,
+            attachedBathroomCount: params.toLet.attachedBathroomCount,
+            floorNumber: params.toLet.floorNumber,
             serviceChargeIncluded: params.toLet.serviceChargeIncluded,
             advanceMonths: params.toLet.advanceMonths,
             amenities: params.toLet.amenities,
@@ -489,6 +514,11 @@ export type UpdateListingInput = Partial<{
   seatsAvailable: number | null;
   attachedBath: boolean;
   attachedBalcony: boolean;
+  roomCount: number | null;
+  balconyCount: number | null;
+  bathroomCount: number | null;
+  attachedBathroomCount: number | null;
+  floorNumber: number | null;
   serviceChargeIncluded: boolean;
   advanceMonths: number | null;
   amenities: string[];
