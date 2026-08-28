@@ -204,8 +204,8 @@ export default function MealRateTrendChart({ days, currentUserId }: { days: Tren
               y={0}
               width={Math.max(1, highlightBand.x2 - highlightBand.x1)}
               height={VIEW_HEIGHT}
-              fill="#f59e0b"
-              fillOpacity={0.1}
+              className="fill-amber-500/10 dark:fill-amber-400/25 stroke-amber-400/40 dark:stroke-amber-300/50"
+              strokeWidth={1}
             />
           )}
 
