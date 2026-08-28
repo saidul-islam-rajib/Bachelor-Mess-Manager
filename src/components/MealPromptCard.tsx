@@ -99,7 +99,7 @@ export function MealPromptCard({
 
   if (compact) {
     return (
-      <div className="rounded-3xl border border-brand-100 bg-brand-50/70 p-4 sm:p-5">
+      <div className="rounded-3xl border border-brand-100 dark:border-brand-500/30 bg-brand-50/70 dark:bg-brand-500/10 p-4 sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-600 text-white">
@@ -138,7 +138,7 @@ export function MealPromptCard({
                 type="button"
                 disabled={locked}
                 onClick={() => setChoosing(true)}
-                className="rounded-full px-3 py-2 text-sm font-medium text-brand-700 underline-offset-2 hover:underline disabled:opacity-40"
+                className="rounded-full px-3 py-2 text-sm font-medium text-brand-700 dark:text-brand-400 underline-offset-2 hover:underline disabled:opacity-40"
               >
                 {strings.mealPrompt.choose}
               </button>
