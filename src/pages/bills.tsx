@@ -495,7 +495,7 @@ function PaymentHistorySection({
                     </>
                   )}
                   {entry.fromAdvance && (
-                    <span className="font-medium text-teal-700">{strings.bills.paymentHistory.fromAdvance}</span>
+                    <span className="font-medium text-teal-700 dark:text-teal-400">{strings.bills.paymentHistory.fromAdvance}</span>
                   )}
                   {entry.isReversed && (
                     <span className="font-medium text-amber-600 dark:text-amber-400">{strings.bills.ledger.reversed}</span>
@@ -683,7 +683,7 @@ function AdvancesSection({
                     <span className="ml-1 text-xs font-normal text-brand-700">{strings.common.you}</span>
                   )}
                 </span>
-                <span className={`shrink-0 font-semibold tabular-nums ${m.balance > 0 ? 'text-teal-700' : 'text-slate-300 dark:text-slate-600'}`}>
+                <span className={`shrink-0 font-semibold tabular-nums ${m.balance > 0 ? 'text-teal-700 dark:text-teal-400' : 'text-slate-300 dark:text-slate-600'}`}>
                   {taka(m.balance)}
                 </span>
               </li>
@@ -763,7 +763,7 @@ function AdvancesSection({
                               ? 'text-slate-400 dark:text-slate-500 line-through'
                               : entry.amount < 0
                                 ? 'text-slate-500 dark:text-slate-400'
-                                : 'text-teal-700'
+                                : 'text-teal-700 dark:text-teal-400'
                           }`}
                         >
                           {entry.amount < 0 ? '−' : '+'}
@@ -876,7 +876,7 @@ function Breakdown({
 function AdvanceNote({ share }: { share: Share }) {
   if (share.advance <= 0) return null;
   return (
-    <p className="mt-1 rounded-lg bg-teal-50 px-2 py-1 text-xs font-medium text-teal-800">
+    <p className="mt-1 rounded-lg bg-teal-50 dark:bg-teal-500/10 px-2 py-1 text-xs font-medium text-teal-800 dark:text-teal-300">
       {strings.bills.advanceOverpaidNote(taka(share.advance))}
     </p>
   );
@@ -1087,7 +1087,7 @@ function SplitPanel({
                   key={share.userId}
                   className={
                     share.advance > 0
-                      ? 'bg-teal-50/60'
+                      ? 'bg-teal-50/60 dark:bg-teal-500/10'
                       : isMe
                         ? 'bg-brand-50/40'
                         : 'bg-white dark:bg-slate-800'
@@ -1108,9 +1108,9 @@ function SplitPanel({
                     {share.outstanding > 0 ? (
                       <span className="font-semibold text-rose-600">{taka(share.outstanding)}</span>
                     ) : share.advance > 0 ? (
-                      <span className="font-semibold text-teal-700">
+                      <span className="font-semibold text-teal-700 dark:text-teal-400">
                         +{taka(share.advance)}
-                        <span className="block text-[10px] font-normal text-teal-600">{strings.bills.getsBackLabel}</span>
+                        <span className="block text-[10px] font-normal text-teal-600 dark:text-teal-400">{strings.bills.getsBackLabel}</span>
                       </span>
                     ) : (
                       <span className="text-slate-300 dark:text-slate-600">—</span>
@@ -1158,7 +1158,7 @@ function SplitPanel({
               key={share.userId}
               className={`p-3.5 ${
                 share.advance > 0
-                  ? 'border-l-4 border-teal-400 bg-teal-50/60'
+                  ? 'border-l-4 border-teal-400 dark:border-teal-500 bg-teal-50/60 dark:bg-teal-500/10'
                   : isMe
                     ? 'bg-brand-50/50'
                     : 'bg-white dark:bg-slate-800'
@@ -1189,7 +1189,7 @@ function SplitPanel({
                     {strings.bills.dueSuffix(taka(share.outstanding))}
                   </span>
                 ) : share.advance > 0 ? (
-                  <span className="shrink-0 text-sm font-bold tabular-nums text-teal-700">
+                  <span className="shrink-0 text-sm font-bold tabular-nums text-teal-700 dark:text-teal-400">
                     +{strings.bills.backSuffix(taka(share.advance))}
                   </span>
                 ) : (
@@ -1311,7 +1311,7 @@ function BillRow({
               <span className="font-semibold text-green-600 dark:text-green-400">{strings.bills.everyonePaid}</span>
             )}
             {bill.advance > 0 && (
-              <span className="rounded-full bg-teal-100 px-2 py-0.5 font-semibold text-teal-800">
+              <span className="rounded-full bg-teal-100 dark:bg-teal-500/15 px-2 py-0.5 font-semibold text-teal-800 dark:text-teal-300">
                 {strings.bills.advanceBack(taka(bill.advance))}
               </span>
             )}

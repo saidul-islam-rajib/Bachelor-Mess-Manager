@@ -4,7 +4,7 @@ export const STATUS_STYLES: Record<string, { pill: string; label: string; dot: s
   PAID: { pill: 'bg-green-100 text-green-800', label: strings.bills.paid, dot: 'bg-green-500' },
   PARTIAL: { pill: 'bg-amber-100 text-amber-800', label: strings.bills.partPaidLabel, dot: 'bg-amber-500' },
   PENDING: { pill: 'bg-rose-100 text-rose-800', label: strings.bills.colDue, dot: 'bg-rose-500' },
-  ADVANCE: { pill: 'bg-teal-100 text-teal-800', label: strings.bills.stats.getsBackDt, dot: 'bg-teal-500' }
+  ADVANCE: { pill: 'bg-teal-100 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300', label: strings.bills.stats.getsBackDt, dot: 'bg-teal-500' }
 };
 
 export function statusOf(entry: { status: string; advance: number }) {
@@ -13,7 +13,7 @@ export function statusOf(entry: { status: string; advance: number }) {
 }
 
 export const POSITION_STYLES = {
-  BACK: { pill: 'bg-teal-100 text-teal-800', label: strings.bills.stats.getsBackDt, dot: 'bg-teal-500', text: 'text-teal-700' },
+  BACK: { pill: 'bg-teal-100 dark:bg-teal-500/15 text-teal-800 dark:text-teal-300', label: strings.bills.stats.getsBackDt, dot: 'bg-teal-500', text: 'text-teal-700 dark:text-teal-400' },
   PAY: { pill: 'bg-rose-100 text-rose-800', label: strings.bills.stillToPayLabel, dot: 'bg-rose-500', text: 'text-rose-600' },
   CLEAR: { pill: 'bg-green-100 text-green-800', label: strings.bills.settled, dot: 'bg-green-500', text: 'text-green-700' }
 };

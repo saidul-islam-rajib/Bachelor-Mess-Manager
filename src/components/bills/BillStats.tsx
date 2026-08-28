@@ -307,19 +307,19 @@ export function BillStats({
             onOpenBill={onOpenBill}
           />
           {refunds.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-teal-200 bg-teal-50/60 p-3.5 sm:p-4">
-              <h3 className="text-sm font-semibold text-teal-900">{stats.getsMoneyBack}</h3>
-              <p className="mt-0.5 text-xs text-teal-800">
+            <div className="mt-4 rounded-2xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/60 dark:bg-teal-500/10 p-3.5 sm:p-4">
+              <h3 className="text-sm font-semibold text-teal-900 dark:text-teal-200">{stats.getsMoneyBack}</h3>
+              <p className="mt-0.5 text-xs text-teal-800 dark:text-teal-300">
                 {stats.getsMoneyBackHint}
               </p>
               <ul className="mt-2 space-y-1 text-sm">
                 {refunds.map((row) => (
                   <li key={row.userId} className="flex items-center justify-between gap-3">
-                    <span className="truncate text-teal-900">
+                    <span className="truncate text-teal-900 dark:text-teal-200">
                       {row.userName}
-                      {row.isCurrentUser && <span className="ml-1.5 text-xs text-teal-700">{strings.common.you}</span>}
+                      {row.isCurrentUser && <span className="ml-1.5 text-xs text-teal-700 dark:text-teal-400">{strings.common.you}</span>}
                     </span>
-                    <span className="shrink-0 font-semibold tabular-nums text-teal-800">+{taka(row.net)}</span>
+                    <span className="shrink-0 font-semibold tabular-nums text-teal-800 dark:text-teal-300">+{taka(row.net)}</span>
                   </li>
                 ))}
               </ul>
@@ -349,7 +349,7 @@ export function BillStats({
                 </div>
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">{stats.getsBackDt}</dt>
-                  <dd className="mt-0.5 font-semibold tabular-nums text-teal-700">{taka(mine.advance)}</dd>
+                  <dd className="mt-0.5 font-semibold tabular-nums text-teal-700 dark:text-teal-400">{taka(mine.advance)}</dd>
                 </div>
               </dl>
               <LineRows lines={mine.lines} labels={labels} onOpenBill={onOpenBill} />

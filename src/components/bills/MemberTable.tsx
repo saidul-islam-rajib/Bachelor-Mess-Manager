@@ -84,7 +84,7 @@ function LineList({
             {line.outstanding > 0 ? (
               <Figure label={strings.bills.colDue} value={taka(line.outstanding)} className="text-rose-600" />
             ) : line.advance > 0 ? (
-              <Figure label={memberTable.backDt} value={`+${taka(line.advance)}`} className="text-teal-700" />
+              <Figure label={memberTable.backDt} value={`+${taka(line.advance)}`} className="text-teal-700 dark:text-teal-400" />
             ) : (
               <Figure label={strings.bills.colDue} value="—" className="text-slate-300 dark:text-slate-600" />
             )}

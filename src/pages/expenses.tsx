@@ -746,7 +746,7 @@ function CommentBox({
           disabled={busy || !text.trim()}
           aria-label={strings.expenses.postComment}
           title={strings.expenses.postComment}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 shadow-sm shadow-brand-600/20 text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:bg-slate-200 disabled:text-slate-400"
+          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 shadow-sm shadow-brand-600/20 text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:bg-slate-200 disabled:text-slate-400 dark:disabled:bg-slate-700 dark:disabled:text-slate-500"
         >
           {busy ? (
             <span className="text-xs">···</span>

@@ -972,12 +972,12 @@ function PaymentLog({
                 <p className={`font-medium ${p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : ''}`}>
                   {p.userName}
                   {p.billId && (
-                    <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                    <span className="ml-2 rounded-full bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 text-xs font-medium text-brand-700 dark:text-brand-400">
                       {payments.billBadgeSuffix(categoryLabels[p.billType ?? ''] ?? p.billType ?? '')}
                     </span>
                   )}
                   {p.isReversal && (
-                    <span className="ml-2 rounded-full bg-rose-50 px-2 py-0.5 text-xs font-medium text-rose-700">
+                    <span className="ml-2 rounded-full bg-rose-50 dark:bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-400">
                       {payments.correctionBadge}
                     </span>
                   )}
@@ -990,7 +990,7 @@ function PaymentLog({
               <div className="flex items-center gap-3">
                 <span
                   className={`font-semibold tabular-nums ${
-                    p.amount < 0 ? 'text-rose-600' : p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-green-600 dark:text-green-400'
+                    p.amount < 0 ? 'text-rose-600 dark:text-rose-400' : p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-green-600 dark:text-green-400'
                   }`}
                 >
                   {p.amount < 0 ? `−${taka(Math.abs(p.amount))}` : taka(p.amount)}
@@ -1019,7 +1019,7 @@ function StatusBadge({ status }: { status: string }) {
     [PAYMENT_STATUS.PAID]: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-green-600/20',
     [PAYMENT_STATUS.PARTIAL]: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-amber-600/20',
     [PAYMENT_STATUS.PENDING]: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-red-600/20',
-    [PAYMENT_STATUS.REFUND]: 'bg-sky-50 text-sky-700 ring-sky-600/20'
+    [PAYMENT_STATUS.REFUND]: 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 ring-sky-600/20'
   };
   const label: Record<string, string> = {
     [PAYMENT_STATUS.PAID]: payments.statusSettled,

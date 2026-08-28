@@ -30,7 +30,7 @@ function Total({
       : tone === 'rose'
         ? 'text-rose-600'
         : tone === 'teal'
-          ? 'text-teal-700'
+          ? 'text-teal-700 dark:text-teal-400'
           : 'text-slate-900 dark:text-slate-100';
   return (
     <div>
@@ -135,7 +135,7 @@ export function FinalSummary({
       )}
 
       {settlement.surplus > 0 && (
-        <p className="mt-3 rounded-2xl bg-teal-50 px-4 py-3 text-xs text-teal-900">
+        <p className="mt-3 rounded-2xl bg-teal-50 dark:bg-teal-500/10 px-4 py-3 text-xs text-teal-900 dark:text-teal-200">
           <span className="font-semibold tabular-nums">{taka(settlement.surplus)}</span> {finalSummary.surplusNote}
         </p>
       )}
