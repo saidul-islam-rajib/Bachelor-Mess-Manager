@@ -124,6 +124,7 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (can(PERMISSIONS.EXPENSE_VIEW)) messLinks.push({ href: ROUTES.expenses, label: strings.nav.bazar });
     if (can(PERMISSIONS.BILL_VIEW)) messLinks.push({ href: ROUTES.bills, label: strings.nav.bills });
     if (can(PERMISSIONS.PAYMENT_VIEW)) messLinks.push({ href: ROUTES.payments, label: strings.nav.payments });
+    if (can(PERMISSIONS.PAYMENT_VIEW)) messLinks.push({ href: ROUTES.settlement, label: strings.nav.settlement });
     if (can(PERMISSIONS.MEMBERSHIP_VIEW)) messLinks.push({ href: ROUTES.members, label: strings.nav.members });
   }
 

@@ -1,0 +1,66 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: bachelor-point-settlement
+  namespace: bachelor-point
+  labels:
+    app: bachelor-point
+    component: settlement
+  annotations:
+    description: "Finalizes last month's settlement for every active group. Idempotent per group, per month."
+spec:
+  schedule: "5 0 1 * *"
+  timeZone: "Asia/Dhaka"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          labels:
+            app: bachelor-point
+            component: settlement
+        spec:
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: settlement
+              image: REPLACE_IMAGE
+              command:
+                - node
+                - scripts/finalize-settlements.js
+              env:
+                - name: APP_URL
+                  value: http://bachelor-point-active
+              envFrom:
+                - configMapRef:
+                    name: bachelor-point-config
+                - secretRef:
+                    name: bachelor-point-secrets
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 128Mi
+                limits:
+                  cpu: 250m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              volumeMounts:
+                - name: tmp
+                  mountPath: /tmp
+          volumes:
+            - name: tmp
+              emptyDir: {}

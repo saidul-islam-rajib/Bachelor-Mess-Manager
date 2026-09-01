@@ -14,6 +14,17 @@ import { STRINGS } from '@/lib/strings';
 import { isValidEmail } from '@/lib/validation';
 import { findXssField } from '@/lib/xss';
 
+async function settlementRedirectDestination(): Promise<string | null> {
+  try {
+    const response = await fetch('/api/settlement/status');
+    if (!response.ok) return null;
+    const data = await response.json().catch(() => ({}));
+    return data?.shouldRedirect ? ROUTES.settlement : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function LoginPage() {
   const strings = STRINGS.auth.login;
   const router = useRouter();
@@ -64,7 +75,10 @@ export default function LoginPage() {
 
       await refresh();
       toast.success(i18n.success.welcomeBack(data.user?.name ?? ''));
-      await router.push(safeNextPath(router.query.next) ?? ROUTES.dashboard);
+
+      const requestedNext = safeNextPath(router.query.next);
+      const destination = requestedNext ?? (await settlementRedirectDestination()) ?? ROUTES.dashboard;
+      await router.push(destination);
     } catch {
       setFormError(i18n.errors.network);
     } finally {

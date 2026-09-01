@@ -4,6 +4,7 @@ import { getActiveMembership, getSessionUser, requireAdmin, requireSupervisorOrA
 import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport, type ReportMember } from '@/lib/group-report';
 import { buildGroupDashboardCard } from '@/lib/dashboard-report';
+import { getFinalSettlement } from '@/lib/final-settlement';
 import { serializeChangeRequest } from '@/lib/meal-edits';
 import { INVITATION_STATUS, REQUEST_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { currentMonthKey, dayToUtcDate, parseMonth, round2, todayKey } from '@/lib/month';
@@ -71,8 +72,9 @@ async function supervisorReport(supervisorId: string, month: string) {
     orderBy: { createdAt: 'desc' }
   });
 
-  const [cards, pendingMealChangeRows] = await Promise.all([
+  const [cards, finalSettlements, pendingMealChangeRows] = await Promise.all([
     Promise.all(groups.map((group) => buildGroupDashboardCard(group, month))),
+    Promise.all(groups.map((group) => getFinalSettlement(group))),
     prisma.mealChangeRequest.findMany({
       where: { groupId: { in: groups.map((group) => group.id) }, status: REQUEST_STATUS.PENDING },
       include: {
@@ -142,6 +144,7 @@ async function supervisorReport(supervisorId: string, month: string) {
 
   return {
     groups: cards,
+    finalSettlements: finalSettlements.filter((settlement): settlement is NonNullable<typeof settlement> => settlement !== null),
     pendingMealChanges,
     totals: {
       groups: groups.length,
@@ -175,20 +178,21 @@ async function memberReport(userId: string, month: string) {
   ]);
 
   if (!membership) {
-    return { group: null, pendingInvitations, current: null, previous: null };
+    return { group: null, pendingInvitations, finalSettlement: null, current: null, previous: null };
   }
 
   const group = await prisma.group.findUnique({ where: { id: membership.groupId } });
   if (!group) {
-    return { group: null, pendingInvitations, current: null, previous: null };
+    return { group: null, pendingInvitations, finalSettlement: null, current: null, previous: null };
   }
 
   const previous = previousMonthKey(month);
   const day = todayKey();
-  const [thisMonth, lastMonth, card, todayMealRows] = await Promise.all([
+  const [thisMonth, lastMonth, card, finalSettlement, todayMealRows] = await Promise.all([
     buildGroupReport(group, month),
     buildGroupReport(group, previous),
     buildGroupDashboardCard(group, month),
+    getFinalSettlement(group),
     prisma.mealEntry.findMany({
       where: { groupId: group.id, date: dayToUtcDate(day) },
       select: { breakfastCount: true, lunchCount: true, dinnerCount: true }
@@ -222,6 +226,7 @@ async function memberReport(userId: string, month: string) {
       card
     },
     pendingInvitations,
+    finalSettlement,
     current: {
       meals: me?.meals ?? 0,
       mealCost: me?.mealCost ?? 0,

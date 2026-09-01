@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   '/api/uploads',
   '/api/meal-reply',
   '/api/meal-prompts/dispatch',
+  '/api/cron/finalize-settlements',
   '/auth/login',
   '/auth/register',
   '/auth/registration-submitted',

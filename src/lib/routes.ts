@@ -11,6 +11,7 @@ export const ROUTES = {
   expenses: '/expenses',
   bills: '/bills',
   payments: '/payments',
+  settlement: '/settlement',
   members: '/members',
   profile: '/profile',
   comments: '/comments',

@@ -306,7 +306,7 @@ export type SettleUp = {
   surplus: number;
 };
 
-export function settleUp(summaries: MemberSummary[]): SettleUp {
+export function settleUp(summaries: Pick<MemberSummary, 'userId' | 'userName' | 'net'>[]): SettleUp {
   const debtors = summaries
     .filter((row) => toPaisa(row.net) < 0)
     .map((row) => ({ row, remaining: -toPaisa(row.net) }))

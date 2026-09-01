@@ -130,6 +130,7 @@ model User {
   mealChangeRequests  MealChangeRequest[] @relation("MealChangeSubject")
   mealChangeDecisions MealChangeRequest[] @relation("MealChangeDecider")
   closingsRun         MonthClosing[]      @relation("MonthClosingActor")
+  closingsSettled     MonthClosing[]      @relation("MonthClosingSettler")
   closingLines        ClosingLine[]
   communityMessages   CommunityMessage[]  @relation("CommunityAuthor")
   communityRead       CommunityRead?
@@ -415,6 +416,9 @@ model MonthClosing {
   closedById    String?
   note          String?
   reopenedAt    DateTime?
+  settledAt     DateTime?
+  settledBy     User?         @relation("MonthClosingSettler", fields: [settledById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  settledById   String?
   createdAt     DateTime      @default(now())
   createdById   String?
   updatedAt     DateTime      @default(now()) @updatedAt

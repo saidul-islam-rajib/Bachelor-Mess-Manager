@@ -335,6 +335,10 @@ export const mealPromptConfig = {
   dispatchSecret: readOptionalString('MEAL_PROMPT_DISPATCH_SECRET')
 } as const;
 
+export const settlementConfig = {
+  dispatchSecret: readOptionalString('SETTLEMENT_DISPATCH_SECRET')
+} as const;
+
 export const seedConfig = {
   enabled: readBoolean('SEED_ENABLED', !isProduction),
   emailDomain: readString('SEED_EMAIL_DOMAIN', 'bachelorpoint.local'),

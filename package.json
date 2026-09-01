@@ -41,6 +41,7 @@
     "user:password": "node scripts/reset-password.js",
     "cleanup:unverified": "node scripts/cleanup-unverified.js",
     "meals:prompt": "node scripts/send-meal-prompts.js",
+    "settlement:finalize": "node scripts/finalize-settlements.js",
     "seed:db": "node prisma/seed.js",
     "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init",
     "backup:db": "node scripts/backup-db.js",

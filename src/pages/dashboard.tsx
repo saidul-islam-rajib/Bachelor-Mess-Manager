@@ -75,6 +75,16 @@ type SupervisorReport = {
   byType: Record<string, number>;
   unpaid: { groupId: string; groupName: string; id: string; name: string; due: number; status: string }[];
   longestStaying: { id: string; name: string; groupName: string; days: number }[];
+  finalSettlements: FinalSettlementCardData[];
+};
+
+type FinalSettlementCardData = {
+  groupId: string;
+  groupName: string;
+  monthKey: string;
+  settledAt: string | null;
+  allClear: boolean;
+  members: { id: string; status: string; liveDue: number }[];
 };
 
 type MemberReport = {
@@ -108,6 +118,7 @@ type MemberReport = {
     mealRate: number;
     groupExpense: number;
   } | null;
+  finalSettlement: FinalSettlementCardData | null;
 };
 
 type DashboardData = {
@@ -197,7 +208,7 @@ export default function DashboardPage() {
       ) : data.admin ? (
         <AdminDashboard report={data.admin} />
       ) : data.supervisor ? (
-        <SupervisorDashboard report={data.supervisor} onDecideMealChange={onDecideMealChange} />
+        <SupervisorDashboard report={data.supervisor} onDecideMealChange={onDecideMealChange} currentUserId={user?.id} />
       ) : data.member ? (
         <MemberDashboard report={data.member} currentUserId={user?.id} />
       ) : (
@@ -248,12 +259,64 @@ function AdminDashboard({ report }: { report: AdminReport }) {
   );
 }
 
+function FinalSettlementCard({
+  settlement,
+  currentUserId,
+  canManage = false
+}: {
+  settlement: FinalSettlementCardData;
+  currentUserId?: string;
+  canManage?: boolean;
+}) {
+  const settlementStrings = strings.settlement;
+  const mine = currentUserId ? settlement.members.find((m) => m.id === currentUserId) : undefined;
+  const outstandingCount = settlement.members.filter((m) => m.status !== 'PAID').length;
+
+  return (
+    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h2 className="text-lg font-semibold">{settlementStrings.dashboardCardTitle}</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{settlementStrings.dashboardCardSubtitle(formatMonthLabel(settlement.monthKey))}</p>
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-medium ${
+            settlement.settledAt
+              ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400'
+              : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400'
+          }`}
+        >
+          {settlement.settledAt ? settlementStrings.settledBadge : settlementStrings.pendingBadge}
+        </span>
+      </div>
+
+      {mine && mine.status !== 'PAID' && (
+        <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">
+          {mine.liveDue > 0 ? settlementStrings.youOwe(taka(Math.abs(mine.liveDue))) : settlementStrings.youAreOwed(taka(Math.abs(mine.liveDue)))}
+        </p>
+      )}
+
+      {canManage && !settlement.settledAt && (
+        <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">
+          {settlement.allClear ? settlementStrings.readyToSettle : settlementStrings.stillOwe(outstandingCount)}
+        </p>
+      )}
+
+      <div className="mt-4">
+        <ActionLink href={ROUTES.settlement}>{settlementStrings.viewDetails}</ActionLink>
+      </div>
+    </div>
+  );
+}
+
 function SupervisorDashboard({
   report,
-  onDecideMealChange
+  onDecideMealChange,
+  currentUserId
 }: {
   report: SupervisorReport;
   onDecideMealChange: (id: string, status: 'APPROVED' | 'REJECTED') => void;
+  currentUserId?: string;
 }) {
   const { totals } = report;
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
@@ -270,6 +333,10 @@ function SupervisorDashboard({
 
   return (
     <div className="space-y-6">
+      {report.finalSettlements.map((settlement) => (
+        <FinalSettlementCard key={settlement.groupId} settlement={settlement} currentUserId={currentUserId} canManage />
+      ))}
+
       {report.pendingMealChanges.length > 0 && (
         <PendingMealApprovals changes={report.pendingMealChanges} onDecide={onDecideMealChange} />
       )}
@@ -708,6 +775,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
   return (
     <div className="space-y-6">
       {report.pendingInvitations > 0 && <InvitationBanner count={report.pendingInvitations} />}
+      {report.finalSettlement && <FinalSettlementCard settlement={report.finalSettlement} currentUserId={currentUserId} />}
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="grid gap-4 sm:grid-cols-2 lg:col-span-2">

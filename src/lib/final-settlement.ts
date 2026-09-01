@@ -1,0 +1,132 @@
+import { closeMonth, markSettled, listClosings, type ClosingSummary } from '@/lib/closings';
+import { buildGroupReport, type GroupReport } from '@/lib/group-report';
+import type { SettlementGroup } from '@/lib/settlement';
+import { settleUp, type SettleUp } from '@/lib/bill-view';
+import { currentMonthKey, previousMonthKey } from '@/lib/month';
+import { PAYMENT_STATUS } from '@/lib/constants';
+
+export type FinalSettlementGroup = SettlementGroup & { name: string; status: string };
+
+export type FinalSettlementMember = {
+  id: string;
+  name: string;
+  email: string;
+  meals: number;
+  mealCost: number;
+  billShare: number;
+  billShareByType: Record<string, number>;
+  bazarPaid: number;
+  cashPaid: number;
+  dueAtClose: number;
+  liveDue: number;
+  status: string;
+  isCurrentMember: boolean;
+};
+
+export type FinalSettlement = {
+  groupId: string;
+  groupName: string;
+  closingId: string;
+  monthKey: string;
+  closedThrough: string;
+  closedBy: string | null;
+  settledAt: string | null;
+  settledBy: string | null;
+  mealRate: number;
+  totals: GroupReport['totals'];
+  members: FinalSettlementMember[];
+  settleUp: SettleUp;
+  allClear: boolean;
+};
+
+async function findGroupFinalClosing(groupId: string, monthKey: string): Promise<ClosingSummary | null> {
+  const closings = await listClosings(groupId, monthKey);
+  return closings.find((closing) => closing.scope === 'GROUP' && !closing.reopenedAt) ?? null;
+}
+
+export async function ensureFinalSettlement(
+  group: FinalSettlementGroup,
+  actor?: { id: string; name: string }
+): Promise<ClosingSummary | null> {
+  const lastMonthKey = previousMonthKey(currentMonthKey());
+  const existing = await findGroupFinalClosing(group.id, lastMonthKey);
+  if (existing) return existing;
+
+  const result = await closeMonth({
+    group,
+    monthKey: lastMonthKey,
+    actorId: actor?.id ?? null,
+    actorName: actor?.name ?? 'Automatic monthly settlement'
+  });
+  if (!result.ok) return null;
+
+  return findGroupFinalClosing(group.id, lastMonthKey);
+}
+
+export async function getFinalSettlement(group: FinalSettlementGroup): Promise<FinalSettlement | null> {
+  const closing = await ensureFinalSettlement(group);
+  if (!closing) return null;
+
+  const [historical, live] = await Promise.all([
+    buildGroupReport(group, closing.monthKey, { through: closing.closedThrough }),
+    buildGroupReport(group, currentMonthKey())
+  ]);
+
+  const liveById = new Map(live.members.map((member) => [member.id, member]));
+
+  const members: FinalSettlementMember[] = historical.members.map((member) => {
+    const liveMember = liveById.get(member.id);
+    return {
+      id: member.id,
+      name: member.name,
+      email: member.email,
+      meals: member.meals,
+      mealCost: member.mealCost,
+      billShare: member.billShare,
+      billShareByType: member.billShareByType,
+      bazarPaid: member.bazarPaid,
+      cashPaid: member.collected,
+      dueAtClose: member.due,
+      liveDue: liveMember?.due ?? member.due,
+      status: liveMember?.status ?? member.status,
+      isCurrentMember: liveMember !== undefined
+    };
+  });
+
+  const settleUpResult = settleUp(members.map((member) => ({ userId: member.id, userName: member.name, net: -member.liveDue })));
+  const allClear = members.every((member) => !member.isCurrentMember || member.status === PAYMENT_STATUS.PAID);
+
+  return {
+    groupId: group.id,
+    groupName: group.name,
+    closingId: closing.id,
+    monthKey: closing.monthKey,
+    closedThrough: closing.closedThrough,
+    closedBy: closing.closedBy,
+    settledAt: closing.settledAt,
+    settledBy: closing.settledBy,
+    mealRate: historical.totals.mealRate,
+    totals: historical.totals,
+    members,
+    settleUp: settleUpResult,
+    allClear
+  };
+}
+
+export async function markFinalSettlementSettled(
+  group: FinalSettlementGroup,
+  actor: { id: string; name: string }
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const report = await getFinalSettlement(group);
+  if (!report) {
+    return { ok: false, error: "Last month hasn't been finalized yet." };
+  }
+  if (report.settledAt) {
+    return { ok: false, error: 'That month is already settled.' };
+  }
+  if (!report.allClear) {
+    return { ok: false, error: 'Not everyone is settled yet.' };
+  }
+
+  return markSettled(report.closingId, actor);
+}

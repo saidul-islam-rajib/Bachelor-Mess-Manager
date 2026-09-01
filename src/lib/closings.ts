@@ -17,6 +17,8 @@ export type ClosingSummary = {
   closedBy: string | null;
   note: string | null;
   reopenedAt: string | null;
+  settledAt: string | null;
+  settledBy: string | null;
   scope: 'GROUP' | 'MEMBERS';
   lines: {
     userId: string;
@@ -36,6 +38,7 @@ export async function listClosings(groupId: string, monthKey?: string): Promise<
     where: { groupId, ...(monthKey ? { monthKey } : {}) },
     include: {
       closedBy: { select: { name: true } },
+      settledBy: { select: { name: true } },
       lines: { include: { user: { select: { id: true, name: true } } } }
     },
     orderBy: { createdAt: 'desc' },
@@ -50,7 +53,9 @@ export async function listClosings(groupId: string, monthKey?: string): Promise<
     closedBy: row.closedBy?.name ?? null,
     note: row.note,
     reopenedAt: row.reopenedAt ? row.reopenedAt.toISOString() : null,
-    scope: row.lines.every((line) => line.isFinal) ? 'GROUP' : 'MEMBERS',
+    settledAt: row.settledAt ? row.settledAt.toISOString() : null,
+    settledBy: row.settledBy?.name ?? null,
+    scope: row.lines.length > 0 && row.lines.every((line) => line.isFinal) ? 'GROUP' : 'MEMBERS',
     lines: row.lines.map((line) => ({
       userId: line.userId,
       userName: line.user.name,
@@ -72,7 +77,7 @@ export async function closeMonth(options: {
   userIds?: string[];
   note?: string | null;
   endMembership?: boolean;
-  actorId: string;
+  actorId: string | null;
   actorName: string;
 }): Promise<CloseResult> {
   const { group, monthKey, actorId, actorName } = options;
@@ -166,7 +171,7 @@ export async function closeMonth(options: {
       link: ROUTES.payments,
       actorId
     },
-    { excludeUserId: actorId }
+    { excludeUserId: actorId ?? undefined }
   );
 
   return { ok: true, closingId: closing.id, lines: targets.length, carriedForward };
@@ -187,7 +192,7 @@ export async function reopenMonth(closingId: string, actor: { id: string; name: 
 
   await prisma.monthClosing.update({
     where: { id: closingId },
-    data: { reopenedAt: new Date() }
+    data: { reopenedAt: new Date(), settledAt: null, settledById: null }
   });
 
   await notifyGroup(
@@ -196,6 +201,42 @@ export async function reopenMonth(closingId: string, actor: { id: string; name: 
       type: NOTIFICATION_TYPES.MONTH_REOPENED,
       title: `${actor.name} reopened ${closing.monthKey} for ${closing.group.name}`,
       excerpt: 'Balances for that month can change again, and nothing carries forward until it is closed once more.',
+      link: ROUTES.payments,
+      actorId: actor.id
+    },
+    { excludeUserId: actor.id }
+  );
+
+  return { ok: true, closingId, lines: 0, carriedForward: 0 };
+}
+
+export async function markSettled(closingId: string, actor: { id: string; name: string }): Promise<CloseResult> {
+  const closing = await prisma.monthClosing.findUnique({
+    where: { id: closingId },
+    include: { group: { select: { id: true, name: true } } }
+  });
+
+  if (!closing) {
+    return { ok: false, error: 'That closing no longer exists.' };
+  }
+  if (closing.reopenedAt) {
+    return { ok: false, error: 'That month has been reopened and is no longer final.' };
+  }
+  if (closing.settledAt) {
+    return { ok: false, error: 'That month is already settled.' };
+  }
+
+  await prisma.monthClosing.update({
+    where: { id: closingId },
+    data: { settledAt: new Date(), settledById: actor.id }
+  });
+
+  await notifyGroup(
+    closing.groupId,
+    {
+      type: NOTIFICATION_TYPES.SETTLEMENT_SETTLED,
+      title: `${actor.name} marked ${closing.monthKey} fully settled for ${closing.group.name}`,
+      excerpt: 'Everyone is squared up for that month. Nothing further is owed either way.',
       link: ROUTES.payments,
       actorId: actor.id
     },
