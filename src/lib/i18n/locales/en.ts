@@ -1246,6 +1246,7 @@ const en = {
     dueOrRefund: 'Due / refund',
     status: 'Status',
     member: 'Member',
+    groupTotal: 'Group total',
     billBreakdownTitle: 'Bill share by type',
     settleUpTitle: (count: number) => `${count} transfer${count === 1 ? '' : 's'} to settle up`,
     settleUpHint: 'The fewest handoffs that clear every due and refund for last month.',

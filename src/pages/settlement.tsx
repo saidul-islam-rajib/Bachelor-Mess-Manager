@@ -9,6 +9,8 @@ import { PAYMENT_STATUS, expenseTypeLabel } from '@/lib/constants';
 
 const settlement = strings.settlement;
 const taka = formatCurrency;
+const sum = (rows: SettlementMember[], pick: (row: SettlementMember) => number) =>
+  rows.reduce((total, row) => total + pick(row), 0);
 
 type SettlementMember = {
   id: string;
@@ -123,6 +125,25 @@ function MemberSection({ members, currentUserId }: { members: SettlementMember[]
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-slate-200 dark:border-slate-700 text-sm font-semibold">
+              <td className="px-3 py-3">{settlement.groupTotal}</td>
+              <td className="px-3 py-3 text-right">{sum(members, (m) => m.meals)}</td>
+              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.mealCost))}</td>
+              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.billShare))}</td>
+              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.bazarPaid))}</td>
+              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.bazarPaid + m.cashPaid))}</td>
+              <td
+                className={`px-3 py-3 text-right ${
+                  sum(members, (m) => m.dueAtClose) > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                }`}
+              >
+                {taka(Math.abs(sum(members, (m) => m.dueAtClose)))}
+                {sum(members, (m) => m.dueAtClose) < -0.005 && <span className="ml-1 text-xs font-normal">{strings.payments.refund}</span>}
+              </td>
+              <td />
+            </tr>
+          </tfoot>
         </table>
       </div>
 
@@ -170,6 +191,31 @@ function MemberSection({ members, currentUserId }: { members: SettlementMember[]
           </li>
         ))}
       </ul>
+
+      <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 md:hidden">
+        <p className="text-sm font-semibold">{settlement.groupTotal}</p>
+        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
+          <div>
+            <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.billShare}</dt>
+            <dd className="font-medium">{taka(sum(members, (m) => m.billShare))}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.totalPaid}</dt>
+            <dd className="font-medium">{taka(sum(members, (m) => m.bazarPaid + m.cashPaid))}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.dueOrRefund}</dt>
+            <dd
+              className={`font-semibold ${
+                sum(members, (m) => m.dueAtClose) > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+              }`}
+            >
+              {taka(Math.abs(sum(members, (m) => m.dueAtClose)))}
+              {sum(members, (m) => m.dueAtClose) < -0.005 && <span className="ml-1 text-xs font-normal">{strings.payments.refund}</span>}
+            </dd>
+          </div>
+        </dl>
+      </div>
     </div>
   );
 }
