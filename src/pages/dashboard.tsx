@@ -3,6 +3,7 @@ import { Fragment, useCallback, useEffect, useState, type ReactNode } from 'reac
 import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
 import MealRateChart, { type MealRateChartDay } from '@/components/dashboard/MealRateChart';
+import GroupBillsSummary from '@/components/dashboard/GroupBillsSummary';
 import { PendingMealApprovals, type PendingMealChange } from '@/components/meals/PendingMealApprovals';
 import { useToast } from '@/components/ToastProvider';
 import { ActionLink, LinkButton, Listbox } from '@/components/ui';
@@ -208,9 +209,9 @@ export default function DashboardPage() {
       ) : data.admin ? (
         <AdminDashboard report={data.admin} />
       ) : data.supervisor ? (
-        <SupervisorDashboard report={data.supervisor} onDecideMealChange={onDecideMealChange} currentUserId={user?.id} />
+        <SupervisorDashboard report={data.supervisor} onDecideMealChange={onDecideMealChange} currentUserId={user?.id} month={month} />
       ) : data.member ? (
-        <MemberDashboard report={data.member} currentUserId={user?.id} />
+        <MemberDashboard report={data.member} currentUserId={user?.id} month={month} />
       ) : (
         <Panel>{dashboardStrings.nothingToShow}</Panel>
       )}
@@ -312,11 +313,13 @@ function FinalSettlementCard({
 function SupervisorDashboard({
   report,
   onDecideMealChange,
-  currentUserId
+  currentUserId,
+  month
 }: {
   report: SupervisorReport;
   onDecideMealChange: (id: string, status: 'APPROVED' | 'REJECTED') => void;
   currentUserId?: string;
+  month: string;
 }) {
   const { totals } = report;
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
@@ -433,6 +436,7 @@ function SupervisorDashboard({
                 card={group}
                 open={openIds.has(group.id)}
                 onToggle={() => toggleGroup(group.id)}
+                month={month}
               />
             ))}
           </div>
@@ -491,11 +495,13 @@ function SupervisorDashboard({
 function SupervisorGroupCard({
   card,
   open,
-  onToggle
+  onToggle,
+  month
 }: {
   card: GroupCard;
   open: boolean;
   onToggle: () => void;
+  month: string;
 }) {
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm">
@@ -526,7 +532,7 @@ function SupervisorGroupCard({
 
       {open && (
         <div className="space-y-5 border-t border-slate-100 dark:border-slate-700 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
-          <GroupStatsPanel card={card} />
+          <GroupStatsPanel card={card} month={month} />
           <ActionLink href={groupPath(card.id)}>{dashboardStrings.openGroup}</ActionLink>
         </div>
       )}
@@ -669,7 +675,7 @@ function BreakdownBars({ byType, total }: { byType: Record<string, number>; tota
   );
 }
 
-function GroupStatsPanel({ card }: { card: GroupCard }) {
+function GroupStatsPanel({ card, month }: { card: GroupCard; month: string }) {
   const hasBreakdown = Object.values(card.byType).some((amount) => amount > 0);
 
   return (
@@ -702,6 +708,18 @@ function GroupStatsPanel({ card }: { card: GroupCard }) {
           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{strings.bills.costBreakdown}</h4>
           <div className="mt-2">
             <BreakdownBars byType={{ ...card.byType, BAZAR: card.bazar }} total={card.expense} />
+          </div>
+        </div>
+      )}
+
+      {card.bills > 0 && (
+        <div>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            {dashboardStrings.billsSummaryTitle}
+          </h4>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{dashboardStrings.billsSummarySubtitle}</p>
+          <div className="mt-2">
+            <GroupBillsSummary groupId={card.id} month={month} />
           </div>
         </div>
       )}
@@ -757,7 +775,7 @@ function PagedList<T>({
   );
 }
 
-function MemberDashboard({ report, currentUserId }: { report: MemberReport; currentUserId?: string }) {
+function MemberDashboard({ report, currentUserId, month }: { report: MemberReport; currentUserId?: string; month: string }) {
   const [showLastMonth, setShowLastMonth] = useState(false);
 
   if (!report.group || !report.current) {
@@ -900,7 +918,7 @@ function MemberDashboard({ report, currentUserId }: { report: MemberReport; curr
         </p>
 
         <div className="mt-5">
-          <GroupStatsPanel card={group.card} />
+          <GroupStatsPanel card={group.card} month={month} />
         </div>
 
         <h3 className="mt-6 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
