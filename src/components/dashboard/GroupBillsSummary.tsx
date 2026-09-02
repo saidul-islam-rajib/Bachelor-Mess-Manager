@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
-import { FinalSummary } from '@/components/bills/FinalSummary';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { MemberBillsTable } from '@/components/dashboard/MemberBillsTable';
 import { ActionLink } from '@/components/ui';
 import { api, errorMessage } from '@/lib/api-client';
-import type { BillsData } from '@/lib/bill-view';
+import { sortByPosition, summarizeMembers, type BillsData } from '@/lib/bill-view';
 import { ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 
@@ -42,10 +42,15 @@ export default function GroupBillsSummary({ groupId, month }: { groupId: string;
 
   return (
     <div>
-      <FinalSummary bills={data.bills} labels={data.categoryLabels} currentUserId={data.currentUserId} />
+      <MemberBillsTableSection bills={data.bills} currentUserId={data.currentUserId} />
       <ActionLink href={ROUTES.bills} className="mt-3">
         {strings.dashboard.openBills}
       </ActionLink>
     </div>
   );
+}
+
+function MemberBillsTableSection({ bills, currentUserId }: { bills: BillsData['bills']; currentUserId: string }) {
+  const summaries = useMemo(() => sortByPosition(summarizeMembers(bills, currentUserId)), [bills, currentUserId]);
+  return <MemberBillsTable summaries={summaries} />;
 }
