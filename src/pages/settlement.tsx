@@ -273,7 +273,7 @@ function SupervisorAction({
 }) {
   if (data.settledAt) return null;
 
-  const waiting = data.members.filter((m) => m.isCurrentMember && m.status !== PAYMENT_STATUS.PAID);
+  const waiting = data.members.filter((m) => m.isCurrentMember && m.closeStatus !== PAYMENT_STATUS.PAID);
 
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
@@ -394,23 +394,23 @@ export default function SettlementPage() {
           <EmptyState title={settlement.notFinalizedYet} />
         ) : (
           <>
-            {mine && mine.status !== PAYMENT_STATUS.PAID && (
+            {mine && mine.closeStatus !== PAYMENT_STATUS.PAID && (
               <div
                 className={`rounded-3xl border p-5 shadow-sm sm:p-6 ${
-                  mine.liveDue > 0.005
+                  mine.dueAtClose > 0.005
                     ? 'border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10'
                     : 'border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10'
                 }`}
               >
-                <p className={`text-lg font-semibold ${mine.liveDue > 0.005 ? 'text-red-900 dark:text-red-200' : 'text-sky-900 dark:text-sky-200'}`}>
-                  {mine.liveDue > 0.005 ? settlement.youOwe(taka(Math.abs(mine.liveDue))) : settlement.youAreOwed(taka(Math.abs(mine.liveDue)))}
+                <p className={`text-lg font-semibold ${mine.dueAtClose > 0.005 ? 'text-red-900 dark:text-red-200' : 'text-sky-900 dark:text-sky-200'}`}>
+                  {mine.dueAtClose > 0.005 ? settlement.youOwe(taka(Math.abs(mine.dueAtClose))) : settlement.youAreOwed(taka(Math.abs(mine.dueAtClose)))}
                 </p>
-                {mine.liveDue > 0.005 && (
+                {mine.dueAtClose > 0.005 && (
                   <p className="mt-1 text-sm text-red-800 dark:text-red-300">{settlement.payReminder}</p>
                 )}
               </div>
             )}
-            {mine && mine.status === PAYMENT_STATUS.PAID && (
+            {mine && mine.closeStatus === PAYMENT_STATUS.PAID && (
               <div className="rounded-3xl border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 p-5 shadow-sm sm:p-6">
                 <p className="text-lg font-semibold text-green-900 dark:text-green-200">{settlement.youAreSettled}</p>
               </div>

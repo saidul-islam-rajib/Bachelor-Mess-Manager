@@ -95,8 +95,8 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
     };
   });
 
-  const settleUpResult = settleUp(members.map((member) => ({ userId: member.id, userName: member.name, net: -member.liveDue })));
-  const allClear = members.every((member) => !member.isCurrentMember || member.status === PAYMENT_STATUS.PAID);
+  const settleUpResult = settleUp(members.map((member) => ({ userId: member.id, userName: member.name, net: -member.dueAtClose })));
+  const allClear = members.every((member) => !member.isCurrentMember || member.closeStatus === PAYMENT_STATUS.PAID);
 
   return {
     groupId: group.id,
