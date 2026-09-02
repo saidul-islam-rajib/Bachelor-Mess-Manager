@@ -23,6 +23,7 @@ type SettlementMember = {
   bazarPaid: number;
   cashPaid: number;
   dueAtClose: number;
+  closeStatus: string;
   liveDue: number;
   status: string;
   isCurrentMember: boolean;
@@ -120,7 +121,7 @@ function MemberSection({ members, currentUserId }: { members: SettlementMember[]
                   {m.dueAtClose < -0.005 && <span className="ml-1 text-xs font-normal">{strings.payments.refund}</span>}
                 </td>
                 <td className="px-3 py-3 text-right">
-                  <StatusBadge status={m.status} />
+                  <StatusBadge status={m.closeStatus} />
                 </td>
               </tr>
             ))}
@@ -155,7 +156,7 @@ function MemberSection({ members, currentUserId }: { members: SettlementMember[]
                 {m.name}
                 {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
               </p>
-              <StatusBadge status={m.status} />
+              <StatusBadge status={m.closeStatus} />
             </div>
             <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
               <div>
@@ -396,15 +397,15 @@ export default function SettlementPage() {
             {mine && mine.status !== PAYMENT_STATUS.PAID && (
               <div
                 className={`rounded-3xl border p-5 shadow-sm sm:p-6 ${
-                  mine.dueAtClose > 0.005
+                  mine.liveDue > 0.005
                     ? 'border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10'
                     : 'border-sky-200 dark:border-sky-500/30 bg-sky-50 dark:bg-sky-500/10'
                 }`}
               >
-                <p className={`text-lg font-semibold ${mine.dueAtClose > 0.005 ? 'text-red-900 dark:text-red-200' : 'text-sky-900 dark:text-sky-200'}`}>
-                  {mine.dueAtClose > 0.005 ? settlement.youOwe(taka(Math.abs(mine.liveDue))) : settlement.youAreOwed(taka(Math.abs(mine.liveDue)))}
+                <p className={`text-lg font-semibold ${mine.liveDue > 0.005 ? 'text-red-900 dark:text-red-200' : 'text-sky-900 dark:text-sky-200'}`}>
+                  {mine.liveDue > 0.005 ? settlement.youOwe(taka(Math.abs(mine.liveDue))) : settlement.youAreOwed(taka(Math.abs(mine.liveDue)))}
                 </p>
-                {mine.dueAtClose > 0.005 && (
+                {mine.liveDue > 0.005 && (
                   <p className="mt-1 text-sm text-red-800 dark:text-red-300">{settlement.payReminder}</p>
                 )}
               </div>

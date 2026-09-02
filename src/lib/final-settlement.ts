@@ -18,6 +18,7 @@ export type FinalSettlementMember = {
   bazarPaid: number;
   cashPaid: number;
   dueAtClose: number;
+  closeStatus: string;
   liveDue: number;
   status: string;
   isCurrentMember: boolean;
@@ -87,6 +88,7 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
       bazarPaid: member.bazarPaid,
       cashPaid: member.collected,
       dueAtClose: member.due,
+      closeStatus: member.status,
       liveDue: liveMember?.due ?? member.due,
       status: liveMember?.status ?? member.status,
       isCurrentMember: liveMember !== undefined
