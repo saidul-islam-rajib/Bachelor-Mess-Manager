@@ -1,15 +1,23 @@
-import type { MemberSummary } from '@/lib/bill-view';
 import { formatCurrency } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 
 const taka = formatCurrency;
-const table = strings.dashboard;
+
+export type MemberDueRow = {
+  id: string;
+  name: string;
+  isCurrentUser?: boolean;
+  hasLeft?: boolean;
+  payable: number;
+  paid: number;
+  net: number;
+};
 
 function DueRefund({ net }: { net: number }) {
   if (net > 0.005) {
     return (
       <span className="font-semibold tabular-nums text-teal-700 dark:text-teal-400">
-        {taka(net)} <span className="text-xs font-normal">{table.billsTableRefundSuffix}</span>
+        {taka(net)} <span className="text-xs font-normal">{strings.payments.refund}</span>
       </span>
     );
   }
@@ -19,32 +27,37 @@ function DueRefund({ net }: { net: number }) {
   return <span className="font-semibold tabular-nums text-slate-400 dark:text-slate-500">{taka(0)}</span>;
 }
 
-export function MemberBillsTable({ summaries }: { summaries: MemberSummary[] }) {
-  if (summaries.length === 0) return null;
+export function MemberDueTable({ rows, payableLabel }: { rows: MemberDueRow[]; payableLabel: string }) {
+  if (rows.length === 0) return null;
 
-  const totalPayable = summaries.reduce((sum, row) => sum + row.share, 0);
-  const totalPaid = summaries.reduce((sum, row) => sum + row.paid, 0);
-  const totalNet = summaries.reduce((sum, row) => sum + row.net, 0);
+  const totalPayable = rows.reduce((sum, row) => sum + row.payable, 0);
+  const totalPaid = rows.reduce((sum, row) => sum + row.paid, 0);
+  const totalNet = rows.reduce((sum, row) => sum + row.net, 0);
 
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-            <th className="py-2 pr-3">{table.billsTableMember}</th>
-            <th className="py-2 pr-3 text-right">{table.billsTablePayable}</th>
-            <th className="py-2 pr-3 text-right">{table.billsTablePaid}</th>
-            <th className="py-2 text-right">{table.billsTableDueRefund}</th>
+            <th className="py-2 pr-3">{strings.settlement.member}</th>
+            <th className="py-2 pr-3 text-right">{payableLabel}</th>
+            <th className="py-2 pr-3 text-right">{strings.settlement.totalPaid}</th>
+            <th className="py-2 text-right">{strings.settlement.dueOrRefund}</th>
           </tr>
         </thead>
         <tbody>
-          {summaries.map((row) => (
-            <tr key={row.userId} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
+          {rows.map((row) => (
+            <tr key={row.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
               <td className="py-2.5 pr-3 font-medium">
-                {row.userName}
+                {row.name}
                 {row.isCurrentUser && <span className="ml-1 text-xs font-normal text-brand-600">{strings.common.you}</span>}
+                {row.hasLeft && (
+                  <span className="ml-2 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                    {strings.payments.left}
+                  </span>
+                )}
               </td>
-              <td className="py-2.5 pr-3 text-right tabular-nums text-slate-600 dark:text-slate-400">{taka(row.share)}</td>
+              <td className="py-2.5 pr-3 text-right tabular-nums text-slate-600 dark:text-slate-400">{taka(row.payable)}</td>
               <td className="py-2.5 pr-3 text-right tabular-nums text-slate-600 dark:text-slate-400">{taka(row.paid)}</td>
               <td className="py-2.5 text-right">
                 <DueRefund net={row.net} />

@@ -4,6 +4,7 @@ import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
 import MealRateChart, { type MealRateChartDay } from '@/components/dashboard/MealRateChart';
 import GroupBillsSummary from '@/components/dashboard/GroupBillsSummary';
+import { MemberDueTable, type MemberDueRow } from '@/components/MemberDueTable';
 import { PendingMealApprovals, type PendingMealChange } from '@/components/meals/PendingMealApprovals';
 import { useToast } from '@/components/ToastProvider';
 import { ActionLink, LinkButton, Listbox } from '@/components/ui';
@@ -85,7 +86,17 @@ type FinalSettlementCardData = {
   monthKey: string;
   settledAt: string | null;
   allClear: boolean;
-  members: { id: string; status: string; liveDue: number }[];
+  members: {
+    id: string;
+    name: string;
+    mealCost: number;
+    billShare: number;
+    bazarPaid: number;
+    cashPaid: number;
+    dueAtClose: number;
+    closeStatus: string;
+    isCurrentMember: boolean;
+  }[];
 };
 
 type MemberReport = {
@@ -271,7 +282,16 @@ function FinalSettlementCard({
 }) {
   const settlementStrings = strings.settlement;
   const mine = currentUserId ? settlement.members.find((m) => m.id === currentUserId) : undefined;
-  const outstandingCount = settlement.members.filter((m) => m.status !== 'PAID').length;
+  const outstandingCount = settlement.members.filter((m) => m.closeStatus !== 'PAID').length;
+  const rows: MemberDueRow[] = settlement.members.map((m) => ({
+    id: m.id,
+    name: m.name,
+    isCurrentUser: m.id === currentUserId,
+    hasLeft: !m.isCurrentMember,
+    payable: m.mealCost + m.billShare,
+    paid: m.bazarPaid + m.cashPaid,
+    net: -m.dueAtClose
+  }));
 
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
@@ -291,9 +311,9 @@ function FinalSettlementCard({
         </span>
       </div>
 
-      {mine && mine.status !== 'PAID' && (
+      {mine && mine.closeStatus !== 'PAID' && (
         <p className="mt-3 text-sm font-medium text-red-600 dark:text-red-400">
-          {mine.liveDue > 0 ? settlementStrings.youOwe(taka(Math.abs(mine.liveDue))) : settlementStrings.youAreOwed(taka(Math.abs(mine.liveDue)))}
+          {mine.dueAtClose > 0 ? settlementStrings.youOwe(taka(Math.abs(mine.dueAtClose))) : settlementStrings.youAreOwed(taka(Math.abs(mine.dueAtClose)))}
         </p>
       )}
 
@@ -302,6 +322,10 @@ function FinalSettlementCard({
           {settlement.allClear ? settlementStrings.readyToSettle : settlementStrings.stillOwe(outstandingCount)}
         </p>
       )}
+
+      <div className="mt-4">
+        <MemberDueTable rows={rows} payableLabel={settlementStrings.totalPayable} />
+      </div>
 
       <div className="mt-4">
         <ActionLink href={ROUTES.settlement}>{settlementStrings.viewDetails}</ActionLink>

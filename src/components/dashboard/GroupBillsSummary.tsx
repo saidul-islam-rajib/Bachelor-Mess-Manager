@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MemberBillsTable } from '@/components/dashboard/MemberBillsTable';
+import { MemberDueTable, type MemberDueRow } from '@/components/MemberDueTable';
 import { ActionLink } from '@/components/ui';
 import { api, errorMessage } from '@/lib/api-client';
 import { sortByPosition, summarizeMembers, type BillsData } from '@/lib/bill-view';
@@ -52,5 +52,13 @@ export default function GroupBillsSummary({ groupId, month }: { groupId: string;
 
 function MemberBillsTableSection({ bills, currentUserId }: { bills: BillsData['bills']; currentUserId: string }) {
   const summaries = useMemo(() => sortByPosition(summarizeMembers(bills, currentUserId)), [bills, currentUserId]);
-  return <MemberBillsTable summaries={summaries} />;
+  const rows: MemberDueRow[] = summaries.map((row) => ({
+    id: row.userId,
+    name: row.userName,
+    isCurrentUser: row.isCurrentUser,
+    payable: row.share,
+    paid: row.paid,
+    net: row.net
+  }));
+  return <MemberDueTable rows={rows} payableLabel={strings.dashboard.billsTablePayable} />;
 }

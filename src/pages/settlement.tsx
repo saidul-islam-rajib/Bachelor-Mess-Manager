@@ -3,14 +3,13 @@ import { useCurrentUser } from '@/components/UserProvider';
 import { useToast } from '@/components/ToastProvider';
 import { useGroupMonth } from '@/components/GroupMonthControls';
 import { Button, EmptyState, Listbox, PageTitle, useConfirm } from '@/components/ui';
+import { MemberDueTable, type MemberDueRow } from '@/components/MemberDueTable';
 import { strings } from '@/lib/i18n';
 import { formatCurrency, formatDay, formatMonthLabel } from '@/lib/format';
-import { PAYMENT_STATUS, expenseTypeLabel } from '@/lib/constants';
+import { PAYMENT_STATUS } from '@/lib/constants';
 
 const settlement = strings.settlement;
 const taka = formatCurrency;
-const sum = (rows: SettlementMember[], pick: (row: SettlementMember) => number) =>
-  rows.reduce((total, row) => total + pick(row), 0);
 
 type SettlementMember = {
   id: string;
@@ -47,175 +46,22 @@ type SettlementData = {
   allClear: boolean;
 };
 
-function StatusBadge({ status }: { status: string }) {
-  const styles: Record<string, string> = {
-    [PAYMENT_STATUS.PAID]: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 ring-green-600/20',
-    [PAYMENT_STATUS.PARTIAL]: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 ring-amber-600/20',
-    [PAYMENT_STATUS.PENDING]: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 ring-red-600/20',
-    [PAYMENT_STATUS.REFUND]: 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 ring-sky-600/20'
-  };
-  const label: Record<string, string> = {
-    [PAYMENT_STATUS.PAID]: strings.payments.statusSettled,
-    [PAYMENT_STATUS.PARTIAL]: strings.payments.statusPartlyPaid,
-    [PAYMENT_STATUS.PENDING]: strings.payments.statusUnpaid,
-    [PAYMENT_STATUS.REFUND]: strings.payments.statusRefundDue
-  };
-  return (
-    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${styles[status] ?? styles.PENDING}`}>
-      {label[status] ?? status}
-    </span>
-  );
-}
-
-function BillBreakdown({ byType }: { byType: Record<string, number> }) {
-  const entries = Object.entries(byType).filter(([, amount]) => amount > 0.005);
-  if (entries.length === 0) return null;
-  return (
-    <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
-      {entries.map(([type, amount]) => `${expenseTypeLabel(type)} ${taka(amount)}`).join(' · ')}
-    </p>
-  );
-}
-
 function MemberSection({ members, currentUserId }: { members: SettlementMember[]; currentUserId?: string }) {
+  const rows: MemberDueRow[] = members.map((m) => ({
+    id: m.id,
+    name: m.name,
+    isCurrentUser: m.id === currentUserId,
+    hasLeft: !m.isCurrentMember,
+    payable: m.mealCost + m.billShare,
+    paid: m.bazarPaid + m.cashPaid,
+    net: -m.dueAtClose
+  }));
+
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{strings.payments.memberBalances}</h2>
-
-      <div className="mt-4 hidden overflow-x-auto md:block">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr className="border-b border-slate-200 dark:border-slate-700 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              <th className="px-3 py-2">{settlement.member}</th>
-              <th className="px-3 py-2 text-right">{settlement.meals}</th>
-              <th className="px-3 py-2 text-right">{settlement.mealCost}</th>
-              <th className="px-3 py-2 text-right">{settlement.billShare}</th>
-              <th className="px-3 py-2 text-right">{settlement.bazarBought}</th>
-              <th className="px-3 py-2 text-right">{settlement.totalPaid}</th>
-              <th className="px-3 py-2 text-right">{settlement.dueOrRefund}</th>
-              <th className="px-3 py-2 text-right">{settlement.status}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((m) => (
-              <tr key={m.id} className="border-b border-slate-100 dark:border-slate-700 last:border-0">
-                <td className="px-3 py-3 font-medium">
-                  {m.name}
-                  {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
-                  {!m.isCurrentMember && (
-                    <span className="ml-2 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                      {strings.payments.left}
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{m.meals}</td>
-                <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.mealCost)}</td>
-                <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">
-                  {taka(m.billShare)}
-                  <BillBreakdown byType={m.billShareByType} />
-                </td>
-                <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.bazarPaid)}</td>
-                <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.bazarPaid + m.cashPaid)}</td>
-                <td className={`px-3 py-3 text-right font-semibold ${m.dueAtClose > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                  {taka(Math.abs(m.dueAtClose))}
-                  {m.dueAtClose < -0.005 && <span className="ml-1 text-xs font-normal">{strings.payments.refund}</span>}
-                </td>
-                <td className="px-3 py-3 text-right">
-                  <StatusBadge status={m.closeStatus} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr className="border-t-2 border-slate-200 dark:border-slate-700 text-sm font-semibold">
-              <td className="px-3 py-3">{settlement.groupTotal}</td>
-              <td className="px-3 py-3 text-right">{sum(members, (m) => m.meals)}</td>
-              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.mealCost))}</td>
-              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.billShare))}</td>
-              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.bazarPaid))}</td>
-              <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.bazarPaid + m.cashPaid))}</td>
-              <td
-                className={`px-3 py-3 text-right ${
-                  sum(members, (m) => m.dueAtClose) > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
-                }`}
-              >
-                {taka(Math.abs(sum(members, (m) => m.dueAtClose)))}
-                {sum(members, (m) => m.dueAtClose) < -0.005 && <span className="ml-1 text-xs font-normal">{strings.payments.refund}</span>}
-              </td>
-              <td />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-
-      <ul className="mt-4 space-y-3 md:hidden">
-        {members.map((m) => (
-          <li key={m.id} className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-medium">
-                {m.name}
-                {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>}
-              </p>
-              <StatusBadge status={m.closeStatus} />
-            </div>
-            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-              <div>
-                <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.meals}</dt>
-                <dd className="font-medium">{m.meals}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.mealCost}</dt>
-                <dd className="font-medium">{taka(m.mealCost)}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.billShare}</dt>
-                <dd className="font-medium">
-                  {taka(m.billShare)}
-                  <BillBreakdown byType={m.billShareByType} />
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.bazarBought}</dt>
-                <dd className="font-medium">{taka(m.bazarPaid)}</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.totalPaid}</dt>
-                <dd className="font-medium">{taka(m.bazarPaid + m.cashPaid)}</dd>
-              </div>
-            </dl>
-            <div className="mt-3 flex items-baseline justify-between border-t border-slate-100 dark:border-slate-700 pt-3">
-              <span className="text-sm text-slate-500 dark:text-slate-400">{m.dueAtClose < -0.005 ? strings.payments.refundOwed : strings.payments.due}</span>
-              <span className={`text-base font-semibold ${m.dueAtClose > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
-                {taka(Math.abs(m.dueAtClose))}
-              </span>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900 p-4 md:hidden">
-        <p className="text-sm font-semibold">{settlement.groupTotal}</p>
-        <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
-          <div>
-            <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.billShare}</dt>
-            <dd className="font-medium">{taka(sum(members, (m) => m.billShare))}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.totalPaid}</dt>
-            <dd className="font-medium">{taka(sum(members, (m) => m.bazarPaid + m.cashPaid))}</dd>
-          </div>
-          <div>
-            <dt className="text-xs text-slate-500 dark:text-slate-400">{settlement.dueOrRefund}</dt>
-            <dd
-              className={`font-semibold ${
-                sum(members, (m) => m.dueAtClose) > 0.005 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
-              }`}
-            >
-              {taka(Math.abs(sum(members, (m) => m.dueAtClose)))}
-              {sum(members, (m) => m.dueAtClose) < -0.005 && <span className="ml-1 text-xs font-normal">{strings.payments.refund}</span>}
-            </dd>
-          </div>
-        </dl>
+      <div className="mt-4">
+        <MemberDueTable rows={rows} payableLabel={settlement.totalPayable} />
       </div>
     </div>
   );
