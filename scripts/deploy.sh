@@ -39,6 +39,11 @@ sudo docker build -t "$IMAGE" .
 log "Importing into k3s containerd"
 sudo docker save "$IMAGE" | sudo k3s ctr images import -
 
+log "Pruning old build artefacts"
+sudo docker image prune -af --filter "until=24h" || true
+sudo docker builder prune -af --keep-storage=2GB || true
+df -h / | tail -1
+
 log "Applying manifests from ${OVERLAY}"
 sudo $KUBECTL kustomize "$OVERLAY" | sed "s|REPLACE_IMAGE|${FULL_IMAGE}|g" | sudo $KUBECTL apply -f -
 
