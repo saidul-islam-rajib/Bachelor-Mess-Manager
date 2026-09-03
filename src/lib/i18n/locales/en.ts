@@ -1391,6 +1391,19 @@ const en = {
     settledBanner: (by: string, date: string) => `Settled by ${by} on ${date}.`,
     settledBannerNoActor: (date: string) => `Settled on ${date}.`,
     onlySupervisorCanSettle: "Only this group's supervisor can mark a month settled.",
+    settleMineButton: 'Mark my balance settled',
+    settleMemberButton: (name: string) => `Mark ${name} settled`,
+    settleMemberOthers: 'Only a supervisor can settle another member’s balance.',
+    settleOwedTitle: 'Write off what you are owed?',
+    settleOwedMessage: (amount: string) =>
+      `The mess owes you ${amount}. Marking yourself settled gives that up — your balance goes to zero and nobody has to pay you back.`,
+    settleDueTitle: 'Mark your balance settled?',
+    settleDueMessage: (amount: string) =>
+      `You still owe ${amount}. Marking yourself settled records it as paid in full, so nothing is left outstanding against you.`,
+    settleConfirm: 'Yes, settle it',
+    settleSuccess: 'Your balance is settled.',
+    settleFailed: 'Could not settle that balance.',
+    settledNote: 'Settled — nothing owed either way.',
     closedThrough: (date: string) => `Finalized through ${date}`
   },
   comments: {

@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { getFinalSettlement, markFinalSettlementSettled } from '@/lib/final-settlement';
+import { getFinalSettlement, markFinalSettlementSettled, settleMemberBalance } from '@/lib/final-settlement';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -32,11 +33,27 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'POST') {
+    const { action, userId } = req.body as { action?: string; userId?: string };
+
+    if (action === 'settleMember') {
+      const targetId = typeof userId === 'string' && userId ? userId : sessionUser.id;
+      if (targetId !== sessionUser.id && !canManage) {
+        return forbidden(res, strings.settlement.settleMemberOthers);
+      }
+
+      const settled = await settleMemberBalance(group, targetId, { id: sessionUser.id, name: sessionUser.name });
+      if (!settled.ok) {
+        return conflict(res, settled.error);
+      }
+
+      const updated = await getFinalSettlement(group);
+      return ok(res, { canManage, settlement: updated });
+    }
+
     if (!canManage) {
       return forbidden(res, "Only this group's supervisor can mark a month settled.");
     }
 
-    const { action } = req.body as { action?: string };
     if (action !== 'markSettled') {
       return badRequest(res, 'Unknown action.');
     }

@@ -155,6 +155,7 @@ export default function SettlementPage() {
   const { groups, groupId, setGroupId, loadingGroups } = useGroupMonth();
 
   const [payload, setPayload] = useState<{ canManage: boolean; settlement: SettlementData | null } | null>(null);
+  const [settling, setSettling] = useState(false);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
 
@@ -181,6 +182,36 @@ export default function SettlementPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  async function handleSettleMine(due: number) {
+    if (!groupId) return;
+    const owed = due < 0;
+    const amount = taka(Math.abs(due));
+    const confirmed = await confirm({
+      title: owed ? settlement.settleOwedTitle : settlement.settleDueTitle,
+      message: owed ? settlement.settleOwedMessage(amount) : settlement.settleDueMessage(amount),
+      confirmLabel: settlement.settleConfirm,
+      destructive: owed
+    });
+    if (!confirmed) return;
+
+    setSettling(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/final-settlement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'settleMember' })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? settlement.settleFailed);
+      setPayload(body);
+      toast.success(settlement.settleSuccess);
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSettling(false);
+    }
+  }
 
   async function handleMarkSettled() {
     if (!groupId) return;
@@ -254,6 +285,14 @@ export default function SettlementPage() {
                 {mine.dueAtClose > 0.005 && (
                   <p className="mt-1 text-sm text-red-800 dark:text-red-300">{settlement.payReminder}</p>
                 )}
+                <button
+                  type="button"
+                  onClick={() => handleSettleMine(mine.dueAtClose)}
+                  disabled={settling}
+                  className="mt-4 inline-flex min-h-[2.5rem] items-center rounded-full border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                >
+                  {settling ? strings.common.saving : settlement.settleMineButton}
+                </button>
               </div>
             )}
             {mine && mine.closeStatus === PAYMENT_STATUS.PAID && (

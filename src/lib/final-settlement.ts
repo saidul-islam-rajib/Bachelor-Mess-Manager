@@ -2,8 +2,9 @@ import { closeMonth, markSettled, listClosings, type ClosingSummary } from '@/li
 import { buildGroupReport, type GroupReport } from '@/lib/group-report';
 import type { SettlementGroup } from '@/lib/settlement';
 import { settleUp, type SettleUp } from '@/lib/bill-view';
-import { currentMonthKey, previousMonthKey } from '@/lib/month';
+import { currentMonthKey, dayToUtcDate, previousMonthKey, round2 } from '@/lib/month';
 import { PAYMENT_STATUS } from '@/lib/constants';
+import { prisma } from '@/lib/prisma';
 
 export type FinalSettlementGroup = SettlementGroup & { name: string; status: string };
 
@@ -113,6 +114,44 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
     settleUp: settleUpResult,
     allClear
   };
+}
+
+export async function settleMemberBalance(
+  group: FinalSettlementGroup,
+  userId: string,
+  actor: { id: string; name: string }
+): Promise<{ ok: true; amount: number; monthKey: string } | { ok: false; error: string }> {
+  const report = await getFinalSettlement(group);
+  if (!report) {
+    return { ok: false, error: "Last month hasn't been finalized yet." };
+  }
+
+  const member = report.members.find((row) => row.id === userId);
+  if (!member) {
+    return { ok: false, error: 'That member has nothing recorded for that month.' };
+  }
+
+  const amount = round2(member.dueAtClose);
+  if (Math.abs(amount) < 0.01) {
+    return { ok: false, error: 'That balance is already settled.' };
+  }
+
+  // Balance the ledger rather than special-casing the sums: a due is written off as
+  // money in, a refund as money back out, so every total lands on zero by itself.
+  await prisma.paymentStatus.create({
+    data: {
+      userId,
+      groupId: group.id,
+      amountDue: amount > 0 ? amount : 0,
+      amountPaid: amount,
+      status: amount > 0 ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.REFUND,
+      dueDate: dayToUtcDate(report.closedThrough),
+      recordedById: actor.id,
+      publishedAt: new Date()
+    }
+  });
+
+  return { ok: true, amount, monthKey: report.monthKey };
 }
 
 export async function markFinalSettlementSettled(
