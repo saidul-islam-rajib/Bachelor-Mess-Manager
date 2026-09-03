@@ -4,6 +4,8 @@ import { useCurrentUser } from '@/components/UserProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
 import MealRateChart, { type MealRateChartDay } from '@/components/dashboard/MealRateChart';
 import GroupBillsSummary from '@/components/dashboard/GroupBillsSummary';
+import BazarSchedule from '@/components/dashboard/BazarSchedule';
+import GroupMemberDetails from '@/components/dashboard/GroupMemberDetails';
 import { MemberDueTable, type MemberDueRow } from '@/components/MemberDueTable';
 import { PendingMealApprovals, type PendingMealChange } from '@/components/meals/PendingMealApprovals';
 import { useToast } from '@/components/ToastProvider';
@@ -747,6 +749,26 @@ function GroupStatsPanel({ card, month }: { card: GroupCard; month: string }) {
           </div>
         </div>
       )}
+
+      <div>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {strings.bazarSchedule.title}
+        </h4>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{strings.bazarSchedule.subtitle}</p>
+        <div className="mt-2">
+          <BazarSchedule groupId={card.id} month={month} />
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+          {dashboardStrings.memberDetails.title}
+        </h4>
+        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{dashboardStrings.memberDetails.subtitle}</p>
+        <div className="mt-2">
+          <GroupMemberDetails groupId={card.id} month={month} />
+        </div>
+      </div>
     </div>
   );
 }

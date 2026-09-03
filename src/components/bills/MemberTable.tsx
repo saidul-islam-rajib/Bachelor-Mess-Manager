@@ -26,7 +26,7 @@ export function Chevron({ open }: { open: boolean }) {
   );
 }
 
-function Figure({
+export function Figure({
   label,
   value,
   className = '',

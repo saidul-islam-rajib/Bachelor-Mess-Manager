@@ -82,65 +82,66 @@ model UserPermission {
 }
 
 model User {
-  id                  String              @id @default(uuid())
-  name                String
-  email               String              @unique
-  password            String
-  phone               String?
-  profileImage        String?
-  theme               String              @default("system")
-  role                String              @default("MEMBER")
-  roleRef             Role                @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  status              String              @default("PENDING")
-  tokenVersion        Int                 @default(0)
-  lastLoginAt         DateTime?
-  createdAt           DateTime            @default(now())
-  createdById         String?
-  updatedAt           DateTime            @default(now()) @updatedAt
-  updatedById         String?
-  isPublished         Boolean             @default(true)
-  publishedAt         DateTime?
-  unpublishedAt       DateTime?
-  memberships         Membership[]
-  comments            Comment[]
-  mealEntries         MealEntry[]
-  mealPlans           MealPlan[]
-  expensePayments     ExpenseEntry[]      @relation("ExpensePayer")
-  expenseHistory      ExpenseHistory[]    @relation("ExpenseHistoryActor")
-  expenseComments     ExpenseComment[]    @relation("ExpenseCommentAuthor")
-  expenseShares       ExpenseShare[]
-  commentReplies      CommentReply[]      @relation("CommentReplyAuthor")
-  groupOrders         GroupOrder[]
-  payments            PaymentStatus[]
-  paymentsRecorded    PaymentStatus[]     @relation("PaymentRecorder")
-  paymentsReceived    PaymentStatus[]     @relation("PaymentRecipient")
-  advances            MemberAdvance[]
-  advancesRecorded    MemberAdvance[]     @relation("AdvanceRecorder")
-  groupsSupervised    Group[]             @relation("GroupSupervisor")
-  groupsCoSupervised  GroupSupervisor[]   @relation("GroupCoSupervisor")
-  coSupervisorsAdded  GroupSupervisor[]   @relation("GroupCoSupervisorGrantor")
-  invitationsReceived Invitation[]        @relation("InvitationInvitee")
-  invitationsSent     Invitation[]        @relation("InvitationInviter")
-  roleRequests        RoleRequest[]       @relation("RoleRequestUser")
-  roleDecisions       RoleRequest[]       @relation("RoleRequestDecider")
-  passwordTokens      PasswordToken[]
-  notifications       Notification[]      @relation("NotificationRecipient")
-  notificationsSent   Notification[]      @relation("NotificationActor")
-  mealEditWindows     MealEditWindow[]
-  mealChangeRequests  MealChangeRequest[] @relation("MealChangeSubject")
-  mealChangeDecisions MealChangeRequest[] @relation("MealChangeDecider")
-  closingsRun         MonthClosing[]      @relation("MonthClosingActor")
-  closingsSettled     MonthClosing[]      @relation("MonthClosingSettler")
-  closingLines        ClosingLine[]
-  communityMessages   CommunityMessage[]  @relation("CommunityAuthor")
-  communityRead       CommunityRead?
-  communityLikes         CommunityLike[]         @relation("CommunityLikeUser")
-  communityComments      CommunityComment[]      @relation("CommunityCommentUser")
+  id                      String                  @id @default(uuid())
+  name                    String
+  email                   String                  @unique
+  password                String
+  phone                   String?
+  profileImage            String?
+  theme                   String                  @default("system")
+  role                    String                  @default("MEMBER")
+  roleRef                 Role                    @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  status                  String                  @default("PENDING")
+  tokenVersion            Int                     @default(0)
+  lastLoginAt             DateTime?
+  createdAt               DateTime                @default(now())
+  createdById             String?
+  updatedAt               DateTime                @default(now()) @updatedAt
+  updatedById             String?
+  isPublished             Boolean                 @default(true)
+  publishedAt             DateTime?
+  unpublishedAt           DateTime?
+  memberships             Membership[]
+  comments                Comment[]
+  mealEntries             MealEntry[]
+  mealPlans               MealPlan[]
+  expensePayments         ExpenseEntry[]          @relation("ExpensePayer")
+  expenseHistory          ExpenseHistory[]        @relation("ExpenseHistoryActor")
+  expenseComments         ExpenseComment[]        @relation("ExpenseCommentAuthor")
+  expenseShares           ExpenseShare[]
+  commentReplies          CommentReply[]          @relation("CommentReplyAuthor")
+  groupOrders             GroupOrder[]
+  bazarDutyDays           BazarDutyDay[]
+  payments                PaymentStatus[]
+  paymentsRecorded        PaymentStatus[]         @relation("PaymentRecorder")
+  paymentsReceived        PaymentStatus[]         @relation("PaymentRecipient")
+  advances                MemberAdvance[]
+  advancesRecorded        MemberAdvance[]         @relation("AdvanceRecorder")
+  groupsSupervised        Group[]                 @relation("GroupSupervisor")
+  groupsCoSupervised      GroupSupervisor[]       @relation("GroupCoSupervisor")
+  coSupervisorsAdded      GroupSupervisor[]       @relation("GroupCoSupervisorGrantor")
+  invitationsReceived     Invitation[]            @relation("InvitationInvitee")
+  invitationsSent         Invitation[]            @relation("InvitationInviter")
+  roleRequests            RoleRequest[]           @relation("RoleRequestUser")
+  roleDecisions           RoleRequest[]           @relation("RoleRequestDecider")
+  passwordTokens          PasswordToken[]
+  notifications           Notification[]          @relation("NotificationRecipient")
+  notificationsSent       Notification[]          @relation("NotificationActor")
+  mealEditWindows         MealEditWindow[]
+  mealChangeRequests      MealChangeRequest[]     @relation("MealChangeSubject")
+  mealChangeDecisions     MealChangeRequest[]     @relation("MealChangeDecider")
+  closingsRun             MonthClosing[]          @relation("MonthClosingActor")
+  closingsSettled         MonthClosing[]          @relation("MonthClosingSettler")
+  closingLines            ClosingLine[]
+  communityMessages       CommunityMessage[]      @relation("CommunityAuthor")
+  communityRead           CommunityRead?
+  communityLikes          CommunityLike[]         @relation("CommunityLikeUser")
+  communityComments       CommunityComment[]      @relation("CommunityCommentUser")
   communityCommentReplies CommunityCommentReply[] @relation("CommunityCommentReplyUser")
-  mealPrompts         MealPrompt[]
-  sessions            UserSession[]
-  permissionOverrides UserPermission[]    @relation("UserPermissionSubject")
-  permissionsGranted  UserPermission[]    @relation("UserPermissionGrantor")
+  mealPrompts             MealPrompt[]
+  sessions                UserSession[]
+  permissionOverrides     UserPermission[]        @relation("UserPermissionSubject")
+  permissionsGranted      UserPermission[]        @relation("UserPermissionGrantor")
 
   @@index([role])
   @@index([status])
@@ -277,6 +278,7 @@ model Group {
   closings                 MonthClosing[]
   mealPrompts              MealPrompt[]
   coSupervisors            GroupSupervisor[]
+  bazarSchedules           BazarSchedule[]
 
   @@index([supervisorId])
   @@index([status])
@@ -706,33 +708,33 @@ model ExpenseComment {
 }
 
 model PaymentStatus {
-  id            String          @id @default(uuid())
-  user          User            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String         @id @default(uuid())
+  user          User           @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userId        String
-  group         Group           @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group         Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
-  expense       ExpenseEntry?   @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  expense       ExpenseEntry?  @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   expenseId     String?
-  reversalOf    PaymentStatus?  @relation("PaymentReversal", fields: [reversalOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  reversalOfId  String?         @unique
-  reversedBy    PaymentStatus?  @relation("PaymentReversal")
-  recordedBy    User?           @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reversalOf    PaymentStatus? @relation("PaymentReversal", fields: [reversalOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reversalOfId  String?        @unique
+  reversedBy    PaymentStatus? @relation("PaymentReversal")
+  recordedBy    User?          @relation("PaymentRecorder", fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   recordedById  String?
-  toUser        User?           @relation("PaymentRecipient", fields: [toUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  toUser        User?          @relation("PaymentRecipient", fields: [toUserId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   toUserId      String?
-  offsetOf      PaymentStatus?  @relation("PaymentOffset", fields: [offsetOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  offsetOfId    String?         @unique
-  offsetBy      PaymentStatus?  @relation("PaymentOffset")
-  fromAdvance   Boolean         @default(false)
+  offsetOf      PaymentStatus? @relation("PaymentOffset", fields: [offsetOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  offsetOfId    String?        @unique
+  offsetBy      PaymentStatus? @relation("PaymentOffset")
+  fromAdvance   Boolean        @default(false)
   amountDue     Float
-  amountPaid    Float           @default(0)
+  amountPaid    Float          @default(0)
   status        String
   dueDate       DateTime
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime       @default(now())
   createdById   String?
-  updatedAt     DateTime      @default(now()) @updatedAt
+  updatedAt     DateTime       @default(now()) @updatedAt
   updatedById   String?
-  isPublished   Boolean       @default(true)
+  isPublished   Boolean        @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
 
@@ -748,25 +750,25 @@ model PaymentStatus {
 /// tagged with that bill's expenseId. The balance is just the signed sum, so it
 /// naturally carries forward month to month until spent.
 model MemberAdvance {
-  id            String          @id @default(uuid())
-  user          User            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String         @id @default(uuid())
+  user          User           @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   userId        String
-  group         Group           @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  group         Group          @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
-  expense       ExpenseEntry?   @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  expense       ExpenseEntry?  @relation(fields: [expenseId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   expenseId     String?
   amount        Float
   note          String?
-  recordedBy    User?           @relation("AdvanceRecorder", fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recordedBy    User?          @relation("AdvanceRecorder", fields: [recordedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   recordedById  String?
-  reversalOf    MemberAdvance?  @relation("AdvanceReversal", fields: [reversalOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  reversalOfId  String?         @unique
-  reversedBy    MemberAdvance?  @relation("AdvanceReversal")
-  createdAt     DateTime        @default(now())
+  reversalOf    MemberAdvance? @relation("AdvanceReversal", fields: [reversalOfId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reversalOfId  String?        @unique
+  reversedBy    MemberAdvance? @relation("AdvanceReversal")
+  createdAt     DateTime       @default(now())
   createdById   String?
-  updatedAt     DateTime        @default(now()) @updatedAt
+  updatedAt     DateTime       @default(now()) @updatedAt
   updatedById   String?
-  isPublished   Boolean         @default(true)
+  isPublished   Boolean        @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
 
@@ -790,6 +792,41 @@ model GroupOrder {
   unpublishedAt DateTime?
 
   @@unique([userId, groupId])
+}
+
+model BazarSchedule {
+  id            String         @id @default(uuid())
+  group         Group          @relation(fields: [groupId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  groupId       String
+  monthKey      String
+  createdAt     DateTime       @default(now())
+  createdById   String?
+  updatedAt     DateTime       @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean        @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+  days          BazarDutyDay[]
+
+  @@unique([groupId, monthKey])
+}
+
+model BazarDutyDay {
+  id            String        @id @default(uuid())
+  schedule      BazarSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  scheduleId    String
+  day           Int
+  user          User?         @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String?
+  createdAt     DateTime      @default(now())
+  createdById   String?
+  updatedAt     DateTime      @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean       @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([scheduleId, day])
 }
 
 model ExpenseHistory {
@@ -876,62 +913,62 @@ model CommentImage {
 }
 
 model CommunityMessage {
-  id               String                  @id @default(uuid())
-  type             String                  @default("MEMBER")
-  key              String                  @unique
-  author           User?                   @relation("CommunityAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  authorId         String?
-  title            String?
-  text             String
-  pinned           Boolean                 @default(false)
-  listingType      String?
-  rent             Float?
-  rentNegotiable   Boolean                 @default(false)
-  location         String?
-  latitude         Float?
-  longitude        Float?
-  genderPreference String?
-  tenantRestriction String?
-  houseRules       String?
-  isSublet         Boolean                 @default(false)
-  seatsAvailable   Int?
-  attachedBath     Boolean                 @default(false)
-  attachedBalcony  Boolean                 @default(false)
-  roomCount        Int?
-  balconyCount     Int?
-  bathroomCount    Int?
+  id                    String                  @id @default(uuid())
+  type                  String                  @default("MEMBER")
+  key                   String                  @unique
+  author                User?                   @relation("CommunityAuthor", fields: [authorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  authorId              String?
+  title                 String?
+  text                  String
+  pinned                Boolean                 @default(false)
+  listingType           String?
+  rent                  Float?
+  rentNegotiable        Boolean                 @default(false)
+  location              String?
+  latitude              Float?
+  longitude             Float?
+  genderPreference      String?
+  tenantRestriction     String?
+  houseRules            String?
+  isSublet              Boolean                 @default(false)
+  seatsAvailable        Int?
+  attachedBath          Boolean                 @default(false)
+  attachedBalcony       Boolean                 @default(false)
+  roomCount             Int?
+  balconyCount          Int?
+  bathroomCount         Int?
   attachedBathroomCount Int?
-  floorNumber      Int?
-  serviceChargeIncluded Boolean            @default(false)
-  advanceMonths    Int?
-  amenities        String[]                @default([])
-  mealsProvided    Boolean                 @default(false)
-  contactWhatsapp  String?
-  contactFacebook  String?
-  availableMonth   String?
-  contactName      String?
-  contactPhone     String?
-  contact2Name     String?
-  contact2Phone    String?
-  contact2Whatsapp String?
-  contact2Facebook String?
-  sourceUrl        String?
-  listingStatus    String?
-  expiresAt        DateTime?
-  viewCount        Int                     @default(0)
-  likeCount        Int                     @default(0)
-  commentCount     Int                     @default(0)
-  deletedAt        DateTime?
-  images           CommunityMessageImage[]
-  likes            CommunityLike[]
-  comments         CommunityComment[]
-  createdAt        DateTime                @default(now())
-  createdById      String?
-  updatedAt        DateTime                @default(now()) @updatedAt
-  updatedById      String?
-  isPublished      Boolean                 @default(true)
-  publishedAt      DateTime?
-  unpublishedAt    DateTime?
+  floorNumber           Int?
+  serviceChargeIncluded Boolean                 @default(false)
+  advanceMonths         Int?
+  amenities             String[]                @default([])
+  mealsProvided         Boolean                 @default(false)
+  contactWhatsapp       String?
+  contactFacebook       String?
+  availableMonth        String?
+  contactName           String?
+  contactPhone          String?
+  contact2Name          String?
+  contact2Phone         String?
+  contact2Whatsapp      String?
+  contact2Facebook      String?
+  sourceUrl             String?
+  listingStatus         String?
+  expiresAt             DateTime?
+  viewCount             Int                     @default(0)
+  likeCount             Int                     @default(0)
+  commentCount          Int                     @default(0)
+  deletedAt             DateTime?
+  images                CommunityMessageImage[]
+  likes                 CommunityLike[]
+  comments              CommunityComment[]
+  createdAt             DateTime                @default(now())
+  createdById           String?
+  updatedAt             DateTime                @default(now()) @updatedAt
+  updatedById           String?
+  isPublished           Boolean                 @default(true)
+  publishedAt           DateTime?
+  unpublishedAt         DateTime?
 
   @@index([createdAt])
   @@index([pinned, createdAt])
