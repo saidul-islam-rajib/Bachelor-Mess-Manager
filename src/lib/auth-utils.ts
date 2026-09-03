@@ -11,7 +11,7 @@ import {
 } from '@/lib/auth';
 import { readIdentity } from '@/lib/identity';
 import { shouldRefresh, verifyImpersonationToken, verifySessionToken } from '@/lib/session';
-import { USER_ROLES, USER_STATUS } from '@/lib/constants';
+import { GROUP_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { normalizeEmail, validateName } from '@/lib/validation';
 import { prisma } from '@/lib/prisma';
 import { cached } from '@/lib/cache';
@@ -182,6 +182,7 @@ export async function isGroupMember(groupId: string, userId: string) {
   const group = await prisma.group.findFirst({
     where: {
       id: groupId,
+      status: GROUP_STATUS.ACTIVE,
       OR: [
         { supervisorId: userId },
         { coSupervisors: { some: { userId } } },

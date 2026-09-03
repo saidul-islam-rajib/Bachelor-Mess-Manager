@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getActiveMembership, getSessionUser, requireSupervisorOrAdmin } from '@/lib/auth-utils';
 import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { messAccessFor } from '@/lib/access-server';
 import { getFinalSettlement, type FinalSettlementGroup } from '@/lib/final-settlement';
 import { PAYMENT_STATUS } from '@/lib/constants';
 import { withAudit } from '@/lib/with-audit';
@@ -16,6 +17,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req, res);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
+  }
+
+  if ((await messAccessFor(sessionUser)).locked) {
+    return ok(res, { shouldRedirect: false, groups: [] });
   }
 
   const groupsToCheck: GroupToCheck[] = [];

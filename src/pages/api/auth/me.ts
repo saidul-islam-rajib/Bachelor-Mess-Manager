@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { getSessionUser } from '@/lib/auth-utils';
 import { clearSessionCookie } from '@/lib/auth';
+import { messAccessFor } from '@/lib/access-server';
 import { ok } from '@/lib/http';
 import { touchSession } from '@/lib/user-sessions';
 import { withAudit } from '@/lib/with-audit';
@@ -17,7 +18,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     await touchSession(user.id, req);
   }
 
-  return ok(res, { user: user ?? null });
+  return ok(res, { user: user ?? null, access: await messAccessFor(user) });
 }
 
 export default withAudit(handler);

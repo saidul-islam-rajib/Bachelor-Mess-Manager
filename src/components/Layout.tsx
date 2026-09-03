@@ -7,6 +7,7 @@ import { strings } from '@/lib/i18n';
 import { USER_ROLES } from '@/lib/constants';
 import { PERMISSIONS } from '@/lib/permissions';
 import { useCurrentUser } from '@/components/UserProvider';
+import MessClosedNotice from '@/components/MessClosedNotice';
 import { useCommunity } from '@/components/CommunityProvider';
 import NotificationBell from '@/components/NotificationBell';
 import ProfileMenu from '@/components/ProfileMenu';
@@ -82,13 +83,15 @@ function DesktopNavLink({ link, active }: { link: NavLink; active: boolean }) {
 }
 
 export default function Layout({ children }: { children: ReactNode }) {
-  const { user, loading, can, logout, stopImpersonating } = useCurrentUser();
+  const { user, access, loading, can, logout, stopImpersonating } = useCurrentUser();
   const { unreadCount: communityUnread } = useCommunity();
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const headerRef = useRef<HTMLElement>(null);
 
   const isAuthPage = router.pathname.startsWith('/auth');
+  const lockExempt = isAuthPage || router.pathname === ROUTES.profile;
+  const locked = access.locked && !lockExempt;
 
   useEffect(() => {
     const close = () => setOpen(false);
@@ -118,7 +121,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   const messLinks: NavLink[] = [];
   const appLinks: NavLink[] = [];
 
-  if (user) {
+  if (user && !access.locked) {
     messLinks.push({ href: ROUTES.dashboard, label: strings.nav.dashboard });
     if (can(PERMISSIONS.MEAL_VIEW)) messLinks.push({ href: ROUTES.meals, label: strings.nav.meals });
     if (can(PERMISSIONS.EXPENSE_VIEW)) messLinks.push({ href: ROUTES.expenses, label: strings.nav.bazar });
@@ -127,7 +130,9 @@ export default function Layout({ children }: { children: ReactNode }) {
     if (can(PERMISSIONS.MEMBERSHIP_VIEW)) messLinks.push({ href: ROUTES.members, label: strings.nav.members });
   }
 
-  appLinks.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
+  if (!access.locked) {
+    appLinks.push({ href: ROUTES.community, label: strings.nav.community, badge: communityUnread });
+  }
   if (user?.role === USER_ROLES.ADMIN) {
     appLinks.push({ href: ROUTES.admin, label: strings.nav.admin });
   }
@@ -310,7 +315,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         )}
       </header>
       <main id="main-content" tabIndex={-1} className="flex-1 outline-none">
-        {children}
+        {locked ? <MessClosedNotice access={access} onSignOut={logout} /> : children}
       </main>
       <Footer />
     </div>

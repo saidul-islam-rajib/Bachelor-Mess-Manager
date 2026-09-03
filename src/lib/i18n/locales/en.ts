@@ -424,6 +424,22 @@ const en = {
       openMember: (name: string) => `See everything about ${name}`
     }
   },
+  messClosed: {
+    closedTitle: 'This mess is closed',
+    closedBody: (group: string) =>
+      `An administrator has closed "${group}". Nobody can record meals, bazar or payments while it stays closed.`,
+    closedBodyNoName: 'An administrator has closed your mess. Nobody can record meals, bazar or payments while it stays closed.',
+    endedTitle: 'You are no longer in this mess',
+    endedBody: (group: string) =>
+      `Your membership of "${group}" has ended, so the mess is no longer open to you.`,
+    endedBodyNoName: 'Your membership has ended, so the mess is no longer open to you.',
+    recordsSafe: 'Nothing has been deleted. Your meals, bazar and payment history are all still on record.',
+    whatNext: 'What you can do now',
+    contactAdmin: 'Ask an administrator to reopen the mess or add you back.',
+    profileStillYours: 'Your profile is still yours — you can update your details or password any time.',
+    openProfile: 'Go to my profile',
+    signOut: 'Sign out'
+  },
   memberDetail: {
     back: 'Back to dashboard',
     loadFailed: 'Could not load this member.',
@@ -512,6 +528,8 @@ const en = {
     memberCount: (count: number) => `${count} member${count === 1 ? '' : 's'}`,
     inactive: 'inactive',
     orderSaveFailed: 'Could not save the new order.',
+    statusAdminOnly:
+      'Only an administrator can open or close a mess. Closing one locks every member out, so it cannot be undone from here.',
     statusTitle: 'Group status',
     statusHint:
       'Deactivating closes the mess. Everything stays on record and you can bring it back at any time.',

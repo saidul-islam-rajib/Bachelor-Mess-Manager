@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { hasPermission, type PermissionCode } from '@/lib/permissions';
+import { OPEN_ACCESS, type MessAccess } from '@/lib/access';
 
 export type ImpersonatedBy = {
   id: string;
@@ -21,6 +22,7 @@ export type CurrentUser = {
 
 type UserContextValue = {
   user: CurrentUser;
+  access: MessAccess;
   loading: boolean;
   can: (permission: PermissionCode) => boolean;
   refresh: () => Promise<void>;
@@ -40,6 +42,7 @@ export function useCurrentUser() {
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser>(null);
+  const [access, setAccess] = useState<MessAccess>(OPEN_ACCESS);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -47,8 +50,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/auth/me');
       const data = await response.json();
       setUser(data.user ?? null);
+      setAccess(data.access ?? OPEN_ACCESS);
     } catch {
       setUser(null);
+      setAccess(OPEN_ACCESS);
     } finally {
       setLoading(false);
     }
@@ -77,8 +82,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const can = useCallback((permission: PermissionCode) => hasPermission(user, permission), [user]);
 
   const value = useMemo(
-    () => ({ user, loading, can, refresh, logout, stopImpersonating }),
-    [user, loading, can, refresh, logout, stopImpersonating]
+    () => ({ user, access, loading, can, refresh, logout, stopImpersonating }),
+    [user, access, loading, can, refresh, logout, stopImpersonating]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

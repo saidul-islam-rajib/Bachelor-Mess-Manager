@@ -112,7 +112,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       }
       data.mealEditRequiresApproval = mealEditRequiresApproval;
     }
-    if (typeof status === 'string' && GROUP_STATUS_VALUES.includes(status)) data.status = status;
+    if (typeof status === 'string' && GROUP_STATUS_VALUES.includes(status)) {
+      if (!requireAdmin(sessionUser)) {
+        return forbidden(res, strings.groups.statusAdminOnly);
+      }
+      data.status = status;
+    }
     if (mealRateMode !== undefined) {
       if (!MEAL_RATE_MODE_VALUES.includes(mealRateMode)) {
         return badRequest(res, 'The meal rate must be worked out monthly or daily.');

@@ -1,7 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getActiveMembership, getSessionUser, requireAdmin, requireSupervisorOrAdmin } from '@/lib/auth-utils';
-import { methodNotAllowed, ok, unauthorized } from '@/lib/http';
+import { methodNotAllowed, ok, unauthorized, forbidden } from '@/lib/http';
+import { messAccessFor } from '@/lib/access-server';
+import { strings } from '@/lib/i18n';
 import { buildGroupReport, type ReportMember } from '@/lib/group-report';
 import { buildGroupDashboardCard } from '@/lib/dashboard-report';
 import { getFinalSettlement } from '@/lib/final-settlement';
@@ -29,6 +31,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const sessionUser = await getSessionUser(req, res);
   if (!sessionUser) {
     return unauthorized(res, 'You must be signed in.');
+  }
+
+  if ((await messAccessFor(sessionUser)).locked) {
+    return forbidden(res, strings.messClosed.closedBodyNoName);
   }
 
   const monthKey = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;

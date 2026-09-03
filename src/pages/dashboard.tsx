@@ -12,7 +12,7 @@ import { useToast } from '@/components/ToastProvider';
 import { ActionLink, LinkButton, Listbox } from '@/components/ui';
 import { commentsAnchorPath, groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
-import { expenseTypeLabel, USER_ROLES } from '@/lib/constants';
+import { expenseTypeLabel, GROUP_STATUS, USER_ROLES } from '@/lib/constants';
 import { currentMonthKey, monthOptions } from '@/lib/month';
 import { formatCurrency, formatDayKey, formatMonthLabel } from '@/lib/format';
 
@@ -350,6 +350,7 @@ function SupervisorDashboard({
   const { totals } = report;
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const allExpanded = report.groups.length > 0 && report.groups.every((group) => openIds.has(group.id));
+  const liveGroups = report.groups.filter((group) => group.status === GROUP_STATUS.ACTIVE);
 
   function toggleGroup(id: string) {
     setOpenIds((current) => {
@@ -472,7 +473,7 @@ function SupervisorDashboard({
       <GroupScopedSection
         title={strings.bazarSchedule.title}
         subtitle={strings.bazarSchedule.subtitle}
-        groups={report.groups}
+        groups={liveGroups}
         month={month}
         render={(groupId) => <BazarSchedule groupId={groupId} month={month} />}
       />
@@ -480,7 +481,7 @@ function SupervisorDashboard({
       <GroupScopedSection
         title={dashboardStrings.memberDetails.title}
         subtitle={dashboardStrings.memberDetails.subtitle}
-        groups={report.groups}
+        groups={liveGroups}
         month={month}
         render={(groupId) => <GroupMemberDetails groupId={groupId} month={month} />}
       />
