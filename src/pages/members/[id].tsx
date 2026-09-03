@@ -152,20 +152,20 @@ export default function MemberDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-6">
+      <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
         <p className="text-sm text-slate-500 dark:text-slate-400">{strings.common.loading}</p>
-      </div>
+      </section>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+      <section className="mx-auto max-w-content space-y-4 px-4 py-8 sm:py-10">
         <Link href={ROUTES.dashboard} className="text-sm font-medium text-brand-700 hover:underline">
           ← {detail.back}
         </Link>
         <Empty text={error || detail.loadFailed} />
-      </div>
+      </section>
     );
   }
 
@@ -173,7 +173,7 @@ export default function MemberDetailPage() {
   const billTypes = Object.entries(money.billShareByType).filter(([, amount]) => amount > 0);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
+    <section className="mx-auto max-w-content space-y-4 px-4 py-8 sm:py-10">
       <Link href={ROUTES.dashboard} className="inline-block text-sm font-medium text-brand-700 hover:underline">
         ← {detail.back}
       </Link>
@@ -199,7 +199,7 @@ export default function MemberDetailPage() {
       </Card>
 
       <Section title={detail.summary}>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
           <Stat label={detail.meals} value={String(meals.total)} />
           <Stat label={detail.mealCost} value={taka(money.mealCost)} />
           <Stat label={detail.bazarPaid} value={taka(money.bazarPaid)} />
@@ -327,6 +327,6 @@ export default function MemberDetailPage() {
           </ul>
         )}
       </Section>
-    </div>
+    </section>
   );
 }
