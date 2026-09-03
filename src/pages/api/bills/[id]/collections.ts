@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember } from '@/lib/auth-utils';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { EXPENSE_TYPES, PAYMENT_STATUS } from '@/lib/constants';
-import { buildCollectionState, collectionsByBill, reversePayment, shareStatus } from '@/lib/bill-collections';
+import { allocateToFronters, buildCollectionState, collectionsByBill, reversePayment, shareStatus } from '@/lib/bill-collections';
 import { dayToUtcDate, round2, todayKey, utcDateToDay } from '@/lib/month';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -143,6 +143,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const owed = round2(current?.share ?? 0);
   const paidAfter = round2((current?.paid ?? 0) + paid);
 
+  const offsets = recipientId
+    ? [{ userId: recipientId, amount: paid }]
+    : allocateToFronters(state.shares, userId, paid);
+
   const { payerRow, recipientName } = await prisma.$transaction(async (tx) => {
     const row = await tx.paymentStatus.create({
       data: {
@@ -160,17 +164,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       include: { user: { select: { name: true } }, toUser: { select: { name: true } } }
     });
 
-    if (recipientId) {
-      const recipientCurrent = state.shares.find((s) => s.userId === recipientId);
+    for (const offset of offsets) {
+      const recipientCurrent = state.shares.find((s) => s.userId === offset.userId);
       await tx.paymentStatus.create({
         data: {
-          userId: recipientId,
+          userId: offset.userId,
           groupId: bill.groupId,
           expenseId: billId,
           recordedById: sessionUser.id,
           offsetOfId: row.id,
           amountDue: round2(recipientCurrent?.share ?? 0),
-          amountPaid: -paid,
+          amountPaid: -offset.amount,
           status: PAYMENT_STATUS.OFFSET,
           dueDate: dayToUtcDate(day),
           publishedAt: new Date()
@@ -200,12 +204,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       fromAdvance: false
     }
   ];
-  if (recipientId) {
+  for (const offset of offsets) {
     refreshedRows.push({
-      id: `${payerRow.id}-offset`,
-      userId: recipientId,
+      id: `${payerRow.id}-offset-${offset.userId}`,
+      userId: offset.userId,
       userName: recipientName ?? '',
-      amount: -paid,
+      amount: -offset.amount,
       date: payerRow.dueDate,
       recordedAt: payerRow.createdAt,
       recordedByName: sessionUser.name,

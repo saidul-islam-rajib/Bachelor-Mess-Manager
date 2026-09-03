@@ -12,6 +12,7 @@ import {
   KIND_ORDER,
   billsByKind,
   billsByType,
+  summarizeMembers,
   totalsOf,
   type Bill,
   type BillsData,
@@ -206,6 +207,8 @@ export default function BillsPage() {
                 currentUserId={data.currentUserId}
                 onOpenBill={revealBill}
               />
+
+              <PaidByMember bills={bills} currentUserId={data.currentUserId} />
 
               <div
                 className={`grid gap-4 ${
@@ -829,6 +832,55 @@ function AdvancesSection({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function PaidByMember({ bills, currentUserId }: { bills: Bill[]; currentUserId: string }) {
+  const rows = summarizeMembers(bills, currentUserId)
+    .filter((row) => row.share > 0 || row.paid > 0)
+    .sort((a, b) => b.paid - a.paid || a.userName.localeCompare(b.userName));
+  if (rows.length === 0) return null;
+
+  const total = rows.reduce((sum, row) => sum + row.paid, 0);
+
+  return (
+    <div className="min-w-0 rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-semibold">{strings.bills.paidByMember}</h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{taka(total)}</p>
+      </div>
+      <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.bills.paidByMemberHint}</p>
+      <ul className="mt-4 space-y-3">
+        {rows.map((row) => {
+          const percent = total > 0 ? Math.round((row.paid / total) * 100) : 0;
+          return (
+            <li key={row.userId}>
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span className="min-w-0 truncate font-medium">
+                  {row.userName}
+                  {row.isCurrentUser && (
+                    <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">{strings.common.you}</span>
+                  )}
+                  <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
+                    {strings.bills.paidOfShare(taka(row.paid), taka(row.share))}
+                  </span>
+                </span>
+                <span className="shrink-0 text-slate-600 dark:text-slate-400">
+                  {row.outstanding > 0.005 ? (
+                    <span className="text-rose-600">{taka(row.outstanding)}</span>
+                  ) : (
+                    <span className="text-teal-700 dark:text-teal-400">{strings.common.dash}</span>
+                  )}
+                </span>
+              </div>
+              <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                <div className="h-full rounded-full bg-brand-600" style={{ width: `${percent}%` }} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

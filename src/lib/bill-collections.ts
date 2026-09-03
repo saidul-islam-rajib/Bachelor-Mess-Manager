@@ -215,6 +215,29 @@ export async function reversePayment(params: {
   return { ok: true, amount: round2(original.amountPaid), userId: original.userId };
 }
 
+export function allocateToFronters(
+  shares: { userId: string; advance: number }[],
+  payerId: string,
+  amount: number
+): { userId: string; amount: number }[] {
+  const owedBack = shares
+    .filter((share) => share.userId !== payerId && share.advance > 0)
+    .sort((a, b) => b.advance - a.advance);
+
+  const allocations: { userId: string; amount: number }[] = [];
+  let remaining = toPaisa(amount);
+
+  for (const share of owedBack) {
+    if (remaining <= 0) break;
+    const take = Math.min(remaining, toPaisa(share.advance));
+    if (take <= 0) continue;
+    allocations.push({ userId: share.userId, amount: fromPaisa(take) });
+    remaining -= take;
+  }
+
+  return allocations;
+}
+
 export async function collectionsByBill(billIds: string[]): Promise<Map<string, CollectionRow[]>> {
   const byBill = new Map<string, CollectionRow[]>();
   if (billIds.length === 0) return byBill;
