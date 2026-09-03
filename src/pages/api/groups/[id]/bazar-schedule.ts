@@ -100,15 +100,24 @@ async function loadSchedule(
   });
 
   const dayCountByMember = new Map<string, number>();
+  const firstDayByMember = new Map<string, number>();
   for (const day of days) {
-    if (day.userId) dayCountByMember.set(day.userId, (dayCountByMember.get(day.userId) ?? 0) + 1);
+    if (!day.userId) continue;
+    dayCountByMember.set(day.userId, (dayCountByMember.get(day.userId) ?? 0) + 1);
+    if (!firstDayByMember.has(day.userId)) firstDayByMember.set(day.userId, day.day);
   }
 
-  const members = activeMembers.map((m) => ({
-    id: m.user.id,
-    name: m.user.name,
-    dayCount: dayCountByMember.get(m.user.id) ?? 0
-  }));
+  // The rotation reads top to bottom in calendar order, so whoever shops first is listed
+  // first. Reordering the list therefore moves a member's turn, not just their row.
+  const members = activeMembers
+    .map((m) => ({
+      id: m.user.id,
+      name: m.user.name,
+      dayCount: dayCountByMember.get(m.user.id) ?? 0,
+      firstDay: firstDayByMember.get(m.user.id) ?? Number.MAX_SAFE_INTEGER
+    }))
+    .sort((a, b) => (a.firstDay !== b.firstDay ? a.firstDay - b.firstDay : a.name.localeCompare(b.name)))
+    .map(({ firstDay: _firstDay, ...member }) => member);
 
   let lockedReason: LockedReason = null;
   if (activeMembers.length === 0) lockedReason = 'NO_MEMBERS';

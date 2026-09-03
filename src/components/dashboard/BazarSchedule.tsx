@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { Avatar, Modal, useConfirm } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
 import { api, errorMessage } from '@/lib/api-client';
@@ -108,6 +111,17 @@ function MemberRow({
   editable: boolean;
   onEdit: () => void;
 }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: member.id,
+    disabled: !editable
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined
+  };
+
   const content = (
     <>
       <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${tone.dot}`} aria-hidden />
@@ -134,16 +148,42 @@ function MemberRow({
   }
 
   return (
-    <li>
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-stretch bg-white dark:bg-slate-800 ${isDragging ? 'opacity-80 shadow-lg' : ''}`}
+    >
+      <button
+        type="button"
+        aria-label={scheduleStrings.dragHandle(member.name)}
+        className="flex w-10 shrink-0 cursor-grab touch-none items-center justify-center text-slate-300 hover:text-slate-500 active:cursor-grabbing dark:text-slate-600 dark:hover:text-slate-400"
+        {...attributes}
+        {...listeners}
+      >
+        <GripIcon />
+      </button>
       <button
         type="button"
         onClick={onEdit}
         aria-label={scheduleStrings.editMember(member.name)}
-        className="flex w-full items-start gap-2.5 px-3.5 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/60 sm:px-4"
+        className="flex min-w-0 flex-1 items-start gap-2.5 py-3 pr-3.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-700/60 sm:pr-4"
       >
         {content}
       </button>
     </li>
+  );
+}
+
+function GripIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <circle cx="9" cy="6" r="1.5" />
+      <circle cx="15" cy="6" r="1.5" />
+      <circle cx="9" cy="12" r="1.5" />
+      <circle cx="15" cy="12" r="1.5" />
+      <circle cx="9" cy="18" r="1.5" />
+      <circle cx="15" cy="18" r="1.5" />
+    </svg>
   );
 }
 
@@ -236,6 +276,11 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
     load();
   }, [load]);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   const toneByUserId = useMemo(() => {
     const map = new Map<string, (typeof MEMBER_TONES)[number]>();
     data?.members.forEach((member, index) => map.set(member.id, MEMBER_TONES[index % MEMBER_TONES.length]));
@@ -278,6 +323,31 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
     const previous = data;
     setData(applyAssignments(data, [{ day, userId }]));
     void save([{ day, userId }], previous);
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    if (!data || saving) return;
+
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = data.members.findIndex((member) => member.id === active.id);
+    const newIndex = data.members.findIndex((member) => member.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Each slot keeps its days; the members holding those slots swap around.
+    const slots = data.members.map((member) => (daysByUserId.get(member.id) ?? []).map((day) => day.day));
+    const reordered = arrayMove(data.members, oldIndex, newIndex);
+
+    const assignments: Assignment[] = [];
+    reordered.forEach((member, index) => {
+      for (const day of slots[index]) assignments.push({ day, userId: member.id });
+    });
+    if (assignments.length === 0) return;
+
+    const previous = data;
+    setData(applyAssignments({ ...data, members: reordered }, assignments));
+    void save(assignments, previous);
   }
 
   async function handleAutoFill() {
@@ -328,19 +398,25 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
         </div>
       )}
 
-      <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
-        {data.members.map((member) => (
-          <MemberRow
-            key={member.id}
-            member={member}
-            tone={toneByUserId.get(member.id)!}
-            days={daysByUserId.get(member.id) ?? []}
-            isCurrentUser={member.id === data.currentUserId}
-            editable={data.editable}
-            onEdit={() => setMemberPicker(member)}
-          />
-        ))}
-      </ul>
+      {data.editable && <p className="text-xs text-slate-500 dark:text-slate-400">{scheduleStrings.reorderHint}</p>}
+
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={data.members.map((member) => member.id)} strategy={verticalListSortingStrategy}>
+          <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 dark:divide-slate-700 dark:border-slate-700">
+            {data.members.map((member) => (
+              <MemberRow
+                key={member.id}
+                member={member}
+                tone={toneByUserId.get(member.id)!}
+                days={daysByUserId.get(member.id) ?? []}
+                isCurrentUser={member.id === data.currentUserId}
+                editable={data.editable}
+                onEdit={() => setMemberPicker(member)}
+              />
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
 
       <div>
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">

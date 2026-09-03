@@ -41,6 +41,12 @@ export function groupPath(groupId: string): string {
   return `${ROUTES.members}?group=${encodeURIComponent(groupId)}`;
 }
 
+export function memberDetailPath(memberId: string, groupId: string, month?: string): string {
+  const query = new URLSearchParams({ group: groupId });
+  if (month) query.set('month', month);
+  return `${ROUTES.members}/${encodeURIComponent(memberId)}?${query.toString()}`;
+}
+
 export function commentsAnchorPath(groupId?: string): string {
   const base = groupId ? groupPath(groupId) : ROUTES.members;
   return `${base}#${MESS_COMMENTS_ANCHOR}`;

@@ -469,6 +469,22 @@ function SupervisorDashboard({
         )}
       </div>
 
+      <GroupScopedSection
+        title={strings.bazarSchedule.title}
+        subtitle={strings.bazarSchedule.subtitle}
+        groups={report.groups}
+        month={month}
+        render={(groupId) => <BazarSchedule groupId={groupId} month={month} />}
+      />
+
+      <GroupScopedSection
+        title={dashboardStrings.memberDetails.title}
+        subtitle={dashboardStrings.memberDetails.subtitle}
+        groups={report.groups}
+        month={month}
+        render={(groupId) => <GroupMemberDetails groupId={groupId} month={month} />}
+      />
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <h2 className="text-lg font-semibold">{dashboardStrings.whoOwes}</h2>
@@ -750,24 +766,40 @@ function GroupStatsPanel({ card, month }: { card: GroupCard; month: string }) {
         </div>
       )}
 
-      <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-          {strings.bazarSchedule.title}
-        </h4>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{strings.bazarSchedule.subtitle}</p>
-        <div className="mt-2">
-          <BazarSchedule groupId={card.id} month={month} />
-        </div>
-      </div>
+    </div>
+  );
+}
 
-      <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-          {dashboardStrings.memberDetails.title}
-        </h4>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{dashboardStrings.memberDetails.subtitle}</p>
-        <div className="mt-2">
-          <GroupMemberDetails groupId={card.id} month={month} />
-        </div>
+function GroupScopedSection({
+  title,
+  subtitle,
+  groups,
+  month,
+  render
+}: {
+  title: string;
+  subtitle: string;
+  groups: { id: string; name: string }[];
+  month: string;
+  render: (groupId: string) => ReactNode;
+}) {
+  if (groups.length === 0) return null;
+
+  return (
+    <div>
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+      </div>
+      <div className="space-y-4">
+        {groups.map((group) => (
+          <Card key={group.id}>
+            {groups.length > 1 && (
+              <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">{group.name}</h3>
+            )}
+            {render(group.id)}
+          </Card>
+        ))}
       </div>
     </div>
   );
@@ -992,6 +1024,22 @@ function MemberDashboard({ report, currentUserId, month }: { report: MemberRepor
           )}
         />
       </Card>
+
+      <GroupScopedSection
+        title={strings.bazarSchedule.title}
+        subtitle={strings.bazarSchedule.subtitle}
+        groups={[{ id: group.id, name: group.name }]}
+        month={month}
+        render={(groupId) => <BazarSchedule groupId={groupId} month={month} />}
+      />
+
+      <GroupScopedSection
+        title={dashboardStrings.memberDetails.title}
+        subtitle={dashboardStrings.memberDetails.subtitle}
+        groups={[{ id: group.id, name: group.name }]}
+        month={month}
+        render={(groupId) => <GroupMemberDetails groupId={groupId} month={month} />}
+      />
     </div>
   );
 }
