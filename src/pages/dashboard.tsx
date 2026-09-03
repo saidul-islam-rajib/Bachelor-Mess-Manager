@@ -6,6 +6,7 @@ import MealRateChart, { type MealRateChartDay } from '@/components/dashboard/Mea
 import GroupBillsSummary from '@/components/dashboard/GroupBillsSummary';
 import BazarSchedule from '@/components/dashboard/BazarSchedule';
 import GroupMemberDetails from '@/components/dashboard/GroupMemberDetails';
+import MessMonthSummary from '@/components/dashboard/MessMonthSummary';
 import { MemberDueTable, type MemberDueRow } from '@/components/MemberDueTable';
 import { PendingMealApprovals, type PendingMealChange } from '@/components/meals/PendingMealApprovals';
 import { useToast } from '@/components/ToastProvider';
@@ -419,17 +420,12 @@ function SupervisorDashboard({
         />
       </div>
 
-      <MoneyOverview
-        label={dashboardStrings.spentThisMonthAllGroups}
-        expense={totals.expense}
-        bazar={totals.bazar}
-        bazarPaid={totals.bazarPaid}
-        bazarOutstanding={totals.bazarOutstanding}
-        bills={totals.bills}
-        billsCollected={totals.billsCollected}
-        billsOutstanding={totals.billsOutstanding}
-        rent={totals.rent}
-        additional={totals.additional}
+      <GroupScopedSection
+        title={strings.monthSummary.title}
+        subtitle={strings.monthSummary.subtitle}
+        groups={liveGroups}
+        month={month}
+        render={(groupId) => <MessMonthSummary groupId={groupId} month={month} />}
       />
 
       <CostBreakdown byType={report.byType} total={totals.expense} />
@@ -619,76 +615,6 @@ function MiniStat({ label, value, tone }: { label: string; value: string; tone?:
   );
 }
 
-type MoneyRowsProps = {
-  bazar: number;
-  bazarPaid: number;
-  bazarOutstanding: number;
-  bills: number;
-  billsCollected: number;
-  billsOutstanding: number;
-  rent: number;
-  additional: number;
-};
-
-function MoneyRows({
-  bazar,
-  bazarPaid,
-  bazarOutstanding,
-  bills,
-  billsCollected,
-  billsOutstanding,
-  rent,
-  additional
-}: MoneyRowsProps) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">{dashboardStrings.mealCostBazar}</h4>
-        <div className="mt-2 grid grid-cols-3 gap-2.5">
-          <MiniStat label={strings.common.total} value={taka(bazar)} />
-          <MiniStat label={dashboardStrings.frontedByMembers} value={taka(bazarPaid)} tone="green" />
-          <MiniStat
-            label={dashboardStrings.yetToRecover}
-            value={taka(bazarOutstanding)}
-            tone={bazarOutstanding > 0 ? 'amber' : 'green'}
-          />
-        </div>
-      </div>
-
-      <div>
-        <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-          {dashboardStrings.billsRentUtilities}
-        </h4>
-        <div className="mt-2 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          <MiniStat label={strings.expenseTypes.RENT} value={taka(rent)} />
-          <MiniStat label={dashboardStrings.additional} value={taka(additional)} />
-          <MiniStat label={strings.bills.totalBills} value={taka(bills)} />
-          <MiniStat label={dashboardStrings.collected} value={taka(billsCollected)} tone="green" />
-          <MiniStat
-            label={dashboardStrings.outstanding}
-            value={taka(billsOutstanding)}
-            tone={billsOutstanding > 0 ? 'red' : 'green'}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function MoneyOverview({ label, expense, ...rows }: { label: string; expense: number } & MoneyRowsProps) {
-  return (
-    <Card>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-lg font-semibold">{label}</h2>
-        <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">{dashboardStrings.totalAmount(taka(expense))}</span>
-      </div>
-      <div className="mt-4">
-        <MoneyRows {...rows} />
-      </div>
-    </Card>
-  );
-}
-
 function BreakdownBars({ byType, total }: { byType: Record<string, number>; total: number }) {
   const rows = Object.entries(byType)
     .filter(([, amount]) => amount > 0)
@@ -734,17 +660,6 @@ function GroupStatsPanel({ card, month }: { card: GroupCard; month: string }) {
           <MealRateChart days={card.days} />
         </div>
       </div>
-
-      <MoneyRows
-        bazar={card.bazar}
-        bazarPaid={card.bazarPaid}
-        bazarOutstanding={card.bazarOutstanding}
-        bills={card.bills}
-        billsCollected={card.billsCollected}
-        billsOutstanding={card.billsOutstanding}
-        rent={card.rent}
-        additional={card.additional}
-      />
 
       {hasBreakdown && (
         <div>
@@ -941,18 +856,9 @@ function MemberDashboard({ report, currentUserId, month }: { report: MemberRepor
           <h2 className="text-lg font-semibold">{dashboardStrings.yourBalance}</h2>
           <StatusBadge status={current.status} />
         </div>
-        <dl className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Field label={dashboardStrings.mealShare} value={taka(current.mealCost)} />
-          <Field label={dashboardStrings.billsShare} value={taka(current.billShare)} />
-          <Field label={dashboardStrings.totalCost} value={taka(current.totalCost)} />
-          <Field label={dashboardStrings.groceriesYouBought} value={taka(current.bazarPaid)} />
-          <Field label={dashboardStrings.cashYouPaid} value={taka(current.collected)} />
-          <Field
-            label={current.due < 0 ? dashboardStrings.refundOwed : dashboardStrings.stillDue}
-            value={taka(Math.abs(current.due))}
-            tone={current.due > 0.01 ? 'red' : 'green'}
-          />
-        </dl>
+        <div className="mt-4">
+          <MessMonthSummary groupId={group.id} month={month} />
+        </div>
         <div className="mt-5 flex flex-wrap gap-2">
           <LinkButton href={ROUTES.meals}>{dashboardStrings.enterMeals}</LinkButton>
           <LinkButton href={ROUTES.payments} variant="secondary">

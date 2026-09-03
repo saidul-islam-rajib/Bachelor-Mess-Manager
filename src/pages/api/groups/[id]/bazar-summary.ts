@@ -4,8 +4,10 @@ import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/l
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport } from '@/lib/group-report';
 import { categoryLabels } from '@/lib/expense-categories';
+import { buildCollectionState, collectionsByBill } from '@/lib/bill-collections';
+import { BILL_TYPE_FILTER } from '@/lib/constants';
 import { EXPENSE_TYPES } from '@/lib/constants';
-import { parseMonth, utcDateToDay } from '@/lib/month';
+import { parseMonth, round2, utcDateToDay } from '@/lib/month';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
@@ -41,15 +43,33 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const monthParam = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
   const { start, nextStart } = parseMonth(monthParam);
 
-  const [report, bazarRows, labels] = await Promise.all([
+  const [report, bazarRows, billRows, labels] = await Promise.all([
     buildGroupReport(group, monthParam),
     prisma.expenseEntry.findMany({
       where: { groupId, type: EXPENSE_TYPES.BAZAR, date: { gte: start, lt: nextStart }, payerId: { not: null } },
       select: { id: true, date: true, amount: true, payerId: true },
       orderBy: [{ date: 'asc' }, { createdAt: 'asc' }]
     }),
+    prisma.expenseEntry.findMany({
+      where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
+      select: { id: true, type: true, shares: { select: { userId: true, amount: true, user: { select: { name: true } } } } }
+    }),
     categoryLabels(groupId)
   ]);
+
+  const collections = await collectionsByBill(billRows.map((row) => row.id));
+  const billPaid = new Map<string, number>();
+  const billOwed = new Map<string, number>();
+  for (const bill of billRows) {
+    const state = buildCollectionState(
+      bill.shares.map((share) => ({ userId: share.userId, userName: share.user.name, amount: share.amount })),
+      collections.get(bill.id) ?? []
+    );
+    for (const share of state.shares) {
+      billPaid.set(share.userId, round2((billPaid.get(share.userId) ?? 0) + share.paid));
+      billOwed.set(share.userId, round2((billOwed.get(share.userId) ?? 0) + share.outstanding));
+    }
+  }
 
   const entriesByPayer = new Map<string, { id: string; date: string; amount: number }[]>();
   for (const row of bazarRows) {
@@ -63,6 +83,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     currentUserId: sessionUser.id,
     canManage,
     categoryLabels: labels,
+    group: {
+      bazar: report.totals.bazar,
+      bazarOutstanding: round2(report.totals.bazar - report.totals.bazarPaid),
+      bills: report.totals.bills,
+      rent: round2(report.byType.RENT ?? 0),
+      additional: round2(report.totals.bills - (report.byType.RENT ?? 0))
+    },
     members: report.members.map((member) => ({
       id: member.id,
       name: member.name,
@@ -74,6 +101,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       billShareByType: member.billShareByType,
       totalCost: member.totalCost,
       collected: member.collected,
+      billPaid: billPaid.get(member.id) ?? 0,
+      billOutstanding: billOwed.get(member.id) ?? 0,
       due: member.due,
       status: member.status,
       bazarEntries: entriesByPayer.get(member.id) ?? []

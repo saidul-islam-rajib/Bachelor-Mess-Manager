@@ -424,6 +424,28 @@ const en = {
       openMember: (name: string) => `See everything about ${name}`
     }
   },
+  monthSummary: {
+    title: 'This month',
+    subtitle: 'What the mess spent, and where you stand in it.',
+    messSection: 'The mess this month',
+    mealCost: 'Meal cost (bazar)',
+    yetToRecover: 'Yet to recover',
+    additionalBills: 'Additional bills',
+    totalBills: 'Total bills',
+    billsSection: 'Your share of the bills',
+    myBillShare: 'Your bill share',
+    myBillPaid: 'Bills you have paid',
+    myBillDue: 'Bills still due',
+    totalSection: 'Where you stand',
+    payable: 'Total payable',
+    paid: 'Total paid',
+    due: 'Still to pay',
+    refund: 'Owed back to you',
+    settled: 'Settled up',
+    paidHint: 'Bazar you paid for, plus every cash payment you have made.',
+    loadFailed: 'Could not load this summary.',
+    noData: 'Nothing recorded for you this month.'
+  },
   messClosed: {
     closedTitle: 'This mess is closed',
     closedBody: (group: string) =>
