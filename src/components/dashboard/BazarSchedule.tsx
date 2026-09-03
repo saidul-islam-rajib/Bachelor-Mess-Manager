@@ -6,7 +6,7 @@ import { Avatar, Modal, useConfirm } from '@/components/ui';
 import { useToast } from '@/components/ToastProvider';
 import { api, errorMessage } from '@/lib/api-client';
 import { computeEqualSplitDays, groupConsecutiveDays } from '@/lib/bazar-schedule';
-import { formatDayKey, initialsOf } from '@/lib/format';
+import { formatDayKey, initialsOf, shortName } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 
 const scheduleStrings = strings.bazarSchedule;
@@ -219,8 +219,15 @@ function CalendarGrid({
         const inner = (
           <>
             <span className="text-[11px] font-semibold leading-none">{day.day}</span>
-            <span className="mt-0.5 block truncate text-[10px] leading-tight opacity-90">
-              {day.userName ? initialsOf(day.userName) : '·'}
+            <span className="mt-0.5 block w-full truncate px-0.5 text-[10px] leading-tight opacity-90">
+              {day.userName ? (
+                <>
+                  <span className="hidden sm:inline">{shortName(day.userName)}</span>
+                  <span className="sm:hidden">{initialsOf(day.userName)}</span>
+                </>
+              ) : (
+                '·'
+              )}
             </span>
           </>
         );

@@ -90,6 +90,21 @@ export function formatStayDuration(days: number): string {
   return remainingMonths === 0 ? strings.units.years(years) : strings.units.yearsMonths(years, remainingMonths);
 }
 
+export function shortName(name: string): string {
+  const parts = name.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '';
+
+  const last = parts[parts.length - 1];
+  if (parts.length === 1) return last;
+
+  const initials = parts
+    .slice(0, -1)
+    .map((part) => part[0].toUpperCase())
+    .join('.');
+
+  return `${initials} ${last}`;
+}
+
 export function initialsOf(name: string): string {
   return (
     name
