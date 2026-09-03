@@ -253,7 +253,13 @@ async function buildSettlementUncached(
         _sum: { amount: true }
       }),
       prisma.paymentStatus.findMany({
-        where: { groupId, dueDate: { gte: start, lt: windowEnd } },
+        where: {
+          groupId,
+          OR: [
+            { expenseId: null, dueDate: { gte: start, lt: windowEnd } },
+            { expense: { date: { gte: start, lt: windowEnd } } }
+          ]
+        },
         select: { userId: true, amountPaid: true }
       }),
       carryForwardEnabled ? loadCarryIn(groupId, key) : Promise.resolve(new Map<string, number>()),

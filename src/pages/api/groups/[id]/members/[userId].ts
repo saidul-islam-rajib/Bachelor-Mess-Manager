@@ -62,7 +62,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       orderBy: { date: 'asc' }
     }),
     prisma.paymentStatus.findMany({
-      where: { groupId, userId, dueDate: { gte: start, lt: nextStart } },
+      where: {
+        groupId,
+        userId,
+        OR: [
+          { expenseId: null, dueDate: { gte: start, lt: nextStart } },
+          { expense: { date: { gte: start, lt: nextStart } } }
+        ]
+      },
       include: { expense: { select: { id: true, type: true } } },
       orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }]
     }),
