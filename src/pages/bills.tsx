@@ -12,6 +12,7 @@ import {
   KIND_ORDER,
   billsByKind,
   billsByType,
+  isSingleMemberBill,
   summarizeMembers,
   totalsOf,
   type Bill,
@@ -1013,6 +1014,9 @@ function BillRow({
             </span>
           </div>
           {bill.payer && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.bills.paidByName(bill.payer.name)}</p>}
+          {isSingleMemberBill(bill) && (
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.bills.billedToOnly(bill.shares[0].userName)}</p>
+          )}
           {bill.note && <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{bill.note}</p>}
         </div>
 
@@ -1114,18 +1118,33 @@ function BillRow({
   );
 }
 
+type BillFormMode = 'EQUAL' | 'CUSTOM' | 'SINGLE';
+
+const BILL_FORM_MODES: BillFormMode[] = ['EQUAL', 'CUSTOM', 'SINGLE'];
+
 function useBillForm(initial: Bill | undefined, members: Member[], categories: Category[]) {
   const [type, setType] = useState(initial?.type ?? categories[0]?.code ?? '');
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
   const [date, setDate] = useState(initial?.date ?? todayKey());
   const [note, setNote] = useState(initial?.note ?? '');
-  const [splitMethod, setSplitMethod] = useState(initial?.splitMethod ?? SPLIT_METHODS.EQUAL);
+  const [mode, setMode] = useState<BillFormMode>(() => {
+    if (initial?.splitMethod !== SPLIT_METHODS.CUSTOM) return 'EQUAL';
+    return initial.shares.length === 1 ? 'SINGLE' : 'CUSTOM';
+  });
+  const [singleMemberId, setSingleMemberId] = useState(() => {
+    if (initial?.splitMethod === SPLIT_METHODS.CUSTOM && initial.shares.length === 1) {
+      return initial.shares[0].userId;
+    }
+    return members[0]?.id ?? '';
+  });
   const [isReceived, setIsReceived] = useState(initial?.isReceived ?? true);
   const [payerId, setPayerId] = useState(initial?.payer?.id ?? '');
   const [custom, setCustom] = useState<Record<string, string>>(() => {
-    if (initial?.splitMethod !== SPLIT_METHODS.CUSTOM) return {};
+    if (initial?.splitMethod !== SPLIT_METHODS.CUSTOM || initial.shares.length === 1) return {};
     return Object.fromEntries(initial.shares.map((s) => [s.userId, String(s.amount)]));
   });
+
+  const splitMethod = mode === 'EQUAL' ? SPLIT_METHODS.EQUAL : SPLIT_METHODS.CUSTOM;
 
   const customTotal = useMemo(
     () => Object.values(custom).reduce((sum, value) => sum + (Number(value) || 0), 0),
@@ -1170,9 +1189,13 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
     isReceived,
     payerId: payerId || null,
     shares:
-      splitMethod === SPLIT_METHODS.CUSTOM
+      mode === 'CUSTOM'
         ? Object.entries(custom).map(([userId, value]) => ({ userId, amount: Number(value) || 0 }))
-        : undefined
+        : mode === 'SINGLE'
+          ? singleMemberId
+            ? [{ userId: singleMemberId, amount: Number(amount) || 0 }]
+            : []
+          : undefined
   });
 
   const fields = (
@@ -1239,27 +1262,42 @@ function useBillForm(initial: Bill | undefined, members: Member[], categories: C
       <fieldset className="mt-4">
         <legend className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.bills.howShared}</legend>
         <div className="mt-2 flex flex-wrap gap-2">
-          {[SPLIT_METHODS.EQUAL, SPLIT_METHODS.CUSTOM].map((method) => (
+          {BILL_FORM_MODES.map((formMode) => (
             <button
-              key={method}
+              key={formMode}
               type="button"
-              onClick={() => setSplitMethod(method)}
+              onClick={() => setMode(formMode)}
               className={`rounded-full px-4 py-2 text-sm transition ${
-                splitMethod === method
+                mode === formMode
                   ? 'bg-brand-600 font-medium text-white'
                   : 'border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
               }`}
             >
-              {SPLIT_METHOD_LABELS[method]}
+              {formMode === 'SINGLE' ? strings.bills.singleMemberLabel : SPLIT_METHOD_LABELS[formMode]}
             </button>
           ))}
         </div>
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          {splitMethod === SPLIT_METHODS.EQUAL ? strings.bills.equalHint : strings.bills.customHint}
+          {mode === 'EQUAL' ? strings.bills.equalHint : mode === 'SINGLE' ? strings.bills.singleMemberHint : strings.bills.customHint}
         </p>
       </fieldset>
 
-      {splitMethod === SPLIT_METHODS.CUSTOM && (
+      {mode === 'SINGLE' && (
+        <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
+          <Listbox
+            className="block"
+            label={strings.bills.singleMemberPickerLabel}
+            value={singleMemberId}
+            onChange={setSingleMemberId}
+            options={members.map((m) => ({ value: m.id, label: m.name }))}
+          />
+          <p className="mt-3 border-t border-slate-100 dark:border-slate-700 pt-2 text-sm text-slate-600 dark:text-slate-400">
+            {strings.bills.singleMemberAmountNote(taka(Number(amount) || 0))}
+          </p>
+        </div>
+      )}
+
+      {mode === 'CUSTOM' && (
         <div className="mt-3 rounded-2xl border border-slate-200 dark:border-slate-700 p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm font-medium">{strings.bills.assignToMembers}</span>

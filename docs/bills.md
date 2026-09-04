@@ -45,6 +45,18 @@ people use. Rejected if: a member is listed twice, any amount is negative, a
 listed person is not an active member, or the shares miss the total by more
 than a paisa. The error says what the shares came to and what the bill was.
 
+**One member** is not a separate split method — it's a third button in the
+form (`src/pages/bills.tsx`, `useBillForm`'s local `mode` state) that is just
+a friendlier front end for `CUSTOM` with exactly one share: pick the member
+from a dropdown instead of checking one box among the whole roster and typing
+the amount by hand, and the form fills in the full bill amount for you. It
+submits the same `splitMethod: 'CUSTOM'` with a single `{ userId, amount }`
+entry, so nothing downstream (collections, payment status, member summaries)
+needed to change — a bill like this shows up in the list as "Billed to
+&lt;name&gt; only" (`isSingleMemberBill()` in `src/lib/bill-view.ts`, true
+whenever a `CUSTOM` bill has exactly one share) instead of the generic
+"Assigned" wording.
+
 ## Who can do what
 
 | Action | Who |
