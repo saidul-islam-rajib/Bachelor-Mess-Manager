@@ -831,7 +831,7 @@ function SplitPanel({
                     share.advance > 0
                       ? 'bg-teal-50/60 dark:bg-teal-500/10'
                       : isMe
-                        ? 'bg-brand-50/40'
+                        ? 'bg-brand-50/40 dark:bg-brand-500/10'
                         : 'bg-white dark:bg-slate-800'
                   }
                 >
@@ -902,7 +902,7 @@ function SplitPanel({
                 share.advance > 0
                   ? 'border-l-4 border-teal-400 dark:border-teal-500 bg-teal-50/60 dark:bg-teal-500/10'
                   : isMe
-                    ? 'bg-brand-50/50'
+                    ? 'bg-brand-50/50 dark:bg-brand-500/10'
                     : 'bg-white dark:bg-slate-800'
               }`}
             >
