@@ -45,6 +45,8 @@ settled when it is not.
 | --- | --- |
 | See the month, everyone's dues | any member of the group |
 | Record a payment | that group's supervisor, or an admin |
+| Reverse a payment (add an opposite row) | that group's supervisor, or an admin |
+| Edit a payment's amount/date in place, or delete it permanently | an admin only |
 | Record anything in a closed group | nobody |
 
 Members can see what everyone owes on purpose — that transparency is the point
@@ -59,7 +61,28 @@ Guards: the member must belong to the group, the date must be a real
 `YYYY-MM-DD`, and the amount must be **positive** and under 100,000,000. A zero
 or negative payment is rejected with a 400 — asserted by `negative payment
 rejected` — because "paying" a negative amount is a correction, and corrections
-are made by deleting the wrong row, which leaves a trail.
+are made by reversing the wrong row, which leaves a trail.
+
+## Correcting a mistake
+
+`DELETE /api/payments/[id]` reverses an entry: it writes an opposite row next
+to the original (and to its paired offset row, if any) rather than touching
+either — the append-only ledger `bill-collections.ts` describes. Any
+supervisor or admin who can manage the group can do this.
+
+An admin can also bypass that entirely:
+
+- `PATCH /api/payments/[id]` with `amount` and/or `date` rewrites the row's
+  `amountPaid`/`dueDate` directly. `amountDue` is left untouched since it can
+  carry different meaning depending on how the row was created (a bill
+  share vs. a plain deposit).
+- `DELETE /api/payments/[id]?hard=true` permanently removes the row — and,
+  transactionally, its whole family of paired offset/reversal rows, so nothing
+  is left dangling or violates the one-to-one `offsetOfId`/`reversalOfId`
+  relations.
+
+Both are gated on `requireAdmin`, not just `canManageGroup`, so a group
+supervisor who isn't a site admin still only has the reversible path.
 
 ## Months and closing
 

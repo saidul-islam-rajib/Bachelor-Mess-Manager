@@ -6,7 +6,7 @@ import { Listbox, ListboxControl, PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
 import { formatInstant } from '@/lib/format';
 import { daysInMonth, round2, todayKey } from '@/lib/month';
-import { PAYMENT_STATUS } from '@/lib/constants';
+import { PAYMENT_STATUS, USER_ROLES } from '@/lib/constants';
 
 const payments = strings.payments;
 
@@ -159,7 +159,39 @@ export default function PaymentsPage() {
     }
   }
 
+  async function editPayment(id: string, editedAmount: number, editedDate: string) {
+    try {
+      const res = await fetch(`/api/payments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: editedAmount, date: editedDate })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? payments.editFailed);
+      toast.success(payments.edited);
+      await load();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function hardDelete(id: string) {
+    if (!window.confirm(payments.hardDeleteConfirm)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/payments/${id}?hard=true`, { method: 'DELETE' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? payments.hardDeleteFailed);
+      toast.success(payments.hardDeleted);
+      await load();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
   const canManage = data?.canManage ?? false;
+  const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
@@ -277,8 +309,11 @@ export default function PaymentsPage() {
               <PaymentLog
                 payments={data.payments}
                 canManage={canManage}
+                isAdmin={isAdmin}
                 categoryLabels={data.categoryLabels}
                 onRemove={remove}
+                onEdit={editPayment}
+                onHardDelete={hardDelete}
               />
             </>
           )}
@@ -953,15 +988,47 @@ function MealRateBreakdown({
 function PaymentLog({
   payments: paymentRows,
   canManage,
+  isAdmin,
   categoryLabels,
-  onRemove
+  onRemove,
+  onEdit,
+  onHardDelete
 }: {
   payments: Payment[];
   canManage: boolean;
+  isAdmin: boolean;
   categoryLabels: Record<string, string>;
   onRemove: (id: string) => void;
+  onEdit: (id: string, amount: number, date: string) => Promise<void>;
+  onHardDelete: (id: string) => void;
 }) {
   const total = paymentRows.reduce((sum, p) => sum + p.amount, 0);
+  const [editingId, setEditingId] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  function startEdit(p: Payment) {
+    setEditingId(p.id);
+    setEditAmount(String(p.amount));
+    setEditDate(p.date);
+  }
+
+  function cancelEdit() {
+    setEditingId('');
+  }
+
+  async function saveEdit(id: string) {
+    const value = Number(editAmount);
+    if (!Number.isFinite(value) || value === 0) return;
+    setSavingEdit(true);
+    try {
+      await onEdit(id, value, editDate);
+      setEditingId('');
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
@@ -974,46 +1041,95 @@ function PaymentLog({
       ) : (
         <>
         <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
-          {paymentRows.map((p) => (
-            <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-              <div className="min-w-0">
-                <p className={`font-medium ${p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : ''}`}>
-                  {p.userName}
-                  {p.billId && (
-                    <span className="ml-2 rounded-full bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 text-xs font-medium text-brand-700 dark:text-brand-400">
-                      {payments.billBadgeSuffix(categoryLabels[p.billType ?? ''] ?? p.billType ?? '')}
-                    </span>
-                  )}
-                  {p.isReversal && (
-                    <span className="ml-2 rounded-full bg-rose-50 dark:bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-400">
-                      {payments.correctionBadge}
-                    </span>
-                  )}
-                </p>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {p.date}
-                  {p.isReversed && <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">{payments.reversedBadge}</span>}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span
-                  className={`font-semibold tabular-nums ${
-                    p.amount < 0 ? 'text-rose-600 dark:text-rose-400' : p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-green-600 dark:text-green-400'
-                  }`}
+          {paymentRows.map((p) =>
+            editingId === p.id ? (
+              <li key={p.id} className="flex flex-wrap items-center gap-2 py-3">
+                <span className="min-w-0 font-medium">{p.userName}</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  placeholder={payments.editAmountPlaceholder}
+                  className="w-28 rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-sm"
+                />
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-1.5 text-sm"
+                />
+                <button
+                  onClick={() => saveEdit(p.id)}
+                  disabled={savingEdit}
+                  className="rounded-full bg-brand-600 px-3 py-1 text-xs text-white hover:bg-brand-700 disabled:opacity-50"
                 >
-                  {p.amount < 0 ? `−${taka(Math.abs(p.amount))}` : taka(p.amount)}
-                </span>
-                {canManage && !p.isReversal && !p.isReversed && (
-                  <button
-                    onClick={() => onRemove(p.id)}
-                    className="rounded-full border border-red-200 dark:border-red-500/30 px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50"
+                  {savingEdit ? strings.common.saving : strings.common.save}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                >
+                  {strings.common.cancel}
+                </button>
+              </li>
+            ) : (
+              <li key={p.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <div className="min-w-0">
+                  <p className={`font-medium ${p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : ''}`}>
+                    {p.userName}
+                    {p.billId && (
+                      <span className="ml-2 rounded-full bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 text-xs font-medium text-brand-700 dark:text-brand-400">
+                        {payments.billBadgeSuffix(categoryLabels[p.billType ?? ''] ?? p.billType ?? '')}
+                      </span>
+                    )}
+                    {p.isReversal && (
+                      <span className="ml-2 rounded-full bg-rose-50 dark:bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-700 dark:text-rose-400">
+                        {payments.correctionBadge}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {p.date}
+                    {p.isReversed && <span className="ml-2 text-xs text-slate-400 dark:text-slate-500">{payments.reversedBadge}</span>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      p.amount < 0 ? 'text-rose-600 dark:text-rose-400' : p.isReversed ? 'text-slate-400 dark:text-slate-500 line-through' : 'text-green-600 dark:text-green-400'
+                    }`}
                   >
-                    {payments.reverse}
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
+                    {p.amount < 0 ? `−${taka(Math.abs(p.amount))}` : taka(p.amount)}
+                  </span>
+                  {canManage && !p.isReversal && !p.isReversed && (
+                    <button
+                      onClick={() => onRemove(p.id)}
+                      className="rounded-full border border-red-200 dark:border-red-500/30 px-3 py-1 text-xs text-red-600 dark:text-red-400 hover:bg-red-50"
+                    >
+                      {payments.reverse}
+                    </button>
+                  )}
+                  {isAdmin && (
+                    <>
+                      <button
+                        onClick={() => startEdit(p)}
+                        className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                      >
+                        {payments.edit}
+                      </button>
+                      <button
+                        onClick={() => onHardDelete(p.id)}
+                        className="rounded-full border border-red-300 dark:border-red-500/40 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"
+                      >
+                        {payments.deleteForever}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </li>
+            )
+          )}
         </ul>
         <p className="mt-3 text-xs text-slate-400 dark:text-slate-500">{payments.neverEditedFootnote}</p>
         </>

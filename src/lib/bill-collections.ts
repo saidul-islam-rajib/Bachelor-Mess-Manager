@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { BILL_TYPE_FILTER, PAYMENT_STATUS } from '@/lib/constants';
-import { round2 } from '@/lib/month';
+import { dayToUtcDate, round2 } from '@/lib/month';
 
 const TOLERANCE_PAISA = 1;
 
@@ -213,6 +213,111 @@ export async function reversePayment(params: {
   });
 
   return { ok: true, amount: round2(original.amountPaid), userId: original.userId };
+}
+
+async function paymentFamilyIds(paymentId: string): Promise<string[]> {
+  const ids = new Set<string>([paymentId]);
+  let frontier = [paymentId];
+
+  while (frontier.length > 0) {
+    const rows = await prisma.paymentStatus.findMany({
+      where: {
+        OR: [{ id: { in: frontier } }, { offsetOfId: { in: frontier } }, { reversalOfId: { in: frontier } }]
+      },
+      select: { id: true, offsetOfId: true, reversalOfId: true }
+    });
+
+    const next: string[] = [];
+    for (const row of rows) {
+      for (const id of [row.id, row.offsetOfId, row.reversalOfId]) {
+        if (id && !ids.has(id)) {
+          ids.add(id);
+          next.push(id);
+        }
+      }
+    }
+    frontier = next;
+  }
+
+  return [...ids];
+}
+
+export type HardDeleteResult = { ok: true; count: number } | { ok: false; error: string };
+
+export async function hardDeletePayment(params: {
+  paymentId: string;
+  groupId?: string;
+}): Promise<HardDeleteResult> {
+  const { paymentId, groupId } = params;
+
+  const original = await prisma.paymentStatus.findUnique({ where: { id: paymentId } });
+  if (!original) return { ok: false, error: 'That entry does not exist.' };
+  if (groupId && original.groupId !== groupId) {
+    return { ok: false, error: 'That entry belongs to another mess.' };
+  }
+
+  const familyIds = await paymentFamilyIds(paymentId);
+
+  await prisma.$transaction(async (tx) => {
+    let remaining = await tx.paymentStatus.findMany({
+      where: { id: { in: familyIds } },
+      select: { id: true, offsetOfId: true, reversalOfId: true }
+    });
+
+    while (remaining.length > 0) {
+      const referencedAsParent = new Set(
+        remaining.flatMap((row) => [row.offsetOfId, row.reversalOfId]).filter((id): id is string => Boolean(id))
+      );
+      const deletable = remaining.filter((row) => !referencedAsParent.has(row.id));
+      if (deletable.length === 0) break;
+
+      await tx.paymentStatus.deleteMany({ where: { id: { in: deletable.map((row) => row.id) } } });
+      const deletedIds = new Set(deletable.map((row) => row.id));
+      remaining = remaining.filter((row) => !deletedIds.has(row.id));
+    }
+  });
+
+  return { ok: true, count: familyIds.length };
+}
+
+export type UpdatePaymentResult = { ok: true } | { ok: false; error: string };
+
+export async function updatePaymentDetails(params: {
+  paymentId: string;
+  groupId?: string;
+  amount?: number;
+  date?: string;
+}): Promise<UpdatePaymentResult> {
+  const { paymentId, groupId, amount, date } = params;
+
+  const original = await prisma.paymentStatus.findUnique({ where: { id: paymentId } });
+  if (!original) return { ok: false, error: 'That entry does not exist.' };
+  if (groupId && original.groupId !== groupId) {
+    return { ok: false, error: 'That entry belongs to another mess.' };
+  }
+
+  const data: { amountPaid?: number; dueDate?: Date } = {};
+
+  if (amount !== undefined) {
+    if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100_000_000) {
+      return { ok: false, error: 'Amount must be a non-zero number under 100,000,000.' };
+    }
+    data.amountPaid = round2(amount);
+  }
+
+  if (date !== undefined) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return { ok: false, error: 'A valid date (YYYY-MM-DD) is required.' };
+    }
+    data.dueDate = dayToUtcDate(date);
+  }
+
+  if (Object.keys(data).length === 0) {
+    return { ok: false, error: 'Nothing to update.' };
+  }
+
+  await prisma.paymentStatus.update({ where: { id: paymentId }, data });
+  return { ok: true };
 }
 
 export function allocateToFronters(

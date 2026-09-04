@@ -1281,7 +1281,16 @@ const en = {
     reversedBadge: 'reversed',
     billBadgeSuffix: (type: string) => `${type} bill`,
     neverEditedFootnote:
-      'Entries are never edited or deleted. Reversing one adds an opposite entry beside it, so the record of what was entered — and of the correction — both survive.',
+      'Entries are never edited or deleted by members or supervisors — reversing one adds an opposite entry beside it instead. An administrator can edit or permanently delete an entry directly.',
+    edit: 'Edit',
+    editAmountPlaceholder: 'Amount (৳)',
+    editFailed: 'Could not update that entry.',
+    edited: 'Entry updated.',
+    deleteForever: 'Delete forever',
+    hardDeleteConfirm:
+      'Permanently delete this entry?\n\nThis removes it (and any linked correction) from the history completely — this cannot be undone.',
+    hardDeleteFailed: 'Could not delete that entry.',
+    hardDeleted: 'Entry permanently deleted.',
     noPaymentsRecorded: 'No payments recorded this month.',
     broughtForward: 'Brought forward',
     balanceFormulaWithCarryIn:
