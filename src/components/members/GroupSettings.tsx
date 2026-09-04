@@ -16,6 +16,8 @@ type GroupDetail = {
   carryForwardEnabled: boolean;
   mealEditRequiresApproval: boolean | null;
   maxSupervisors: number | null;
+  bazarReminderEnabled: boolean;
+  bazarReminderTime: string;
 };
 
 type SupervisorState = {
@@ -252,6 +254,40 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
         </p>
       </Card>
 
+      <Card>
+        <h2 className="text-lg font-semibold">{strings.groups.bazarReminderTitle}</h2>
+        <p className="mt-1 max-w-2xl text-sm text-slate-500 dark:text-slate-400">{strings.groups.bazarReminderHint}</p>
+
+        <label className="mt-4 flex max-w-xl cursor-pointer items-start gap-3">
+          <input
+            type="checkbox"
+            checked={group.bazarReminderEnabled}
+            disabled={busy}
+            onChange={(event) =>
+              patch(
+                { bazarReminderEnabled: event.target.checked },
+                event.target.checked ? strings.groups.bazarReminderEnabledSaved : strings.groups.bazarReminderDisabledSaved,
+                strings.groups.settingFailed
+              )
+            }
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-brand-600 focus:ring-brand-500 disabled:opacity-50"
+          />
+          <span>
+            <span className="text-sm font-medium">{strings.groups.bazarReminderEnableLabel}</span>
+            <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
+              {strings.groups.bazarReminderEnableHint}
+            </span>
+          </span>
+        </label>
+
+        <BazarReminderTimeField
+          key={`${group.id}-${group.bazarReminderTime}`}
+          initial={group.bazarReminderTime}
+          disabled={busy || !group.bazarReminderEnabled}
+          onSave={(time) => patch({ bazarReminderTime: time }, strings.groups.bazarReminderTimeSaved, strings.groups.settingFailed)}
+        />
+      </Card>
+
       {isAdmin && supervisors && (
         <Card>
           <h2 className="text-lg font-semibold">{strings.groups.supervisorsForThisMess}</h2>
@@ -344,6 +380,46 @@ function MealWeights({
         </button>
       </form>
     </Card>
+  );
+}
+
+function BazarReminderTimeField({
+  initial,
+  disabled,
+  onSave
+}: {
+  initial: string;
+  disabled: boolean;
+  onSave: (time: string) => void;
+}) {
+  const [time, setTime] = useState(initial);
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSave(time);
+  }
+
+  return (
+    <form className="mt-5 flex flex-wrap items-end gap-3" onSubmit={submit}>
+      <label className="text-sm">
+        <span className="text-slate-600 dark:text-slate-400">{strings.groups.bazarReminderTimeLabel}</span>
+        <input
+          type="time"
+          value={time}
+          disabled={disabled}
+          onChange={(event) => setTime(event.target.value)}
+          className="mt-1 w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-3 py-2 disabled:opacity-50"
+        />
+      </label>
+      <button
+        type="submit"
+        disabled={disabled}
+        className="rounded-full bg-brand-600 shadow-sm shadow-brand-600/20 px-6 py-2.5 text-sm text-white hover:bg-brand-700 transition-all active:translate-y-px disabled:opacity-50"
+      >
+        {strings.common.save}
+      </button>
+      <span className="w-full text-xs text-slate-500 dark:text-slate-400">{strings.groups.bazarReminderTimeHint}</span>
+    </form>
   );
 }
 

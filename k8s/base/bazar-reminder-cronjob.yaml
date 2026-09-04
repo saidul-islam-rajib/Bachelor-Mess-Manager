@@ -7,12 +7,11 @@ metadata:
     app: bachelor-point
     component: bazar-reminder
   annotations:
-    description: "Daily 7am nudge to whoever is on bazar duty. Idempotent per member, per group, per day."
+    description: "Runs every 5 minutes; dispatches the bazar-duty reminder for whichever mess's own configured time has just arrived. Idempotent per member, per group, per day."
 spec:
-  schedule: "0 7 * * *"
-  timeZone: "Asia/Dhaka"
+  schedule: "*/5 * * * *"
   concurrencyPolicy: Forbid
-  startingDeadlineSeconds: 3600
+  startingDeadlineSeconds: 120
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
   jobTemplate:

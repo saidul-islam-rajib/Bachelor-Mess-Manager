@@ -283,7 +283,7 @@ kubectl -n bachelor-point rollout status deployment/bachelor-point-blue
 # daily one-tap meal ask, once blue is serving
 sed "s|REPLACE_IMAGE|$IMAGE|g" k8s/base/meal-prompt-cronjob.yaml | kubectl apply -f -
 
-# daily 7am bazar-duty reminder, once blue is serving
+# bazar-duty reminder (checks every 5 min for each mess's own reminder time), once blue is serving
 sed "s|REPLACE_IMAGE|$IMAGE|g" k8s/base/bazar-reminder-cronjob.yaml | kubectl apply -f -
 ```
 

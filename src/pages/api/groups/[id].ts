@@ -4,6 +4,7 @@ import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/l
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { GROUP_STATUS_VALUES, MEAL_RATE_MODE_VALUES } from '@/lib/constants';
 import { deleteGroupPermanently } from '@/lib/hard-delete';
+import { isTimeOfDay } from '@/lib/month';
 import {
   getMealEditPolicy,
   SUPERVISORS_PER_GROUP_MAX,
@@ -65,7 +66,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       mealRateMode,
       carryForwardEnabled,
       mealEditRequiresApproval,
-      maxSupervisors
+      maxSupervisors,
+      bazarReminderEnabled,
+      bazarReminderTime
     } = req.body as {
       name?: string;
       status?: string;
@@ -76,6 +79,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       carryForwardEnabled?: boolean;
       mealEditRequiresApproval?: boolean | null;
       maxSupervisors?: number | null;
+      bazarReminderEnabled?: boolean;
+      bazarReminderTime?: string;
     };
 
     const data: Record<string, unknown> = {};
@@ -125,6 +130,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       data.mealRateMode = mealRateMode;
     }
     if (typeof carryForwardEnabled === 'boolean') data.carryForwardEnabled = carryForwardEnabled;
+    if (typeof bazarReminderEnabled === 'boolean') data.bazarReminderEnabled = bazarReminderEnabled;
+    if (bazarReminderTime !== undefined) {
+      if (!isTimeOfDay(bazarReminderTime)) {
+        return badRequest(res, strings.groups.bazarReminderTimeInvalid);
+      }
+      data.bazarReminderTime = bazarReminderTime;
+    }
     for (const [key, value] of [
       ['mealWeightBreakfast', mealWeightBreakfast],
       ['mealWeightLunch', mealWeightLunch],

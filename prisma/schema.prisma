@@ -256,6 +256,8 @@ model Group {
   carryForwardEnabled      Boolean             @default(true)
   mealEditRequiresApproval Boolean?
   maxSupervisors           Int?
+  bazarReminderEnabled     Boolean             @default(true)
+  bazarReminderTime        String              @default("07:00")
   createdAt                DateTime            @default(now())
   createdById              String?
   updatedAt                DateTime            @default(now()) @updatedAt

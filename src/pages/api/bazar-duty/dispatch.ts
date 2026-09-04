@@ -7,7 +7,7 @@ import { GROUP_STATUS, NOTIFICATION_TYPES } from '@/lib/constants';
 import { bazarDutyUserId } from '@/lib/bazar-duty';
 import { formatDay } from '@/lib/format';
 import { strings } from '@/lib/i18n';
-import { dayToUtcDate, todayKey } from '@/lib/month';
+import { dayToUtcDate, parseTimeToMinutes, todayKey, zonedMinutesSinceMidnight } from '@/lib/month';
 import { notifyUsers } from '@/lib/notifications';
 import { sendPushToUser } from '@/lib/push';
 import { groupPath } from '@/lib/routes';
@@ -39,6 +39,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   const dateKey = date ?? todayKey();
   const trusted = secretMatches(req);
+  const timeGated = trusted && date === undefined;
+  const nowMinutes = zonedMinutesSinceMidnight();
 
   let groupIds: string[];
 
@@ -79,8 +81,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   let sent = 0;
 
   for (const id of groupIds) {
-    const group = await prisma.group.findUnique({ where: { id }, select: { id: true, name: true, status: true } });
+    const group = await prisma.group.findUnique({
+      where: { id },
+      select: { id: true, name: true, status: true, bazarReminderEnabled: true, bazarReminderTime: true }
+    });
     if (!group || group.status !== GROUP_STATUS.ACTIVE) continue;
+    if (!group.bazarReminderEnabled) continue;
+
+    if (timeGated) {
+      const dueMinutes = parseTimeToMinutes(group.bazarReminderTime) ?? 0;
+      if (nowMinutes < dueMinutes) continue;
+    }
 
     const userId = await bazarDutyUserId(group.id, dateKey);
     if (!userId) continue;

@@ -3,6 +3,7 @@ import { appConfig, dateConfig, uiConfig } from '@/config';
 const MS_PER_DAY = 86_400_000;
 const MONTH_KEY_PATTERN = /^\d{4}-\d{2}$/;
 const DAY_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_OF_DAY_PATTERN = /^([01]\d|2[0-3]):([0-5]\d)$/;
 
 let dayKeyFormatter: Intl.DateTimeFormat | null = null;
 
@@ -14,6 +15,34 @@ function zonedDayFormatter(): Intl.DateTimeFormat {
     day: '2-digit'
   });
   return dayKeyFormatter;
+}
+
+let timeOfDayFormatter: Intl.DateTimeFormat | null = null;
+
+function zonedTimeOfDayFormatter(): Intl.DateTimeFormat {
+  timeOfDayFormatter ??= new Intl.DateTimeFormat('en-US', {
+    timeZone: appConfig.timeZone,
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23'
+  });
+  return timeOfDayFormatter;
+}
+
+export function isTimeOfDay(value: unknown): value is string {
+  return typeof value === 'string' && TIME_OF_DAY_PATTERN.test(value);
+}
+
+export function parseTimeToMinutes(value: string): number | null {
+  const match = TIME_OF_DAY_PATTERN.exec(value);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+
+export function zonedMinutesSinceMidnight(instant: Date = new Date()): number {
+  const parts = zonedTimeOfDayFormatter().formatToParts(instant);
+  const value = (type: Intl.DateTimeFormatPartTypes) => Number(parts.find((part) => part.type === type)?.value ?? '0');
+  return value('hour') * 60 + value('minute');
 }
 
 export function isDayKey(value: unknown): value is string {

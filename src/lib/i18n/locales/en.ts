@@ -603,6 +603,18 @@ const en = {
     pastMealsAutoHint:
       'Changes apply immediately and the whole mess is notified. Faster for a mess that trusts itself, but a back-dated edit shifts everyone else\'s share without a check.',
     pastMealsSaved: 'Past-meal approval updated.',
+    bazarReminderTitle: 'Bazar duty reminder',
+    bazarReminderHint:
+      'Nudge whoever is on bazar duty today, by email, the bell and a push alert if they have turned that on.',
+    bazarReminderEnableLabel: 'Send the daily reminder',
+    bazarReminderEnableHint:
+      'Turn this off and nobody in this mess gets a bazar-duty reminder, whatever the site-wide setting is.',
+    bazarReminderEnabledSaved: 'Bazar duty reminders turned on.',
+    bazarReminderDisabledSaved: 'Bazar duty reminders turned off.',
+    bazarReminderTimeLabel: 'Reminder time',
+    bazarReminderTimeHint: 'Sent once a day, in this mess\'s local time.',
+    bazarReminderTimeSaved: 'Reminder time updated.',
+    bazarReminderTimeInvalid: 'Enter a valid time.',
     supervisorsForThisMess: 'Supervisors for this mess',
     supervisorsForThisMessHint:
       'How many people may run this mess. The main supervisor counts towards the limit, so 2 means one second supervisor alongside them.',
