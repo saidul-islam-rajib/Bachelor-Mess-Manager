@@ -43,6 +43,7 @@
     "meals:prompt": "node scripts/send-meal-prompts.js",
     "settlement:finalize": "node scripts/finalize-settlements.js",
     "bazar:remind": "node scripts/send-bazar-reminders.js",
+    "cron:loop": "node scripts/cron-loop.js",
     "seed:db": "node prisma/seed.js",
     "setup": "npm run prisma:deploy && npm run db:sync-roles && npm run admin:init",
     "backup:db": "node scripts/backup-db.js",

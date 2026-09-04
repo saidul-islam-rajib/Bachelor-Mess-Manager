@@ -110,6 +110,29 @@ Secret first — without it the job exits non-zero and sends nothing. Anywhere
 else, any cron that can run `npm run bazar:remind` every few minutes with the
 same environment will do.
 
+**On a plain `docker compose` deployment** (the `docker-compose.yml` at the
+repo root — a single VPS running `db` / `migrate` / `app`, no Kubernetes),
+there is a fourth service, `cron`, built from the same image as `app` and
+running `node scripts/cron-loop.js`. That script is a small, dependency-free
+in-process scheduler (`setInterval`, no OS cron involved) that spawns
+`scripts/send-bazar-reminders.js` every 5 minutes with `env: process.env` —
+deliberately avoiding OS/container cron daemons entirely, since whether they
+pass environment variables through to the jobs they spawn varies and is easy
+to get wrong silently. `docker compose up -d --build` picks it up like any
+other service.
+
+This only works once `BAZAR_REMINDER_DISPATCH_SECRET` is a real secret in
+whatever supplies `docker-compose.yml`'s environment on that host (its own
+`.env` file, or the shell environment `docker compose` runs in) — the compose
+file's checked-in fallback (`local-dev-bazar-reminder-secret`) is for local
+development only, and email/push need `SMTP_*` / `VAPID_*` set there too
+(the `app` service's `environment:` block now passes all of these through;
+previously it passed through none of them, so on a deployment matching this
+file as checked in, **no outbound mail of any kind — not just this feature —
+could have been sending**, regardless of what `.env` on the host contained,
+because compose only forwards variables a service's `environment:` block
+explicitly names).
+
 **The time-of-day gate only applies to this automatic, secret-authenticated,
 no-explicit-date path.** Two things bypass it and send immediately (subject
 only to the group's `bazarReminderEnabled` flag and the once-per-day dedupe):

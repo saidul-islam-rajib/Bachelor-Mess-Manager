@@ -52,6 +52,14 @@ services:
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-ChangeThisAdminPassword2026}"
       UPLOAD_DIR: /data/uploads
       SECURITY_TRUST_PROXY_HEADERS: "false"
+      BAZAR_REMINDER_DISPATCH_SECRET: "${BAZAR_REMINDER_DISPATCH_SECRET:-local-dev-bazar-reminder-secret}"
+      VAPID_PUBLIC_KEY: "${VAPID_PUBLIC_KEY:-}"
+      VAPID_PRIVATE_KEY: "${VAPID_PRIVATE_KEY:-}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
     ports:
       - "${APP_PORT:-8080}:8080"
     volumes:
@@ -59,6 +67,20 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+    restart: unless-stopped
+
+  cron:
+    build:
+      context: .
+      target: runner
+    container_name: bachelor-point-cron
+    command: ["node", "scripts/cron-loop.js"]
+    environment:
+      APP_URL: "http://app:8080"
+      BAZAR_REMINDER_DISPATCH_SECRET: "${BAZAR_REMINDER_DISPATCH_SECRET:-local-dev-bazar-reminder-secret}"
+    depends_on:
+      app:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
