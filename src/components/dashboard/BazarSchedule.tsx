@@ -48,6 +48,7 @@ type BazarScheduleData = {
   editable: boolean;
   lockedReason: LockedReason;
   canManage: boolean;
+  isAdmin: boolean;
   currentUserId: string;
   members: BazarMember[];
   days: BazarDay[];
@@ -216,6 +217,7 @@ function CalendarGrid({
       {data.days.map((day) => {
         const tone = day.userId ? toneByUserId.get(day.userId) : undefined;
         const isPast = day.date < today;
+        const locked = isPast && !data.isAdmin;
         const className = tone
           ? tone.cell
           : 'border-dashed border-slate-200 bg-slate-50/60 text-slate-400 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-500';
@@ -236,7 +238,7 @@ function CalendarGrid({
           </>
         );
 
-        if (!data.editable || isPast) {
+        if (!data.editable || locked) {
           return (
             <div
               key={day.day}
@@ -418,6 +420,12 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
     <div className="space-y-4">
       {!data.editable && <p className="text-xs text-amber-700 dark:text-amber-400">{lockedMessage(data.lockedReason)}</p>}
 
+      {data.editable && data.lockedReason && (
+        <p className="text-xs text-amber-700 dark:text-amber-400">
+          {scheduleStrings.adminOverrideNotice(lockedMessage(data.lockedReason))}
+        </p>
+      )}
+
       {data.editable && hasFutureDays && (
         <div className="flex justify-end">
           <button
@@ -446,7 +454,7 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
                 tone={toneByUserId.get(member.id)!}
                 days={daysByUserId.get(member.id) ?? []}
                 isCurrentUser={member.id === data.currentUserId}
-                editable={data.editable && hasFutureDays}
+                editable={data.editable && (hasFutureDays || data.isAdmin)}
                 onEdit={() => setMemberPicker(member)}
               />
             ))}
@@ -526,14 +534,15 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
             const mine = memberPicker !== null && day.userId === memberPicker.id;
             const takenBy = !mine && day.userId ? day.userName : null;
             const isPast = day.date < today;
+            const locked = isPast && !data.isAdmin;
             return (
               <button
                 key={day.day}
                 type="button"
-                disabled={isPast}
-                title={isPast ? scheduleStrings.pastDayTooltip : undefined}
+                disabled={locked}
+                title={locked ? scheduleStrings.pastDayTooltip : undefined}
                 onClick={() => {
-                  if (!memberPicker || isPast) return;
+                  if (!memberPicker || locked) return;
                   assign(day.day, mine ? null : memberPicker.id);
                 }}
                 className={`flex min-h-[2.75rem] flex-col items-center justify-center rounded-lg border px-0.5 transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${

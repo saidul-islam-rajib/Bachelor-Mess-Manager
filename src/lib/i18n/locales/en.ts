@@ -527,6 +527,7 @@ const en = {
     lockedGroupClosed: 'This mess is closed, so the bazar schedule cannot be changed.',
     lockedMonthClosed: 'This month is closed, so the bazar schedule cannot be changed.',
     lockedNoMembers: 'Add members to this mess to build a bazar schedule.',
+    adminOverrideNotice: (reason: string) => `${reason} You can still change it as an administrator.`,
     saveFailed: 'Could not save the bazar schedule.',
     invalidAssignment: 'That assignment is not valid.',
     cannotChangePast: "You can't change bazar duty for a day that has already passed.",

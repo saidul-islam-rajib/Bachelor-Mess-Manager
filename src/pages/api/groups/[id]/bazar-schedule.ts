@@ -24,7 +24,8 @@ async function loadSchedule(
   group: { status: string },
   monthKey: string,
   currentUserId: string,
-  canManage: boolean
+  canManage: boolean,
+  isAdmin: boolean
 ) {
   const totalDays = daysInMonth(monthKey).length;
   const scheduleId = await ensureSchedule(groupId, monthKey, totalDays);
@@ -89,12 +90,15 @@ async function loadSchedule(
   else if (groupClosed) lockedReason = 'GROUP_CLOSED';
   else if (monthClosed) lockedReason = 'MONTH_CLOSED';
 
+  const editable = isAdmin ? activeMembers.length > 0 : lockedReason === null;
+
   return {
     monthKey,
     totalDays,
-    editable: lockedReason === null,
+    editable,
     lockedReason,
     canManage,
+    isAdmin,
     currentUserId,
     members,
     days
@@ -121,6 +125,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return forbidden(res, 'You are not a member of this group.');
   }
   const canManage = await canManageGroup(groupId, sessionUser);
+  const isAdmin = requireAdmin(sessionUser);
 
   const monthParam = Array.isArray(req.query.month) ? req.query.month[0] : req.query.month;
   const { key: monthKey } = parseMonth(monthParam);
@@ -130,17 +135,17 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return forbidden(res, strings.errors.permissionDenied);
     }
 
-    return ok(res, await loadSchedule(groupId, group, monthKey, sessionUser.id, canManage));
+    return ok(res, await loadSchedule(groupId, group, monthKey, sessionUser.id, canManage, isAdmin));
   }
 
   if (req.method === 'PUT') {
     if (!hasPermission(sessionUser, PERMISSIONS.EXPENSE_CREATE)) {
       return forbidden(res, strings.errors.permissionDenied);
     }
-    if (!isGroupWritable(group)) {
+    if (!isAdmin && !isGroupWritable(group)) {
       return forbidden(res, GROUP_CLOSED_MESSAGE);
     }
-    if (await isMonthClosed(groupId, monthKey)) {
+    if (!isAdmin && (await isMonthClosed(groupId, monthKey))) {
       return forbidden(res, strings.bazarSchedule.lockedMonthClosed);
     }
 
@@ -167,7 +172,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       if (typeof day !== 'number' || !Number.isInteger(day) || day < 1 || day > totalDays) {
         return badRequest(res, strings.bazarSchedule.invalidAssignment);
       }
-      if (monthDays[day - 1] < today) {
+      if (!isAdmin && monthDays[day - 1] < today) {
         return badRequest(res, strings.bazarSchedule.cannotChangePast);
       }
       if (userId !== null && typeof userId !== 'string') {
@@ -193,7 +198,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       )
     );
 
-    return ok(res, await loadSchedule(groupId, group, monthKey, sessionUser.id, canManage));
+    return ok(res, await loadSchedule(groupId, group, monthKey, sessionUser.id, canManage, isAdmin));
   }
 
   return methodNotAllowed(res, ['GET', 'PUT']);
