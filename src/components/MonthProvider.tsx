@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import { currentMonthKey, isMonthKey } from '@/lib/month';
+import { currentMonthKey, isMonthKey, todayKey } from '@/lib/month';
 
 const MONTH_STORAGE_KEY = 'bachelor_point_month';
+const MONTH_STORAGE_DAY_KEY = 'bachelor_point_month_saved_on';
 
 type MonthContextValue = {
   month: string;
@@ -21,7 +22,9 @@ export function useSelectedMonth() {
 function readStoredMonth(): string {
   if (typeof window === 'undefined') return currentMonthKey();
   const stored = window.localStorage.getItem(MONTH_STORAGE_KEY);
-  return isMonthKey(stored) ? stored : currentMonthKey();
+  const savedOn = window.localStorage.getItem(MONTH_STORAGE_DAY_KEY);
+  if (!isMonthKey(stored) || savedOn !== todayKey()) return currentMonthKey();
+  return stored;
 }
 
 export function MonthProvider({ children }: { children: ReactNode }) {
@@ -30,6 +33,7 @@ export function MonthProvider({ children }: { children: ReactNode }) {
   const setMonth = useCallback((next: string) => {
     setMonthState(next);
     window.localStorage.setItem(MONTH_STORAGE_KEY, next);
+    window.localStorage.setItem(MONTH_STORAGE_DAY_KEY, todayKey());
   }, []);
 
   const value = useMemo(() => ({ month, setMonth }), [month, setMonth]);
