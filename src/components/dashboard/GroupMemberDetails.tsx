@@ -21,6 +21,7 @@ type SummaryMember = {
   billShareByType: Record<string, number>;
   totalCost: number;
   collected: number;
+  billPaid: number;
   due: number;
   status: string;
 };
@@ -88,7 +89,7 @@ function MemberRow({
         <span className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5 sm:grid-cols-4">
           <Figure label={memberDetails.meals} value={member.meals} />
           <Figure label={memberDetails.bazarPaid} value={taka(member.bazarPaid)} />
-          <Figure label={memberDetails.billsPaid} value={taka(member.collected)} />
+          <Figure label={memberDetails.billsPaid} value={taka(member.billPaid)} />
           <Figure
             strong
             label={member.due > 0 ? memberDetails.due : member.due < 0 ? memberDetails.refund : memberDetails.settledUp}
