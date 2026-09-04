@@ -1,8 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { dayToUtcDate, daysInMonth, parseMonth, todayKey, utcDateToDay } from '@/lib/month';
+import { currentMonthKey, dayToUtcDate, daysInMonth, parseMonth, todayKey, utcDateToDay } from '@/lib/month';
 import { WEEKDAYS } from '@/lib/constants';
-
-const HORIZON_MONTHS = 2;
 
 export type PlanDay = {
   weekday: number;
@@ -27,10 +25,9 @@ function dayRange(start: string, end: string): string[] {
   return days;
 }
 
-function horizonEnd(monthsAhead: number): string {
-  const now = new Date();
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthsAhead + 1, 0));
-  return utcDateToDay(end);
+function endOfCurrentMonth(): string {
+  const days = daysInMonth(currentMonthKey());
+  return days[days.length - 1];
 }
 
 export function emptyPlanDays(): PlanDay[] {
@@ -103,7 +100,7 @@ export async function applyPlanToUpcoming(
   if (!plan) return { filled: 0 };
 
   const start = laterOf(todayKey(), utcDateToDay(plan.startDate));
-  const end = horizonEnd(HORIZON_MONTHS);
+  const end = endOfCurrentMonth();
   if (start > end) return { filled: 0 };
 
   await prisma.mealEntry.deleteMany({

@@ -4,7 +4,7 @@ import { flattenMentions, mentionIdsIn, mentionsEveryone } from '@/lib/mentions'
 import { isMailConfigured, sendMail, type MailMessage } from '@/lib/mailer';
 import { commentsAnchorPath, ROUTES } from '@/lib/routes';
 import { buildPageMeta, type PageMeta } from '@/lib/query';
-import { NOTIFICATION_TYPES, type NotificationType } from '@/lib/constants';
+import { NOTIFICATION_TYPES, USER_ROLES, type NotificationType } from '@/lib/constants';
 import { isNotificationEnabled } from '@/lib/settings-service';
 import { escapeHtml } from '@/lib/xss';
 
@@ -39,6 +39,19 @@ export type NotificationRecipient = { id: string; name: string; email: string };
 
 function truncate(text: string) {
   return text.length > EXCERPT_LENGTH ? `${text.slice(0, EXCERPT_LENGTH - 1)}…` : text;
+}
+
+async function actorIsAdmin(actorId?: string | null): Promise<boolean> {
+  if (!actorId) return false;
+  const actor = await prisma.user.findUnique({ where: { id: actorId }, select: { role: true } });
+  return actor?.role === USER_ROLES.ADMIN;
+}
+
+async function retractNotifications(recipientIds: string[], type: string, groupId?: string | null) {
+  if (recipientIds.length === 0) return;
+  await prisma.notification.deleteMany({
+    where: { userId: { in: recipientIds }, type, groupId: groupId ?? null }
+  });
 }
 
 export function mentionLink(type: NotificationType, groupId: string) {
@@ -84,6 +97,11 @@ export async function notifyMentions({
       : await eligibleRecipients(groupId, mentioned);
     if (recipients.length === 0) return;
     if (!(await isNotificationEnabled(type))) return;
+
+    if (await actorIsAdmin(actorId)) {
+      await retractNotifications(recipients, type, groupId);
+      return;
+    }
 
     await prisma.notification.createMany({
       data: recipients.map((userId) => ({
@@ -206,6 +224,11 @@ export async function createNotifications(recipientIds: string[], input: Notific
   if (targets.length === 0) return 0;
   if (!(await isNotificationEnabled(input.type))) return 0;
 
+  if (await actorIsAdmin(input.actorId)) {
+    await retractNotifications(targets, input.type, input.groupId);
+    return 0;
+  }
+
   const now = new Date();
   const result = await prisma.notification.createMany({
     data: targets.map((userId) => ({
@@ -230,6 +253,7 @@ export function deliverEmails(recipients: NotificationRecipient[], input: Notifi
 
   void (async () => {
     if (!(await isNotificationEnabled(input.type))) return;
+    if (await actorIsAdmin(input.actorId)) return;
     await Promise.allSettled(
       recipients.map((recipient) => sendMail({ ...notificationEmail(recipient.name, input, url), to: recipient.email }))
     );
