@@ -1,7 +1,6 @@
-import { prisma } from '@/lib/prisma';
 import { buildGroupReport, type GroupReport } from '@/lib/group-report';
-import { buildCollectionState, collectionsByBill } from '@/lib/bill-collections';
-import { BILL_TYPE_FILTER, EXPENSE_TYPES } from '@/lib/constants';
+import { groupBillCollectionTotals } from '@/lib/bill-collections';
+import { EXPENSE_TYPES } from '@/lib/constants';
 import { parseMonth, round2 } from '@/lib/month';
 import type { SettlementGroup } from '@/lib/settlement';
 import { cached } from '@/lib/cache';
@@ -40,32 +39,6 @@ export type GroupDashboardCard = {
   members: { id: string; name: string; due: number; status: string; stayDays: number }[];
 };
 
-type BillLedgerTotals = { amount: number; collected: number; outstanding: number };
-
-async function billLedgerTotals(groupId: string, start: Date, nextStart: Date): Promise<BillLedgerTotals> {
-  const rows = await prisma.expenseEntry.findMany({
-    where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
-    include: { shares: true }
-  });
-  if (rows.length === 0) return { amount: 0, collected: 0, outstanding: 0 };
-
-  const collections = await collectionsByBill(rows.map((row) => row.id));
-
-  let amount = 0;
-  let collected = 0;
-  let outstanding = 0;
-  for (const row of rows) {
-    const state = buildCollectionState(
-      row.shares.map((s) => ({ userId: s.userId, userName: '', amount: s.amount })),
-      collections.get(row.id) ?? []
-    );
-    amount = round2(amount + row.amount);
-    collected = round2(collected + state.collected);
-    outstanding = round2(outstanding + state.outstanding);
-  }
-  return { amount, collected, outstanding };
-}
-
 function dayPoints(report: GroupReport): DayRatePoint[] {
   return report.days
     .filter((day) => day.meals > 0)
@@ -80,7 +53,7 @@ async function buildCard(
 
   const [report, billTotals] = await Promise.all([
     buildGroupReport(group, month),
-    billLedgerTotals(group.id, start, nextStart)
+    groupBillCollectionTotals(group.id, start, nextStart)
   ]);
 
   const rates = dayPoints(report).map((day) => day.rate);

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { PAYMENT_STATUS } from '@/lib/constants';
+import { BILL_TYPE_FILTER, PAYMENT_STATUS } from '@/lib/constants';
 import { round2 } from '@/lib/month';
 
 const TOLERANCE_PAISA = 1;
@@ -277,4 +277,50 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
   }
 
   return byBill;
+}
+
+export type MemberBillCollectionTotals = { paid: number; outstanding: number };
+
+export type GroupBillCollectionTotals = {
+  perMember: Map<string, MemberBillCollectionTotals>;
+  collected: number;
+  outstanding: number;
+};
+
+export async function groupBillCollectionTotals(
+  groupId: string,
+  start: Date,
+  nextStart: Date
+): Promise<GroupBillCollectionTotals> {
+  const perMember = new Map<string, MemberBillCollectionTotals>();
+  const empty = { perMember, collected: 0, outstanding: 0 };
+
+  const bills = await prisma.expenseEntry.findMany({
+    where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
+    select: { id: true, shares: { select: { userId: true, amount: true } } }
+  });
+  if (bills.length === 0) return empty;
+
+  const collections = await collectionsByBill(bills.map((bill) => bill.id));
+
+  let collected = 0;
+  let outstanding = 0;
+  for (const bill of bills) {
+    const state = buildCollectionState(
+      bill.shares.map((share) => ({ userId: share.userId, userName: '', amount: share.amount })),
+      collections.get(bill.id) ?? []
+    );
+    collected = round2(collected + state.collected);
+    outstanding = round2(outstanding + state.outstanding);
+
+    for (const share of state.shares) {
+      const current = perMember.get(share.userId) ?? { paid: 0, outstanding: 0 };
+      perMember.set(share.userId, {
+        paid: round2(current.paid + share.paid),
+        outstanding: round2(current.outstanding + share.outstanding)
+      });
+    }
+  }
+
+  return { perMember, collected, outstanding };
 }
