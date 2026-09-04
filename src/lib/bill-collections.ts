@@ -290,10 +290,19 @@ export async function updatePaymentDetails(params: {
 }): Promise<UpdatePaymentResult> {
   const { paymentId, groupId, amount, date } = params;
 
-  const original = await prisma.paymentStatus.findUnique({ where: { id: paymentId } });
+  const original = await prisma.paymentStatus.findUnique({
+    where: { id: paymentId },
+    include: { offsetBy: { select: { id: true } }, reversedBy: { select: { id: true } } }
+  });
   if (!original) return { ok: false, error: 'That entry does not exist.' };
   if (groupId && original.groupId !== groupId) {
     return { ok: false, error: 'That entry belongs to another mess.' };
+  }
+  if (original.offsetOfId || original.offsetBy || original.reversalOfId || original.reversedBy || original.fromAdvance) {
+    return {
+      ok: false,
+      error: 'This entry is linked to another record (a transfer, reversal, or advance) — reverse or hard-delete it instead of editing it directly.'
+    };
   }
 
   const data: { amountPaid?: number; dueDate?: Date } = {};

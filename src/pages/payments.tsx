@@ -37,6 +37,7 @@ type Payment = {
   billType: string | null;
   isReversal: boolean;
   isReversed: boolean;
+  isLinked: boolean;
 };
 
 type DayRate = {
@@ -1112,12 +1113,14 @@ function PaymentLog({
                   )}
                   {isAdmin && (
                     <>
-                      <button
-                        onClick={() => startEdit(p)}
-                        className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
-                      >
-                        {payments.edit}
-                      </button>
+                      {!p.isLinked && (
+                        <button
+                          onClick={() => startEdit(p)}
+                          className="rounded-full border border-slate-200 dark:border-slate-700 px-3 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                        >
+                          {payments.edit}
+                        </button>
+                      )}
                       <button
                         onClick={() => onHardDelete(p.id)}
                         className="rounded-full border border-red-300 dark:border-red-500/40 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10"

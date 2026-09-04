@@ -47,7 +47,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         include: {
           user: { select: { id: true, name: true } },
           expense: { select: { id: true, type: true } },
-          reversedBy: { select: { id: true } }
+          reversedBy: { select: { id: true } },
+          offsetBy: { select: { id: true } }
         },
         orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }]
       })
@@ -62,7 +63,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       billId: p.expense?.id ?? null,
       billType: p.expense?.type ?? null,
       isReversal: Boolean(p.reversalOfId),
-      isReversed: Boolean(p.reversedBy)
+      isReversed: Boolean(p.reversedBy),
+      isLinked: Boolean(p.offsetOfId || p.offsetBy || p.fromAdvance || p.reversalOfId || p.reversedBy)
     }));
 
     return ok(res, {
