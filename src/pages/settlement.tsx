@@ -19,8 +19,10 @@ type SettlementMember = {
   mealCost: number;
   billShare: number;
   billShareByType: Record<string, number>;
+  payableByType: Record<string, number>;
   bazarPaid: number;
   cashPaid: number;
+  paidByType: Record<string, number>;
   dueAtClose: number;
   closeStatus: string;
   liveDue: number;
@@ -41,12 +43,21 @@ type SettlementData = {
   settledBy: string | null;
   mealRate: number;
   totals: { bazar: number; bills: number; expense: number; meals: number };
+  categoryLabels: Record<string, string>;
   members: SettlementMember[];
   settleUp: { transfers: Transfer[]; unmatched: number; surplus: number };
   allClear: boolean;
 };
 
-function MemberSection({ members, currentUserId }: { members: SettlementMember[]; currentUserId?: string }) {
+function MemberSection({
+  members,
+  currentUserId,
+  categoryLabels
+}: {
+  members: SettlementMember[];
+  currentUserId?: string;
+  categoryLabels: Record<string, string>;
+}) {
   const rows: MemberDueRow[] = members.map((m) => ({
     id: m.id,
     name: m.name,
@@ -54,14 +65,16 @@ function MemberSection({ members, currentUserId }: { members: SettlementMember[]
     hasLeft: !m.isCurrentMember,
     payable: m.mealCost + m.billShare,
     paid: m.bazarPaid + m.cashPaid,
-    net: -m.dueAtClose
+    net: -m.dueAtClose,
+    payableByType: m.payableByType,
+    paidByType: m.paidByType
   }));
 
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
       <h2 className="text-lg font-semibold">{strings.payments.memberBalances}</h2>
       <div className="mt-4">
-        <MemberDueTable rows={rows} payableLabel={settlement.totalPayable} />
+        <MemberDueTable rows={rows} payableLabel={settlement.totalPayable} categoryLabels={categoryLabels} />
       </div>
     </div>
   );
@@ -311,7 +324,7 @@ export default function SettlementPage() {
 
             <p className="text-xs text-slate-500 dark:text-slate-400">{settlement.closedThrough(formatDay(data.closedThrough))}</p>
 
-            <MemberSection members={data.members} currentUserId={user?.id} />
+            <MemberSection members={data.members} currentUserId={user?.id} categoryLabels={data.categoryLabels} />
             <SettleUpSection result={data.settleUp} />
 
             {payload?.canManage && <SupervisorAction data={data} marking={marking} onMarkSettled={handleMarkSettled} />}

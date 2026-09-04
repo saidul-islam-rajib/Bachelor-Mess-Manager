@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { cached } from '@/lib/cache';
-import { BILL_TYPE_FILTER, MEAL_RATE_MODES, PAYMENT_STATUS } from '@/lib/constants';
+import { BILL_TYPE_FILTER, GENERAL_PAYMENT_TYPE, MEAL_RATE_MODES, PAYMENT_STATUS } from '@/lib/constants';
 import { dayToUtcDate, parseMonth, previousMonthKey, round2, todayKey, utcDateToDay } from '@/lib/month';
 import { syncPlansForMonth } from '@/lib/meal-plan';
 
@@ -22,6 +22,7 @@ export type SettlementMember = {
   totalCost: number;
   bazarPaid: number;
   cashPaid: number;
+  cashPaidByType: Record<string, number>;
   due: number;
   status: string;
   joinedAt: string;
@@ -260,7 +261,7 @@ async function buildSettlementUncached(
             { expense: { date: { gte: start, lt: windowEnd } } }
           ]
         },
-        select: { userId: true, amountPaid: true }
+        select: { userId: true, amountPaid: true, expense: { select: { type: true } } }
       }),
       carryForwardEnabled ? loadCarryIn(groupId, key) : Promise.resolve(new Map<string, number>()),
       prisma.monthClosing.findFirst({
@@ -401,9 +402,17 @@ async function buildSettlementUncached(
   }
 
   const cashByMember = new Int32Array(memberIds.length);
+  const cashByMemberType = memberIds.map(() => new Map<string, number>());
   for (const row of cashRows) {
     const index = indexOf.get(row.userId);
-    if (index !== undefined) cashByMember[index] += toPaisa(row.amountPaid);
+    if (index === undefined) continue;
+
+    const paisa = toPaisa(row.amountPaid);
+    cashByMember[index] += paisa;
+
+    const type = row.expense?.type ?? GENERAL_PAYMENT_TYPE;
+    const bucket = cashByMemberType[index];
+    bucket.set(type, (bucket.get(type) ?? 0) + paisa);
   }
 
   const now = new Date();
@@ -439,6 +448,9 @@ async function buildSettlementUncached(
       totalCost: fromPaisa(totalCostPaisa),
       bazarPaid: fromPaisa(bazarPaidPaisa),
       cashPaid: fromPaisa(cashPaidPaisa),
+      cashPaidByType: Object.fromEntries(
+        [...cashByMemberType[index].entries()].map(([type, paisa]) => [type, fromPaisa(paisa)])
+      ),
       due: fromPaisa(duePaisa),
       status: settlementStatus(totalCostPaisa, creditPaisa, duePaisa),
       joinedAt: person.joinedAt.toISOString(),

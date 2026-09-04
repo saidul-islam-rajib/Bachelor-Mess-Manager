@@ -13,6 +13,7 @@ export type ReportMember = {
   totalCost: number;
   bazarPaid: number;
   collected: number;
+  collectedByType: Record<string, number>;
   due: number;
   status: string;
   isActive: boolean;
@@ -86,6 +87,7 @@ export async function buildGroupReport(
       totalCost: member.totalCost,
       bazarPaid: member.bazarPaid,
       collected: member.cashPaid,
+      collectedByType: member.cashPaidByType,
       due: member.due,
       status: member.status,
       isActive: member.isActive,

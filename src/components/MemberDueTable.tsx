@@ -11,6 +11,8 @@ export type MemberDueRow = {
   payable: number;
   paid: number;
   net: number;
+  payableByType?: Record<string, number>;
+  paidByType?: Record<string, number>;
 };
 
 function DueRefund({ net }: { net: number }) {
@@ -27,12 +29,49 @@ function DueRefund({ net }: { net: number }) {
   return <span className="font-semibold tabular-nums text-slate-400 dark:text-slate-500">{taka(0)}</span>;
 }
 
-export function MemberDueTable({ rows, payableLabel }: { rows: MemberDueRow[]; payableLabel: string }) {
+function sumByType(rows: MemberDueRow[], key: 'payableByType' | 'paidByType'): Record<string, number> {
+  const totals: Record<string, number> = {};
+  for (const row of rows) {
+    for (const [type, amount] of Object.entries(row[key] ?? {})) {
+      totals[type] = (totals[type] ?? 0) + amount;
+    }
+  }
+  return totals;
+}
+
+function TypeBreakdown({ byType, labels }: { byType?: Record<string, number>; labels?: Record<string, string> }) {
+  const entries = Object.entries(byType ?? {})
+    .filter(([, amount]) => amount > 0.005)
+    .sort((a, b) => b[1] - a[1]);
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="mt-0.5 flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-[11px] font-normal text-slate-400 dark:text-slate-500">
+      {entries.map(([type, amount]) => (
+        <span key={type}>
+          {labels?.[type] ?? type} {taka(amount)}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function MemberDueTable({
+  rows,
+  payableLabel,
+  categoryLabels
+}: {
+  rows: MemberDueRow[];
+  payableLabel: string;
+  categoryLabels?: Record<string, string>;
+}) {
   if (rows.length === 0) return null;
 
   const totalPayable = rows.reduce((sum, row) => sum + row.payable, 0);
   const totalPaid = rows.reduce((sum, row) => sum + row.paid, 0);
   const totalNet = rows.reduce((sum, row) => sum + row.net, 0);
+  const totalPayableByType = sumByType(rows, 'payableByType');
+  const totalPaidByType = sumByType(rows, 'paidByType');
 
   return (
     <div className="overflow-x-auto">
@@ -57,8 +96,14 @@ export function MemberDueTable({ rows, payableLabel }: { rows: MemberDueRow[]; p
                   </span>
                 )}
               </td>
-              <td className="py-2.5 pr-3 text-right tabular-nums text-slate-600 dark:text-slate-400">{taka(row.payable)}</td>
-              <td className="py-2.5 pr-3 text-right tabular-nums text-slate-600 dark:text-slate-400">{taka(row.paid)}</td>
+              <td className="py-2.5 pr-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
+                {taka(row.payable)}
+                <TypeBreakdown byType={row.payableByType} labels={categoryLabels} />
+              </td>
+              <td className="py-2.5 pr-3 text-right tabular-nums text-slate-600 dark:text-slate-400">
+                {taka(row.paid)}
+                <TypeBreakdown byType={row.paidByType} labels={categoryLabels} />
+              </td>
               <td className="py-2.5 text-right">
                 <DueRefund net={row.net} />
               </td>
@@ -68,8 +113,14 @@ export function MemberDueTable({ rows, payableLabel }: { rows: MemberDueRow[]; p
         <tfoot>
           <tr className="border-t-2 border-slate-200 dark:border-slate-700 text-sm font-semibold">
             <td className="py-2.5 pr-3">{strings.settlement.groupTotal}</td>
-            <td className="py-2.5 pr-3 text-right tabular-nums">{taka(totalPayable)}</td>
-            <td className="py-2.5 pr-3 text-right tabular-nums">{taka(totalPaid)}</td>
+            <td className="py-2.5 pr-3 text-right tabular-nums">
+              {taka(totalPayable)}
+              <TypeBreakdown byType={totalPayableByType} labels={categoryLabels} />
+            </td>
+            <td className="py-2.5 pr-3 text-right tabular-nums">
+              {taka(totalPaid)}
+              <TypeBreakdown byType={totalPaidByType} labels={categoryLabels} />
+            </td>
             <td className="py-2.5 text-right">
               <DueRefund net={totalNet} />
             </td>

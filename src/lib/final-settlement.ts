@@ -3,7 +3,9 @@ import { buildGroupReport, type GroupReport } from '@/lib/group-report';
 import type { SettlementGroup } from '@/lib/settlement';
 import { settleUp, type SettleUp } from '@/lib/bill-view';
 import { currentMonthKey, dayToUtcDate, previousMonthKey, round2 } from '@/lib/month';
-import { PAYMENT_STATUS } from '@/lib/constants';
+import { EXPENSE_TYPES, GENERAL_PAYMENT_TYPE, PAYMENT_STATUS } from '@/lib/constants';
+import { categoryLabels } from '@/lib/expense-categories';
+import { strings } from '@/lib/i18n';
 import { prisma } from '@/lib/prisma';
 
 export type FinalSettlementGroup = SettlementGroup & { name: string; status: string };
@@ -16,8 +18,10 @@ export type FinalSettlementMember = {
   mealCost: number;
   billShare: number;
   billShareByType: Record<string, number>;
+  payableByType: Record<string, number>;
   bazarPaid: number;
   cashPaid: number;
+  paidByType: Record<string, number>;
   dueAtClose: number;
   closeStatus: string;
   liveDue: number;
@@ -36,6 +40,7 @@ export type FinalSettlement = {
   settledBy: string | null;
   mealRate: number;
   totals: GroupReport['totals'];
+  categoryLabels: Record<string, string>;
   members: FinalSettlementMember[];
   settleUp: SettleUp;
   allClear: boolean;
@@ -69,9 +74,10 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
   const closing = await ensureFinalSettlement(group);
   if (!closing) return null;
 
-  const [historical, live] = await Promise.all([
+  const [historical, live, labels] = await Promise.all([
     buildGroupReport(group, closing.monthKey, { through: closing.closedThrough }),
-    buildGroupReport(group, currentMonthKey())
+    buildGroupReport(group, currentMonthKey()),
+    categoryLabels(group.id)
   ]);
 
   const liveById = new Map(live.members.map((member) => [member.id, member]));
@@ -86,8 +92,10 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
       mealCost: member.mealCost,
       billShare: member.billShare,
       billShareByType: member.billShareByType,
+      payableByType: { [EXPENSE_TYPES.BAZAR]: member.mealCost, ...member.billShareByType },
       bazarPaid: member.bazarPaid,
       cashPaid: member.collected,
+      paidByType: { [EXPENSE_TYPES.BAZAR]: member.bazarPaid, ...member.collectedByType },
       dueAtClose: member.due,
       closeStatus: member.status,
       liveDue: liveMember?.due ?? member.due,
@@ -110,6 +118,7 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
     settledBy: closing.settledBy,
     mealRate: historical.totals.mealRate,
     totals: historical.totals,
+    categoryLabels: { ...labels, [GENERAL_PAYMENT_TYPE]: strings.settlement.generalPaymentLabel },
     members,
     settleUp: settleUpResult,
     allClear
