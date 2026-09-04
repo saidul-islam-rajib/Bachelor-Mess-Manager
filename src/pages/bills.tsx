@@ -20,8 +20,8 @@ import {
   type Member,
   type Share
 } from '@/lib/bill-view';
-import { round2, todayKey } from '@/lib/month';
-import { formatCurrency, formatDayKey, formatInstant } from '@/lib/format';
+import { todayKey } from '@/lib/month';
+import { formatCurrency, formatDayKey } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 
 const taka = formatCurrency;
@@ -57,8 +57,6 @@ export default function BillsPage() {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string[]>([]);
-  const [advanceVersion, setAdvanceVersion] = useState(0);
-  const bumpAdvances = useCallback(() => setAdvanceVersion((v) => v + 1), []);
 
   const toggleExpanded = useCallback((billId: string) => {
     setExpanded((current) =>
@@ -146,7 +144,6 @@ export default function BillsPage() {
       if (!res.ok) throw new Error(payload?.error ?? strings.bills.reverseEntryFailed);
       toast.success(strings.bills.entryReversed);
       await refresh();
-      bumpAdvances();
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -164,7 +161,6 @@ export default function BillsPage() {
       toast.success(strings.bills.deleted);
       collapse(bill.id);
       await refresh();
-      bumpAdvances();
     } catch (err) {
       toast.error((err as Error).message);
     }
@@ -173,7 +169,6 @@ export default function BillsPage() {
   const canManage = data?.canManage ?? false;
   const canRecordOwn = data?.canRecordOwn ?? false;
   const hasBreakdown = Object.values(data?.totals.byType ?? {}).some((amount) => amount > 0);
-  const pairBreakdownWithAdvances = hasBreakdown && !canManage;
   const bills = useMemo(() => data?.bills ?? [], [data?.bills]);
   const grouped = useMemo(() => billsByKind(bills), [bills]);
   const openCount = bills.filter((bill) => expanded.includes(bill.id)).length;
@@ -210,11 +205,7 @@ export default function BillsPage() {
 
               <PaidByMember bills={bills} currentUserId={data.currentUserId} />
 
-              <div
-                className={`grid gap-4 ${
-                  hasBreakdown && canManage ? 'lg:grid-cols-5' : pairBreakdownWithAdvances ? 'lg:grid-cols-2' : ''
-                }`}
-              >
+              <div className={`grid gap-4 ${hasBreakdown && canManage ? 'lg:grid-cols-5' : ''}`}>
                 {hasBreakdown && (
                   <div className={canManage ? 'lg:col-span-3' : ''}>
                     <Breakdown
@@ -229,9 +220,6 @@ export default function BillsPage() {
                     <CategoryManager groupId={groupId} categories={data.categories} onChanged={refresh} />
                   </div>
                 )}
-                {pairBreakdownWithAdvances && (
-                  <AdvancesSection groupId={groupId} canManage={canManage} refreshToken={advanceVersion} />
-                )}
               </div>
 
               {canManage && (
@@ -240,10 +228,7 @@ export default function BillsPage() {
                   members={data.members}
                   categories={data.categories}
                   month={month}
-                  onSaved={async () => {
-                    await refresh();
-                    bumpAdvances();
-                  }}
+                  onSaved={refresh}
                 />
               )}
 
@@ -352,10 +337,6 @@ export default function BillsPage() {
                   </div>
                 )}
               </div>
-
-              {!pairBreakdownWithAdvances && (
-                <AdvancesSection groupId={groupId} canManage={canManage} refreshToken={advanceVersion} />
-              )}
 
               {bills.length > 0 && (
                 <FinalSummary
@@ -539,298 +520,6 @@ function PaymentHistorySection({
             </div>
           )}
         </>
-      )}
-    </div>
-  );
-}
-
-type AdvanceMember = { id: string; name: string; balance: number };
-
-type AdvanceHistoryEntry = {
-  id: string;
-  userId: string;
-  userName: string;
-  amount: number;
-  note: string | null;
-  expenseId: string | null;
-  expenseType: string | null;
-  recordedByName: string | null;
-  reversalOfId: string | null;
-  isReversed: boolean;
-  createdAt: string;
-};
-
-type AdvancesData = {
-  canManage: boolean;
-  currentUserId: string;
-  members: AdvanceMember[];
-  history: AdvanceHistoryEntry[];
-};
-
-const ADVANCE_HISTORY_PAGE_SIZE = 8;
-
-function AdvancesSection({
-  groupId,
-  canManage,
-  refreshToken
-}: {
-  groupId: string;
-  canManage: boolean;
-  refreshToken: number;
-}) {
-  const toast = useToast();
-  const [data, setData] = useState<AdvancesData | null>(null);
-  const [open, setOpen] = useState(true);
-  const [collectFor, setCollectFor] = useState('');
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [page, setPage] = useState(0);
-
-  const load = useCallback(async () => {
-    if (!groupId) return;
-    try {
-      const res = await fetch(`/api/groups/${groupId}/advances`);
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? strings.bills.advances.loadFailed);
-      setData(body);
-    } catch (err) {
-      toast.error((err as Error).message);
-    }
-  }, [groupId, toast]);
-
-  useEffect(() => {
-    load();
-    // refreshToken bumps after actions elsewhere on the page (creating/deleting a
-    // bill, reversing a payment) that can change advance balances behind the scenes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [load, refreshToken]);
-
-  async function submitCollect(event: FormEvent) {
-    event.preventDefault();
-    const value = Number(amount);
-    if (!collectFor || !Number.isFinite(value) || value <= 0) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/groups/${groupId}/advances`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: collectFor, amount: value, note: note.trim() || undefined })
-      });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? strings.bills.advances.recordFailed);
-      toast.success(strings.bills.advances.recorded);
-      setAmount('');
-      setNote('');
-      setCollectFor('');
-      await load();
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function reverse(advanceId: string) {
-    if (!window.confirm(strings.bills.advances.confirmReverse)) return;
-    try {
-      const res = await fetch(`/api/groups/${groupId}/advances?advanceId=${advanceId}`, { method: 'DELETE' });
-      const body = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(body?.error ?? strings.bills.advances.reverseFailed);
-      toast.success(strings.bills.advances.reversedToast);
-      await load();
-    } catch (err) {
-      toast.error((err as Error).message);
-    }
-  }
-
-  if (!data) return null;
-
-  const totalBalance = round2(data.members.reduce((sum, m) => sum + m.balance, 0));
-  const pageCount = Math.max(1, Math.ceil(data.history.length / ADVANCE_HISTORY_PAGE_SIZE));
-  const currentPage = Math.min(page, pageCount - 1);
-  const pageItems = data.history.slice(
-    currentPage * ADVANCE_HISTORY_PAGE_SIZE,
-    currentPage * ADVANCE_HISTORY_PAGE_SIZE + ADVANCE_HISTORY_PAGE_SIZE
-  );
-
-  return (
-    <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 shadow-sm sm:p-6">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="flex w-full items-center justify-between gap-3 text-left"
-      >
-        <div>
-          <h2 className="text-lg font-semibold">{strings.bills.advances.title}</h2>
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-            {totalBalance > 0
-              ? strings.bills.advances.balanceSummary(taka(totalBalance), data.members.length)
-              : strings.bills.advances.noneYet}
-          </p>
-        </div>
-        <Chevron open={open} />
-      </button>
-
-      {open && (
-        <div className="mt-4 space-y-5">
-          <p className="text-xs text-slate-500 dark:text-slate-400">{strings.bills.advances.explanation}</p>
-
-          <ul className="divide-y divide-slate-100 dark:divide-slate-700 rounded-2xl border border-slate-100 dark:border-slate-700">
-            {data.members.map((m) => (
-              <li key={m.id} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
-                <span className="truncate font-medium">
-                  {m.name}
-                  {m.id === data.currentUserId && (
-                    <span className="ml-1 text-xs font-normal text-brand-700">{strings.common.you}</span>
-                  )}
-                </span>
-                <span className={`shrink-0 font-semibold tabular-nums ${m.balance > 0 ? 'text-teal-700 dark:text-teal-400' : 'text-slate-300 dark:text-slate-600'}`}>
-                  {taka(m.balance)}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          {canManage && (
-            <form onSubmit={submitCollect} className="flex flex-wrap items-end gap-2 rounded-2xl bg-slate-50 dark:bg-slate-900 p-3">
-              <div className="min-w-[9rem] flex-1">
-                <Listbox
-                  label={strings.common.member}
-                  value={collectFor}
-                  onChange={setCollectFor}
-                  placeholder={strings.bills.advances.selectMember}
-                  options={data.members.map((m) => ({ value: m.id, label: m.name }))}
-                />
-              </div>
-              <div className="w-28">
-                <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.common.amount}</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    min="0"
-                    value={amount}
-                    onChange={(event) => setAmount(event.target.value)}
-                    required
-                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
-                  />
-                </label>
-              </div>
-              <div className="min-w-[9rem] flex-1">
-                <label className="block">
-                  <span className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">{strings.bills.advances.noteLabel}</span>
-                  <input
-                    type="text"
-                    value={note}
-                    onChange={(event) => setNote(event.target.value)}
-                    placeholder={strings.bills.advances.notePlaceholder}
-                    className="mt-1 w-full rounded-2xl border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 px-4 py-2.5 outline-none focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800"
-                  />
-                </label>
-              </div>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="min-h-[2.75rem] rounded-2xl bg-brand-600 px-4 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
-              >
-                {submitting ? strings.common.saving : strings.bills.advances.collectCta}
-              </button>
-            </form>
-          )}
-
-          {data.history.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                {strings.bills.advances.historyTitle}
-              </h3>
-              <ul className="mt-2 divide-y divide-slate-100 dark:divide-slate-700">
-                {pageItems.map((entry) => {
-                  const isDeposit = !entry.expenseId && !entry.reversalOfId;
-                  return (
-                    <li key={entry.id} className="py-2.5 text-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="min-w-0 truncate font-medium text-slate-900 dark:text-slate-100">
-                          {entry.userName}
-                          {entry.expenseId
-                            ? ` ${strings.bills.advances.appliedToBill}`
-                            : entry.reversalOfId
-                              ? ` ${strings.bills.advances.reversalEntry}`
-                              : ` ${strings.bills.advances.depositEntry}`}
-                        </p>
-                        <span
-                          className={`shrink-0 text-sm font-semibold tabular-nums ${
-                            entry.isReversed
-                              ? 'text-slate-400 dark:text-slate-500 line-through'
-                              : entry.amount < 0
-                                ? 'text-slate-500 dark:text-slate-400'
-                                : 'text-teal-700 dark:text-teal-400'
-                          }`}
-                        >
-                          {entry.amount < 0 ? '−' : '+'}
-                          {taka(Math.abs(entry.amount))}
-                        </span>
-                      </div>
-                      <p className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 dark:text-slate-400">
-                        <span>{formatInstant(entry.createdAt, 'dayMonthTime')}</span>
-                        {entry.recordedByName && (
-                          <>
-                            <span aria-hidden>·</span>
-                            <span>{strings.bills.ledger.recordedBy(entry.recordedByName)}</span>
-                          </>
-                        )}
-                        {entry.note && (
-                          <>
-                            <span aria-hidden>·</span>
-                            <span>{entry.note}</span>
-                          </>
-                        )}
-                        {entry.isReversed && (
-                          <span className="font-medium text-amber-600 dark:text-amber-400">{strings.bills.ledger.reversed}</span>
-                        )}
-                        {canManage && isDeposit && entry.amount > 0 && !entry.isReversed && (
-                          <button
-                            type="button"
-                            onClick={() => reverse(entry.id)}
-                            className="text-rose-500 underline-offset-2 hover:underline"
-                          >
-                            {strings.bills.ledger.reverse}
-                          </button>
-                        )}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
-
-              {pageCount > 1 && (
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-700 pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setPage((p) => Math.max(0, p - 1))}
-                    disabled={currentPage === 0}
-                    className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {strings.common.pager.previous}
-                  </button>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {strings.common.pager.pageOf(currentPage + 1, pageCount)}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-                    disabled={currentPage === pageCount - 1}
-                    className="min-h-[2.25rem] rounded-full border border-slate-200 dark:border-slate-700 px-3.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {strings.common.pager.next}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
       )}
     </div>
   );

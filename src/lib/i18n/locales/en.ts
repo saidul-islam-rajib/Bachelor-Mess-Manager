@@ -1202,28 +1202,6 @@ const en = {
       title: 'Payment history',
       subtitle: (count: number) => `${count} payment${count === 1 ? '' : 's'} recorded this month`,
       fromAdvance: '· from advance'
-    },
-    advances: {
-      title: 'Advances',
-      balanceSummary: (amount: string, count: number) =>
-        `${amount} on hand across ${count} member${count === 1 ? '' : 's'}`,
-      noneYet: 'No advance collected yet',
-      explanation:
-        "Money members hand over ahead of a bill. New bills automatically pull from whatever balance a member has on file, so rent, wifi and electricity can be paid the moment they're due.",
-      selectMember: 'Select member',
-      noteLabel: 'Note (optional)',
-      notePlaceholder: 'e.g. August advance',
-      collectCta: 'Collect advance',
-      historyTitle: 'History',
-      appliedToBill: '· applied to a bill',
-      reversalEntry: '· reversal',
-      depositEntry: '· deposit',
-      confirmReverse: 'Reverse this advance deposit?',
-      recorded: 'Advance recorded.',
-      reversedToast: 'Advance reversed.',
-      loadFailed: 'Could not load advances.',
-      recordFailed: 'Could not record that advance.',
-      reverseFailed: 'Could not reverse that entry.'
     }
   },
   payments: {
@@ -1351,7 +1329,29 @@ const en = {
     pickAtLeastOneMember: 'Pick at least one member to close for.',
     closeFailed: 'Could not close the month.',
     closedSummary: (members: number, carried: string) =>
-      `Closed for ${members} member${members === 1 ? '' : 's'}. ${carried} carried forward.`
+      `Closed for ${members} member${members === 1 ? '' : 's'}. ${carried} carried forward.`,
+    advances: {
+      title: 'Advances',
+      balanceSummary: (amount: string, count: number) =>
+        `${amount} on hand across ${count} member${count === 1 ? '' : 's'}`,
+      noneYet: 'No advance collected yet',
+      explanation:
+        "Money members hand over ahead of a bill. New bills automatically pull from whatever balance a member has on file, so rent, wifi and electricity can be paid the moment they're due.",
+      selectMember: 'Select member',
+      noteLabel: 'Note (optional)',
+      notePlaceholder: 'e.g. August advance',
+      collectCta: 'Collect advance',
+      historyTitle: 'History',
+      appliedToBill: '· applied to a bill',
+      reversalEntry: '· reversal',
+      depositEntry: '· deposit',
+      confirmReverse: 'Reverse this advance deposit?',
+      recorded: 'Advance recorded.',
+      reversedToast: 'Advance reversed.',
+      loadFailed: 'Could not load advances.',
+      recordFailed: 'Could not record that advance.',
+      reverseFailed: 'Could not reverse that entry.'
+    }
   },
   settlement: {
     title: 'Final settlement',
