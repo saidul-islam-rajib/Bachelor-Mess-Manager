@@ -670,13 +670,13 @@ function MemberActions({
           }}
           placeholder={strings.common.amount}
           aria-label={strings.bills.transfer.amountFrom(share.userName)}
-          className={`w-24 rounded-full border border-slate-300 dark:border-slate-600 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+          className={`w-24 rounded-full border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
         />
         <select
           value={toUserId}
           onChange={(event) => setToUserId(event.target.value)}
           aria-label={strings.bills.transfer.whoDidPay(share.userName)}
-          className={`rounded-full border border-slate-300 dark:border-slate-600 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+          className={`rounded-full border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
         >
           <option value="">{strings.bills.transfer.intoCollection}</option>
           {recipients.map((recipient) => (
