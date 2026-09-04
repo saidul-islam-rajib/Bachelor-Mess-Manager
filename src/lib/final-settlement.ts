@@ -157,18 +157,47 @@ export async function settleMemberBalance(
     return { ok: false, error: 'That balance is already settled.' };
   }
 
-  // Balance the ledger rather than special-casing the sums: a due is written off as
-  // money in, a refund as money back out, so every total lands on zero by itself.
-  await prisma.paymentStatus.create({
-    data: {
-      userId,
-      groupId: group.id,
-      amountDue: amount > 0 ? amount : 0,
-      amountPaid: amount,
-      status: amount > 0 ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.REFUND,
-      dueDate: dayToUtcDate(report.closedThrough),
-      recordedById: actor.id,
-      publishedAt: new Date()
+  const legs = report.settleUp.transfers.filter((t) => t.fromUserId === userId || t.toUserId === userId);
+  const coveredPaisa = Math.round(legs.reduce((sum, t) => sum + t.amount, 0) * 100);
+  if (coveredPaisa < Math.round(Math.abs(amount) * 100) - 1) {
+    return {
+      ok: false,
+      error: 'Part of this balance has no matching member to settle with yet — see the note under "Settle up" first.'
+    };
+  }
+
+  const dueDate = dayToUtcDate(report.closedThrough);
+
+  await prisma.$transaction(async (tx) => {
+    for (const leg of legs) {
+      const legAmount = round2(leg.amount);
+      const payerRow = await tx.paymentStatus.create({
+        data: {
+          userId: leg.fromUserId,
+          groupId: group.id,
+          toUserId: leg.toUserId,
+          amountDue: legAmount,
+          amountPaid: legAmount,
+          status: PAYMENT_STATUS.PAID,
+          dueDate,
+          recordedById: actor.id,
+          publishedAt: new Date()
+        }
+      });
+
+      await tx.paymentStatus.create({
+        data: {
+          userId: leg.toUserId,
+          groupId: group.id,
+          offsetOfId: payerRow.id,
+          amountDue: 0,
+          amountPaid: -legAmount,
+          status: PAYMENT_STATUS.OFFSET,
+          dueDate,
+          recordedById: actor.id,
+          publishedAt: new Date()
+        }
+      });
     }
   });
 
