@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import { ToastProvider } from '@/components/ToastProvider';
 import { UserProvider } from '@/components/UserProvider';
 import { InvitationsProvider } from '@/components/InvitationsProvider';
+import { MonthProvider } from '@/components/MonthProvider';
 import { NotificationsProvider } from '@/components/NotificationsProvider';
 import { CommunityProvider } from '@/components/CommunityProvider';
 import { PwaProvider } from '@/components/PwaProvider';
@@ -41,18 +42,20 @@ export default function App({ Component, pageProps }: AppProps) {
           <ConfirmProvider>
             <UserProvider>
               <ThemeSync />
-              <InvitationsProvider>
-                <NotificationsProvider>
-                  <CommunityProvider>
-                    <PwaProvider>
-                      <PresenceTracker />
-                      <Layout>
-                        <Component {...pageProps} />
-                      </Layout>
-                    </PwaProvider>
-                  </CommunityProvider>
-                </NotificationsProvider>
-              </InvitationsProvider>
+              <MonthProvider>
+                <InvitationsProvider>
+                  <NotificationsProvider>
+                    <CommunityProvider>
+                      <PwaProvider>
+                        <PresenceTracker />
+                        <Layout>
+                          <Component {...pageProps} />
+                        </Layout>
+                      </PwaProvider>
+                    </CommunityProvider>
+                  </NotificationsProvider>
+                </InvitationsProvider>
+              </MonthProvider>
             </UserProvider>
           </ConfirmProvider>
         </ToastProvider>

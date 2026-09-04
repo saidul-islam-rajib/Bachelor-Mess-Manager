@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Fragment, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useCurrentUser } from '@/components/UserProvider';
+import { useSelectedMonth } from '@/components/MonthProvider';
 import MealPromptsPanel from '@/components/MealPromptsPanel';
 import MealRateChart, { type MealRateChartDay } from '@/components/dashboard/MealRateChart';
 import GroupBillsSummary from '@/components/dashboard/GroupBillsSummary';
@@ -14,7 +15,7 @@ import { ActionLink, LinkButton, Listbox } from '@/components/ui';
 import { commentsAnchorPath, groupPath, ROUTES } from '@/lib/routes';
 import { strings } from '@/lib/i18n';
 import { expenseTypeLabel, GROUP_STATUS, USER_ROLES } from '@/lib/constants';
-import { currentMonthKey, monthOptions } from '@/lib/month';
+import { monthOptions } from '@/lib/month';
 import { formatCurrency, formatDayKey, formatMonthLabel } from '@/lib/format';
 
 const taka = formatCurrency;
@@ -151,7 +152,7 @@ type DashboardData = {
 export default function DashboardPage() {
   const { user, loading: userLoading } = useCurrentUser();
   const toast = useToast();
-  const [month, setMonth] = useState(currentMonthKey());
+  const { month, setMonth } = useSelectedMonth();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');

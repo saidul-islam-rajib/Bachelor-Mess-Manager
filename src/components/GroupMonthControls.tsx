@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { cacheConfig } from '@/config';
 import { Listbox } from '@/components/ui';
+import { useSelectedMonth } from '@/components/MonthProvider';
 import { cached, invalidate } from '@/lib/cache';
 import { strings } from '@/lib/i18n';
-import { currentMonthKey, monthOptions } from '@/lib/month';
+import { monthOptions } from '@/lib/month';
 
 export type GroupOption = {
   id: string;
@@ -21,7 +22,7 @@ export function useGroupMonth(options: { includeInactive?: boolean } = {}) {
   const router = useRouter();
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [groupId, setGroupId] = useState('');
-  const [month, setMonth] = useState(currentMonthKey());
+  const { month, setMonth } = useSelectedMonth();
   const [loadingGroups, setLoadingGroups] = useState(true);
   const [limits, setLimits] = useState<GroupLimits | null>(null);
   const [hiddenInactive, setHiddenInactive] = useState(0);
