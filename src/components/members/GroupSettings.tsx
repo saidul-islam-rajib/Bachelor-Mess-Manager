@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { useToast } from '@/components/ToastProvider';
 import { useCurrentUser } from '@/components/UserProvider';
 import { Listbox, useConfirm } from '@/components/ui';
+import { api, errorMessage } from '@/lib/api-client';
 import { GROUP_STATUS, MEAL_RATE_MODES, USER_ROLES } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
 
@@ -50,6 +51,7 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
   const [supervisors, setSupervisors] = useState<SupervisorState | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [sendingReminder, setSendingReminder] = useState(false);
 
   const load = useCallback(async () => {
     if (!groupId) return;
@@ -111,6 +113,18 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
       deactivating ? strings.groups.deactivated(group.name) : strings.groups.activated(group.name),
       strings.groups.statusUpdateFailed
     );
+  }
+
+  async function sendReminderNow() {
+    setSendingReminder(true);
+    try {
+      const data = await api.post<{ sent: number; message: string }>('/api/bazar-duty/dispatch', { groupId });
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(errorMessage(err));
+    } finally {
+      setSendingReminder(false);
+    }
   }
 
   if (loading && !group) {
@@ -286,6 +300,18 @@ export default function GroupSettings({ groupId, onChanged }: { groupId: string;
           disabled={busy || !group.bazarReminderEnabled}
           onSave={(time) => patch({ bazarReminderTime: time }, strings.groups.bazarReminderTimeSaved, strings.groups.settingFailed)}
         />
+
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
+          <p className="max-w-md text-xs text-slate-500 dark:text-slate-400">{strings.groups.bazarReminderSendNowHint}</p>
+          <button
+            type="button"
+            onClick={sendReminderNow}
+            disabled={sendingReminder || !group.bazarReminderEnabled}
+            className="shrink-0 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            {sendingReminder ? strings.groups.bazarReminderSending : strings.groups.bazarReminderSendNow}
+          </button>
+        </div>
       </Card>
 
       {isAdmin && supervisors && (

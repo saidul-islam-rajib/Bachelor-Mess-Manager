@@ -617,6 +617,10 @@ const en = {
     bazarReminderTimeLabel: 'Reminder time',
     bazarReminderTimeHint: 'Sent once a day, in this mess\'s local time.',
     bazarReminderTimeSaved: 'Reminder time updated.',
+    bazarReminderSendNow: 'Send now',
+    bazarReminderSending: 'Sending…',
+    bazarReminderSendNowHint:
+      "Sends today's reminder right away, without waiting for the scheduled time — useful for testing. Still only sends once per member per day.",
     bazarReminderTimeInvalid: 'Enter a valid time.',
     supervisorsForThisMess: 'Supervisors for this mess',
     supervisorsForThisMessHint:
