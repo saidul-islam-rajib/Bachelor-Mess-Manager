@@ -222,6 +222,8 @@ export const BILL_TYPE_FILTER = { not: EXPENSE_TYPES.BAZAR } as const;
 
 export const GENERAL_PAYMENT_TYPE = 'GENERAL';
 
+export const CARRY_IN_TYPE = 'CARRY_IN';
+
 export const BILL_TYPES = BILL_TYPE_VALUES.map((value) => ({
   value,
   label: strings.expenseTypes[value as keyof typeof strings.expenseTypes]

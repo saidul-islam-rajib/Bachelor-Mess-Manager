@@ -700,6 +700,7 @@ function MemberCostBreakdown({
   totals: Totals;
   currentUserId?: string;
 }) {
+  const hasOpening = members.some((m) => Math.abs(m.carryIn) > 0.005);
   const types = Object.keys(byType)
     .filter((code) => Math.abs(byType[code]) > 0.005)
     .sort((a, b) => byType[b] - byType[a]);
@@ -720,6 +721,7 @@ function MemberCostBreakdown({
                   <th className="px-3 py-2">{payments.member}</th>
                   <th className="px-3 py-2 text-right">{payments.meals}</th>
                   <th className="px-3 py-2 text-right">{payments.bazarBought}</th>
+                  {hasOpening && <th className="px-3 py-2 text-right">{payments.broughtForward}</th>}
                   <th className="px-3 py-2 text-right">{payments.mealShare}</th>
                   {types.map((code) => (
                     <th key={code} className="px-3 py-2 text-right">
@@ -738,13 +740,14 @@ function MemberCostBreakdown({
                     </td>
                     <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{m.meals}</td>
                     <td className="px-3 py-3 text-right font-medium text-green-700 dark:text-green-400">{taka(m.bazarPaid)}</td>
+                    {hasOpening && <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.carryIn)}</td>}
                     <td className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">{taka(m.mealCost)}</td>
                     {types.map((code) => (
                       <td key={code} className="px-3 py-3 text-right text-slate-600 dark:text-slate-400">
                         {taka(m.billShareByType?.[code] ?? 0)}
                       </td>
                     ))}
-                    <td className="px-3 py-3 text-right font-semibold">{taka(m.mealCost + m.billShare)}</td>
+                    <td className="px-3 py-3 text-right font-semibold">{taka(m.cost)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -753,13 +756,14 @@ function MemberCostBreakdown({
                   <td className="px-3 py-3">{payments.groupTotal}</td>
                   <td className="px-3 py-3 text-right">{totals.meals}</td>
                   <td className="px-3 py-3 text-right text-green-700 dark:text-green-400">{taka(sum(members, (m) => m.bazarPaid))}</td>
+                  {hasOpening && <td className="px-3 py-3 text-right">{taka(totals.carryIn)}</td>}
                   <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.mealCost))}</td>
                   {types.map((code) => (
                     <td key={code} className="px-3 py-3 text-right">
                       {taka(byType[code])}
                     </td>
                   ))}
-                  <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.mealCost + m.billShare))}</td>
+                  <td className="px-3 py-3 text-right">{taka(sum(members, (m) => m.cost))}</td>
                 </tr>
               </tfoot>
             </table>
@@ -773,11 +777,12 @@ function MemberCostBreakdown({
                     {m.name}
                     {m.id === currentUserId && <span className="ml-1 text-xs font-normal text-green-600 dark:text-green-400">({strings.common.you})</span>}
                   </p>
-                  <span className="text-sm font-semibold">{taka(m.mealCost + m.billShare)}</span>
+                  <span className="text-sm font-semibold">{taka(m.cost)}</span>
                 </div>
                 <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                   <Field label={payments.meals} value={String(m.meals)} />
                   <Field label={payments.bazarBought} value={taka(m.bazarPaid)} />
+                  {hasOpening && <Field label={payments.broughtForward} value={taka(m.carryIn)} />}
                   <Field label={payments.mealShare} value={taka(m.mealCost)} />
                   {types.map((code) => (
                     <Field key={code} label={labels[code] ?? code} value={taka(m.billShareByType?.[code] ?? 0)} />

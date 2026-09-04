@@ -94,12 +94,16 @@ type FinalSettlementCardData = {
     name: string;
     mealCost: number;
     billShare: number;
+    totalCost: number;
+    payableByType: Record<string, number>;
     bazarPaid: number;
     cashPaid: number;
+    paidByType: Record<string, number>;
     dueAtClose: number;
     closeStatus: string;
     isCurrentMember: boolean;
   }[];
+  categoryLabels: Record<string, string>;
 };
 
 type MemberReport = {
@@ -291,9 +295,11 @@ function FinalSettlementCard({
     name: m.name,
     isCurrentUser: m.id === currentUserId,
     hasLeft: !m.isCurrentMember,
-    payable: m.mealCost + m.billShare,
+    payable: m.totalCost,
     paid: m.bazarPaid + m.cashPaid,
-    net: -m.dueAtClose
+    net: -m.dueAtClose,
+    payableByType: m.payableByType,
+    paidByType: m.paidByType
   }));
 
   return (
@@ -327,7 +333,7 @@ function FinalSettlementCard({
       )}
 
       <div className="mt-4">
-        <MemberDueTable rows={rows} payableLabel={settlementStrings.totalPayable} />
+        <MemberDueTable rows={rows} payableLabel={settlementStrings.totalPayable} categoryLabels={settlement.categoryLabels} />
       </div>
 
       <div className="mt-4">

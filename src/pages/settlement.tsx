@@ -19,6 +19,7 @@ type SettlementMember = {
   mealCost: number;
   billShare: number;
   billShareByType: Record<string, number>;
+  totalCost: number;
   payableByType: Record<string, number>;
   bazarPaid: number;
   cashPaid: number;
@@ -63,7 +64,7 @@ function MemberSection({
     name: m.name,
     isCurrentUser: m.id === currentUserId,
     hasLeft: !m.isCurrentMember,
-    payable: m.mealCost + m.billShare,
+    payable: m.totalCost,
     paid: m.bazarPaid + m.cashPaid,
     net: -m.dueAtClose,
     payableByType: m.payableByType,

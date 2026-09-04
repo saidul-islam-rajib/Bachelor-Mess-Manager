@@ -41,15 +41,16 @@ function sumByType(rows: MemberDueRow[], key: 'payableByType' | 'paidByType'): R
 
 function TypeBreakdown({ byType, labels }: { byType?: Record<string, number>; labels?: Record<string, string> }) {
   const entries = Object.entries(byType ?? {})
-    .filter(([, amount]) => amount > 0.005)
-    .sort((a, b) => b[1] - a[1]);
+    .filter(([, amount]) => Math.abs(amount) > 0.005)
+    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
   if (entries.length === 0) return null;
 
   return (
     <div className="mt-0.5 flex flex-wrap justify-end gap-x-2 gap-y-0.5 text-[11px] font-normal text-slate-400 dark:text-slate-500">
       {entries.map(([type, amount]) => (
         <span key={type}>
-          {labels?.[type] ?? type} {taka(amount)}
+          {labels?.[type] ?? type} {amount < 0 ? '−' : ''}
+          {taka(Math.abs(amount))}
         </span>
       ))}
     </div>

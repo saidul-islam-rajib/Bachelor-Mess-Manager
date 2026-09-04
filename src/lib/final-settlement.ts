@@ -3,7 +3,7 @@ import { buildGroupReport, type GroupReport } from '@/lib/group-report';
 import type { SettlementGroup } from '@/lib/settlement';
 import { settleUp, type SettleUp } from '@/lib/bill-view';
 import { currentMonthKey, dayToUtcDate, previousMonthKey, round2 } from '@/lib/month';
-import { EXPENSE_TYPES, GENERAL_PAYMENT_TYPE, PAYMENT_STATUS } from '@/lib/constants';
+import { CARRY_IN_TYPE, EXPENSE_TYPES, GENERAL_PAYMENT_TYPE, PAYMENT_STATUS } from '@/lib/constants';
 import { categoryLabels } from '@/lib/expense-categories';
 import { strings } from '@/lib/i18n';
 import { prisma } from '@/lib/prisma';
@@ -15,9 +15,11 @@ export type FinalSettlementMember = {
   name: string;
   email: string;
   meals: number;
+  carryIn: number;
   mealCost: number;
   billShare: number;
   billShareByType: Record<string, number>;
+  totalCost: number;
   payableByType: Record<string, number>;
   bazarPaid: number;
   cashPaid: number;
@@ -89,10 +91,16 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
       name: member.name,
       email: member.email,
       meals: member.meals,
+      carryIn: member.carryIn,
       mealCost: member.mealCost,
       billShare: member.billShare,
       billShareByType: member.billShareByType,
-      payableByType: { [EXPENSE_TYPES.BAZAR]: member.mealCost, ...member.billShareByType },
+      totalCost: member.totalCost,
+      payableByType: {
+        [CARRY_IN_TYPE]: member.carryIn,
+        [EXPENSE_TYPES.BAZAR]: member.mealCost,
+        ...member.billShareByType
+      },
       bazarPaid: member.bazarPaid,
       cashPaid: member.collected,
       paidByType: { [EXPENSE_TYPES.BAZAR]: member.bazarPaid, ...member.collectedByType },
@@ -118,7 +126,11 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
     settledBy: closing.settledBy,
     mealRate: historical.totals.mealRate,
     totals: historical.totals,
-    categoryLabels: { ...labels, [GENERAL_PAYMENT_TYPE]: strings.settlement.generalPaymentLabel },
+    categoryLabels: {
+      ...labels,
+      [GENERAL_PAYMENT_TYPE]: strings.settlement.generalPaymentLabel,
+      [CARRY_IN_TYPE]: strings.memberDetail.carryIn
+    },
     members,
     settleUp: settleUpResult,
     allClear
