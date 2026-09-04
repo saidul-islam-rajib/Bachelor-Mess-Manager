@@ -282,11 +282,15 @@ kubectl -n bachelor-point rollout status deployment/bachelor-point-blue
 
 # daily one-tap meal ask, once blue is serving
 sed "s|REPLACE_IMAGE|$IMAGE|g" k8s/base/meal-prompt-cronjob.yaml | kubectl apply -f -
+
+# daily 7am bazar-duty reminder, once blue is serving
+sed "s|REPLACE_IMAGE|$IMAGE|g" k8s/base/bazar-reminder-cronjob.yaml | kubectl apply -f -
 ```
 
-The CronJob needs `MEAL_PROMPT_DISPATCH_SECRET` in the Secret and posts to the
-in-cluster service, so it keeps working across a colour switch. See
-[meal-prompts.md](meal-prompts.md).
+The CronJobs need `MEAL_PROMPT_DISPATCH_SECRET` / `BAZAR_REMINDER_DISPATCH_SECRET`
+in the Secret and post to the in-cluster service, so they keep working across
+a colour switch. See [meal-prompts.md](meal-prompts.md) and
+[bazar-duty-reminders.md](bazar-duty-reminders.md).
 
 ### 5.10 Point DNS at the ALB
 

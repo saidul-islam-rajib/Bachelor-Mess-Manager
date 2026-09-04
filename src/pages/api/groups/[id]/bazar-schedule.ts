@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { computeEqualSplitDays } from '@/lib/bazar-schedule';
+import { ensureSchedule } from '@/lib/bazar-duty';
 import { daysInMonth, parseMonth } from '@/lib/month';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -17,41 +17,6 @@ async function isMonthClosed(groupId: string, monthKey: string): Promise<boolean
     select: { id: true }
   });
   return Boolean(closing);
-}
-
-async function ensureSchedule(groupId: string, monthKey: string, totalDays: number): Promise<string> {
-  const schedule = await prisma.bazarSchedule.upsert({
-    where: { groupId_monthKey: { groupId, monthKey } },
-    update: {},
-    create: { groupId, monthKey, publishedAt: new Date() }
-  });
-
-  const dayCount = await prisma.bazarDutyDay.count({ where: { scheduleId: schedule.id } });
-  if (dayCount > 0) return schedule.id;
-
-  const activeMembers = await prisma.membership.findMany({
-    where: { groupId, isActive: true },
-    orderBy: { joinedAt: 'asc' },
-    select: { userId: true }
-  });
-  if (activeMembers.length === 0) return schedule.id;
-
-  const defaultAssignments = computeEqualSplitDays(
-    activeMembers.map((m) => m.userId),
-    totalDays
-  );
-
-  await prisma.$transaction(
-    defaultAssignments.map((assignment) =>
-      prisma.bazarDutyDay.upsert({
-        where: { scheduleId_day: { scheduleId: schedule.id, day: assignment.day } },
-        update: {},
-        create: { scheduleId: schedule.id, day: assignment.day, userId: assignment.userId, publishedAt: new Date() }
-      })
-    )
-  );
-
-  return schedule.id;
 }
 
 async function loadSchedule(

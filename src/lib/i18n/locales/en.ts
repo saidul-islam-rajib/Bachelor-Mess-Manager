@@ -1869,6 +1869,25 @@ const en = {
     counts: (breakfast: number, lunch: number, dinner: number) =>
       `breakfast ${breakfast}, lunch ${lunch}, dinner ${dinner}`
   },
+  bazarReminder: {
+    notificationTitle: (group: string, date: string) => `Your bazar turn today — ${group} (${date})`,
+    notificationBody: "Pick up today's groceries for the mess.",
+    pushTitle: (group: string) => `Bazar duty — ${group}`,
+    pushBody: "It's your turn to do the bazar today. Tap for details.",
+    dispatchForbidden: 'You cannot send bazar duty reminders for this group.',
+    dispatched: (count: number) => `Sent ${count} bazar duty reminder${count === 1 ? '' : 's'}.`,
+    nothingToSend: 'No bazar duty reminders to send today.',
+    alarmTitle: 'Bazar duty alarm',
+    alarmDescription: 'Get a phone-style alert the moment it is your turn to do the bazar, even if the app is closed.',
+    enableAlarm: 'Enable alarm notifications',
+    disableAlarm: 'Turn off alarm notifications',
+    alarmEnabled: 'Alarm notifications are on.',
+    alarmDisabled: 'Alarm notifications are off.',
+    alarmUnsupported: 'This browser does not support alarm notifications.',
+    alarmPermissionDenied: 'Notification permission was blocked. Allow notifications for this site in your browser settings.',
+    alarmSubscribeFailed: 'Could not enable alarm notifications. Try again.',
+    alarmUnsubscribeFailed: 'Could not turn off alarm notifications. Try again.'
+  },
   profile: {
     title: 'Profile',
     subtitle: 'Your details and anything waiting for you.',
@@ -2260,7 +2279,8 @@ const en = {
         SETTLEMENT_SETTLED: 'Last month’s final settlement is marked settled',
         SUPERVISOR_CHANGED: 'Supervision is handed over or shared',
         COMMUNITY_ANNOUNCEMENT: 'An admin posts a community announcement',
-        COMMUNITY_WELCOME: 'A new member is welcomed to the community room'
+        COMMUNITY_WELCOME: 'A new member is welcomed to the community room',
+        BAZAR_DUTY_REMINDER: 'The daily 7am reminder to the member on bazar duty'
       } as Record<string, string>,
       mealEditWindowOptions: [
         { value: 5, label: '5 minutes' },

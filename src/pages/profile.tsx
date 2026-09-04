@@ -17,6 +17,7 @@ import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 import { validateName, validatePhone } from '@/lib/validation';
 import { ACCEPTED_IMAGE_MIMES, evictCachedUpload } from '@/lib/uploads.client';
+import { getExistingPushSubscription, isPushSupported, subscribeToPush, unsubscribeFromPush } from '@/lib/push.client';
 import { formatBytes, formatCurrency } from '@/lib/format';
 import { uploadConfig } from '@/config';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -133,6 +134,7 @@ export default function ProfilePage() {
           </div>
 
           <ThemeSection />
+          <PushNotificationsSection />
           <DefaultMealPlanSection />
           <PastMealEditingSection />
           <PasswordSection />
@@ -355,6 +357,87 @@ function ThemeSection() {
         options={THEME_OPTIONS_LIST}
         variant="pills"
       />
+    </div>
+  );
+}
+
+function PushNotificationsSection() {
+  const toast = useToast();
+  const [supported, setSupported] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function check() {
+      const supportsPush = isPushSupported();
+      if (!cancelled) setSupported(supportsPush);
+      if (!supportsPush) {
+        if (!cancelled) setChecking(false);
+        return;
+      }
+
+      try {
+        const subscription = await getExistingPushSubscription();
+        if (!cancelled) setEnabled(subscription !== null);
+      } finally {
+        if (!cancelled) setChecking(false);
+      }
+    }
+
+    check();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  async function toggle(next: boolean) {
+    setBusy(true);
+    try {
+      if (next) {
+        await subscribeToPush();
+        setEnabled(true);
+        toast.success(strings.bazarReminder.alarmEnabled);
+      } else {
+        await unsubscribeFromPush();
+        setEnabled(false);
+        toast.success(strings.bazarReminder.alarmDisabled);
+      }
+    } catch (err) {
+      const message = (err as Error).message;
+      if (next && message === 'denied') {
+        toast.error(strings.bazarReminder.alarmPermissionDenied);
+      } else if (next) {
+        toast.error(strings.bazarReminder.alarmSubscribeFailed);
+      } else {
+        toast.error(strings.bazarReminder.alarmUnsubscribeFailed);
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (checking || !supported) return null;
+
+  return (
+    <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800 sm:p-5">
+      <label className="flex cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          checked={enabled}
+          disabled={busy}
+          onChange={(e) => void toggle(e.target.checked)}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900"
+        />
+        <span>
+          <span className="text-sm font-medium">{strings.bazarReminder.alarmTitle}</span>
+          <span className="mt-1 block text-sm text-slate-600 dark:text-slate-400">
+            {strings.bazarReminder.alarmDescription}
+          </span>
+        </span>
+      </label>
     </div>
   );
 }

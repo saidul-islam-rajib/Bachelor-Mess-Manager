@@ -72,7 +72,8 @@ const BROWSER_ENV: Record<string, string | undefined> = {
   MEAL_PROMPT_DEFAULT_BREAKFAST: process.env.MEAL_PROMPT_DEFAULT_BREAKFAST,
   MEAL_PROMPT_DEFAULT_LUNCH: process.env.MEAL_PROMPT_DEFAULT_LUNCH,
   MEAL_PROMPT_DEFAULT_DINNER: process.env.MEAL_PROMPT_DEFAULT_DINNER,
-  MEAL_PROMPT_MAX_COUNT: process.env.MEAL_PROMPT_MAX_COUNT
+  MEAL_PROMPT_MAX_COUNT: process.env.MEAL_PROMPT_MAX_COUNT,
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY
 };
 
 function readRaw(key: string): string | undefined {
@@ -337,6 +338,16 @@ export const mealPromptConfig = {
 
 export const settlementConfig = {
   dispatchSecret: readOptionalString('SETTLEMENT_DISPATCH_SECRET')
+} as const;
+
+export const bazarReminderConfig = {
+  dispatchSecret: readOptionalString('BAZAR_REMINDER_DISPATCH_SECRET')
+} as const;
+
+export const pushConfig = {
+  publicKey: readOptionalString('VAPID_PUBLIC_KEY'),
+  privateKey: readOptionalString('VAPID_PRIVATE_KEY'),
+  subject: readString('VAPID_SUBJECT', `mailto:${authorConfig.email}`)
 } as const;
 
 export const seedConfig = {

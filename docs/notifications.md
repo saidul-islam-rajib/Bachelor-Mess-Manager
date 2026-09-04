@@ -78,3 +78,4 @@ the thousands, this is the seam to replace with SSE.
 | `MENTION_COMMUNITY` | the mentioned member | someone wrote `@name` in the [community room](community.md) |
 | `COMMUNITY_WELCOME` | the new member | their account was approved |
 | `MEAL_PROMPT` | one member | the daily [one-tap meal ask](meal-prompts.md); the link answers it without signing in |
+| `BAZAR_DUTY_REMINDER` | the on-duty member | the daily [bazar duty reminder](bazar-duty-reminders.md) at 7am, sent by email, bell and push |
