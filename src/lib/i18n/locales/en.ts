@@ -507,7 +507,8 @@ const en = {
     autoFill: 'Split evenly',
     autoFillHint: 'Share the month out evenly between everyone.',
     autoFillConfirmTitle: 'Split the month evenly?',
-    autoFillConfirmMessage: 'This replaces the days already set and shares the month out evenly between every member.',
+    autoFillConfirmMessage:
+      "This replaces the days already set from today onward and shares what's left evenly between every member. Days that have already passed are left as they were.",
     calendarTitle: 'Month at a glance',
     reorderHint: 'Drag a member to swap turns. Tap a member to pick their exact days.',
     dragHandle: (name: string) => `Drag to move ${name} in the rotation`,
@@ -522,11 +523,13 @@ const en = {
     assignDayTitle: (date: string) => `Who shops on ${date}?`,
     assignDayHint: 'Pick a member, or choose Nobody to leave the day open.',
     dayLabel: (date: string) => `${date} — tap to change who shops`,
+    pastDayTooltip: 'This day has already passed and can no longer be changed.',
     lockedGroupClosed: 'This mess is closed, so the bazar schedule cannot be changed.',
     lockedMonthClosed: 'This month is closed, so the bazar schedule cannot be changed.',
     lockedNoMembers: 'Add members to this mess to build a bazar schedule.',
     saveFailed: 'Could not save the bazar schedule.',
     invalidAssignment: 'That assignment is not valid.',
+    cannotChangePast: "You can't change bazar duty for a day that has already passed.",
     loadFailed: 'Could not load the bazar schedule.'
   },
   groups: {

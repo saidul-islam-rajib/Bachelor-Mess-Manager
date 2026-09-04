@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { ensureSchedule } from '@/lib/bazar-duty';
-import { daysInMonth, parseMonth } from '@/lib/month';
+import { daysInMonth, parseMonth, todayKey } from '@/lib/month';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
@@ -149,7 +149,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return badRequest(res, strings.bazarSchedule.invalidAssignment);
     }
 
-    const totalDays = daysInMonth(monthKey).length;
+    const monthDays = daysInMonth(monthKey);
+    const totalDays = monthDays.length;
+    const today = todayKey();
     const activeMemberships = await prisma.membership.findMany({
       where: { groupId, isActive: true },
       select: { userId: true }
@@ -164,6 +166,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       const { day, userId } = item as { day?: unknown; userId?: unknown };
       if (typeof day !== 'number' || !Number.isInteger(day) || day < 1 || day > totalDays) {
         return badRequest(res, strings.bazarSchedule.invalidAssignment);
+      }
+      if (monthDays[day - 1] < today) {
+        return badRequest(res, strings.bazarSchedule.cannotChangePast);
       }
       if (userId !== null && typeof userId !== 'string') {
         return badRequest(res, strings.bazarSchedule.invalidAssignment);

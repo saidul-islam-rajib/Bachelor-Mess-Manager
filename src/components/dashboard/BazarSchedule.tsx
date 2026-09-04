@@ -7,6 +7,7 @@ import { useToast } from '@/components/ToastProvider';
 import { api, errorMessage } from '@/lib/api-client';
 import { computeEqualSplitDays, groupConsecutiveDays } from '@/lib/bazar-schedule';
 import { formatDayKey, initialsOf, shortName } from '@/lib/format';
+import { todayKey } from '@/lib/month';
 import { strings } from '@/lib/i18n';
 
 const scheduleStrings = strings.bazarSchedule;
@@ -189,10 +190,12 @@ function GripIcon() {
 
 function CalendarGrid({
   data,
+  today,
   toneByUserId,
   onPickDay
 }: {
   data: BazarScheduleData;
+  today: string;
   toneByUserId: Map<string, (typeof MEMBER_TONES)[number]>;
   onPickDay: (day: BazarDay) => void;
 }) {
@@ -212,6 +215,7 @@ function CalendarGrid({
 
       {data.days.map((day) => {
         const tone = day.userId ? toneByUserId.get(day.userId) : undefined;
+        const isPast = day.date < today;
         const className = tone
           ? tone.cell
           : 'border-dashed border-slate-200 bg-slate-50/60 text-slate-400 dark:border-slate-700 dark:bg-slate-900/40 dark:text-slate-500';
@@ -232,9 +236,15 @@ function CalendarGrid({
           </>
         );
 
-        if (!data.editable) {
+        if (!data.editable || isPast) {
           return (
-            <div key={day.day} className={`flex min-h-[3rem] flex-col items-center justify-center rounded-lg border px-0.5 ${className}`}>
+            <div
+              key={day.day}
+              title={isPast ? scheduleStrings.pastDayTooltip : undefined}
+              className={`flex min-h-[3rem] flex-col items-center justify-center rounded-lg border px-0.5 ${
+                isPast ? 'opacity-60' : ''
+              } ${className}`}
+            >
               {inner}
             </div>
           );
@@ -305,6 +315,9 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
     return map;
   }, [data]);
 
+  const today = useMemo(() => todayKey(), []);
+  const hasFutureDays = useMemo(() => (data?.days ?? []).some((day) => day.date >= today), [data, today]);
+
   const save = useCallback(
     async (assignments: Assignment[], previous: BazarScheduleData) => {
       setSaving(true);
@@ -343,7 +356,10 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
     if (oldIndex === -1 || newIndex === -1) return;
 
     // Each slot keeps its days; the members holding those slots swap around.
-    const slots = data.members.map((member) => (daysByUserId.get(member.id) ?? []).map((day) => day.day));
+    // Days that have already passed stay with whoever actually shopped that day.
+    const slots = data.members.map((member) =>
+      (daysByUserId.get(member.id) ?? []).filter((day) => day.date >= today).map((day) => day.day)
+    );
     const reordered = arrayMove(data.members, oldIndex, newIndex);
 
     const assignments: Assignment[] = [];
@@ -359,6 +375,10 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
 
   async function handleAutoFill() {
     if (!data) return;
+
+    const futureDays = data.days.filter((day) => day.date >= today);
+    if (futureDays.length === 0) return;
+
     const proceed = await confirm({
       title: scheduleStrings.autoFillConfirmTitle,
       message: scheduleStrings.autoFillConfirmMessage,
@@ -366,10 +386,17 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
     });
     if (!proceed) return;
 
-    const assignments = computeEqualSplitDays(
+    // computeEqualSplitDays hands back day numbers relative to the days it was given,
+    // so they need mapping back onto the real day-of-month before saving.
+    const relative = computeEqualSplitDays(
       data.members.map((member) => member.id),
-      data.totalDays
+      futureDays.length
     );
+    const assignments: Assignment[] = relative.map((assignment) => ({
+      day: futureDays[assignment.day - 1].day,
+      userId: assignment.userId
+    }));
+
     const previous = data;
     setData(applyAssignments(data, assignments));
     void save(assignments, previous);
@@ -391,7 +418,7 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
     <div className="space-y-4">
       {!data.editable && <p className="text-xs text-amber-700 dark:text-amber-400">{lockedMessage(data.lockedReason)}</p>}
 
-      {data.editable && (
+      {data.editable && hasFutureDays && (
         <div className="flex justify-end">
           <button
             type="button"
@@ -405,7 +432,9 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
         </div>
       )}
 
-      {data.editable && <p className="text-xs text-slate-500 dark:text-slate-400">{scheduleStrings.reorderHint}</p>}
+      {data.editable && hasFutureDays && (
+        <p className="text-xs text-slate-500 dark:text-slate-400">{scheduleStrings.reorderHint}</p>
+      )}
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={data.members.map((member) => member.id)} strategy={verticalListSortingStrategy}>
@@ -417,7 +446,7 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
                 tone={toneByUserId.get(member.id)!}
                 days={daysByUserId.get(member.id) ?? []}
                 isCurrentUser={member.id === data.currentUserId}
-                editable={data.editable}
+                editable={data.editable && hasFutureDays}
                 onEdit={() => setMemberPicker(member)}
               />
             ))}
@@ -429,7 +458,7 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
           {scheduleStrings.calendarTitle}
         </p>
-        <CalendarGrid data={data} toneByUserId={toneByUserId} onPickDay={setDayPicker} />
+        <CalendarGrid data={data} today={today} toneByUserId={toneByUserId} onPickDay={setDayPicker} />
       </div>
 
       <Modal
@@ -496,15 +525,18 @@ export default function BazarSchedule({ groupId, month }: { groupId: string; mon
           {data.days.map((day) => {
             const mine = memberPicker !== null && day.userId === memberPicker.id;
             const takenBy = !mine && day.userId ? day.userName : null;
+            const isPast = day.date < today;
             return (
               <button
                 key={day.day}
                 type="button"
+                disabled={isPast}
+                title={isPast ? scheduleStrings.pastDayTooltip : undefined}
                 onClick={() => {
-                  if (!memberPicker) return;
+                  if (!memberPicker || isPast) return;
                   assign(day.day, mine ? null : memberPicker.id);
                 }}
-                className={`flex min-h-[2.75rem] flex-col items-center justify-center rounded-lg border px-0.5 transition-transform active:scale-95 ${
+                className={`flex min-h-[2.75rem] flex-col items-center justify-center rounded-lg border px-0.5 transition-transform active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${
                   mine
                     ? 'border-brand-400 bg-brand-500 text-white dark:border-brand-400 dark:bg-brand-500'
                     : takenBy
