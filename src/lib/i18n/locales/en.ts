@@ -1056,7 +1056,6 @@ const en = {
     recordOpen: 'Close',
     recordCollapsedHint: 'Add rent, gas, electricity or any other fixed cost.',
     noCostTypes: 'No cost types yet.',
-    partPayment: 'Part',
     loadFailed: 'Could not load bills.',
     updateFailed: 'Could not update the bill.',
     collectFailed: 'Could not record that payment.',

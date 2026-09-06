@@ -845,7 +845,7 @@ function MemberActions({
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      {share.outstanding > 0 && (
+      {share.outstanding > 0 ? (
         <button
           type="button"
           onClick={() => onStart(true)}
@@ -853,14 +853,15 @@ function MemberActions({
         >
           {strings.bills.markPaid} · {taka(share.outstanding)}
         </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onStart(false)}
+          className={`rounded-full border border-slate-300 dark:border-slate-600 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 ${size}`}
+        >
+          {strings.common.add}
+        </button>
       )}
-      <button
-        type="button"
-        onClick={() => onStart(false)}
-        className={`rounded-full border border-slate-300 dark:border-slate-600 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 ${size}`}
-      >
-        {share.outstanding > 0 ? strings.bills.partPayment : strings.common.add}
-      </button>
     </div>
   );
 }

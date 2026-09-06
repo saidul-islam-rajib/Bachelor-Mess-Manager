@@ -159,11 +159,16 @@ DELETE /api/bills/[id]/collections?collectionId=...&hard=true    permanently del
 PATCH  /api/bills/[id]/collections?collectionId=...   { amount, date }
 ```
 
-`settle: true` is the **Mark paid** button: it pays exactly what that member has
-left outstanding, so clicking it can never overshoot into an accidental advance,
-and clicking it twice is refused with "that member has nothing left to pay on
-this bill". A bare `amount` is the **Part payment** box, and it is allowed to
-exceed the member's share — that is how somebody fronts money for the group.
+`settle: true` pays exactly what that member has left outstanding, and clicking
+it twice is refused with "that member has nothing left to pay on this bill". A
+bare `amount` is any other figure, and it is allowed to exceed the member's
+share — that is how somebody fronts money for the group.
+
+The split panel has one action per member: **Mark paid · ৳X** while they owe (it
+opens the amount field pre-filled with what is left — lower it for a part
+payment), or **Add** once they are settled (a blank amount field, for recording
+a further payment or a front). There is no separate "part payment" button; the
+amount is always editable before saving.
 
 `date` defaults to today and decides which month the credit lands in. A member
 who clears an August bill in September is credited in September and carries the
