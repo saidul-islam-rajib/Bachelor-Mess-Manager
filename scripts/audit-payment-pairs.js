@@ -142,9 +142,10 @@ async function main() {
   const bills = new Map();
   for (const r of rows) {
     if (!r.expenseId) continue;
-    if (!bills.has(r.expenseId)) bills.set(r.expenseId, { expense: r.expense, perMember: new Map() });
+    if (!bills.has(r.expenseId)) bills.set(r.expenseId, { expense: r.expense, perMember: new Map(), rowsByUser: new Map() });
     const b = bills.get(r.expenseId);
     b.perMember.set(r.userId, (b.perMember.get(r.userId) || 0) + paisa(r.amountPaid));
+    b.rowsByUser.set(r.userId, [...(b.rowsByUser.get(r.userId) || []), r]);
   }
 
   console.log('=== Per-bill payment ledger (sum of every payment row, incl. offsets & reversals) ===\n');
@@ -153,10 +154,21 @@ async function main() {
     const collected = [...b.perMember.values()].reduce((a, n) => a + n, 0) / 100;
     console.log(`${label}  [${billId}]`);
     for (const [userId, p] of b.perMember) {
-      console.log(`   ${nameOf(userId).padEnd(26)} ${taka(p / 100).padStart(12)}`);
+      const marker = p < -1 ? '   <-- negative: stranded offset, or a matching payment was deleted' : '';
+      console.log(`   ${nameOf(userId).padEnd(26)} ${taka(p / 100).padStart(12)}${marker}`);
+      if (p < -1) {
+        note(
+          'ERROR',
+          b.rowsByUser.get(userId)[0],
+          `${nameOf(userId)}'s payment rows for this bill sum to ${taka(p / 100)} — a member's total on one bill should never be negative`
+        );
+      }
     }
     console.log(`   ${'-'.repeat(26)} ${'-'.repeat(12)}`);
     console.log(`   ${'net collected'.padEnd(26)} ${taka(collected).padStart(12)}${b.expense ? `   (bill ${taka(b.expense.amount)})` : ''}`);
+    if (b.expense && Math.abs(paisa(collected) - paisa(b.expense.amount)) > 1) {
+      console.log(`   ${'gap vs bill'.padEnd(26)} ${taka(collected - b.expense.amount).padStart(12)}`);
+    }
     console.log('');
   }
 
