@@ -125,19 +125,28 @@ function SettleUpSection({ result }: { result: SettlementData['settleUp'] }) {
 function SupervisorAction({
   data,
   marking,
-  onMarkSettled
+  settlingId,
+  settlingAll,
+  onMarkSettled,
+  onSettleMember,
+  onSettleAll
 }: {
   data: SettlementData;
   marking: boolean;
+  settlingId: string | null;
+  settlingAll: boolean;
   onMarkSettled: () => void;
+  onSettleMember: (member: SettlementMember) => void;
+  onSettleAll: () => void;
 }) {
   if (data.settledAt) return null;
 
-  const waiting = data.members.filter((m) => m.isCurrentMember && m.closeStatus !== PAYMENT_STATUS.PAID);
+  const waiting = data.members.filter((m) => m.closeStatus !== PAYMENT_STATUS.PAID);
+  const everyoneSettled = waiting.length === 0;
 
   return (
     <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm sm:p-6">
-      {data.allClear ? (
+      {everyoneSettled ? (
         <>
           <h2 className="text-lg font-semibold">{settlement.allClearTitle}</h2>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{settlement.allClearHint}</p>
@@ -148,14 +157,38 @@ function SupervisorAction({
       ) : (
         <>
           <h2 className="text-lg font-semibold">{settlement.waitingTitle(waiting.length)}</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{settlement.waitingHint}</p>
-          <ul className="mt-3 flex flex-wrap gap-2">
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{settlement.supervisorSettleHint}</p>
+          <ul className="mt-4 divide-y divide-slate-100 dark:divide-slate-700">
             {waiting.map((m) => (
-              <li key={m.id} className="rounded-full bg-slate-100 dark:bg-slate-700 px-3 py-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-                {m.name}
+              <li key={m.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
+                <span className="min-w-0 text-sm">
+                  <span className="font-medium text-slate-900 dark:text-slate-100">{m.name}</span>
+                  {!m.isCurrentMember && (
+                    <span className="ml-2 rounded-full bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                      {strings.payments.left}
+                    </span>
+                  )}
+                  <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                    {m.dueAtClose > 0.005
+                      ? settlement.memberOwesInline(taka(m.dueAtClose))
+                      : settlement.memberOwedInline(taka(Math.abs(m.dueAtClose)))}
+                  </span>
+                </span>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  loading={settlingId === m.id}
+                  disabled={settlingAll}
+                  onClick={() => onSettleMember(m)}
+                >
+                  {settlement.settleShort}
+                </Button>
               </li>
             ))}
           </ul>
+          <Button className="mt-4" variant="secondary" onClick={onSettleAll} loading={settlingAll} disabled={settlingId !== null}>
+            {settlement.settleAllButton}
+          </Button>
         </>
       )}
     </div>
@@ -172,6 +205,8 @@ export default function SettlementPage() {
   const [settling, setSettling] = useState(false);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
+  const [settlingId, setSettlingId] = useState<string | null>(null);
+  const [settlingAll, setSettlingAll] = useState(false);
 
   const load = useCallback(async () => {
     if (!groupId) {
@@ -224,6 +259,67 @@ export default function SettlementPage() {
       toast.error((err as Error).message);
     } finally {
       setSettling(false);
+    }
+  }
+
+  async function handleSettleMember(member: SettlementMember) {
+    if (!groupId) return;
+    const owed = member.dueAtClose < 0;
+    const amount = taka(Math.abs(member.dueAtClose));
+    const confirmed = await confirm({
+      title: settlement.settleMemberConfirmTitle(member.name),
+      message: owed
+        ? settlement.settleMemberOwedMessage(member.name, amount)
+        : settlement.settleMemberOwesMessage(member.name, amount),
+      confirmLabel: settlement.settleConfirm,
+      destructive: owed
+    });
+    if (!confirmed) return;
+
+    setSettlingId(member.id);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/final-settlement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'settleMember', userId: member.id })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? settlement.settleFailed);
+      setPayload(body);
+      toast.success(settlement.settleMemberSuccess(member.name));
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSettlingId(null);
+    }
+  }
+
+  async function handleSettleAll() {
+    if (!groupId || !data) return;
+    const pending = data.members.filter((m) => m.closeStatus !== PAYMENT_STATUS.PAID).length;
+    const confirmed = await confirm({
+      title: settlement.settleAllConfirmTitle,
+      message: settlement.settleAllConfirmMessage(pending),
+      confirmLabel: settlement.settleAllButton,
+      destructive: true
+    });
+    if (!confirmed) return;
+
+    setSettlingAll(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/final-settlement`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'settleAll' })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error ?? settlement.settleAllFailed);
+      setPayload(body);
+      toast.success(settlement.settleAllSuccess(pending));
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setSettlingAll(false);
     }
   }
 
@@ -328,7 +424,17 @@ export default function SettlementPage() {
             <MemberSection members={data.members} currentUserId={user?.id} categoryLabels={data.categoryLabels} />
             <SettleUpSection result={data.settleUp} />
 
-            {payload?.canManage && <SupervisorAction data={data} marking={marking} onMarkSettled={handleMarkSettled} />}
+            {payload?.canManage && (
+              <SupervisorAction
+                data={data}
+                marking={marking}
+                settlingId={settlingId}
+                settlingAll={settlingAll}
+                onMarkSettled={handleMarkSettled}
+                onSettleMember={handleSettleMember}
+                onSettleAll={handleSettleAll}
+              />
+            )}
           </>
         )}
       </div>

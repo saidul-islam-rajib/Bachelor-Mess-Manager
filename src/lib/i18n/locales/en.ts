@@ -1442,6 +1442,24 @@ const en = {
     settleMineButton: 'Mark my balance settled',
     settleMemberButton: (name: string) => `Mark ${name} settled`,
     settleMemberOthers: 'Only a supervisor can settle another member’s balance.',
+    settleShort: 'Settle',
+    supervisorSettleHint:
+      'Settle each member as they hand over what they owe or collect their refund, or settle the whole month in one step once everyone is squared up in cash.',
+    memberOwesInline: (amount: string) => `owes ${amount}`,
+    memberOwedInline: (amount: string) => `owed ${amount}`,
+    settleMemberConfirmTitle: (name: string) => `Settle ${name}’s balance?`,
+    settleMemberOwesMessage: (name: string, amount: string) =>
+      `${name} still owes ${amount}. This records it as paid in full, so nothing is left outstanding against them.`,
+    settleMemberOwedMessage: (name: string, amount: string) =>
+      `The mess owes ${name} ${amount}. This records it as refunded, so their balance goes to zero.`,
+    settleMemberSuccess: (name: string) => `${name}’s balance is settled.`,
+    settleAllButton: 'Settle the whole month',
+    settleAllConfirmTitle: 'Settle the whole month?',
+    settleAllConfirmMessage: (count: number) =>
+      `Every remaining due and refund is written off: ${count} balance${count === 1 ? '' : 's'} go to zero, and the month is marked settled for good. Do this once everyone has squared up in cash.`,
+    settleAllSuccess: (count: number) =>
+      `Settled ${count} balance${count === 1 ? '' : 's'}. The month is closed.`,
+    settleAllFailed: 'Could not settle the month.',
     settleOwedTitle: 'Write off what you are owed?',
     settleOwedMessage: (amount: string) =>
       `The mess owes you ${amount}. Marking yourself settled gives that up — your balance goes to zero and nobody has to pay you back.`,

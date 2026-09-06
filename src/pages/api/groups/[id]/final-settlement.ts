@@ -2,7 +2,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { getFinalSettlement, markFinalSettlementSettled, settleMemberBalance } from '@/lib/final-settlement';
+import {
+  declareMemberSettled,
+  getFinalSettlement,
+  markFinalSettlementSettled,
+  settleMemberBalance,
+  settleWholeMonth
+} from '@/lib/final-settlement';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 
@@ -34,37 +40,49 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (req.method === 'POST') {
     const { action, userId } = req.body as { action?: string; userId?: string };
+    const actor = { id: sessionUser.id, name: sessionUser.name };
 
     if (action === 'settleMember') {
       const targetId = typeof userId === 'string' && userId ? userId : sessionUser.id;
-      if (targetId !== sessionUser.id && !canManage) {
+      const settled =
+        targetId === sessionUser.id
+          ? await settleMemberBalance(group, targetId, actor)
+          : canManage
+            ? await declareMemberSettled(group, targetId, actor)
+            : null;
+
+      if (!settled) {
         return forbidden(res, strings.settlement.settleMemberOthers);
       }
-
-      const settled = await settleMemberBalance(group, targetId, { id: sessionUser.id, name: sessionUser.name });
       if (!settled.ok) {
         return conflict(res, settled.error);
       }
 
-      const updated = await getFinalSettlement(group);
-      return ok(res, { canManage, settlement: updated });
+      return ok(res, { canManage, settlement: await getFinalSettlement(group) });
     }
 
     if (!canManage) {
-      return forbidden(res, "Only this group's supervisor can mark a month settled.");
+      return forbidden(res, "Only this group's supervisor can settle a month.");
+    }
+
+    if (action === 'settleAll') {
+      const result = await settleWholeMonth(group, actor);
+      if (!result.ok) {
+        return conflict(res, result.error);
+      }
+      return ok(res, { canManage, settlement: await getFinalSettlement(group) });
     }
 
     if (action !== 'markSettled') {
       return badRequest(res, 'Unknown action.');
     }
 
-    const result = await markFinalSettlementSettled(group, { id: sessionUser.id, name: sessionUser.name });
+    const result = await markFinalSettlementSettled(group, actor);
     if (!result.ok) {
       return conflict(res, result.error);
     }
 
-    const report = await getFinalSettlement(group);
-    return ok(res, { canManage, settlement: report });
+    return ok(res, { canManage, settlement: await getFinalSettlement(group) });
   }
 
   return methodNotAllowed(res, ['GET', 'POST']);

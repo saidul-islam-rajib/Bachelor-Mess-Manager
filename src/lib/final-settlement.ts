@@ -146,6 +146,9 @@ export async function settleMemberBalance(
   if (!report) {
     return { ok: false, error: "Last month hasn't been finalized yet." };
   }
+  if (report.settledAt) {
+    return { ok: false, error: 'That month is already settled.' };
+  }
 
   const member = report.members.find((row) => row.id === userId);
   if (!member) {
@@ -202,6 +205,85 @@ export async function settleMemberBalance(
   });
 
   return { ok: true, amount, monthKey: report.monthKey };
+}
+
+type SettlementTx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+function writeSettlementRow(
+  tx: SettlementTx,
+  params: { groupId: string; member: FinalSettlementMember; dueDate: Date; actorId: string }
+) {
+  const amount = round2(params.member.dueAtClose);
+  return tx.paymentStatus.create({
+    data: {
+      userId: params.member.id,
+      groupId: params.groupId,
+      amountDue: amount > 0 ? amount : 0,
+      amountPaid: amount,
+      status: amount > 0 ? PAYMENT_STATUS.PAID : PAYMENT_STATUS.REFUND,
+      dueDate: params.dueDate,
+      recordedById: params.actorId,
+      publishedAt: new Date()
+    }
+  });
+}
+
+export async function declareMemberSettled(
+  group: FinalSettlementGroup,
+  userId: string,
+  actor: { id: string; name: string }
+): Promise<{ ok: true; amount: number } | { ok: false; error: string }> {
+  const report = await getFinalSettlement(group);
+  if (!report) {
+    return { ok: false, error: "Last month hasn't been finalized yet." };
+  }
+  if (report.settledAt) {
+    return { ok: false, error: 'That month is already settled.' };
+  }
+
+  const member = report.members.find((row) => row.id === userId);
+  if (!member) {
+    return { ok: false, error: 'That member has nothing recorded for that month.' };
+  }
+  if (Math.abs(Math.round(member.dueAtClose * 100)) < 1) {
+    return { ok: false, error: 'That balance is already settled.' };
+  }
+
+  const dueDate = dayToUtcDate(report.closedThrough);
+  await prisma.$transaction((tx) => writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id }));
+
+  return { ok: true, amount: round2(member.dueAtClose) };
+}
+
+export async function settleWholeMonth(
+  group: FinalSettlementGroup,
+  actor: { id: string; name: string }
+): Promise<{ ok: true; settled: number; monthKey: string } | { ok: false; error: string }> {
+  const report = await getFinalSettlement(group);
+  if (!report) {
+    return { ok: false, error: "Last month hasn't been finalized yet." };
+  }
+  if (report.settledAt) {
+    return { ok: false, error: 'That month is already settled.' };
+  }
+
+  const dueDate = dayToUtcDate(report.closedThrough);
+  const pending = report.members.filter((member) => Math.abs(Math.round(member.dueAtClose * 100)) >= 1);
+
+  if (pending.length > 0) {
+    await prisma.$transaction(async (tx) => {
+      for (const member of pending) {
+        await writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id });
+      }
+    });
+  }
+
+  const marked = await markSettled(report.closingId, actor);
+  if (!marked.ok) {
+    return { ok: false, error: marked.error };
+  }
+
+  return { ok: true, settled: pending.length, monthKey: report.monthKey };
 }
 
 export async function markFinalSettlementSettled(
