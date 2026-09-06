@@ -164,11 +164,19 @@ it twice is refused with "that member has nothing left to pay on this bill". A
 bare `amount` is any other figure, and it is allowed to exceed the member's
 share — that is how somebody fronts money for the group.
 
-The split panel has one action per member: **Mark paid · ৳X** while they owe (it
-opens the amount field pre-filled with what is left — lower it for a part
-payment), or **Add** once they are settled (a blank amount field, for recording
-a further payment or a front). There is no separate "part payment" button; the
-amount is always editable before saving.
+The split panel has one action per member, driven by where they stand:
+
+- **owes something** → **Mark paid · ৳X**, opening the amount field pre-filled
+  with what is left; lower it for a part payment. There is no separate "part
+  payment" button — the amount is always editable before saving.
+- **settled, with one plain payment to their name** (supervisor only) → **Edit**,
+  opening that payment's amount and date for a `PATCH` in place. A payment that
+  is one leg of a transfer, a reversal, an advance-funded payment or the "Paid
+  by" credit is not offered here — those are corrected the way they were made.
+- **settled, and their paid figure is the "Paid by" credit** (supervisor only) →
+  **Edit**, opening the bill form, since that figure is the bill amount.
+- **settled, anything else** → **Add**, a blank amount field for a further
+  payment or a front.
 
 `date` defaults to today and decides which month the credit lands in. A member
 who clears an August bill in September is credited in September and carries the

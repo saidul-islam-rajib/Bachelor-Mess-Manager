@@ -19,6 +19,7 @@ import {
   type Bill,
   type BillsData,
   type Category,
+  type Collection,
   type Member,
   type Share
 } from '@/lib/bill-view';
@@ -360,6 +361,9 @@ export default function BillsPage() {
                                       onToggle={() => toggleSettled(bill)}
                                       onDelete={() => remove(bill)}
                                       onCollect={(body) => recordCollection(bill, body)}
+                                      onEditCollection={(collectionId, amount, date) =>
+                                        editCollection(bill, collectionId, amount, date)
+                                      }
                                     />
                                   )
                                 )}
@@ -765,15 +769,23 @@ function AdvanceNote({ share }: { share: Share }) {
 
 type RecipientOption = { id: string; name: string; advance: number };
 
+type SettledAction = 'edit-collection' | 'edit-bill' | 'add';
+
 function MemberActions({
   share,
   recipients,
   editing,
+  editingCollection,
   amount,
   setAmount,
   toUserId,
   setToUserId,
+  editDate,
+  setEditDate,
+  settledAction,
   onStart,
+  onStartEdit,
+  onEditBill,
   onCancel,
   onSubmit,
   compact
@@ -781,16 +793,24 @@ function MemberActions({
   share: Share;
   recipients: RecipientOption[];
   editing: boolean;
+  editingCollection: boolean;
   amount: string;
   setAmount: (value: string) => void;
   toUserId: string;
   setToUserId: (value: string) => void;
+  editDate: string;
+  setEditDate: (value: string) => void;
+  settledAction: SettledAction;
   onStart: (prefillFull: boolean) => void;
+  onStartEdit: () => void;
+  onEditBill: () => void;
   onCancel: () => void;
   onSubmit: () => void;
   compact?: boolean;
 }) {
   const size = compact ? 'min-h-[2rem] px-3 text-xs' : 'min-h-[2.5rem] px-3.5 text-sm';
+  const field = `rounded-full border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`;
+  const outlineBtn = `rounded-full border border-slate-300 dark:border-slate-600 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 ${size}`;
 
   if (editing) {
     return (
@@ -809,22 +829,32 @@ function MemberActions({
           }}
           placeholder={strings.common.amount}
           aria-label={strings.bills.transfer.amountFrom(share.userName)}
-          className={`w-24 rounded-full border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
+          className={`w-24 ${field}`}
         />
-        <select
-          value={toUserId}
-          onChange={(event) => setToUserId(event.target.value)}
-          aria-label={strings.bills.transfer.whoDidPay(share.userName)}
-          className={`rounded-full border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 ${size} focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100`}
-        >
-          <option value="">{strings.bills.transfer.intoCollection}</option>
-          {recipients.map((recipient) => (
-            <option key={recipient.id} value={recipient.id}>
-              {strings.bills.transfer.paidTo(recipient.name)}
-              {recipient.advance > 0 ? ` ${strings.bills.transfer.getsBack(taka(recipient.advance))}` : ''}
-            </option>
-          ))}
-        </select>
+        {editingCollection ? (
+          <input
+            type="date"
+            value={editDate}
+            onChange={(event) => setEditDate(event.target.value)}
+            aria-label={strings.common.date}
+            className={field}
+          />
+        ) : (
+          <select
+            value={toUserId}
+            onChange={(event) => setToUserId(event.target.value)}
+            aria-label={strings.bills.transfer.whoDidPay(share.userName)}
+            className={field}
+          >
+            <option value="">{strings.bills.transfer.intoCollection}</option>
+            {recipients.map((recipient) => (
+              <option key={recipient.id} value={recipient.id}>
+                {strings.bills.transfer.paidTo(recipient.name)}
+                {recipient.advance > 0 ? ` ${strings.bills.transfer.getsBack(taka(recipient.advance))}` : ''}
+              </option>
+            ))}
+          </select>
+        )}
         <button
           type="button"
           onClick={onSubmit}
@@ -843,9 +873,9 @@ function MemberActions({
     );
   }
 
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      {share.outstanding > 0 ? (
+  if (share.outstanding > 0) {
+    return (
+      <div className="flex flex-wrap items-center gap-1.5">
         <button
           type="button"
           onClick={() => onStart(true)}
@@ -853,12 +883,22 @@ function MemberActions({
         >
           {strings.bills.markPaid} · {taka(share.outstanding)}
         </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {settledAction === 'edit-collection' ? (
+        <button type="button" onClick={onStartEdit} className={outlineBtn}>
+          {strings.common.edit}
+        </button>
+      ) : settledAction === 'edit-bill' ? (
+        <button type="button" onClick={onEditBill} className={outlineBtn}>
+          {strings.common.edit}
+        </button>
       ) : (
-        <button
-          type="button"
-          onClick={() => onStart(false)}
-          className={`rounded-full border border-slate-300 dark:border-slate-600 font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 ${size}`}
-        >
+        <button type="button" onClick={() => onStart(false)} className={outlineBtn}>
           {strings.common.add}
         </button>
       )}
@@ -872,7 +912,9 @@ function SplitPanel({
   currentUserId,
   canManage,
   canRecordOwn,
-  onCollect
+  onCollect,
+  onEditBill,
+  onEditCollection
 }: {
   bill: Bill;
   members: Member[];
@@ -880,10 +922,14 @@ function SplitPanel({
   canManage: boolean;
   canRecordOwn: boolean;
   onCollect: (body: Record<string, unknown>) => void;
+  onEditBill: () => void;
+  onEditCollection: (collectionId: string, amount: number, date: string) => void;
 }) {
   const [editingFor, setEditingFor] = useState<string | null>(null);
+  const [editingCollectionId, setEditingCollectionId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
   const [toUserId, setToUserId] = useState('');
+  const [editDate, setEditDate] = useState('');
 
   const rows = useMemo(() => {
     const copy = [...bill.shares];
@@ -913,23 +959,54 @@ function SplitPanel({
     return canManage || (canRecordOwn && userId === currentUserId);
   }
 
+  function editableCollection(share: Share): Collection | null {
+    const editable = share.collections.filter((c) => !c.isReversal && !c.isReversed && !c.isLinked);
+    return editable.length === 1 ? editable[0] : null;
+  }
+
+  function settledActionFor(share: Share): SettledAction {
+    if (!canManage) return 'add';
+    if (editableCollection(share)) return 'edit-collection';
+    if (share.collections.some((c) => c.fromPayer && !c.isReversed)) return 'edit-bill';
+    return 'add';
+  }
+
   function start(userId: string, prefillFull: boolean) {
     setEditingFor(userId);
+    setEditingCollectionId(null);
     const share = bill.shares.find((s) => s.userId === userId);
     setAmount(prefillFull && share ? String(share.outstanding) : '');
+    setToUserId('');
+    setEditDate('');
+  }
+
+  function startEdit(userId: string) {
+    const share = bill.shares.find((s) => s.userId === userId);
+    const collection = share ? editableCollection(share) : null;
+    if (!collection) return;
+    setEditingFor(userId);
+    setEditingCollectionId(collection.id);
+    setAmount(String(collection.amount));
+    setEditDate(collection.date);
     setToUserId('');
   }
 
   function cancel() {
     setEditingFor(null);
+    setEditingCollectionId(null);
     setAmount('');
     setToUserId('');
+    setEditDate('');
   }
 
   function submit(userId: string) {
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) return;
-    onCollect({ userId, amount: value, ...(toUserId ? { toUserId } : {}) });
+    if (editingCollectionId) {
+      onEditCollection(editingCollectionId, value, editDate);
+    } else {
+      onCollect({ userId, amount: value, ...(toUserId ? { toUserId } : {}) });
+    }
     cancel();
   }
 
@@ -1010,11 +1087,17 @@ function SplitPanel({
                             share={share}
                             recipients={recipientsFor(share.userId)}
                             editing={editingFor === share.userId}
+                            editingCollection={editingFor === share.userId && editingCollectionId !== null}
                             amount={amount}
                             setAmount={setAmount}
                             toUserId={toUserId}
                             setToUserId={setToUserId}
+                            editDate={editDate}
+                            setEditDate={setEditDate}
+                            settledAction={settledActionFor(share)}
                             onStart={(prefillFull) => start(share.userId, prefillFull)}
+                            onStartEdit={() => startEdit(share.userId)}
+                            onEditBill={onEditBill}
                             onCancel={cancel}
                             onSubmit={() => submit(share.userId)}
                           />
@@ -1087,11 +1170,17 @@ function SplitPanel({
                     share={share}
                     recipients={recipientsFor(share.userId)}
                     editing={editingFor === share.userId}
+                    editingCollection={editingFor === share.userId && editingCollectionId !== null}
                     amount={amount}
                     setAmount={setAmount}
                     toUserId={toUserId}
                     setToUserId={setToUserId}
+                    editDate={editDate}
+                    setEditDate={setEditDate}
+                    settledAction={settledActionFor(share)}
                     onStart={(prefillFull) => start(share.userId, prefillFull)}
+                    onStartEdit={() => startEdit(share.userId)}
+                    onEditBill={onEditBill}
                     onCancel={cancel}
                     onSubmit={() => submit(share.userId)}
                   />
@@ -1116,7 +1205,8 @@ function BillRow({
   onEdit,
   onToggle,
   onDelete,
-  onCollect
+  onCollect,
+  onEditCollection
 }: {
   bill: Bill;
   members: Member[];
@@ -1129,6 +1219,7 @@ function BillRow({
   onToggle: () => void;
   onDelete: () => void;
   onCollect: (body: Record<string, unknown>) => void;
+  onEditCollection: (collectionId: string, amount: number, date: string) => void;
 }) {
   const myShare = bill.shares.find((s) => s.userId === currentUserId);
   const percent = bill.amount > 0 ? Math.min(100, Math.round((bill.collected / bill.amount) * 100)) : 0;
@@ -1222,6 +1313,8 @@ function BillRow({
             canManage={canManage}
             canRecordOwn={canRecordOwn}
             onCollect={onCollect}
+            onEditBill={onEdit}
+            onEditCollection={onEditCollection}
           />
 
           {canManage && (
