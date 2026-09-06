@@ -36,7 +36,7 @@ async function resolveGroupIds() {
 async function main() {
   const groupIds = await resolveGroupIds();
 
-  const where = { type: { not: 'BAZAR' }, splitMethod: 'CUSTOM', payerId: { not: null } };
+  const where = { type: { not: 'BAZAR' }, payerId: { not: null }, isReceived: true };
   if (groupIds) where.groupId = { in: groupIds };
 
   const bills = await prisma.expenseEntry.findMany({
@@ -48,11 +48,18 @@ async function main() {
       amount: true,
       date: true,
       payerId: true,
-      note: true,
-      shares: { select: { userId: true } },
       payments: {
-        where: { fromPayer: true },
-        select: { id: true, userId: true, amountPaid: true, dueDate: true }
+        select: {
+          id: true,
+          userId: true,
+          amountPaid: true,
+          dueDate: true,
+          fromPayer: true,
+          offsetOfId: true,
+          reversalOfId: true,
+          toUserId: true,
+          reversedBy: { select: { id: true } }
+        }
       }
     },
     orderBy: { date: 'asc' }
@@ -61,7 +68,7 @@ async function main() {
   const userNames = new Map(
     (
       await prisma.user.findMany({
-        where: { id: { in: [...new Set(bills.flatMap((b) => [b.payerId, ...b.shares.map((s) => s.userId)]))] } },
+        where: { id: { in: [...new Set(bills.map((b) => b.payerId))] } },
         select: { id: true, name: true }
       })
     ).map((u) => [u.id, u.name])
@@ -74,34 +81,41 @@ async function main() {
   let alreadyGood = 0;
 
   for (const bill of bills) {
-    const isSingle = bill.shares.length === 1;
-    const sole = isSingle ? bill.shares[0].userId : null;
-    const shouldCredit = isSingle && bill.payerId && bill.payerId !== sole;
-
-    const existing = bill.payments;
+    const auto = bill.payments.filter((p) => p.fromPayer);
     const label = `${bill.type} ${bill.date.toISOString().slice(0, 10)} ${taka(bill.amount)}  [${bill.id}]`;
 
-    if (!shouldCredit) {
-      for (const row of existing) {
-        console.log(`REMOVE  ${label}\n        stale payer credit for ${nameOf(row.userId)} (${taka(row.amountPaid)})`);
+    const priorPaisa = bill.payments
+      .filter(
+        (p) =>
+          p.userId === bill.payerId &&
+          !p.fromPayer &&
+          !p.offsetOfId &&
+          !p.reversalOfId &&
+          !p.toUserId &&
+          !p.reversedBy
+      )
+      .reduce((sum, p) => sum + paisa(p.amountPaid), 0);
+    const targetPaisa = paisa(bill.amount) - priorPaisa;
+
+    if (targetPaisa <= 0) {
+      for (const row of auto) {
+        console.log(`REMOVE  ${label}\n        payer credit for ${nameOf(row.userId)} (${taka(row.amountPaid)}) — already covered`);
         if (!dryRun) await prisma.paymentStatus.delete({ where: { id: row.id } });
         removed += 1;
       }
       continue;
     }
 
-    const match = existing.find((r) => r.userId === bill.payerId);
-    const stale = existing.filter((r) => r.id !== match?.id);
-    for (const row of stale) {
+    const target = round2(targetPaisa / 100);
+    const match = auto.find((r) => r.userId === bill.payerId);
+    for (const row of auto.filter((r) => r.id !== match?.id)) {
       console.log(`REMOVE  ${label}\n        stale payer credit for ${nameOf(row.userId)} (${taka(row.amountPaid)})`);
       if (!dryRun) await prisma.paymentStatus.delete({ where: { id: row.id } });
       removed += 1;
     }
 
     if (!match) {
-      console.log(
-        `CREATE  ${label}\n        credit ${taka(bill.amount)} to ${nameOf(bill.payerId)} (paid, charged to ${nameOf(sole)})`
-      );
+      console.log(`CREATE  ${label}\n        credit ${taka(target)} to ${nameOf(bill.payerId)}`);
       if (!dryRun) {
         await prisma.paymentStatus.create({
           data: {
@@ -110,7 +124,7 @@ async function main() {
             expenseId: bill.id,
             fromPayer: true,
             amountDue: 0,
-            amountPaid: round2(bill.amount),
+            amountPaid: target,
             status: 'PAID',
             dueDate: bill.date,
             publishedAt: new Date()
@@ -121,16 +135,12 @@ async function main() {
       continue;
     }
 
-    const amountOff = paisa(match.amountPaid) !== paisa(bill.amount);
-    const dateOff = match.dueDate.getTime() !== bill.date.getTime();
-    if (amountOff || dateOff) {
-      console.log(
-        `FIX     ${label}\n        payer credit for ${nameOf(bill.payerId)}: ${taka(match.amountPaid)} -> ${taka(bill.amount)}`
-      );
+    if (paisa(match.amountPaid) !== targetPaisa || match.dueDate.getTime() !== bill.date.getTime()) {
+      console.log(`FIX     ${label}\n        payer credit for ${nameOf(bill.payerId)}: ${taka(match.amountPaid)} -> ${taka(target)}`);
       if (!dryRun) {
         await prisma.paymentStatus.update({
           where: { id: match.id },
-          data: { amountPaid: round2(bill.amount), amountDue: 0, status: 'PAID', dueDate: bill.date }
+          data: { amountPaid: target, amountDue: 0, status: 'PAID', dueDate: bill.date }
         });
       }
       fixed += 1;

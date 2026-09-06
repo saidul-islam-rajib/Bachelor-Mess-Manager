@@ -197,6 +197,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const billDate = dayToUtcDate(date);
+    const billPayerId = typeof payerId === 'string' && payerId ? payerId : null;
+    const payerCoversOwnShare = billPayerId !== null && isReceived === true;
 
     const bill = await prisma.$transaction(async (tx) => {
       const created = await tx.expenseEntry.create({
@@ -205,7 +207,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           type,
           amount: total,
           date: billDate,
-          payerId: typeof payerId === 'string' && payerId ? payerId : null,
+          payerId: billPayerId,
           isReceived: isReceived === true,
           splitMethod: method,
           note: typeof note === 'string' ? note.trim() : '',
@@ -218,7 +220,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       await applyAdvanceToShares(tx, {
         groupId,
         expenseId: created.id,
-        shares: computed.shares,
+        shares: payerCoversOwnShare
+          ? computed.shares.filter((s) => s.userId !== billPayerId)
+          : computed.shares,
         dueDate: billDate,
         recordedById: sessionUser.id
       });

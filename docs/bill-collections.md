@@ -92,43 +92,55 @@ anybody's meals more expensive, it just sits in their dues. Somebody who eats
 four meals all month still owes their full share of the gas, and somebody who
 eats sixty does not owe more of it.
 
-**It does not replace `isReceived`.** A supervisor often pays the vendor out of
-the mess float first and collects from members afterwards, or the reverse. The
-two are independent, so the pill on the bill card now reads "Vendor paid" /
-"Vendor unpaid" to stop it being read as "members have paid".
+**It does not replace `isReceived` — it reads it.** `isReceived` ("Vendor paid")
+means the money has left someone's pocket for the outside. That someone is
+`payerId` ("Paid by"). So a bill that is *both* — a named payer *and* vendor-paid
+— is one where a specific person has demonstrably put in the whole amount, and
+that is the one case the app credits automatically (see below). Before the bill
+is vendor-paid, "Paid by" is still just a plan and nothing is credited.
 
-**It does not auto-create collections — with one exception.** Recording a bill
-does not assume anybody has paid; every collection is an explicit act by the
-supervisor. The exception is a **one-member bill with an outside payer** (see
-below), where there is exactly one thing that can be true and the "Paid by"
-field already says it.
+**It does not auto-create collections for members' shares.** Recording a bill
+does not assume anybody has paid their share; every share collection is an
+explicit act by the supervisor. The "Paid by" credit below is not that — it is
+the fronter's whole outlay, which the bill already records.
 
-## The "Paid by" credit on a one-member bill
+## The "Paid by" credit
 
-A one-member bill (the **One member** button — `CUSTOM` split, a single share) is
-often "I paid ৳200 to clear last month's due for Rajib": charged to Rajib, but
-`payerId` is someone else — Shaqib. Rajib owes his ৳200 share; Shaqib fronted the
-whole ৳200. There is no ambiguity and nothing to collect over time, so
-`syncPayerCredit()` (`src/lib/bill-collections.ts`) writes Shaqib a real
-`PaymentStatus` row for the full amount, flagged `fromPayer`, linked to the bill.
+A bill with `payerId` set and `isReceived` true says one person handed the whole
+amount to the vendor. `syncPayerCredit()` (`src/lib/bill-collections.ts`) writes
+that person a real `PaymentStatus` row for the amount, flagged `fromPayer` and
+linked to the bill:
 
-It rides the same single ledger as every other collection, so Shaqib's balance,
-the `/bills` split ("Rajib owes ৳200 · Shaqib gets ৳200 back" — the overpayment
-case above) and the `/payments` settlement all pick it up with no special-casing
-downstream. The row is reconciled, not appended: `syncPayerCredit()` runs inside
-the bill create/edit transaction and rewrites the amount, moves it to a new
-payer, or deletes it if the bill stops being a one-member bill with an outside
-payer. Deleting the bill drops it (`clearPayerCredit()` in the delete
-transaction) rather than leaving an `expenseId`-nulled orphan.
+- **Gas ৳1000 split equally across six, paid by Shaqib, vendor paid.** Shaqib's
+  own share is ৳166.67; he is credited the full ৳1000, so he ends ৳833.33 ahead
+  and the other five owe him ৳166.67 each — the overpayment case above, reached
+  without anyone recording six collections.
+- **A one-member "Previous month due ৳200 for Rajib", paid by Shaqib.** Rajib
+  owes his ৳200 share; Shaqib is credited ৳200. Rajib's row shows the debt,
+  Shaqib's shows the credit.
+
+It rides the same single ledger as every other collection, so the payer's
+balance, the `/bills` split and the `/payments` settlement all pick it up with no
+special-casing downstream. The row is reconciled, not appended: `syncPayerCredit()`
+runs inside the bill create / edit / vendor-paid-toggle transaction and rewrites
+the amount, moves it to a new payer, or deletes it when the bill loses its payer
+or is marked vendor-unpaid. Deleting the bill drops it (`clearPayerCredit()` in
+the delete transaction) rather than leaving an `expenseId`-nulled orphan.
+
+The credit only **tops the payer up to the full amount**: if the payer already
+has a plain payment on the bill (a hand-recorded fronter payment, or their share
+auto-paid from their advance wallet), the auto row covers just the remainder, and
+if they are already at or over the full amount there is no auto row at all — so
+turning this on does not double-count bills a supervisor had already worked
+around by hand. On a fresh bill the payer is left out of the advance auto-apply
+entirely, since their fronting already covers their share.
 
 `fromPayer` rows are managed by the bill, so `reversePayment`,
 `updatePaymentDetails` and `hardDeletePayment` all refuse them — change the
-bill's "Paid by" field instead. The Bills payment-history row shows them with a
-`from "Paid by"` tag and no edit/reverse/delete buttons.
+bill's "Paid by" field or vendor-paid state instead. The Bills payment-history
+row shows them with a `from "Paid by"` tag and no edit/reverse/delete buttons.
 
-This only applies to **one-member** bills. A shared or custom bill split across
-several people still needs the fronter's payment recorded explicitly, because
-"who fronted how much" is a real question there and the app should not guess it.
+Bazar is unaffected: its payer is already credited through `bazarPaid`.
 
 Bills that predate this rule are reconciled by
 `node scripts/backfill-payer-credits.js` (idempotent, `--dry-run` to preview,

@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { BILL_TYPE_FILTER, EXPENSE_TYPES, PAYMENT_STATUS, SPLIT_METHODS } from '@/lib/constants';
+import { BILL_TYPE_FILTER, EXPENSE_TYPES, PAYMENT_STATUS } from '@/lib/constants';
 import { dayToUtcDate, round2 } from '@/lib/month';
 
 type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
@@ -420,16 +420,7 @@ export async function syncPayerCredit(
 ): Promise<void> {
   const bill = await tx.expenseEntry.findUnique({
     where: { id: params.expenseId },
-    select: {
-      id: true,
-      groupId: true,
-      type: true,
-      amount: true,
-      date: true,
-      payerId: true,
-      splitMethod: true,
-      shares: { select: { userId: true } }
-    }
+    select: { id: true, groupId: true, type: true, amount: true, date: true, payerId: true, isReceived: true }
   });
   if (!bill || bill.type === EXPENSE_TYPES.BAZAR) return;
 
@@ -437,19 +428,38 @@ export async function syncPayerCredit(
     where: { expenseId: bill.id, fromPayer: true }
   });
 
-  const isSingleMember = bill.splitMethod === SPLIT_METHODS.CUSTOM && bill.shares.length === 1;
-  const soleShareUserId = isSingleMember ? bill.shares[0].userId : null;
   const payerId = bill.payerId;
-  const shouldCredit = Boolean(isSingleMember && payerId && payerId !== soleShareUserId);
-
-  if (!shouldCredit) {
+  const remove = async () => {
     if (existing.length > 0) {
       await tx.paymentStatus.deleteMany({ where: { id: { in: existing.map((row) => row.id) } } });
     }
+  };
+
+  if (!payerId || !bill.isReceived) {
+    await remove();
     return;
   }
 
-  const amountPaid = round2(bill.amount);
+  const priorRows = await tx.paymentStatus.findMany({
+    where: {
+      expenseId: bill.id,
+      userId: payerId,
+      fromPayer: false,
+      offsetOfId: null,
+      reversalOfId: null,
+      toUserId: null,
+      reversedBy: { is: null }
+    },
+    select: { amountPaid: true }
+  });
+  const priorPaisa = priorRows.reduce((sum, row) => sum + Math.round(row.amountPaid * 100), 0);
+  const amountPaid = round2((Math.round(bill.amount * 100) - priorPaisa) / 100);
+
+  if (amountPaid <= 0) {
+    await remove();
+    return;
+  }
+
   const keep = existing.find((row) => row.userId === payerId);
   const stale = existing.filter((row) => row.id !== keep?.id);
   if (stale.length > 0) {
@@ -468,7 +478,7 @@ export async function syncPayerCredit(
 
   await tx.paymentStatus.create({
     data: {
-      userId: payerId as string,
+      userId: payerId,
       groupId: bill.groupId,
       expenseId: bill.id,
       recordedById: params.recordedById,
