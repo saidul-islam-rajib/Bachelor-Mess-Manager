@@ -17,6 +17,7 @@ export type CollectionRow = {
   recordedByName: string | null;
   reversalOfId: string | null;
   isReversed: boolean;
+  isLinked: boolean;
   toUserId: string | null;
   toUserName: string | null;
   fromUserId: string | null;
@@ -362,6 +363,7 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
       user: { select: { name: true } },
       recordedBy: { select: { name: true } },
       reversedBy: { select: { id: true } },
+      offsetBy: { select: { id: true } },
       toUser: { select: { name: true } },
       offsetOf: { select: { userId: true, user: { select: { name: true } } } }
     },
@@ -381,6 +383,9 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
       recordedByName: row.recordedBy?.name ?? null,
       reversalOfId: row.reversalOfId,
       isReversed: Boolean(row.reversedBy),
+      isLinked: Boolean(
+        row.offsetOfId || row.offsetBy || row.fromAdvance || row.reversalOfId || row.reversedBy
+      ),
       toUserId: row.toUserId,
       toUserName: row.toUser?.name ?? null,
       fromUserId: row.offsetOf?.userId ?? null,

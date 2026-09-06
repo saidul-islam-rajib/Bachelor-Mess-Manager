@@ -107,9 +107,11 @@ Supervisor or admin only, and only in a writable group — a closed month refuse
 same as every other write.
 
 ```
-POST /api/bills/[id]/collections   { userId, amount, date }
-POST /api/bills/[id]/collections   { userId, settle: true }
-DELETE /api/bills/[id]/collections?collectionId=...
+POST   /api/bills/[id]/collections   { userId, amount, date }
+POST   /api/bills/[id]/collections   { userId, settle: true }
+DELETE /api/bills/[id]/collections?collectionId=...              reverse
+DELETE /api/bills/[id]/collections?collectionId=...&hard=true    permanently delete
+PATCH  /api/bills/[id]/collections?collectionId=...   { amount, date }
 ```
 
 `settle: true` is the **Mark paid** button: it pays exactly what that member has
@@ -122,11 +124,10 @@ exceed the member's share — that is how somebody fronts money for the group.
 who clears an August bill in September is credited in September and carries the
 August due forward, which is the honest record of what happened.
 
-## The ledger is append-only
+## The ledger is append-only for members
 
-**No entry is ever edited or deleted — by anybody, supervisor or member.** There
-is no route that mutates or removes a `PaymentStatus` row, so there is no way to
-quietly change what the record says happened.
+**A member never edits or deletes an entry.** The only correction path a member
+sees is reversing — and reversing does not mutate anything, it appends.
 
 A mistake is corrected the way a ledger corrects one: by writing a second row
 that reverses the first. The correction carries the negative amount and a
@@ -136,14 +137,34 @@ negative — so the history reads as *this was entered, then corrected*, never a
 if the first entry had not happened.
 
 That matters here more than in most software. The thing a mess argues about is
-whether somebody paid, and a supervisor who could silently delete a payment
-record is exactly the thing members would have to take on trust. Now they do
-not have to.
+whether somebody paid, so the honest record — entered, then corrected — is the
+default, and the one members are shown.
 
-`DELETE /api/bills/[id]/collections?collectionId=…` therefore *reverses*; it
-does not delete. The guards: the entry must belong to that bill, an entry can be
-reversed only once, and a correction cannot itself be reversed. The same rule
-and the same helper cover the general payments on `/payments`.
+`DELETE /api/bills/[id]/collections?collectionId=…` therefore *reverses* by
+default; it does not delete. The guards: the entry must belong to that bill, an
+entry can be reversed only once, and a correction cannot itself be reversed. The
+same rule and the same helper cover the general payments on `/payments`.
+
+## The supervisor can also edit or delete outright
+
+Reversing keeps a paper trail, but it cannot clean up an entry that should never
+have existed — a leftover one-sided row, a duplicate, a typo entered minutes ago
+that nobody has acted on. So the group's supervisor (and any admin) can also:
+
+- **`PATCH …?collectionId=…`** with `amount` and/or `date` — rewrites
+  `amountPaid`/`dueDate` on the row in place. `updatePaymentDetails` refuses a
+  row that is linked to another record (one leg of a transfer, a reversal, or an
+  advance-funded payment); those stay reverse-only so the two sides never
+  desync. The Bills page hides **edit** for such rows accordingly.
+- **`DELETE …?collectionId=…&hard=true`** — removes the row and, in one
+  transaction, its whole family of paired offset and reversal rows, deleting
+  children before parents so the one-to-one `offsetOfId`/`reversalOfId` relations
+  are never violated mid-delete.
+
+Both need `canManageGroup` and the `payment.record` permission — the same gate
+as recording and reversing. A member calling either gets a 403. Deleting a bill
+still only nulls `expenseId` on its collections (`onDelete: SetNull`); a hard
+delete here is the deliberate removal of one specific entry, requested by name.
 
 Because a reversal is just another row with a negative `amountPaid`, the
 settlement needs no special case: the credit nets to zero, the member's due goes
@@ -207,6 +228,10 @@ reversing twice refused, a correction being unreversable, a member refused
 outright, and the same behaviour on general payments including the settlement
 credit cancelling.
 
-`npm test` is unchanged at 209/216 — the 7 failures are pre-existing
-date-rollover flakes in the meal suites, identical on a clean checkout.
-`npm run build` and `npm run lint` are clean.
+The supervisor edit/delete path reuses `updatePaymentDetails` and
+`hardDeletePayment` from `/payments` — same helpers, same guards against
+touching a linked leg — so it inherits their coverage; only the gate changed,
+from `requireAdmin` to `canManageGroup` + `payment.record`.
+
+`npm run typecheck`, `npm run lint` and `npm run build` are clean. The e2e
+suites need a running Postgres and were not re-run for this change.

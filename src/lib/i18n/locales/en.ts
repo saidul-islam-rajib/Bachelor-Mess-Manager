@@ -1065,6 +1065,13 @@ const en = {
       'Reverse this entry?\n\nThe original stays in the history and a matching correction is added beside it. Nothing is erased.',
     reverseEntryFailed: 'Could not reverse that entry.',
     entryReversed: 'Entry reversed. The original is kept in the history.',
+    editEntryAmountLabel: 'Amount (৳)',
+    editEntryFailed: 'Could not update that entry.',
+    entryEdited: 'Entry updated.',
+    hardDeleteEntryConfirm:
+      'Permanently delete this entry?\n\nIt is removed from the history completely, along with any linked correction. This cannot be undone.',
+    hardDeleteEntryFailed: 'Could not delete that entry.',
+    entryHardDeleted: 'Entry permanently deleted.',
     deleteFailed: 'Could not delete the bill.',
     deleted: 'Bill deleted.',
     loadingBills: 'Loading bills...',
@@ -1096,7 +1103,8 @@ const en = {
     collectedLabel: 'Collected',
     ofLabel: 'of',
     paidDot: '· paid',
-    collectionsNote: 'Payment entries cannot be edited or deleted — only reversed.',
+    collectionsNote:
+      "Reversing a payment entry keeps it in the history; the group's supervisor or an admin can also edit its amount or permanently delete it.",
     costTypeLabel: 'Cost type',
     amountLabel: 'Amount (৳)',
     retiredSuffix: (type: string) => `${type} (retired)`,
@@ -1213,6 +1221,8 @@ const en = {
     },
     ledger: {
       reverse: 'reverse',
+      edit: 'edit',
+      delete: 'delete',
       reversed: '· reversed',
       recordedBy: (name: string) => `by ${name}`
     },
@@ -1282,7 +1292,7 @@ const en = {
     reversedBadge: 'reversed',
     billBadgeSuffix: (type: string) => `${type} bill`,
     neverEditedFootnote:
-      'Entries are never edited or deleted by members or supervisors — reversing one adds an opposite entry beside it instead. An administrator can edit or permanently delete an entry directly.',
+      'Members never edit or delete entries — reversing one adds an opposite entry beside it instead, leaving the original on the record. A group supervisor or an administrator can also edit an entry or permanently delete it.',
     edit: 'Edit',
     editAmountPlaceholder: 'Amount (৳)',
     editFailed: 'Could not update that entry.',

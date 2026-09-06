@@ -46,7 +46,7 @@ settled when it is not.
 | See the month, everyone's dues | any member of the group |
 | Record a payment | that group's supervisor, or an admin |
 | Reverse a payment (add an opposite row) | that group's supervisor, or an admin |
-| Edit a payment's amount/date in place, or delete it permanently | an admin only |
+| Edit a payment's amount/date in place, or delete it permanently | that group's supervisor, or an admin |
 | Record anything in a closed group | nobody |
 
 Members can see what everyone owes on purpose — that transparency is the point
@@ -70,19 +70,24 @@ to the original (and to its paired offset row, if any) rather than touching
 either — the append-only ledger `bill-collections.ts` describes. Any
 supervisor or admin who can manage the group can do this.
 
-An admin can also bypass that entirely:
+The same supervisor or admin can also skip the append-only path when an entry
+is simply wrong:
 
 - `PATCH /api/payments/[id]` with `amount` and/or `date` rewrites the row's
   `amountPaid`/`dueDate` directly. `amountDue` is left untouched since it can
   carry different meaning depending on how the row was created (a bill
-  share vs. a plain deposit).
+  share vs. a plain deposit). `updatePaymentDetails` refuses a row that is one
+  leg of a transfer, a reversal, or an advance-funded payment — those must go
+  through Reverse, which keeps both sides in sync.
 - `DELETE /api/payments/[id]?hard=true` permanently removes the row — and,
   transactionally, its whole family of paired offset/reversal rows, so nothing
   is left dangling or violates the one-to-one `offsetOfId`/`reversalOfId`
   relations.
 
-Both are gated on `requireAdmin`, not just `canManageGroup`, so a group
-supervisor who isn't a site admin still only has the reversible path.
+Both are gated on `canManageGroup` plus the `payment.record` permission — the
+same gate as recording and reversing — so a member still only ever sees the
+reversible path, and a supervisor gets the direct edit/delete their own group
+needs without waiting on a site admin.
 
 ## Months and closing
 

@@ -3,7 +3,15 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember } from '@/lib/auth-utils';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { EXPENSE_TYPES, PAYMENT_STATUS } from '@/lib/constants';
-import { allocateToFronters, buildCollectionState, collectionsByBill, reversePayment, shareStatus } from '@/lib/bill-collections';
+import {
+  allocateToFronters,
+  buildCollectionState,
+  collectionsByBill,
+  hardDeletePayment,
+  reversePayment,
+  shareStatus,
+  updatePaymentDetails
+} from '@/lib/bill-collections';
 import { dayToUtcDate, round2, todayKey, utcDateToDay } from '@/lib/month';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -13,8 +21,8 @@ import { invalidatePrefix } from '@/lib/cache';
 import { advancesKey, billsListGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST' && req.method !== 'DELETE') {
-    return methodNotAllowed(res, ['POST', 'DELETE']);
+  if (req.method !== 'POST' && req.method !== 'DELETE' && req.method !== 'PATCH') {
+    return methodNotAllowed(res, ['POST', 'DELETE', 'PATCH']);
   }
 
   const sessionUser = await getSessionUser(req, res);
@@ -44,9 +52,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return forbidden(res, GROUP_CLOSED_MESSAGE);
   }
 
-  if (req.method === 'DELETE') {
+  if (req.method === 'DELETE' || req.method === 'PATCH') {
     if (!manages) {
-      return forbidden(res, "Only this group's supervisor can reverse a payment entry.");
+      return forbidden(res, "Only this group's supervisor can change a payment entry.");
     }
     if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD)) {
       return forbidden(res, strings.errors.permissionDenied);
@@ -56,12 +64,43 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       ? req.query.collectionId[0]
       : req.query.collectionId;
     if (!collectionId) {
-      return badRequest(res, 'Which entry should be reversed?');
+      return badRequest(res, 'Which entry should be changed?');
     }
 
     const existing = await prisma.paymentStatus.findUnique({ where: { id: collectionId } });
     if (!existing || existing.expenseId !== billId) {
       return notFound(res, 'That entry is not recorded against this bill.');
+    }
+
+    const settleCaches = () => {
+      invalidatePrefix(billsListGroupPrefix(bill.groupId));
+      invalidatePrefix(advancesKey(bill.groupId));
+    };
+
+    if (req.method === 'PATCH') {
+      const { amount, date } = req.body as { amount?: number; date?: string };
+      const updated = await updatePaymentDetails({
+        paymentId: collectionId,
+        groupId: bill.groupId,
+        amount: amount === undefined ? undefined : Number(amount),
+        date: typeof date === 'string' ? date : undefined
+      });
+      if (!updated.ok) {
+        return conflict(res, updated.error);
+      }
+
+      settleCaches();
+      return ok(res, { updated: true });
+    }
+
+    if (req.query.hard === 'true') {
+      const deleted = await hardDeletePayment({ paymentId: collectionId, groupId: bill.groupId });
+      if (!deleted.ok) {
+        return conflict(res, deleted.error);
+      }
+
+      settleCaches();
+      return ok(res, { deleted: true });
     }
 
     const reversed = await reversePayment({
@@ -197,6 +236,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       recordedByName: sessionUser.name,
       reversalOfId: null,
       isReversed: false,
+      isLinked: offsets.length > 0,
       toUserId: payerRow.toUserId,
       toUserName: recipientName,
       fromUserId: null,
@@ -215,6 +255,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       recordedByName: sessionUser.name,
       reversalOfId: null,
       isReversed: false,
+      isLinked: true,
       toUserId: null,
       toUserName: null,
       fromUserId: userId,

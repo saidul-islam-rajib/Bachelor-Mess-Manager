@@ -150,6 +150,39 @@ export default function BillsPage() {
     }
   }
 
+  async function editCollection(bill: Bill, collectionId: string, amount: number, date: string) {
+    try {
+      const res = await fetch(`/api/bills/${bill.id}/collections?collectionId=${collectionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount, date })
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error ?? strings.bills.editEntryFailed);
+      toast.success(strings.bills.entryEdited);
+      await refresh();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
+  async function hardDeleteCollection(bill: Bill, collectionId: string) {
+    if (!window.confirm(strings.bills.hardDeleteEntryConfirm)) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/bills/${bill.id}/collections?collectionId=${collectionId}&hard=true`, {
+        method: 'DELETE'
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error ?? strings.bills.hardDeleteEntryFailed);
+      toast.success(strings.bills.entryHardDeleted);
+      await refresh();
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  }
+
   async function remove(bill: Bill) {
     const label = data?.categoryLabels[bill.type] ?? bill.type;
     if (!window.confirm(strings.bills.deleteConfirm(label, taka(bill.amount)))) {
@@ -357,6 +390,14 @@ export default function BillsPage() {
                   const bill = bills.find((b) => b.id === billId);
                   if (bill) reverseCollection(bill, collectionId);
                 }}
+                onEdit={async (billId, collectionId, amount, date) => {
+                  const bill = bills.find((b) => b.id === billId);
+                  if (bill) await editCollection(bill, collectionId, amount, date);
+                }}
+                onHardDelete={(billId, collectionId) => {
+                  const bill = bills.find((b) => b.id === billId);
+                  if (bill) hardDeleteCollection(bill, collectionId);
+                }}
               />
             </>
           )}
@@ -371,9 +412,11 @@ type PaymentHistoryEntry = {
   billId: string;
   billLabel: string;
   billDate: string;
+  entryDate: string;
   memberName: string;
   amount: number;
   isReversed: boolean;
+  linked: boolean;
   toUserName: string | null;
   fromAdvance: boolean;
   recordedByName: string | null;
@@ -387,16 +430,47 @@ function PaymentHistorySection({
   labels,
   canManage,
   onOpenBill,
-  onReverse
+  onReverse,
+  onEdit,
+  onHardDelete
 }: {
   bills: Bill[];
   labels: Record<string, string>;
   canManage: boolean;
   onOpenBill: (billId: string) => void;
   onReverse: (billId: string, collectionId: string) => void;
+  onEdit: (billId: string, collectionId: string, amount: number, date: string) => Promise<void>;
+  onHardDelete: (billId: string, collectionId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  function startEdit(entry: PaymentHistoryEntry) {
+    setEditingId(entry.id);
+    setEditAmount(String(entry.amount));
+    setEditDate(entry.entryDate);
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setSavingEdit(false);
+  }
+
+  async function saveEdit(entry: PaymentHistoryEntry) {
+    const value = Number(editAmount);
+    if (!Number.isFinite(value) || value <= 0) return;
+    setSavingEdit(true);
+    try {
+      await onEdit(entry.billId, entry.id, value, editDate);
+      setEditingId(null);
+    } finally {
+      setSavingEdit(false);
+    }
+  }
 
   // Only the payer-initiated entry is shown — the auto-generated offset on the
   // recipient's side and reversal corrections are folded into this same row
@@ -412,9 +486,11 @@ function PaymentHistorySection({
             billId: bill.id,
             billLabel: labels[bill.type] ?? bill.type,
             billDate: bill.date,
+            entryDate: entry.date,
             memberName: share.userName,
             amount: entry.amount,
             isReversed: entry.isReversed,
+            linked: entry.isLinked,
             toUserName: entry.toUserName,
             fromAdvance: entry.fromAdvance,
             recordedByName: entry.recordedByName,
@@ -485,16 +561,73 @@ function PaymentHistorySection({
                   {entry.isReversed && (
                     <span className="font-medium text-amber-600 dark:text-amber-400">{strings.bills.ledger.reversed}</span>
                   )}
-                  {canManage && !entry.isReversed && (
+                  {canManage && !entry.isReversed && editingId !== entry.id && (
+                    <>
+                      {!entry.linked && (
+                        <button
+                          type="button"
+                          onClick={() => startEdit(entry)}
+                          className="text-slate-500 dark:text-slate-400 underline-offset-2 hover:underline"
+                        >
+                          {strings.bills.ledger.edit}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onReverse(entry.billId, entry.id)}
+                        className="text-rose-500 underline-offset-2 hover:underline"
+                      >
+                        {strings.bills.ledger.reverse}
+                      </button>
+                    </>
+                  )}
+                  {canManage && editingId !== entry.id && (
                     <button
                       type="button"
-                      onClick={() => onReverse(entry.billId, entry.id)}
-                      className="text-rose-500 underline-offset-2 hover:underline"
+                      onClick={() => onHardDelete(entry.billId, entry.id)}
+                      className="font-medium text-rose-600 dark:text-rose-400 underline-offset-2 hover:underline"
                     >
-                      {strings.bills.ledger.reverse}
+                      {strings.bills.ledger.delete}
                     </button>
                   )}
                 </p>
+                {canManage && editingId === entry.id && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      step="0.01"
+                      min="0"
+                      value={editAmount}
+                      onChange={(event) => setEditAmount(event.target.value)}
+                      aria-label={strings.bills.editEntryAmountLabel}
+                      placeholder={strings.bills.editEntryAmountLabel}
+                      className="w-28 rounded-full border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 min-h-[2rem] px-3 text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                    />
+                    <input
+                      type="date"
+                      value={editDate}
+                      onChange={(event) => setEditDate(event.target.value)}
+                      aria-label={strings.common.date}
+                      className="rounded-full border border-slate-300 bg-white text-slate-900 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 min-h-[2rem] px-3 text-xs focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => saveEdit(entry)}
+                      disabled={savingEdit}
+                      className="rounded-full bg-brand-600 px-3 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-50 min-h-[2rem]"
+                    >
+                      {savingEdit ? strings.common.saving : strings.common.save}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="rounded-full border border-slate-200 dark:border-slate-700 px-3 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 min-h-[2rem]"
+                    >
+                      {strings.common.cancel}
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

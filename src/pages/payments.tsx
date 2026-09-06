@@ -6,7 +6,7 @@ import { Listbox, ListboxControl, PageTitle } from '@/components/ui';
 import { strings } from '@/lib/i18n';
 import { formatInstant } from '@/lib/format';
 import { daysInMonth, round2, todayKey } from '@/lib/month';
-import { PAYMENT_STATUS, USER_ROLES } from '@/lib/constants';
+import { PAYMENT_STATUS } from '@/lib/constants';
 
 const payments = strings.payments;
 
@@ -192,7 +192,6 @@ export default function PaymentsPage() {
   }
 
   const canManage = data?.canManage ?? false;
-  const isAdmin = user?.role === USER_ROLES.ADMIN;
 
   return (
     <section className="mx-auto max-w-content px-4 py-8 sm:py-10">
@@ -310,7 +309,6 @@ export default function PaymentsPage() {
               <PaymentLog
                 payments={data.payments}
                 canManage={canManage}
-                isAdmin={isAdmin}
                 categoryLabels={data.categoryLabels}
                 onRemove={remove}
                 onEdit={editPayment}
@@ -989,7 +987,6 @@ function MealRateBreakdown({
 function PaymentLog({
   payments: paymentRows,
   canManage,
-  isAdmin,
   categoryLabels,
   onRemove,
   onEdit,
@@ -997,7 +994,6 @@ function PaymentLog({
 }: {
   payments: Payment[];
   canManage: boolean;
-  isAdmin: boolean;
   categoryLabels: Record<string, string>;
   onRemove: (id: string) => void;
   onEdit: (id: string, amount: number, date: string) => Promise<void>;
@@ -1111,7 +1107,7 @@ function PaymentLog({
                       {payments.reverse}
                     </button>
                   )}
-                  {isAdmin && (
+                  {canManage && (
                     <>
                       {!p.isLinked && (
                         <button

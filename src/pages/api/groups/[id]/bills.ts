@@ -97,6 +97,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
               recordedByName: c.recordedByName,
               isReversal: Boolean(c.reversalOfId),
               isReversed: c.isReversed,
+              isLinked: c.isLinked,
               toUserName: c.toUserName,
               fromUserName: c.fromUserName,
               fromAdvance: c.fromAdvance

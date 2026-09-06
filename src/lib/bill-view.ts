@@ -10,6 +10,7 @@ export type Collection = {
   recordedByName: string | null;
   isReversal: boolean;
   isReversed: boolean;
+  isLinked: boolean;
   toUserName: string | null;
   fromUserName: string | null;
   fromAdvance: boolean;

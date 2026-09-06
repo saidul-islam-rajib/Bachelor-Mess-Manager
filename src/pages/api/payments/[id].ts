@@ -1,9 +1,13 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
+import { canManageGroup, getSessionUser } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { hardDeletePayment, reversePayment, updatePaymentDetails } from '@/lib/bill-collections';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
+import { invalidatePrefix } from '@/lib/cache';
+import { advancesKey, billsListGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE' && req.method !== 'PATCH') {
@@ -31,9 +35,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return forbidden(res, 'Only the group supervisor can change a payment.');
   }
 
+  const settleCaches = () => {
+    invalidatePrefix(billsListGroupPrefix(payment.groupId));
+    invalidatePrefix(advancesKey(payment.groupId));
+  };
+
   if (req.method === 'PATCH') {
-    if (!requireAdmin(sessionUser)) {
-      return forbidden(res, 'Only an administrator can edit a payment entry directly.');
+    if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD)) {
+      return forbidden(res, strings.errors.permissionDenied);
     }
 
     const { amount, date } = req.body as { amount?: number; date?: string };
@@ -47,13 +56,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return conflict(res, updated.error);
     }
 
+    settleCaches();
     return ok(res, { updated: true });
   }
 
   const hard = req.query.hard === 'true';
   if (hard) {
-    if (!requireAdmin(sessionUser)) {
-      return forbidden(res, 'Only an administrator can permanently delete a payment entry.');
+    if (!hasPermission(sessionUser, PERMISSIONS.PAYMENT_RECORD)) {
+      return forbidden(res, strings.errors.permissionDenied);
     }
 
     const deleted = await hardDeletePayment({ paymentId, groupId: payment.groupId });
@@ -61,6 +71,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return conflict(res, deleted.error);
     }
 
+    settleCaches();
     return ok(res, { deleted: true });
   }
 
@@ -73,6 +84,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return conflict(res, reversed.error);
   }
 
+  settleCaches();
   return ok(res, { reversed: true, amount: reversed.amount });
 }
 
