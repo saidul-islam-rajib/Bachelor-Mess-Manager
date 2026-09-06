@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { BILL_TYPE_FILTER, SPLIT_METHODS } from '@/lib/constants';
-import { buildCollectionState, collectionsByBill } from '@/lib/bill-collections';
+import { buildCollectionState, collectionsByBill, syncPayerCredit } from '@/lib/bill-collections';
 import { applyAdvanceToShares } from '@/lib/advances';
 import { computeShares, isBillType } from '@/lib/bills';
 import { categoryLabels, isValidBillType, listCategories } from '@/lib/expense-categories';
@@ -14,7 +14,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 import { cached, invalidatePrefix } from '@/lib/cache';
-import { advancesKey, billsListGroupPrefix, billsListKey } from '@/lib/cache-keys';
+import { advancesKey, billsListGroupPrefix, billsListKey, dashboardGroupPrefix } from '@/lib/cache-keys';
 import { cacheConfig } from '@/config';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -89,6 +89,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
             outstanding: s.outstanding,
             advance: s.advance,
             status: s.status,
+            isShare: s.isShare,
             collections: s.collections.map((c) => ({
               id: c.id,
               amount: round2(c.amount),
@@ -100,7 +101,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
               isLinked: c.isLinked,
               toUserName: c.toUserName,
               fromUserName: c.fromUserName,
-              fromAdvance: c.fromAdvance
+              fromAdvance: c.fromAdvance,
+              fromPayer: c.fromPayer
             }))
           })),
           collected: state.collected,
@@ -221,6 +223,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         recordedById: sessionUser.id
       });
 
+      await syncPayerCredit(tx, { expenseId: created.id, recordedById: sessionUser.id });
+
       return created;
     });
 
@@ -233,6 +237,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     invalidatePrefix(billsListGroupPrefix(groupId));
     invalidatePrefix(advancesKey(groupId));
+    invalidatePrefix(dashboardGroupPrefix(groupId));
 
     return created(res, {
       bill: {

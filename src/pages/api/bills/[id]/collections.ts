@@ -18,7 +18,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 import { invalidatePrefix } from '@/lib/cache';
-import { advancesKey, billsListGroupPrefix } from '@/lib/cache-keys';
+import { advancesKey, billsListGroupPrefix, dashboardGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST' && req.method !== 'DELETE' && req.method !== 'PATCH') {
@@ -75,6 +75,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     const settleCaches = () => {
       invalidatePrefix(billsListGroupPrefix(bill.groupId));
       invalidatePrefix(advancesKey(bill.groupId));
+      invalidatePrefix(dashboardGroupPrefix(bill.groupId));
     };
 
     if (req.method === 'PATCH') {
@@ -113,6 +114,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     invalidatePrefix(billsListGroupPrefix(bill.groupId));
+    invalidatePrefix(dashboardGroupPrefix(bill.groupId));
     if (existing.fromAdvance) invalidatePrefix(advancesKey(bill.groupId));
 
     return ok(res, { reversed: true, amount: reversed.amount });
@@ -241,7 +243,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       toUserName: recipientName,
       fromUserId: null,
       fromUserName: null,
-      fromAdvance: false
+      fromAdvance: false,
+      fromPayer: false
     }
   ];
   for (const offset of offsets) {
@@ -260,12 +263,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       toUserName: null,
       fromUserId: userId,
       fromUserName: payerRow.user.name,
-      fromAdvance: false
+      fromAdvance: false,
+      fromPayer: false
     });
   }
   const refreshed = buildCollectionState(shares, refreshedRows);
 
   invalidatePrefix(billsListGroupPrefix(bill.groupId));
+  invalidatePrefix(dashboardGroupPrefix(bill.groupId));
 
   return created(res, {
     collection: {

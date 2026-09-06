@@ -64,7 +64,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       billType: p.expense?.type ?? null,
       isReversal: Boolean(p.reversalOfId),
       isReversed: Boolean(p.reversedBy),
-      isLinked: Boolean(p.offsetOfId || p.offsetBy || p.fromAdvance || p.reversalOfId || p.reversedBy)
+      isLinked: Boolean(
+        p.offsetOfId || p.offsetBy || p.fromAdvance || p.fromPayer || p.reversalOfId || p.reversedBy
+      )
     }));
 
     return ok(res, {

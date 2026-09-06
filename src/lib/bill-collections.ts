@@ -1,8 +1,13 @@
 import { prisma } from '@/lib/prisma';
-import { BILL_TYPE_FILTER, PAYMENT_STATUS } from '@/lib/constants';
+import { BILL_TYPE_FILTER, EXPENSE_TYPES, PAYMENT_STATUS, SPLIT_METHODS } from '@/lib/constants';
 import { dayToUtcDate, round2 } from '@/lib/month';
 
+type TransactionClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
 const TOLERANCE_PAISA = 1;
+
+const PAYER_CREDIT_LOCKED =
+  'This credit is set by the bill’s “Paid by” field — change or clear it on the bill instead.';
 
 const toPaisa = (amount: number) => Math.round(amount * 100);
 const fromPaisa = (paisa: number) => round2(paisa / 100);
@@ -23,6 +28,7 @@ export type CollectionRow = {
   fromUserId: string | null;
   fromUserName: string | null;
   fromAdvance: boolean;
+  fromPayer: boolean;
 };
 
 export type CollectionEntry = {
@@ -46,6 +52,7 @@ export type ShareState = {
   outstanding: number;
   advance: number;
   status: string;
+  isShare: boolean;
   collections: CollectionRow[];
 };
 
@@ -94,6 +101,7 @@ export function buildCollectionState(
       outstanding: fromPaisa(outstandingPaisa),
       advance: fromPaisa(advancePaisa),
       status: shareStatus(sharePaisa, paidPaisa),
+      isShare: true,
       collections: rowsByUser.get(share.userId) ?? []
     };
   });
@@ -111,6 +119,7 @@ export function buildCollectionState(
       outstanding: 0,
       advance: fromPaisa(paidPaisa),
       status: PAYMENT_STATUS.PAID,
+      isShare: false,
       collections: rowsByUser.get(row.userId) ?? []
     });
   }
@@ -162,6 +171,9 @@ export async function reversePayment(params: {
   }
   if (original.reversedBy) {
     return { ok: false, error: 'That entry has already been reversed.' };
+  }
+  if (original.fromPayer) {
+    return { ok: false, error: PAYER_CREDIT_LOCKED };
   }
 
   await prisma.$transaction(async (tx) => {
@@ -255,6 +267,9 @@ export async function hardDeletePayment(params: {
   if (!original) return { ok: false, error: 'That entry does not exist.' };
   if (groupId && original.groupId !== groupId) {
     return { ok: false, error: 'That entry belongs to another mess.' };
+  }
+  if (original.fromPayer) {
+    return { ok: false, error: PAYER_CREDIT_LOCKED };
   }
 
   const familyIds = await paymentFamilyIds(paymentId);
@@ -384,18 +399,91 @@ export async function collectionsByBill(billIds: string[]): Promise<Map<string, 
       reversalOfId: row.reversalOfId,
       isReversed: Boolean(row.reversedBy),
       isLinked: Boolean(
-        row.offsetOfId || row.offsetBy || row.fromAdvance || row.reversalOfId || row.reversedBy
+        row.offsetOfId || row.offsetBy || row.fromAdvance || row.fromPayer || row.reversalOfId || row.reversedBy
       ),
       toUserId: row.toUserId,
       toUserName: row.toUser?.name ?? null,
       fromUserId: row.offsetOf?.userId ?? null,
       fromUserName: row.offsetOf?.user.name ?? null,
-      fromAdvance: row.fromAdvance
+      fromAdvance: row.fromAdvance,
+      fromPayer: row.fromPayer
     });
     byBill.set(row.expenseId, list);
   }
 
   return byBill;
+}
+
+export async function syncPayerCredit(
+  tx: TransactionClient,
+  params: { expenseId: string; recordedById: string }
+): Promise<void> {
+  const bill = await tx.expenseEntry.findUnique({
+    where: { id: params.expenseId },
+    select: {
+      id: true,
+      groupId: true,
+      type: true,
+      amount: true,
+      date: true,
+      payerId: true,
+      splitMethod: true,
+      shares: { select: { userId: true } }
+    }
+  });
+  if (!bill || bill.type === EXPENSE_TYPES.BAZAR) return;
+
+  const existing = await tx.paymentStatus.findMany({
+    where: { expenseId: bill.id, fromPayer: true }
+  });
+
+  const isSingleMember = bill.splitMethod === SPLIT_METHODS.CUSTOM && bill.shares.length === 1;
+  const soleShareUserId = isSingleMember ? bill.shares[0].userId : null;
+  const payerId = bill.payerId;
+  const shouldCredit = Boolean(isSingleMember && payerId && payerId !== soleShareUserId);
+
+  if (!shouldCredit) {
+    if (existing.length > 0) {
+      await tx.paymentStatus.deleteMany({ where: { id: { in: existing.map((row) => row.id) } } });
+    }
+    return;
+  }
+
+  const amountPaid = round2(bill.amount);
+  const keep = existing.find((row) => row.userId === payerId);
+  const stale = existing.filter((row) => row.id !== keep?.id);
+  if (stale.length > 0) {
+    await tx.paymentStatus.deleteMany({ where: { id: { in: stale.map((row) => row.id) } } });
+  }
+
+  if (keep) {
+    if (round2(keep.amountPaid) !== amountPaid || keep.dueDate.getTime() !== bill.date.getTime()) {
+      await tx.paymentStatus.update({
+        where: { id: keep.id },
+        data: { amountPaid, amountDue: 0, status: PAYMENT_STATUS.PAID, dueDate: bill.date }
+      });
+    }
+    return;
+  }
+
+  await tx.paymentStatus.create({
+    data: {
+      userId: payerId as string,
+      groupId: bill.groupId,
+      expenseId: bill.id,
+      recordedById: params.recordedById,
+      fromPayer: true,
+      amountDue: 0,
+      amountPaid,
+      status: PAYMENT_STATUS.PAID,
+      dueDate: bill.date,
+      publishedAt: new Date()
+    }
+  });
+}
+
+export async function clearPayerCredit(tx: TransactionClient, expenseId: string): Promise<void> {
+  await tx.paymentStatus.deleteMany({ where: { expenseId, fromPayer: true } });
 }
 
 export type MemberBillCollectionTotals = { paid: number; outstanding: number };

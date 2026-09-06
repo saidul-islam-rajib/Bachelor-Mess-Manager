@@ -83,6 +83,12 @@ settled with the outside party; it does not touch what members owe. The card
 labels it "Vendor paid" for exactly that reason — who has chipped in is a
 separate question, answered by [bill-collections.md](bill-collections.md).
 
+On a **one-member bill** `payerId` also credits that person: if the bill is
+charged to one member but paid by another, the payer fronted the whole thing and
+is credited it as a collection. See "The 'Paid by' credit on a one-member bill"
+in [bill-collections.md](bill-collections.md). On shared bills `payerId` stays
+display-only — record the fronter's payment explicitly.
+
 ## Who has paid their share
 
 Each share carries its own paid/unpaid state, so a supervisor can mark that one

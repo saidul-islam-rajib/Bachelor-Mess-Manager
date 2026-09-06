@@ -36,6 +36,7 @@ const ROW_SELECT = {
   offsetOfId: true,
   reversalOfId: true,
   fromAdvance: true,
+  fromPayer: true,
   amountPaid: true,
   amountDue: true,
   status: true,
@@ -179,9 +180,11 @@ async function main() {
         ? `reversal-of ${r.reversalOfId}`
         : r.offsetOfId
           ? `offset-of ${r.offsetOfId}`
-          : r.toUserId
-            ? `transfer to ${(r.toUser && r.toUser.name) || r.toUserId}`
-            : 'payment';
+          : r.fromPayer
+            ? 'payer credit'
+            : r.toUserId
+              ? `transfer to ${(r.toUser && r.toUser.name) || r.toUserId}`
+              : 'payment';
       console.log(
         `${day(r.dueDate)}  ${r.user.name.padEnd(24)} ${taka(r.amountPaid).padStart(12)}  ${String(r.status).padEnd(8)} ${role}` +
           `${r.reversedBy ? '  [reversed]' : ''}${r.fromAdvance ? '  [fromAdvance]' : ''}`

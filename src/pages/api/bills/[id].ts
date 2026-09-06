@@ -7,10 +7,11 @@ import { computeShares, isBillType } from '@/lib/bills';
 import { isValidBillType } from '@/lib/expense-categories';
 import { dayToUtcDate, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
+import { clearPayerCredit, syncPayerCredit } from '@/lib/bill-collections';
 import { refundAdvanceForBill } from '@/lib/advances';
 import { withAudit } from '@/lib/with-audit';
 import { invalidatePrefix } from '@/lib/cache';
-import { advancesKey, billsListGroupPrefix } from '@/lib/cache-keys';
+import { advancesKey, billsListGroupPrefix, dashboardGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'PATCH' && req.method !== 'DELETE') {
@@ -41,6 +42,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     await prisma.$transaction(async (tx) => {
       await refundAdvanceForBill(tx, { expenseId: billId, actorId: sessionUser.id });
+      await clearPayerCredit(tx, billId);
       await tx.expenseEntry.delete({ where: { id: billId } });
     });
 
@@ -53,6 +55,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     invalidatePrefix(billsListGroupPrefix(bill.groupId));
     invalidatePrefix(advancesKey(bill.groupId));
+    invalidatePrefix(dashboardGroupPrefix(bill.groupId));
 
     return ok(res, { deleted: true });
   }
@@ -143,11 +146,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         data: computedShares.map((s) => ({ expenseId: billId, userId: s.userId, amount: s.amount }))
       });
     }
-    return tx.expenseEntry.update({
+    const entry = await tx.expenseEntry.update({
       where: { id: billId },
       data,
       include: { shares: { include: { user: { select: { id: true, name: true } } } } }
     });
+    await syncPayerCredit(tx, { expenseId: billId, recordedById: sessionUser.id });
+    return entry;
   });
 
   await recordExpenseUpdated({
@@ -159,6 +164,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   });
 
   invalidatePrefix(billsListGroupPrefix(bill.groupId));
+  invalidatePrefix(dashboardGroupPrefix(bill.groupId));
 
   return ok(res, {
     bill: {

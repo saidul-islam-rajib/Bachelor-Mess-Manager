@@ -731,6 +731,7 @@ model PaymentStatus {
   offsetOfId    String?        @unique
   offsetBy      PaymentStatus? @relation("PaymentOffset")
   fromAdvance   Boolean        @default(false)
+  fromPayer     Boolean        @default(false)
   amountDue     Float
   amountPaid    Float          @default(0)
   status        String

@@ -10,6 +10,7 @@ import { SPLIT_METHODS, SPLIT_METHOD_LABELS } from '@/lib/constants';
 import {
   BILL_KIND_COPY,
   KIND_ORDER,
+  billShares,
   billsByKind,
   billsByType,
   isSingleMemberBill,
@@ -419,6 +420,7 @@ type PaymentHistoryEntry = {
   linked: boolean;
   toUserName: string | null;
   fromAdvance: boolean;
+  isPayerCredit: boolean;
   recordedByName: string | null;
   recordedAt: string;
 };
@@ -493,6 +495,7 @@ function PaymentHistorySection({
             linked: entry.isLinked,
             toUserName: entry.toUserName,
             fromAdvance: entry.fromAdvance,
+            isPayerCredit: entry.fromPayer,
             recordedByName: entry.recordedByName,
             recordedAt: entry.recordedAt
           });
@@ -561,7 +564,10 @@ function PaymentHistorySection({
                   {entry.isReversed && (
                     <span className="font-medium text-amber-600 dark:text-amber-400">{strings.bills.ledger.reversed}</span>
                   )}
-                  {canManage && !entry.isReversed && editingId !== entry.id && (
+                  {entry.isPayerCredit && (
+                    <span className="font-medium text-teal-700 dark:text-teal-400">{strings.bills.paymentHistory.fromPayer}</span>
+                  )}
+                  {canManage && !entry.isPayerCredit && !entry.isReversed && editingId !== entry.id && (
                     <>
                       {!entry.linked && (
                         <button
@@ -581,7 +587,7 @@ function PaymentHistorySection({
                       </button>
                     </>
                   )}
-                  {canManage && editingId !== entry.id && (
+                  {canManage && !entry.isPayerCredit && editingId !== entry.id && (
                     <button
                       type="button"
                       onClick={() => onHardDelete(entry.billId, entry.id)}
@@ -1148,7 +1154,7 @@ function BillRow({
           </div>
           {bill.payer && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.bills.paidByName(bill.payer.name)}</p>}
           {isSingleMemberBill(bill) && (
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.bills.billedToOnly(bill.shares[0].userName)}</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{strings.bills.billedToOnly(billShares(bill)[0].userName)}</p>
           )}
           {bill.note && <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{bill.note}</p>}
         </div>
@@ -1256,25 +1262,26 @@ type BillFormMode = 'EQUAL' | 'CUSTOM' | 'SINGLE';
 const BILL_FORM_MODES: BillFormMode[] = ['EQUAL', 'CUSTOM', 'SINGLE'];
 
 function useBillForm(initial: Bill | undefined, members: Member[], categories: Category[]) {
+  const initialShares = initial ? billShares(initial) : [];
   const [type, setType] = useState(initial?.type ?? categories[0]?.code ?? '');
   const [amount, setAmount] = useState(initial ? String(initial.amount) : '');
   const [date, setDate] = useState(initial?.date ?? todayKey());
   const [note, setNote] = useState(initial?.note ?? '');
   const [mode, setMode] = useState<BillFormMode>(() => {
     if (initial?.splitMethod !== SPLIT_METHODS.CUSTOM) return 'EQUAL';
-    return initial.shares.length === 1 ? 'SINGLE' : 'CUSTOM';
+    return initialShares.length === 1 ? 'SINGLE' : 'CUSTOM';
   });
   const [singleMemberId, setSingleMemberId] = useState(() => {
-    if (initial?.splitMethod === SPLIT_METHODS.CUSTOM && initial.shares.length === 1) {
-      return initial.shares[0].userId;
+    if (initial?.splitMethod === SPLIT_METHODS.CUSTOM && initialShares.length === 1) {
+      return initialShares[0].userId;
     }
     return members[0]?.id ?? '';
   });
   const [isReceived, setIsReceived] = useState(initial?.isReceived ?? true);
   const [payerId, setPayerId] = useState(initial?.payer?.id ?? '');
   const [custom, setCustom] = useState<Record<string, string>>(() => {
-    if (initial?.splitMethod !== SPLIT_METHODS.CUSTOM || initial.shares.length === 1) return {};
-    return Object.fromEntries(initial.shares.map((s) => [s.userId, String(s.amount)]));
+    if (initial?.splitMethod !== SPLIT_METHODS.CUSTOM || initialShares.length === 1) return {};
+    return Object.fromEntries(initialShares.map((s) => [s.userId, String(s.amount)]));
   });
 
   const splitMethod = mode === 'EQUAL' ? SPLIT_METHODS.EQUAL : SPLIT_METHODS.CUSTOM;

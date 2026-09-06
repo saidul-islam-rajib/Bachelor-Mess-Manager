@@ -7,7 +7,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { strings } from '@/lib/i18n';
 import { withAudit } from '@/lib/with-audit';
 import { invalidatePrefix } from '@/lib/cache';
-import { advancesKey, billsListGroupPrefix } from '@/lib/cache-keys';
+import { advancesKey, billsListGroupPrefix, dashboardGroupPrefix } from '@/lib/cache-keys';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'DELETE' && req.method !== 'PATCH') {
@@ -38,6 +38,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const settleCaches = () => {
     invalidatePrefix(billsListGroupPrefix(payment.groupId));
     invalidatePrefix(advancesKey(payment.groupId));
+    invalidatePrefix(dashboardGroupPrefix(payment.groupId));
   };
 
   if (req.method === 'PATCH') {

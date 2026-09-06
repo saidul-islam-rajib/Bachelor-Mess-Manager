@@ -97,9 +97,42 @@ the mess float first and collects from members afterwards, or the reverse. The
 two are independent, so the pill on the bill card now reads "Vendor paid" /
 "Vendor unpaid" to stop it being read as "members have paid".
 
-**It does not auto-create collections.** Recording a bill does not assume
-anybody has paid. Every collection is an explicit act by the supervisor, because
-the app should never claim money changed hands when it did not.
+**It does not auto-create collections — with one exception.** Recording a bill
+does not assume anybody has paid; every collection is an explicit act by the
+supervisor. The exception is a **one-member bill with an outside payer** (see
+below), where there is exactly one thing that can be true and the "Paid by"
+field already says it.
+
+## The "Paid by" credit on a one-member bill
+
+A one-member bill (the **One member** button — `CUSTOM` split, a single share) is
+often "I paid ৳200 to clear last month's due for Rajib": charged to Rajib, but
+`payerId` is someone else — Shaqib. Rajib owes his ৳200 share; Shaqib fronted the
+whole ৳200. There is no ambiguity and nothing to collect over time, so
+`syncPayerCredit()` (`src/lib/bill-collections.ts`) writes Shaqib a real
+`PaymentStatus` row for the full amount, flagged `fromPayer`, linked to the bill.
+
+It rides the same single ledger as every other collection, so Shaqib's balance,
+the `/bills` split ("Rajib owes ৳200 · Shaqib gets ৳200 back" — the overpayment
+case above) and the `/payments` settlement all pick it up with no special-casing
+downstream. The row is reconciled, not appended: `syncPayerCredit()` runs inside
+the bill create/edit transaction and rewrites the amount, moves it to a new
+payer, or deletes it if the bill stops being a one-member bill with an outside
+payer. Deleting the bill drops it (`clearPayerCredit()` in the delete
+transaction) rather than leaving an `expenseId`-nulled orphan.
+
+`fromPayer` rows are managed by the bill, so `reversePayment`,
+`updatePaymentDetails` and `hardDeletePayment` all refuse them — change the
+bill's "Paid by" field instead. The Bills payment-history row shows them with a
+`from "Paid by"` tag and no edit/reverse/delete buttons.
+
+This only applies to **one-member** bills. A shared or custom bill split across
+several people still needs the fronter's payment recorded explicitly, because
+"who fronted how much" is a real question there and the app should not guess it.
+
+Bills that predate this rule are reconciled by
+`node scripts/backfill-payer-credits.js` (idempotent, `--dry-run` to preview,
+`--group "<name>"` to scope).
 
 ## Recording one
 

@@ -1236,7 +1236,8 @@ const en = {
     paymentHistory: {
       title: 'Payment history',
       subtitle: (count: number) => `${count} payment${count === 1 ? '' : 's'} recorded this month`,
-      fromAdvance: '· from advance'
+      fromAdvance: '· from advance',
+      fromPayer: '· from “Paid by”'
     }
   },
   payments: {

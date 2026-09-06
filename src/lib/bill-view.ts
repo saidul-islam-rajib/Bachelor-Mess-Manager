@@ -14,6 +14,7 @@ export type Collection = {
   toUserName: string | null;
   fromUserName: string | null;
   fromAdvance: boolean;
+  fromPayer: boolean;
 };
 
 export type Share = {
@@ -24,6 +25,7 @@ export type Share = {
   outstanding: number;
   advance: number;
   status: string;
+  isShare: boolean;
   collections: Collection[];
 };
 
@@ -95,8 +97,12 @@ export function billKind(bill: Bill): BillKind {
   return bill.splitMethod === SPLIT_METHODS.CUSTOM ? BILL_KINDS.ASSIGNED : BILL_KINDS.SHARED;
 }
 
+export function billShares(bill: Bill): Share[] {
+  return bill.shares.filter((share) => share.isShare);
+}
+
 export function isSingleMemberBill(bill: Bill): boolean {
-  return bill.splitMethod === SPLIT_METHODS.CUSTOM && bill.shares.length === 1;
+  return bill.splitMethod === SPLIT_METHODS.CUSTOM && billShares(bill).length === 1;
 }
 
 export function billsByKind(bills: Bill[]): Record<BillKind, Bill[]> {

@@ -16,8 +16,12 @@ export function billsListKey(groupId: string, month: string): string {
 
 export const DASHBOARD_GROUP_CACHE_PREFIX = 'dashboard-group:';
 
+export function dashboardGroupPrefix(groupId: string): string {
+  return `${DASHBOARD_GROUP_CACHE_PREFIX}${groupId}:`;
+}
+
 export function dashboardGroupKey(groupId: string, month: string): string {
-  return `${DASHBOARD_GROUP_CACHE_PREFIX}${groupId}:${month}`;
+  return `${dashboardGroupPrefix(groupId)}${month}`;
 }
 
 export const ADVANCES_CACHE_PREFIX = 'advances:';
