@@ -499,7 +499,10 @@ const en = {
     colDinner: 'D',
     paymentsTitle: 'Payments',
     paymentsSubtitle: 'Cash this member has handed in.',
-    noPayments: 'No payments recorded this month.'
+    noPayments: 'No payments recorded this month.',
+    settlementHistoryTitle: 'Settlement history',
+    settlementHistorySubtitle: 'Every month this member has settled up, with the numbers as they stood at the time.',
+    noSettlementHistory: 'This member has not settled up for any month yet.'
   },
   bazarSchedule: {
     title: 'Bazar duty schedule',
@@ -1470,7 +1473,27 @@ const en = {
     settleSuccess: 'Your balance is settled.',
     settleFailed: 'Could not settle that balance.',
     settledNote: 'Settled — nothing owed either way.',
-    closedThrough: (date: string) => `Finalized through ${date}`
+    closedThrough: (date: string) => `Finalized through ${date}`,
+    historyTitle: 'Settlement history',
+    historySubtitle: 'Every month you have settled up, with the numbers as they stood at the time.',
+    historyLoadFailed: 'Could not load your settlement history.',
+    historySubmittedOn: (date: string) => `Settled ${date}`,
+    historyBySelf: 'Settled by you',
+    historyByActor: (name: string) => `Settled by ${name}`,
+    historyMethodSelf: 'Self',
+    historyMethodSupervisor: 'By supervisor',
+    historyPayableBreakdown: 'What you owed',
+    historyPaidBreakdown: 'What you paid',
+    historyPayableBreakdownMember: 'What they owed',
+    historyPaidBreakdownMember: 'What they paid',
+    historyDueAtClose: 'Balance at settlement',
+    historyDueAmount: (amount: string) => `Owed ${amount}`,
+    historyRefundAmount: (amount: string) => `Owed back ${amount}`,
+    historySettledAmount: 'Square — nothing owed',
+    historyTransfersTitle: 'Settled with',
+    historyTransferOut: (name: string) => `Paid to ${name}`,
+    historyTransferIn: (name: string) => `Collected from ${name}`,
+    historyMealRateNote: (rate: string) => `Charged at ${rate} per meal`
   },
   comments: {
     title: 'Mess comments',

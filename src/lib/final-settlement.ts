@@ -202,12 +202,73 @@ export async function settleMemberBalance(
         }
       });
     }
+
+    await recordSettlementSubmission(tx, { report, member, method: 'SELF', actor });
   });
 
   return { ok: true, amount, monthKey: report.monthKey };
 }
 
 type SettlementTx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+export type SettlementSubmissionMethod = 'SELF' | 'SUPERVISOR';
+
+export type SettlementSubmissionTransfer = {
+  direction: 'out' | 'in';
+  counterpartyName: string;
+  amount: number;
+};
+
+function submissionTransfers(report: FinalSettlement, userId: string): SettlementSubmissionTransfer[] {
+  return report.settleUp.transfers
+    .filter((transfer) => transfer.fromUserId === userId || transfer.toUserId === userId)
+    .map((transfer) =>
+      transfer.fromUserId === userId
+        ? { direction: 'out' as const, counterpartyName: transfer.toName, amount: round2(transfer.amount) }
+        : { direction: 'in' as const, counterpartyName: transfer.fromName, amount: round2(transfer.amount) }
+    );
+}
+
+async function recordSettlementSubmission(
+  tx: SettlementTx,
+  params: {
+    report: FinalSettlement;
+    member: FinalSettlementMember;
+    method: SettlementSubmissionMethod;
+    actor: { id: string; name: string };
+  }
+) {
+  const { report, member, method, actor } = params;
+
+  await tx.settlementSubmission.upsert({
+    where: { closingId_userId: { closingId: report.closingId, userId: member.id } },
+    create: {
+      userId: member.id,
+      groupId: report.groupId,
+      closingId: report.closingId,
+      monthKey: report.monthKey,
+      groupName: report.groupName,
+      method,
+      actorId: actor.id,
+      actorName: actor.name,
+      mealRate: report.mealRate,
+      meals: member.meals,
+      carryIn: round2(member.carryIn),
+      mealCost: round2(member.mealCost),
+      billShare: round2(member.billShare),
+      totalCost: round2(member.totalCost),
+      bazarPaid: round2(member.bazarPaid),
+      cashPaid: round2(member.cashPaid),
+      dueAtClose: round2(member.dueAtClose),
+      payableByType: member.payableByType,
+      paidByType: member.paidByType,
+      transfers: submissionTransfers(report, member.id),
+      submittedAt: new Date(),
+      publishedAt: new Date()
+    },
+    update: {}
+  });
+}
 
 function writeSettlementRow(
   tx: SettlementTx,
@@ -250,7 +311,10 @@ export async function declareMemberSettled(
   }
 
   const dueDate = dayToUtcDate(report.closedThrough);
-  await prisma.$transaction((tx) => writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id }));
+  await prisma.$transaction(async (tx) => {
+    await writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id });
+    await recordSettlementSubmission(tx, { report, member, method: 'SUPERVISOR', actor });
+  });
 
   return { ok: true, amount: round2(member.dueAtClose) };
 }
@@ -274,6 +338,7 @@ export async function settleWholeMonth(
     await prisma.$transaction(async (tx) => {
       for (const member of pending) {
         await writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id });
+        await recordSettlementSubmission(tx, { report, member, method: 'SUPERVISOR', actor });
       }
     });
   }

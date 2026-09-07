@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { buildGroupReport } from '@/lib/group-report';
+import { listSettlementHistory } from '@/lib/settlement-history';
 import { categoryLabels } from '@/lib/expense-categories';
 import { EXPENSE_TYPES } from '@/lib/constants';
 import { daysInMonth, parseMonth, round2, utcDateToDay } from '@/lib/month';
@@ -46,7 +47,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { key: monthKey, start, nextStart } = parseMonth(monthParam);
   const canManage = await canManageGroup(groupId, sessionUser);
 
-  const [user, report, bazarRows, mealRows, paymentRows, schedule, labels] = await Promise.all([
+  const [user, report, bazarRows, mealRows, paymentRows, schedule, labels, settlementSubmissions] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: { id: true, name: true, email: true, phone: true, profileImage: true }
@@ -77,7 +78,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       where: { groupId_monthKey: { groupId, monthKey } },
       include: { days: { where: { userId }, orderBy: { day: 'asc' } } }
     }),
-    categoryLabels(groupId)
+    categoryLabels(groupId),
+    listSettlementHistory({ userId, groupId })
   ]);
 
   if (!user) {
@@ -151,7 +153,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       amount: round2(row.amountPaid),
       status: row.status,
       billType: row.expense?.type ?? null
-    }))
+    })),
+    settlementSubmissions
   });
 }
 

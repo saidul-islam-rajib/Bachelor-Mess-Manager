@@ -82,68 +82,70 @@ model UserPermission {
 }
 
 model User {
-  id                      String                  @id @default(uuid())
-  name                    String
-  email                   String                  @unique
-  password                String
-  phone                   String?
-  profileImage            String?
-  theme                   String                  @default("system")
-  role                    String                  @default("MEMBER")
-  roleRef                 Role                    @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
-  status                  String                  @default("PENDING")
-  tokenVersion            Int                     @default(0)
-  lastLoginAt             DateTime?
-  createdAt               DateTime                @default(now())
-  createdById             String?
-  updatedAt               DateTime                @default(now()) @updatedAt
-  updatedById             String?
-  isPublished             Boolean                 @default(true)
-  publishedAt             DateTime?
-  unpublishedAt           DateTime?
-  memberships             Membership[]
-  comments                Comment[]
-  mealEntries             MealEntry[]
-  mealPlans               MealPlan[]
-  expensePayments         ExpenseEntry[]          @relation("ExpensePayer")
-  expenseHistory          ExpenseHistory[]        @relation("ExpenseHistoryActor")
-  expenseComments         ExpenseComment[]        @relation("ExpenseCommentAuthor")
-  expenseShares           ExpenseShare[]
-  commentReplies          CommentReply[]          @relation("CommentReplyAuthor")
-  groupOrders             GroupOrder[]
-  bazarDutyDays           BazarDutyDay[]
-  bazarDutyReminders      BazarDutyReminder[]
-  pushSubscriptions       PushSubscription[]
-  payments                PaymentStatus[]
-  paymentsRecorded        PaymentStatus[]         @relation("PaymentRecorder")
-  paymentsReceived        PaymentStatus[]         @relation("PaymentRecipient")
-  advances                MemberAdvance[]
-  advancesRecorded        MemberAdvance[]         @relation("AdvanceRecorder")
-  groupsSupervised        Group[]                 @relation("GroupSupervisor")
-  groupsCoSupervised      GroupSupervisor[]       @relation("GroupCoSupervisor")
-  coSupervisorsAdded      GroupSupervisor[]       @relation("GroupCoSupervisorGrantor")
-  invitationsReceived     Invitation[]            @relation("InvitationInvitee")
-  invitationsSent         Invitation[]            @relation("InvitationInviter")
-  roleRequests            RoleRequest[]           @relation("RoleRequestUser")
-  roleDecisions           RoleRequest[]           @relation("RoleRequestDecider")
-  passwordTokens          PasswordToken[]
-  notifications           Notification[]          @relation("NotificationRecipient")
-  notificationsSent       Notification[]          @relation("NotificationActor")
-  mealEditWindows         MealEditWindow[]
-  mealChangeRequests      MealChangeRequest[]     @relation("MealChangeSubject")
-  mealChangeDecisions     MealChangeRequest[]     @relation("MealChangeDecider")
-  closingsRun             MonthClosing[]          @relation("MonthClosingActor")
-  closingsSettled         MonthClosing[]          @relation("MonthClosingSettler")
-  closingLines            ClosingLine[]
-  communityMessages       CommunityMessage[]      @relation("CommunityAuthor")
-  communityRead           CommunityRead?
-  communityLikes          CommunityLike[]         @relation("CommunityLikeUser")
-  communityComments       CommunityComment[]      @relation("CommunityCommentUser")
-  communityCommentReplies CommunityCommentReply[] @relation("CommunityCommentReplyUser")
-  mealPrompts             MealPrompt[]
-  sessions                UserSession[]
-  permissionOverrides     UserPermission[]        @relation("UserPermissionSubject")
-  permissionsGranted      UserPermission[]        @relation("UserPermissionGrantor")
+  id                         String                  @id @default(uuid())
+  name                       String
+  email                      String                  @unique
+  password                   String
+  phone                      String?
+  profileImage               String?
+  theme                      String                  @default("system")
+  role                       String                  @default("MEMBER")
+  roleRef                    Role                    @relation(fields: [role], references: [code], onDelete: NoAction, onUpdate: NoAction)
+  status                     String                  @default("PENDING")
+  tokenVersion               Int                     @default(0)
+  lastLoginAt                DateTime?
+  createdAt                  DateTime                @default(now())
+  createdById                String?
+  updatedAt                  DateTime                @default(now()) @updatedAt
+  updatedById                String?
+  isPublished                Boolean                 @default(true)
+  publishedAt                DateTime?
+  unpublishedAt              DateTime?
+  memberships                Membership[]
+  comments                   Comment[]
+  mealEntries                MealEntry[]
+  mealPlans                  MealPlan[]
+  expensePayments            ExpenseEntry[]          @relation("ExpensePayer")
+  expenseHistory             ExpenseHistory[]        @relation("ExpenseHistoryActor")
+  expenseComments            ExpenseComment[]        @relation("ExpenseCommentAuthor")
+  expenseShares              ExpenseShare[]
+  commentReplies             CommentReply[]          @relation("CommentReplyAuthor")
+  groupOrders                GroupOrder[]
+  bazarDutyDays              BazarDutyDay[]
+  bazarDutyReminders         BazarDutyReminder[]
+  pushSubscriptions          PushSubscription[]
+  payments                   PaymentStatus[]
+  paymentsRecorded           PaymentStatus[]         @relation("PaymentRecorder")
+  paymentsReceived           PaymentStatus[]         @relation("PaymentRecipient")
+  advances                   MemberAdvance[]
+  advancesRecorded           MemberAdvance[]         @relation("AdvanceRecorder")
+  groupsSupervised           Group[]                 @relation("GroupSupervisor")
+  groupsCoSupervised         GroupSupervisor[]       @relation("GroupCoSupervisor")
+  coSupervisorsAdded         GroupSupervisor[]       @relation("GroupCoSupervisorGrantor")
+  invitationsReceived        Invitation[]            @relation("InvitationInvitee")
+  invitationsSent            Invitation[]            @relation("InvitationInviter")
+  roleRequests               RoleRequest[]           @relation("RoleRequestUser")
+  roleDecisions              RoleRequest[]           @relation("RoleRequestDecider")
+  passwordTokens             PasswordToken[]
+  notifications              Notification[]          @relation("NotificationRecipient")
+  notificationsSent          Notification[]          @relation("NotificationActor")
+  mealEditWindows            MealEditWindow[]
+  mealChangeRequests         MealChangeRequest[]     @relation("MealChangeSubject")
+  mealChangeDecisions        MealChangeRequest[]     @relation("MealChangeDecider")
+  closingsRun                MonthClosing[]          @relation("MonthClosingActor")
+  closingsSettled            MonthClosing[]          @relation("MonthClosingSettler")
+  closingLines               ClosingLine[]
+  settlementSubmissions      SettlementSubmission[]  @relation("SettlementSubmissionSubject")
+  settlementSubmissionsActed SettlementSubmission[]  @relation("SettlementSubmissionActor")
+  communityMessages          CommunityMessage[]      @relation("CommunityAuthor")
+  communityRead              CommunityRead?
+  communityLikes             CommunityLike[]         @relation("CommunityLikeUser")
+  communityComments          CommunityComment[]      @relation("CommunityCommentUser")
+  communityCommentReplies    CommunityCommentReply[] @relation("CommunityCommentReplyUser")
+  mealPrompts                MealPrompt[]
+  sessions                   UserSession[]
+  permissionOverrides        UserPermission[]        @relation("UserPermissionSubject")
+  permissionsGranted         UserPermission[]        @relation("UserPermissionGrantor")
 
   @@index([role])
   @@index([status])
@@ -244,25 +246,25 @@ model UserSession {
 }
 
 model Group {
-  id                       String              @id @default(uuid())
+  id                       String                 @id @default(uuid())
   name                     String
-  supervisor               User                @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supervisor               User                   @relation("GroupSupervisor", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   supervisorId             String
-  status                   String              @default("ACTIVE")
-  mealWeightBreakfast      Float               @default(0.5)
-  mealWeightLunch          Float               @default(1)
-  mealWeightDinner         Float               @default(1)
-  mealRateMode             String              @default("MONTHLY")
-  carryForwardEnabled      Boolean             @default(true)
+  status                   String                 @default("ACTIVE")
+  mealWeightBreakfast      Float                  @default(0.5)
+  mealWeightLunch          Float                  @default(1)
+  mealWeightDinner         Float                  @default(1)
+  mealRateMode             String                 @default("MONTHLY")
+  carryForwardEnabled      Boolean                @default(true)
   mealEditRequiresApproval Boolean?
   maxSupervisors           Int?
-  bazarReminderEnabled     Boolean             @default(true)
-  bazarReminderTime        String              @default("07:00")
-  createdAt                DateTime            @default(now())
+  bazarReminderEnabled     Boolean                @default(true)
+  bazarReminderTime        String                 @default("07:00")
+  createdAt                DateTime               @default(now())
   createdById              String?
-  updatedAt                DateTime            @default(now()) @updatedAt
+  updatedAt                DateTime               @default(now()) @updatedAt
   updatedById              String?
-  isPublished              Boolean             @default(true)
+  isPublished              Boolean                @default(true)
   publishedAt              DateTime?
   unpublishedAt            DateTime?
   memberships              Membership[]
@@ -280,6 +282,7 @@ model Group {
   mealEditWindows          MealEditWindow[]
   mealChangeRequests       MealChangeRequest[]
   closings                 MonthClosing[]
+  settlementSubmissions    SettlementSubmission[]
   mealPrompts              MealPrompt[]
   coSupervisors            GroupSupervisor[]
   bazarSchedules           BazarSchedule[]
@@ -414,26 +417,27 @@ model MealChangeRequest {
 }
 
 model MonthClosing {
-  id            String        @id @default(uuid())
-  group         Group         @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id            String                 @id @default(uuid())
+  group         Group                  @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   groupId       String
   monthKey      String
   closedThrough DateTime
-  closedBy      User?         @relation("MonthClosingActor", fields: [closedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  closedBy      User?                  @relation("MonthClosingActor", fields: [closedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   closedById    String?
   note          String?
   reopenedAt    DateTime?
   settledAt     DateTime?
-  settledBy     User?         @relation("MonthClosingSettler", fields: [settledById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  settledBy     User?                  @relation("MonthClosingSettler", fields: [settledById], references: [id], onDelete: NoAction, onUpdate: NoAction)
   settledById   String?
-  createdAt     DateTime      @default(now())
+  createdAt     DateTime               @default(now())
   createdById   String?
-  updatedAt     DateTime      @default(now()) @updatedAt
+  updatedAt     DateTime               @default(now()) @updatedAt
   updatedById   String?
-  isPublished   Boolean       @default(true)
+  isPublished   Boolean                @default(true)
   publishedAt   DateTime?
   unpublishedAt DateTime?
   lines         ClosingLine[]
+  submissions   SettlementSubmission[]
 
   @@index([groupId, monthKey])
 }
@@ -462,6 +466,51 @@ model ClosingLine {
 
   @@unique([closingId, userId])
   @@index([userId])
+}
+
+/// An immutable snapshot taken the moment a member's last-month balance is
+/// settled through the final-settlement flow — self-serve or by a supervisor.
+/// The live final-settlement report reads the balance as zero once settled, so
+/// the numbers that mattered (what was owed, what was paid, the breakdown, the
+/// transfers) only survive here. One row per member per closing.
+model SettlementSubmission {
+  id            String       @id @default(uuid())
+  user          User         @relation("SettlementSubmissionSubject", fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  userId        String
+  group         Group        @relation(fields: [groupId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  groupId       String
+  closing       MonthClosing @relation(fields: [closingId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  closingId     String
+  monthKey      String
+  groupName     String
+  method        String
+  actor         User?        @relation("SettlementSubmissionActor", fields: [actorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  actorId       String?
+  actorName     String
+  mealRate      Float        @default(0)
+  meals         Float        @default(0)
+  carryIn       Float        @default(0)
+  mealCost      Float        @default(0)
+  billShare     Float        @default(0)
+  totalCost     Float        @default(0)
+  bazarPaid     Float        @default(0)
+  cashPaid      Float        @default(0)
+  dueAtClose    Float        @default(0)
+  payableByType Json
+  paidByType    Json
+  transfers     Json
+  submittedAt   DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  createdById   String?
+  updatedAt     DateTime     @default(now()) @updatedAt
+  updatedById   String?
+  isPublished   Boolean      @default(true)
+  publishedAt   DateTime?
+  unpublishedAt DateTime?
+
+  @@unique([closingId, userId])
+  @@index([userId, submittedAt])
+  @@index([groupId, monthKey])
 }
 
 model SiteSettings {

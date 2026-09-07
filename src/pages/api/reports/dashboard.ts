@@ -205,6 +205,13 @@ async function memberReport(userId: string, month: string) {
     })
   ]);
 
+  const settlementSubmitted = finalSettlement
+    ? (await prisma.settlementSubmission.findUnique({
+        where: { closingId_userId: { closingId: finalSettlement.closingId, userId } },
+        select: { id: true }
+      })) !== null
+    : false;
+
   const me = mine(thisMonth.members, userId);
   const meLast = mine(lastMonth.members, userId);
 
@@ -232,7 +239,7 @@ async function memberReport(userId: string, month: string) {
       card
     },
     pendingInvitations,
-    finalSettlement,
+    finalSettlement: settlementSubmitted ? null : finalSettlement,
     current: {
       meals: me?.meals ?? 0,
       mealCost: me?.mealCost ?? 0,

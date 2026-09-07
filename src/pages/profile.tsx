@@ -11,8 +11,10 @@ import { PasswordField } from '@/components/PasswordField';
 import { TextField } from '@/components/TextField';
 import { Badge, Button, Collapsible, EmptyState, ImageViewer, PageTitle, RadioGroup, StatusBadge, useConfirm } from '@/components/ui';
 import MealPlanCard from '@/components/MealPlanCard';
+import { SettlementHistoryList } from '@/components/SettlementHistory';
 import { useTheme } from '@/components/ThemeProvider';
 import { api, errorMessage } from '@/lib/api-client';
+import type { SettlementHistoryEntry } from '@/lib/settlement-history';
 import { strings } from '@/lib/i18n';
 import { PASSWORD_MIN_LENGTH } from '@/lib/password.client';
 import { validateName, validatePhone } from '@/lib/validation';
@@ -140,6 +142,7 @@ export default function ProfilePage() {
           <PasswordSection />
 
           <RoleRequestPanel />
+          <SettlementHistorySection />
           <ToLetListingsSection />
           <InvitationsSection />
         </div>
@@ -288,6 +291,50 @@ function ToLetListingsSection() {
         defaultContactPhone={user?.phone ?? ''}
         onSaved={onReposted}
       />
+    </Collapsible>
+  );
+}
+
+function SettlementHistorySection() {
+  const [items, setItems] = useState<SettlementHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const data = await api.get<{ submissions: SettlementHistoryEntry[] }>('/api/settlements/mine');
+        if (!cancelled) setItems(data.submissions);
+      } catch {
+        if (!cancelled) setFailed(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!loading && !failed && items.length === 0) return null;
+
+  return (
+    <Collapsible
+      title={strings.settlement.historyTitle}
+      description={strings.settlement.historySubtitle}
+      badge={!loading && !failed ? <Badge tone="neutral">{String(items.length)}</Badge> : null}
+    >
+      {loading ? (
+        <p className="text-sm text-slate-400 dark:text-slate-500">{strings.common.loading}</p>
+      ) : failed ? (
+        <p className="text-sm text-slate-500 dark:text-slate-400">{strings.settlement.historyLoadFailed}</p>
+      ) : (
+        <SettlementHistoryList items={items} viewerIsSelf />
+      )}
     </Collapsible>
   );
 }

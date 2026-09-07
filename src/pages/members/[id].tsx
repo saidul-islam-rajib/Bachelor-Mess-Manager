@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useCallback, useEffect, useState } from 'react';
 import { Avatar, Card, PageTitle } from '@/components/ui';
+import { SettlementHistoryList } from '@/components/SettlementHistory';
 import { api, errorMessage } from '@/lib/api-client';
+import type { SettlementHistoryEntry } from '@/lib/settlement-history';
 import { formatCurrency, formatDate, formatDayKey, formatMonthLabel, formatStayDuration } from '@/lib/format';
 import { strings } from '@/lib/i18n';
 import { ROUTES } from '@/lib/routes';
@@ -49,6 +51,7 @@ type MemberDetailData = {
   bazarEntries: BazarEntry[];
   dutyDays: DutyDay[];
   payments: Payment[];
+  settlementSubmissions: SettlementHistoryEntry[];
 };
 
 function Stat({ label, value, tone = '' }: { label: string; value: string; tone?: string }) {
@@ -299,6 +302,14 @@ export default function MemberDetailPage() {
               </li>
             ))}
           </ul>
+        )}
+      </Section>
+
+      <Section title={detail.settlementHistoryTitle} subtitle={detail.settlementHistorySubtitle}>
+        {data.settlementSubmissions.length === 0 ? (
+          <Empty text={detail.noSettlementHistory} />
+        ) : (
+          <SettlementHistoryList items={data.settlementSubmissions} viewerIsSelf={data.isSelf} />
         )}
       </Section>
 

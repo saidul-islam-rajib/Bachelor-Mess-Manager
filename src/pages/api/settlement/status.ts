@@ -44,10 +44,18 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       if (!settlement) return null;
 
       const mine = settlement.members.find((member) => member.id === sessionUser.id) ?? null;
+      const alreadySubmitted =
+        role === 'MEMBER' &&
+        (await prisma.settlementSubmission.findUnique({
+          where: { closingId_userId: { closingId: settlement.closingId, userId: sessionUser.id } },
+          select: { id: true }
+        })) !== null;
       const shouldRedirect =
         role === 'MANAGER'
           ? settlement.allClear && !settlement.settledAt
-          : mine !== null && (mine.status === PAYMENT_STATUS.PARTIAL || mine.status === PAYMENT_STATUS.PENDING);
+          : !alreadySubmitted &&
+            mine !== null &&
+            (mine.status === PAYMENT_STATUS.PARTIAL || mine.status === PAYMENT_STATUS.PENDING);
 
       return {
         groupId: settlement.groupId,
