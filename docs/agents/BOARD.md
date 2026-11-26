@@ -2,7 +2,7 @@
 
 Rules are in `PROTOCOL.md`.
 
-Last progress report: 30%
+Last progress report: 40%
 
 ## Tasks
 
@@ -11,7 +11,7 @@ Last progress report: 30%
 | A1 | architect | P0 | done | | Choose the mobile stack (native Kotlin and Swift, or one shared codebase) and record ADR-001 | agents/architect/A1-mobile-stack | Merged by qa: ADR-001 accepted, matches MOBILE-REFERENCE |
 | A2 | architect | P0 | done | | Decide how the mobile apps sign in and call the API (token auth beside cookie sessions, API versioning, OpenAPI contract) and record ADR-002 | agents/architect/A2-mobile-auth | Merged by qa: ADR-002 accepted, `typ: mob` bearer token, `/api/mobile/v1/auth/*`, additive-only contract; follow-ups F19, F20 |
 | A3 | architect | P1 | done | A1 | Repo layout for mobile code, which paths android and ios each own, and the checks each runs; ADR-003 | agents/architect/A3-repo-layout | Merged by qa, checks pass: ADR-003 accepted: standalone `mobile/`, ios owns shared files, android owns `*.android.*` + `config/android.ts`; D1 becomes Android pass (A5) |
-| A4 | architect | P1 | review | A1 | CI/CD and Docker: backend image, mobile build and release lanes, what runs on `agents/*` pushes versus `develop`; ADR-004 | agents/architect/A4-ci-cd | ADR-004 accepted: `ci.yml` on GitHub-hosted runners for `agents/**`, deploy only from `develop` with path filters, EAS by owner only; follow-ups F25, F26 |
+| A4 | architect | P1 | done | A1 | CI/CD and Docker: backend image, mobile build and release lanes, what runs on `agents/*` pushes versus `develop`; ADR-004 | agents/architect/A4-ci-cd | Merged by qa, checks pass: ADR-004 accepted; follow-ups F25, F26 |
 | A5 | architect | P1 | todo | A2,A3,A4 | Break the accepted ADRs into one-run tasks for android, ios and fixer on this board | | |
 | F1 | fixer | P0 | done | | Make `npm run typecheck` and `npm run lint` pass cleanly | | Already clean on agents/integration, no change needed |
 | F2 | fixer | P0 | done | | Audit meal rate and the meal cost split; add one F row per bug found | | Audit only, no code changed; found F7 and F8 |
@@ -31,7 +31,7 @@ Last progress report: 30%
 | F16 | fixer | P1 | todo | | `POST /api/groups/[id]/payments` accepts `amount: 0.004`: `value > 0` passes, then `round2` stores `amountPaid: 0`, a PAID row of zero. Input: amount 0.004. Round first, then validate `>= 0.01`; same in `updatePaymentDetails` | | |
 | F17 | fixer | P1 | todo | | `closeMonth` (`src/lib/closings.ts`) reads existing closings and creates the new one in separate steps, not one transaction, so two concurrent closes (supervisor click plus the auto close in `ensureFinalSettlement` when a member opens `/settlement`) both pass `alreadyClosed` and write two live closings; `loadCarryIn` takes the last `carryOut` per user, so which one wins depends on creation order. Fix: do the check and create inside one transaction with a lock, or a unique guard; add a check on the pure part where possible | | |
 | F18 | fixer | P1 | todo | | `settleMemberBalance`, `declareMemberSettled` and `settleWholeMonth` (`src/lib/final-settlement.ts`) compute the report outside the transaction and then write ledger rows, so a double submit or two supervisors at once write the adjusting/transfer rows twice (only the `SettlementSubmission` upsert is idempotent, with `update: {}`). Input: two concurrent `declareMemberSettled` for a member who owes 500 gives a refund-sized -500 net. Recompute the due or check the submission inside the transaction and skip if present | | |
-| F19 | fixer | P0 | review | A2 | Per ADR-002: `createMobileToken`/`verifyMobileToken` in `src/lib/session.ts`, bearer fallback in `getRealSessionUser` and `src/middleware.ts`, shared login function, `POST /api/mobile/v1/auth/login`, `refresh`, `logout`; web login responses unchanged. Add `scripts/check-mobile-auth.js` | agents/fixer/F19-mobile-auth | Token fns, bearer fallback, 3 routes, shared `src/lib/login.ts`, device APP; check `scripts/check-mobile-auth.js` 29/29, typecheck and lint clean |
+| F19 | fixer | P0 | done | A2 | Per ADR-002: `createMobileToken`/`verifyMobileToken` in `src/lib/session.ts`, bearer fallback in `getRealSessionUser` and `src/middleware.ts`, shared login function, `POST /api/mobile/v1/auth/login`, `refresh`, `logout`; web login responses unchanged. Add `scripts/check-mobile-auth.js` | agents/fixer/F19-mobile-auth | Merged by qa, checks pass: typecheck, lint, check-mobile-auth 29/29 |
 | F20 | fixer | P1 | todo | F19 | Per ADR-002: write `docs/api/mobile-openapi.json` with health and the three mobile auth routes, and `scripts/check-openapi.js` | | |
 | F21 | fixer | P2 | todo | A3 | Per ADR-003: add `mobile` to `.dockerignore` so the backend image never copies the app | | |
 | F22 | fixer | P0 | todo | | `allocateToFronters` (`src/lib/bill-collections.ts`) returns one allocation per member holding an advance, but `POST /api/bills/[id]/collections` writes each as an offset row with the same `offsetOfId`, and `PaymentStatus.offsetOfId` is `@unique`, so the second insert fails and the whole transaction rolls back with a 500. Input: bill 1800, Imran and Sajib each hold an advance, Limon POSTs `amount: 360` with no `toUserId` and the payment is split across both fronters. Add a check on the pure part that fails when it returns more than one allocation, then fix (one offset row per payment, or drop the unique and handle `reversePayment`/`updatePaymentDetails`, which read `offsetBy` as a single row) | | |
@@ -40,7 +40,7 @@ Last progress report: 30%
 | F25 | fixer | P1 | todo | A4 | Per ADR-004: add `.github/workflows/ci.yml` (jobs `backend`, `image`, `mobile`) and `scripts/check-workflows.js` (js-yaml, no network); run the ADR-004 checks | | |
 | F26 | fixer | P1 | todo | F25 | Per ADR-004: in `deploy.yml` add `paths-ignore` and the `refs/heads/develop` job guard, same guard in `ops.yml`, add `.claude` to `.dockerignore`; nothing else in the deploy path | | |
 | D1 | android | P1 | todo | A1,A2,A3,I1 | Scaffold the Android app per ADR-001 and ADR-003, with sign-in against the API | | |
-| I1 | ios | P0 | review | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | agents/ios/I1-mobile-scaffold | `mobile/` Expo SDK 58, sign-in + dev server picker; tsc, eslint, jest pass; expo-doctor offline (2 network checks failed); root checks pass. Login hits `/api/mobile/v1/auth/login`, which needs F19 to work end to end |
+| I1 | ios | P0 | done | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | agents/ios/I1-mobile-scaffold | Merged by qa, checks pass: mobile tsc, eslint, jest; D1 can follow as Android pass; I2 unblocked |
 | I2 | ios | P0 | todo | I1 | Write `docs/mobile-on-iphone.md`: the owner's steps to run the backend on the laptop and open the app on the iPhone in Expo Go, and keep it true as the app changes | | |
 | Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
 

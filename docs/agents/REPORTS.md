@@ -2,6 +2,37 @@
 
 Written by `qa` each time overall progress passes another 10%. Newest first.
 
+## 2026-11-26: 40% (15/35 done)
+
+### architect
+- Finished since last report: A4 (ADR-004: `ci.yml` on GitHub-hosted runners, deploy only from `develop`, EAS by owner only).
+- In progress: none. A5 (break ADRs into tasks) is now unblocked.
+- Blocked: none.
+
+### fixer
+- Finished: F12 (audit of collections, found F22-F24), F19 (mobile token auth: `/api/mobile/v1/auth/login`, `refresh`, `logout`, bearer fallback, web login unchanged).
+- In progress: none. F13, F14, F22, F23 (P0) are queued.
+- Blocked: none.
+
+### android
+- Finished: none.
+- In progress: none. D1 waits for A5.
+- Blocked: A5.
+
+### ios
+- Finished: I1 (Expo SDK 58 app in `mobile/`, sign-in and server picker).
+- In progress: none. I2 (iPhone run guide) is next.
+- Blocked: none.
+
+### qa
+- Finished: Q1; merged A4, F19 and I1 after typecheck, lint, allocation, mobile-auth (29/29) and mobile tsc, eslint, jest passed. `check-mail`, `check-meal-rate` and `check-signup-flow` fail the same way on the base branch (need a database or env), not from these merges.
+
+### Try on the iPhone now
+Not yet: `docs/mobile-on-iphone.md` (I2) is not written. The app and the login API now exist, so I2 is the next step.
+
+### Owner decisions
+- F11 and F14: should edits dated in a closed month be blocked, or only warned?
+
 ## 2026-11-26: 30% (11/30 done)
 
 ### architect
