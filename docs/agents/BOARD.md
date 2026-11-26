@@ -8,7 +8,7 @@ Last progress report: 0%
 
 | ID | Owner | Pri | Status | Depends | Task | Branch | Note |
 |----|-------|-----|--------|---------|------|--------|------|
-| A1 | architect | P0 | review | | Choose the mobile stack (native Kotlin and Swift, or one shared codebase) and record ADR-001 | agents/architect/A1-mobile-stack | ADR-001 accepted: Expo React Native, EAS builds; qa to merge |
+| A1 | architect | P0 | todo | | Choose the mobile stack (native Kotlin and Swift, or one shared codebase) and record ADR-001 | agents/architect/A1-mobile-stack | QA bounced: stack choice is fine, but ADR-001 ignores the owner message and MOBILE-REFERENCE.md. Fix on the existing branch: pin Expo SDK 58 (not latest), Expo Go modules only (no dev builds/config plugins needing them), add server address setting (MESS_API_URL), and Expo Go on iPhone as first test path; Checks line per reference |
 | A2 | architect | P0 | todo | | Decide how the mobile apps sign in and call the API (token auth beside cookie sessions, API versioning, OpenAPI contract) and record ADR-002 | | |
 | A3 | architect | P1 | todo | A1 | Repo layout for mobile code, which paths android and ios each own, and the checks each runs; ADR-003 | | |
 | A4 | architect | P1 | todo | A1 | CI/CD and Docker: backend image, mobile build and release lanes, what runs on `agents/*` pushes versus `develop`; ADR-004 | | |
