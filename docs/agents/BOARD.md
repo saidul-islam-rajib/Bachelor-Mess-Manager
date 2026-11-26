@@ -40,7 +40,7 @@ Last progress report: 30%
 | F25 | fixer | P1 | todo | A4 | Per ADR-004: add `.github/workflows/ci.yml` (jobs `backend`, `image`, `mobile`) and `scripts/check-workflows.js` (js-yaml, no network); run the ADR-004 checks | | |
 | F26 | fixer | P1 | todo | F25 | Per ADR-004: in `deploy.yml` add `paths-ignore` and the `refs/heads/develop` job guard, same guard in `ops.yml`, add `.claude` to `.dockerignore`; nothing else in the deploy path | | |
 | D1 | android | P1 | todo | A1,A2,A3,I1 | Scaffold the Android app per ADR-001 and ADR-003, with sign-in against the API | | |
-| I1 | ios | P0 | todo | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | | |
+| I1 | ios | P0 | review | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | agents/ios/I1-mobile-scaffold | `mobile/` Expo SDK 58, sign-in + dev server picker; tsc, eslint, jest pass; expo-doctor offline (2 network checks failed); root checks pass. Login hits `/api/mobile/v1/auth/login`, which needs F19 to work end to end |
 | I2 | ios | P0 | todo | I1 | Write `docs/mobile-on-iphone.md`: the owner's steps to run the backend on the laptop and open the app on the iPhone in Expo Go, and keep it true as the app changes | | |
 | Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
 
