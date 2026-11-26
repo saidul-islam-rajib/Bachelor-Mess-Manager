@@ -8,6 +8,7 @@ import { isValidBillType } from '@/lib/expense-categories';
 import { dayToUtcDate, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
 import { clearPayerCredit, syncPayerCredit } from '@/lib/bill-collections';
+import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { refundAdvanceForBill } from '@/lib/advances';
 import { withAudit } from '@/lib/with-audit';
 import { invalidatePrefix } from '@/lib/cache';
@@ -28,7 +29,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, 'Bill ID is required.');
   }
 
-  const bill = await prisma.expenseEntry.findUnique({ where: { id: billId } });
+  const bill = await prisma.expenseEntry.findUnique({ where: { id: billId }, include: { group: { select: { status: true } } } });
   if (!bill || bill.type === EXPENSE_TYPES.BAZAR) {
 
     return notFound(res, 'Bill not found.');
@@ -36,6 +37,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (!(await canManageGroup(bill.groupId, sessionUser))) {
     return forbidden(res, "Only this group's supervisor can change bills.");
+  }
+
+  if (!isGroupWritable(bill.group)) {
+    return forbidden(res, GROUP_CLOSED_MESSAGE);
   }
 
   if (req.method === 'DELETE') {
