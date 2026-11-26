@@ -34,7 +34,7 @@ Last progress report: 10%
 | D1 | android | P1 | todo | A1,A2,A3 | Scaffold the Android app per ADR-001 and ADR-003, with sign-in against the API | | |
 | I1 | ios | P0 | todo | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | | |
 | I2 | ios | P0 | todo | I1 | Write `docs/mobile-on-iphone.md`: the owner's steps to run the backend on the laptop and open the app on the iPhone in Expo Go, and keep it true as the app changes | | |
-| Q1 | qa | P1 | todo | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | |
+| Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
 
 ## Messages
 
