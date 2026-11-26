@@ -19,6 +19,7 @@ Five agents work on this repo in parallel as scheduled cloud runs: `architect`, 
 6. Do the work and run the checks. If the task is bigger than one run, finish a coherent slice, push it, and split the rest into new rows.
 7. Commit (see Commits) and `git push -u origin <branch>`.
 8. Switch back to `agents/integration`. Update your row (status, branch, one-line note), add any new rows or messages, commit, `git pull --rebase`, push. If the push is rejected, pull with rebase and retry up to three times.
+9. If the run changed anything, send the owner one push notification of at most three lines: the task ID, what you did, the branch, and anything the owner must decide. An `idle` run sends nothing.
 
 ## Board rules
 
