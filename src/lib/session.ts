@@ -7,6 +7,7 @@ export const IMPERSONATION_COOKIE_NAME = sessionConfig.impersonationCookieName;
 export const IMPERSONATION_MAX_AGE_SECONDS = sessionConfig.impersonationMaxAgeSeconds;
 
 const IMPERSONATION_TYPE = 'imp';
+const MOBILE_TYPE = 'mob';
 
 export type SessionPayload = {
   uid: string;
@@ -14,6 +15,8 @@ export type SessionPayload = {
   iat: number;
   exp: number;
 };
+
+export type MobilePayload = SessionPayload & { typ: typeof MOBILE_TYPE };
 
 export type ImpersonationPayload = SessionPayload & {
   typ: typeof IMPERSONATION_TYPE;
@@ -74,7 +77,7 @@ function encode(value: string): ArrayBuffer {
   return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 }
 
-async function sign(payload: SessionPayload | ImpersonationPayload): Promise<string> {
+async function sign(payload: SessionPayload | ImpersonationPayload | MobilePayload): Promise<string> {
   const body = bytesToBase64Url(encode(JSON.stringify(payload)));
   const signature = await crypto.subtle.sign('HMAC', await getKey(), encode(body));
   return `${body}.${bytesToBase64Url(signature)}`;
@@ -149,6 +152,54 @@ export async function verifyImpersonationToken(
   if (typeof payload.aid !== 'string' || !payload.aid) return null;
 
   return payload as unknown as ImpersonationPayload;
+}
+
+export async function createMobileToken(userId: string, tokenVersion: number): Promise<string> {
+  const issuedAt = Math.floor(Date.now() / 1000);
+  return sign({
+    typ: MOBILE_TYPE,
+    uid: userId,
+    sv: tokenVersion,
+    iat: issuedAt,
+    exp: issuedAt + sessionConfig.maxAgeSeconds
+  });
+}
+
+export async function verifyMobileToken(token: string | undefined | null): Promise<MobilePayload | null> {
+  const payload = await verify(token);
+  if (!payload) return null;
+  if (payload.typ !== MOBILE_TYPE) return null;
+
+  return payload as unknown as MobilePayload;
+}
+
+export function readMobileClaims(token: string | undefined | null): MobilePayload | null {
+  if (!token) return null;
+
+  const dot = token.indexOf('.');
+  if (dot <= 0 || dot === token.length - 1) return null;
+
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(base64UrlToBuffer(token.slice(0, dot)))) as MobilePayload;
+
+    if (typeof payload?.uid !== 'string' || !payload.uid) return null;
+    if (typeof payload.exp !== 'number' || typeof payload.iat !== 'number') return null;
+    if (typeof payload.sv !== 'number') return null;
+    if (payload.typ !== MOBILE_TYPE) return null;
+    if (payload.exp <= Math.floor(Date.now() / 1000)) return null;
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export function readBearerToken(authorization: string | string[] | undefined | null): string | undefined {
+  const header = Array.isArray(authorization) ? authorization[0] : authorization;
+  if (typeof header !== 'string') return undefined;
+
+  const match = /^Bearer\s+(\S+)$/i.exec(header.trim());
+  return match ? match[1] : undefined;
 }
 
 export function readSessionClaims(token: string | undefined | null): SessionPayload | null {

@@ -16,7 +16,7 @@ export const SESSION_END_REASONS = {
   REPLACED: 'REPLACED'
 } as const;
 
-export const DEVICES = { MOBILE: 'MOBILE', TABLET: 'TABLET', DESKTOP: 'DESKTOP' } as const;
+export const DEVICES = { MOBILE: 'MOBILE', TABLET: 'TABLET', DESKTOP: 'DESKTOP', APP: 'APP' } as const;
 
 export type DeviceKey = (typeof DEVICES)[keyof typeof DEVICES];
 
@@ -87,10 +87,10 @@ export function deviceOf(userAgent: string | null | undefined): string {
   return DEVICES.DESKTOP;
 }
 
-function requestFingerprint(req: NextApiRequest) {
+function requestFingerprint(req: NextApiRequest, deviceOverride?: string) {
   const raw = req.headers['user-agent'];
   const userAgent = typeof raw === 'string' ? raw.slice(0, 250) : null;
-  return { ipAddress: clientIp(req), userAgent, device: deviceOf(userAgent) };
+  return { ipAddress: clientIp(req), userAgent, device: deviceOverride ?? deviceOf(userAgent) };
 }
 
 export type TouchResult = { sessionId: string; started: boolean };
@@ -98,10 +98,10 @@ export type TouchResult = { sessionId: string; started: boolean };
 export async function touchSession(
   userId: string,
   req: NextApiRequest,
-  options: { forceNew?: boolean } = {}
+  options: { forceNew?: boolean; device?: DeviceKey } = {}
 ): Promise<TouchResult | null> {
   const now = new Date();
-  const { ipAddress, userAgent, device } = requestFingerprint(req);
+  const { ipAddress, userAgent, device } = requestFingerprint(req, options.device);
 
   try {
     const open = options.forceNew

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
-import { readSessionClaims, SESSION_COOKIE_NAME } from '@/lib/session';
+import { readBearerToken, readMobileClaims, readSessionClaims, SESSION_COOKIE_NAME } from '@/lib/session';
 import { IDENTITY_COOKIE, readIdentityClaims } from '@/lib/identity';
 import { ROUTES } from '@/lib/routes';
 
@@ -21,6 +21,7 @@ const PUBLIC_PATHS = [
   '/api/auth/set-password',
   '/api/auth/forgot-password',
   '/api/auth/login',
+  '/api/mobile/v1/auth',
   '/api/auth/register',
   '/api/auth/me',
   '/api/auth/logout',
@@ -54,6 +55,10 @@ export function middleware(req: NextRequest) {
   const claims = readSessionClaims(token);
 
   if (claims) {
+    return NextResponse.next();
+  }
+
+  if (isApi && !token && readMobileClaims(readBearerToken(req.headers.get('authorization')))) {
     return NextResponse.next();
   }
 

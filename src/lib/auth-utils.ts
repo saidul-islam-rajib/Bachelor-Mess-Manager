@@ -10,7 +10,7 @@ import {
   THEME_COOKIE_NAME
 } from '@/lib/auth';
 import { readIdentity } from '@/lib/identity';
-import { shouldRefresh, verifyImpersonationToken, verifySessionToken } from '@/lib/session';
+import { readBearerToken, shouldRefresh, verifyImpersonationToken, verifyMobileToken, verifySessionToken } from '@/lib/session';
 import { GROUP_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { normalizeEmail, validateName } from '@/lib/validation';
 import { prisma } from '@/lib/prisma';
@@ -55,6 +55,14 @@ const SESSION_USER_SELECT = {
 
 export function readSessionToken(req: NextApiRequest): string | undefined {
   return parseCookies(req.headers.cookie)[SESSION_COOKIE_NAME];
+}
+
+export function readMobileBearer(req: NextApiRequest): string | undefined {
+  return readBearerToken(req.headers.authorization);
+}
+
+function isBearerRequest(req: NextApiRequest): boolean {
+  return !readSessionToken(req) && Boolean(readMobileBearer(req));
 }
 
 export function readImpersonationToken(req: NextApiRequest): string | undefined {
@@ -114,7 +122,24 @@ async function adoptFromIdentity(req: NextApiRequest): Promise<SessionUserRow | 
   return { ...user, permissions: effectivePermissions(existing.role, permissionOverrides) };
 }
 
+export async function getMobileSession(
+  req: NextApiRequest
+): Promise<{ user: SessionUser; payload: { uid: string; sv: number; exp: number } } | null> {
+  const payload = await verifyMobileToken(readMobileBearer(req));
+  if (!payload) return null;
+
+  const row = await loadActiveUser(payload.uid, payload.sv);
+  if (!row) return null;
+
+  return { user: toSessionUser(row), payload };
+}
+
 export async function getRealSessionUser(req: NextApiRequest, res?: NextApiResponse): Promise<SessionUser | null> {
+  if (isBearerRequest(req)) {
+    const session = await getMobileSession(req);
+    return session ? session.user : null;
+  }
+
   const payload = await verifySessionToken(readSessionToken(req));
 
   if (!payload) {
@@ -145,6 +170,7 @@ function syncThemeCookie(req: NextApiRequest, res: NextApiResponse | undefined, 
 export async function getSessionUser(req: NextApiRequest, res?: NextApiResponse): Promise<SessionUser | null> {
   const realUser = await getRealSessionUser(req, res);
   if (!realUser) return null;
+  if (isBearerRequest(req)) return realUser;
 
   const impersonation = await verifyImpersonationToken(readImpersonationToken(req));
   if (!impersonation) {
