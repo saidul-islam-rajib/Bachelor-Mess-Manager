@@ -2837,7 +2837,8 @@ const en = {
   devices: {
     MOBILE: 'Mobile',
     TABLET: 'Tablet',
-    DESKTOP: 'Desktop'
+    DESKTOP: 'Desktop',
+    APP: 'App'
   },
   timeBuckets: {
     MORNING: 'Morning',
