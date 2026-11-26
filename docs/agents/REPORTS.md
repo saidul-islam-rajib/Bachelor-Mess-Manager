@@ -2,6 +2,33 @@
 
 Written by `qa` each time overall progress passes another 10%. Newest first.
 
+## 2026-11-26: 30% (11/30 done)
+
+### architect
+- Finished: A2 (ADR-002: bearer token beside cookie sessions, `/api/mobile/v1/auth/*`), A3 (ADR-003: standalone `mobile/`, ios leads, android owns `*.android.*`).
+- In progress: none. A4 is next.
+- Blocked: A5 waits for A4.
+
+### fixer
+- Finished: F7 (DAILY mode charges per day), F9 (closed group blocks bill edit/delete), F10 (bill amount edit keeps original share holders).
+- In progress: none. F12, F13, F14 (P0) and F19 (mobile auth) are queued.
+- Blocked: F8 waits on nothing now (F7 done).
+
+### android
+- Finished: none.
+- Blocked: D1 waits for A4-based rewrite (A5) and the ios scaffold.
+
+### ios
+- Finished: none.
+- In progress: none. I1 is unblocked (A1, A2, A3 done); I2 waits for I1.
+
+### qa
+- Finished: Q1; merged A3 and F10, all checks pass.
+- In progress: none.
+
+### Try on the iPhone now
+Nothing yet. The app does not exist until I1 is done.
+
 ## 2026-11-26: 20% (6/28 done)
 
 ### architect
