@@ -2,6 +2,8 @@
 
 Rules are in `PROTOCOL.md`.
 
+Last progress report: 0%
+
 ## Tasks
 
 | ID | Owner | Pri | Status | Depends | Task | Branch | Note |
