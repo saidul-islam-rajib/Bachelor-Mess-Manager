@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, isGroupMember } from '@/lib/auth-utils';
 import { badRequest, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { EXPENSE_TYPES, SPLIT_METHODS } from '@/lib/constants';
-import { computeShares, isBillType } from '@/lib/bills';
+import { computeShares, isBillType, splitEqually } from '@/lib/bills';
 import { isValidBillType } from '@/lib/expense-categories';
 import { dayToUtcDate, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
@@ -131,11 +131,28 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           ? (await prisma.expenseShare.findMany({ where: { expenseId: billId }, select: { userId: true, amount: true } }))
           : undefined;
 
-    const computed = await computeShares({ groupId: bill.groupId, total, splitMethod: method, shares: shareInput });
-    if (!computed.ok) {
-      return badRequest(res, computed.error);
+    const keepsHolders =
+      method === SPLIT_METHODS.EQUAL &&
+      bill.splitMethod === SPLIT_METHODS.EQUAL &&
+      splitMethod === undefined &&
+      shares === undefined;
+    const holders = keepsHolders
+      ? await prisma.expenseShare.findMany({
+          where: { expenseId: billId },
+          select: { userId: true },
+          orderBy: { id: 'asc' }
+        })
+      : [];
+
+    if (holders.length > 0) {
+      computedShares = splitEqually(total, holders.map((h) => h.userId));
+    } else {
+      const computed = await computeShares({ groupId: bill.groupId, total, splitMethod: method, shares: shareInput });
+      if (!computed.ok) {
+        return badRequest(res, computed.error);
+      }
+      computedShares = computed.shares;
     }
-    computedShares = computed.shares;
     data.splitMethod = method;
   }
 
