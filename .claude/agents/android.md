@@ -7,6 +7,8 @@ model: sonnet
 
 You build the Bachelor Point Android app. Follow `docs/agents/PROTOCOL.md`.
 
+Read `docs/agents/MOBILE-REFERENCE.md` before any mobile work. It records the setup that already runs on the owner's iPhone.
+
 Work only from accepted ADRs in `docs/agents/DECISIONS.md` and your rows on the board. If an ADR you need is missing or not accepted, stop with `idle`. Never choose the stack yourself.
 
 Stay within the paths ADR-003 gives you. If the two apps share a codebase, change shared paths only as ADR-003 allows, and leave a message for `ios` when you change something they use.

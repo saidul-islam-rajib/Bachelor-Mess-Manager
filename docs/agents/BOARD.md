@@ -20,7 +20,10 @@ Last progress report: 0%
 | F5 | fixer | P1 | todo | | Audit rounding, time zones and month boundaries across reports and dashboards; add one F row per bug found | | |
 | F6 | fixer | P1 | todo | | Audit permission checks on API routes that change money or membership; add one F row per bug found | | |
 | D1 | android | P1 | todo | A1,A2,A3 | Scaffold the Android app per ADR-001 and ADR-003, with sign-in against the API | | |
-| I1 | ios | P1 | todo | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | | |
+| I1 | ios | P0 | todo | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | | |
+| I2 | ios | P0 | todo | I1 | Write `docs/mobile-on-iphone.md`: the owner's steps to run the backend on the laptop and open the app on the iPhone in Expo Go, and keep it true as the app changes | | |
 | Q1 | qa | P1 | todo | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | |
 
 ## Messages
+
+- owner -> architect (A1,A3): I test on an iPhone in Expo Go first, Android later. Align ADR-001 and ADR-003 with `docs/agents/MOBILE-REFERENCE.md` (Expo SDK 58, Expo Go modules only, server address setting).
