@@ -2,7 +2,7 @@
 
 Rules are in `PROTOCOL.md`.
 
-Last progress report: 10%
+Last progress report: 20%
 
 ## Tasks
 
