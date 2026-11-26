@@ -7,7 +7,7 @@ Five agents work on this repo in parallel as scheduled cloud runs: `architect`, 
 - `agents/integration` is the shared branch. The board and the decisions live there, and every run starts from it.
 - Work happens on `agents/<role>/<task-id>-<slug>`, branched from `agents/integration`.
 - Only `qa` merges work branches into `agents/integration`.
-- Never push to `develop`, `main` or any other branch. A push to `develop` deploys production. The owner merges `agents/integration` into `develop` by hand.
+- Never push to `develop`, `main` or any other branch. A push to `develop` deploys production. The owner squash-merges `agents/integration` into `develop` by hand, so commits on `develop` carry the owner's name.
 
 ## Every run
 
@@ -43,9 +43,8 @@ If a check fails for a reason that is not yours, say so on the board instead of 
 
 ## Commits
 
-- Author every commit as the repo owner, read from develop's history:
-  `git -c user.name="$(git log -1 --format=%an origin/develop)" -c user.email="$(git log -1 --format=%ae origin/develop)" commit -m "..."`
-- No `Co-Authored-By` trailer and no other attribution line.
+- Commit with the sandbox's own git identity. Never set or override `user.name` or `user.email`.
+- Do not add a `Co-Authored-By` trailer or any other attribution line.
 - First line in the imperative, saying what changes for a user of the app. A short body with the reason.
 - Never commit `.env`, credentials, or anything under `uploads/`, `backups/`, `.next/` or `node_modules/`.
 

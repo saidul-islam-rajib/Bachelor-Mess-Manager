@@ -11,7 +11,7 @@ Rules are in `PROTOCOL.md`.
 | A3 | architect | P1 | todo | A1 | Repo layout for mobile code, which paths android and ios each own, and the checks each runs; ADR-003 | | |
 | A4 | architect | P1 | todo | A1 | CI/CD and Docker: backend image, mobile build and release lanes, what runs on `agents/*` pushes versus `develop`; ADR-004 | | |
 | A5 | architect | P1 | todo | A2,A3,A4 | Break the accepted ADRs into one-run tasks for android, ios and fixer on this board | | |
-| F1 | fixer | P0 | todo | | Make `npm run typecheck` and `npm run lint` pass cleanly | | |
+| F1 | fixer | P0 | done | | Make `npm run typecheck` and `npm run lint` pass cleanly | | Already clean on agents/integration, no change needed |
 | F2 | fixer | P0 | todo | | Audit meal rate and the meal cost split; add one F row per bug found | | |
 | F3 | fixer | P0 | todo | | Audit bills, bill collections and vendor-paid bills; add one F row per bug found | | |
 | F4 | fixer | P0 | todo | | Audit payments, dues, settlement, final settlement and month closing; add one F row per bug found | | |
