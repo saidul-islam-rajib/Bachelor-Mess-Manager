@@ -18,7 +18,7 @@ Five agents work on this repo in parallel as scheduled cloud runs: `architect`, 
 5. `git checkout -b agents/<role>/<id>-<slug>`, or check out the branch already named in the row.
 6. Do the work and run the checks. If the task is bigger than one run, finish a coherent slice, push it, and split the rest into new rows.
 7. Commit (see Commits) and `git push -u origin <branch>`.
-8. Switch back to `agents/integration`. Update your row (status, branch, one-line note), add any new rows or messages, commit, `git pull --rebase`, push. If the push is rejected, pull with rebase and retry up to three times.
+8. Switch back to `agents/integration`. Update your row (status, branch, one-line note), add any new rows or messages, commit, `git pull --rebase`, push. If the push is rejected, pull with rebase and retry up to three times. If the rebase stops on a conflict in `BOARD.md` or `REPORTS.md`, keep both sides' changes, `git add` the file and `git rebase --continue`.
 9. If the run changed anything, send the owner one push notification of at most three lines: the task ID, what you did, the branch, and anything the owner must decide. An `idle` run sends nothing.
 
 ## Board rules
