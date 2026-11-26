@@ -3,6 +3,7 @@ import { cached } from '@/lib/cache';
 import { BILL_TYPE_FILTER, GENERAL_PAYMENT_TYPE, MEAL_RATE_MODES, PAYMENT_STATUS } from '@/lib/constants';
 import { dayToUtcDate, parseMonth, previousMonthKey, round2, todayKey, utcDateToDay } from '@/lib/month';
 import { syncPlansForMonth } from '@/lib/meal-plan';
+import { allocateMealCosts } from '@/lib/meal-cost';
 
 const WEIGHT_SCALE = 1000;
 const SETTLED_TOLERANCE_PAISA = 1;
@@ -378,13 +379,15 @@ async function buildSettlementUncached(
   }
   const unallocatedPaisa = totalBazarPaisa - dayPricedPaisa;
 
-  if (totalUnits > 0) {
-    const shares = allocate(totalBazarPaisa, [...unitsByMember]);
-    for (let i = 0; i < shares.length; i++) mealCostByMember[i] += shares[i];
-  } else if (memberIds.length > 0 && totalBazarPaisa !== 0) {
-    const shares = allocate(totalBazarPaisa, memberIds.map(() => 1));
-    for (let i = 0; i < shares.length; i++) mealCostByMember[i] += shares[i];
-  }
+  const mealCosts = allocateMealCosts(
+    memberIds.length,
+    totalBazarPaisa,
+    effectiveMode === MEAL_RATE_MODES.DAILY,
+    pricedByDay,
+    unitsByDay,
+    unitsByMember
+  );
+  for (let i = 0; i < mealCosts.length; i++) mealCostByMember[i] += mealCosts[i];
 
   const billShareByMember = new Int32Array(memberIds.length);
   const billShareByMemberType = memberIds.map(() => new Map<string, number>());
