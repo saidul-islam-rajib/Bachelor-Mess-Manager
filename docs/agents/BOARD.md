@@ -8,7 +8,7 @@ Last progress report: 10%
 
 | ID | Owner | Pri | Status | Depends | Task | Branch | Note |
 |----|-------|-----|--------|---------|------|--------|------|
-| A1 | architect | P0 | review | | Choose the mobile stack (native Kotlin and Swift, or one shared codebase) and record ADR-001 | agents/architect/A1-mobile-stack | Reworked per QA and owner: Expo SDK 58 pinned, Expo Go modules only, MESS_API_URL server setting, Expo Go on iPhone first, Checks per reference |
+| A1 | architect | P0 | done | | Choose the mobile stack (native Kotlin and Swift, or one shared codebase) and record ADR-001 | agents/architect/A1-mobile-stack | Merged by qa: ADR-001 accepted, matches MOBILE-REFERENCE |
 | A2 | architect | P0 | todo | | Decide how the mobile apps sign in and call the API (token auth beside cookie sessions, API versioning, OpenAPI contract) and record ADR-002 | | |
 | A3 | architect | P1 | todo | A1 | Repo layout for mobile code, which paths android and ios each own, and the checks each runs; ADR-003 | | |
 | A4 | architect | P1 | todo | A1 | CI/CD and Docker: backend image, mobile build and release lanes, what runs on `agents/*` pushes versus `develop`; ADR-004 | | |
