@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { prisma } from '@/lib/prisma';
-import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/lib/auth-utils';
+import { getSessionUser, isGroupMember, isMainSupervisor, requireAdmin } from '@/lib/auth-utils';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { addCoSupervisor, listSupervisors, removeCoSupervisor } from '@/lib/supervisors';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
@@ -36,7 +36,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return methodNotAllowed(res, ['GET', 'POST', 'DELETE']);
   }
 
-  if (!(await canManageGroup(groupId, sessionUser))) {
+  if (!(await isMainSupervisor(groupId, sessionUser))) {
     return forbidden(res, strings.groups.coSupervisorOnlySupervisor);
   }
 
