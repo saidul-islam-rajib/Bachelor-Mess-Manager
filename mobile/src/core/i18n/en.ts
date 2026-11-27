@@ -300,6 +300,15 @@ export const en = {
   more: {
     signedInAs: 'Signed in as {name}',
     signOut: 'Sign out',
+    notifications: 'Notifications',
+  },
+  notifications: {
+    title: 'Notifications',
+    unread: '{count} unread',
+    markAll: 'Mark all read',
+    empty: 'No notifications yet.',
+    loadFailed: 'Could not load notifications.',
+    retry: 'Try again',
   },
   dashboard: {
     hello: 'Hello, {name}',
