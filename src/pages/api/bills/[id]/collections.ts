@@ -148,6 +148,9 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   let recipientId: string | null = null;
   if (typeof toUserId === 'string' && toUserId) {
+    if (!manages) {
+      return forbidden(res, "Only this group's supervisor can record a payment to another member.");
+    }
     if (toUserId === userId) {
       return badRequest(res, 'Choose someone else to receive the payment.');
     }
