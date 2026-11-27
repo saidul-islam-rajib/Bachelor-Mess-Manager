@@ -60,10 +60,35 @@ describe('DashboardScreen', () => {
     expect(spy.mock.calls.some(([url]) => /\/api\/reports\/dashboard$/.test(String(url)))).toBe(true);
   });
 
-  it('shows a note for roles without a member view', async () => {
-    jest.spyOn(globalThis, 'fetch').mockImplementation(() => ok({ role: 'ADMIN', month: '2026-11', admin: {} }));
+  it('shows supervisor totals and members with dues', async () => {
+    jest.spyOn(globalThis, 'fetch').mockImplementation(() =>
+      ok({
+        role: 'SUPERVISOR',
+        month: '2026-11',
+        supervisor: {
+          totals: { groups: 2, members: 9, meals: 120, mealRate: 70, expense: 8400, collected: 5000, outstanding: 3400 },
+          unpaid: [{ groupId: 'g1', groupName: 'Mess A', id: 'u1', name: 'Rafi', due: 450.5 }],
+          pendingMealChanges: [{}, {}],
+        },
+      }),
+    );
     await renderScreen();
-    expect(await screen.findByText(en.dashboard.roleNotSupported)).toBeTruthy();
+    expect(await screen.findByText('3400.00')).toBeTruthy();
+    expect(screen.getByText('Rafi · Mess A')).toBeTruthy();
+    expect(screen.getByText('450.50')).toBeTruthy();
+  });
+
+  it('shows admin counts', async () => {
+    jest.spyOn(globalThis, 'fetch').mockImplementation(() =>
+      ok({
+        role: 'ADMIN',
+        month: '2026-11',
+        admin: { pendingApprovals: 4, members: 30, supervisors: 5, activeGroups: 6, inactiveGroups: 1, activeMemberships: 33 },
+      }),
+    );
+    await renderScreen();
+    expect(await screen.findByText(en.dashboard.adminPending)).toBeTruthy();
+    expect(screen.getByText('33')).toBeTruthy();
   });
 
   it('shows an error with retry when the request fails', async () => {
