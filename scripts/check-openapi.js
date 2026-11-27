@@ -56,6 +56,22 @@ function run() {
     check(`${apiPath} reads the session through getSessionUser`, /getSessionUser\(req/.test(src));
     check(`${apiPath} is not public in the middleware`, !mw.includes(`'${apiPath}'`));
   }
+  for (const [apiPath, file, methods] of [
+    ['/api/groups/{id}/meals', ['src', 'pages', 'api', 'groups', '[id]', 'meals.ts'], ['get', 'put']],
+    ['/api/groups/{id}/meal-edit-window', ['src', 'pages', 'api', 'groups', '[id]', 'meal-edit-window.ts'], ['get', 'post', 'delete']],
+    ['/api/meal-changes/{id}', ['src', 'pages', 'api', 'meal-changes', '[id].ts'], ['patch', 'delete']],
+    ['/api/auth/me', ['src', 'pages', 'api', 'auth', 'me.ts'], ['get']]
+  ]) {
+    const ops = (spec.paths && spec.paths[apiPath]) || {};
+    const src = read(...file);
+    for (const method of methods) {
+      check(`${method.toUpperCase()} ${apiPath} is in the contract`, Boolean(ops[method]));
+    }
+    check(`${apiPath} contract lists no method the route lacks`, Object.keys(ops).every((m) => new RegExp(`'${m.toUpperCase()}'`).test(src) || m === 'get' && /req\.method === 'GET'|getSessionUser/.test(src) && apiPath === '/api/auth/me'));
+    check(`${apiPath} reads the session through getSessionUser`, /getSessionUser\(req/.test(src));
+  }
+  const meals = spec.components && spec.components.schemas && spec.components.schemas.MealsMonth;
+  check('MealsMonth lists entries, editWindow and pendingChanges', Boolean(meals && ['entries', 'editWindow', 'pendingChanges'].every((k) => meals.required.includes(k))));
   const dash = spec.components && spec.components.schemas && spec.components.schemas.MemberDashboard;
   check('MemberDashboard lists current and previous', Boolean(dash && dash.required.includes('current') && dash.required.includes('previous')));
   check('middleware makes only /api/mobile/v1/auth public', publicMobile && !/'\/api\/mobile'/.test(mw) && !/'\/api\/mobile\/v1'/.test(mw));
