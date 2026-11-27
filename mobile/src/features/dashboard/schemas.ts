@@ -23,10 +23,35 @@ const memberDashboard = z.object({
   current: memberMonth.nullable(),
 });
 
+const supervisorDashboard = z.object({
+  totals: z.object({
+    groups: z.number(),
+    members: z.number(),
+    meals: z.number(),
+    mealRate: z.number(),
+    expense: z.number(),
+    collected: z.number(),
+    outstanding: z.number(),
+  }),
+  unpaid: z.array(z.object({ groupId: z.string(), groupName: z.string(), id: z.string(), name: z.string(), due: z.number() })),
+  pendingMealChanges: z.array(z.unknown()),
+});
+
+const adminDashboard = z.object({
+  pendingApprovals: z.number(),
+  members: z.number(),
+  supervisors: z.number(),
+  activeGroups: z.number(),
+  inactiveGroups: z.number(),
+  activeMemberships: z.number(),
+});
+
 export const dashboardSchema = z.object({
   role: z.enum(['ADMIN', 'SUPERVISOR', 'MEMBER']),
   month: z.string(),
   member: memberDashboard.optional(),
+  supervisor: supervisorDashboard.optional(),
+  admin: adminDashboard.optional(),
 });
 
 export type Dashboard = z.infer<typeof dashboardSchema>;
