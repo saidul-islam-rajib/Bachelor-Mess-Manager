@@ -4,19 +4,20 @@ import { en } from '@/core/i18n/en';
 import { theme } from '@/core/theme';
 import { BazarScreen } from '@/features/bazar/BazarScreen';
 import { BillsScreen } from '@/features/bills/BillsScreen';
+import { PaymentsScreen } from '@/features/payments/PaymentsScreen';
 
 export default function MoneyTab() {
-  const [section, setSection] = useState<'bazar' | 'bills'>('bazar');
+  const [section, setSection] = useState<'bazar' | 'bills' | 'payments'>('bazar');
   return (
     <View style={styles.screen}>
       <View style={styles.row}>
-        {(['bazar', 'bills'] as const).map((k) => (
+        {(['bazar', 'bills', 'payments'] as const).map((k) => (
           <Pressable key={k} accessibilityRole="button" accessibilityState={{ selected: section === k }} style={[styles.button, section === k && styles.on]} onPress={() => setSection(k)}>
-            <Text style={section === k ? styles.onText : styles.text}>{k === 'bazar' ? en.bills.sectionBazar : en.bills.sectionBills}</Text>
+            <Text style={section === k ? styles.onText : styles.text}>{k === 'bazar' ? en.bills.sectionBazar : k === 'bills' ? en.bills.sectionBills : en.payments.sectionPayments}</Text>
           </Pressable>
         ))}
       </View>
-      {section === 'bazar' ? <BazarScreen /> : <BillsScreen />}
+      {section === 'bazar' ? <BazarScreen /> : section === 'bills' ? <BillsScreen /> : <PaymentsScreen />}
     </View>
   );
 }
