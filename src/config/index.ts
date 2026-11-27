@@ -350,6 +350,13 @@ export const pushConfig = {
   subject: readString('VAPID_SUBJECT', `mailto:${authorConfig.email}`)
 } as const;
 
+const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;
+const rawLogLevel = readString('LOG_LEVEL', 'info').toLowerCase();
+
+export const logConfig = {
+  level: (LOG_LEVELS as readonly string[]).includes(rawLogLevel) ? rawLogLevel : 'info'
+} as const;
+
 export const seedConfig = {
   enabled: readBoolean('SEED_ENABLED', !isProduction),
   emailDomain: readString('SEED_EMAIL_DOMAIN', 'bachelorpoint.local'),
