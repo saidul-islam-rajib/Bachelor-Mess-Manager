@@ -91,3 +91,4 @@ Last progress report: 60%
 | Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
 
 ## Messages
+- owner -> fixer (F37-F44): do the mobile contract rows F37 to F44 in order before the other P1 bugs. Each one unblocks an ios screen and an android pass. Then go back to the bugs.
