@@ -60,7 +60,10 @@ function run() {
     ['/api/groups/{id}/meals', ['src', 'pages', 'api', 'groups', '[id]', 'meals.ts'], ['get', 'put']],
     ['/api/groups/{id}/meal-edit-window', ['src', 'pages', 'api', 'groups', '[id]', 'meal-edit-window.ts'], ['get', 'post', 'delete']],
     ['/api/meal-changes/{id}', ['src', 'pages', 'api', 'meal-changes', '[id].ts'], ['patch', 'delete']],
-    ['/api/auth/me', ['src', 'pages', 'api', 'auth', 'me.ts'], ['get']]
+    ['/api/auth/me', ['src', 'pages', 'api', 'auth', 'me.ts'], ['get']],
+    ['/api/meal-prompts', ['src', 'pages', 'api', 'meal-prompts', 'index.ts'], ['get', 'post']],
+    ['/api/groups/{id}/meal-plan', ['src', 'pages', 'api', 'groups', '[id]', 'meal-plan.ts'], ['get', 'put']],
+    ['/api/groups/{id}/meal-summary', ['src', 'pages', 'api', 'groups', '[id]', 'meal-summary.ts'], ['get']]
   ]) {
     const ops = (spec.paths && spec.paths[apiPath]) || {};
     const src = read(...file);
