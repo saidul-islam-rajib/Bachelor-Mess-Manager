@@ -1663,6 +1663,401 @@
           }
         }
       }
+    },
+    "/api/groups/{id}/payments": {
+      "get": {
+        "summary": "Payments, member dues and totals of a month (needs PAYMENT_VIEW)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentsMonth"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Record a cash payment (supervisor with PAYMENT_RECORD, group open, month not closed)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/payments/{id}": {
+      "patch": {
+        "summary": "Change a payment amount or date (supervisor with PAYMENT_RECORD, group open); 409 when linked rows forbid it",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Payment id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentPatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentUpdated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Reverse a payment, or delete it outright with hard=true (supervisor with PAYMENT_RECORD, group open); 409 when not allowed. Response is PaymentReversed, or PaymentDeleted when hard=true",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Payment id"
+          },
+          {
+            "name": "hard",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reversed or deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PaymentReversed"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PaymentDeleted"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/advances": {
+      "get": {
+        "summary": "Advance balances per active member and the latest 100 deposits (needs PAYMENT_VIEW)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Advances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvancesList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Record an advance deposit (supervisor with PAYMENT_RECORD, group open)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvanceCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Reverse an advance deposit (supervisor with PAYMENT_RECORD)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          },
+          {
+            "name": "advanceId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reversed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvanceReversed"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/settlements/mine": {
+      "get": {
+        "summary": "The signed-in user's final settlement submissions across all groups, newest first",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Submissions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementsMine"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -4392,6 +4787,778 @@
         "properties": {
           "comment": {
             "$ref": "#/components/schemas/ExpenseComment"
+          }
+        }
+      },
+      "PaymentRow": {
+        "type": "object",
+        "required": [
+          "id",
+          "userId",
+          "userName",
+          "amount",
+          "date",
+          "billId",
+          "billType",
+          "isReversal",
+          "isReversed",
+          "isLinked"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "billId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "billType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isReversal": {
+            "type": "boolean"
+          },
+          "isReversed": {
+            "type": "boolean"
+          },
+          "isLinked": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PaymentMember": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "meals",
+          "carryIn",
+          "mealCost",
+          "billShare",
+          "billShareByType",
+          "cost",
+          "bazarPaid",
+          "collected",
+          "due",
+          "status",
+          "isActive"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "meals": {
+            "type": "number"
+          },
+          "carryIn": {
+            "type": "number"
+          },
+          "mealCost": {
+            "type": "number"
+          },
+          "billShare": {
+            "type": "number"
+          },
+          "billShareByType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "cost": {
+            "type": "number"
+          },
+          "bazarPaid": {
+            "type": "number"
+          },
+          "collected": {
+            "type": "number"
+          },
+          "due": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PaymentTotals": {
+        "type": "object",
+        "required": [
+          "bazar",
+          "bills",
+          "expense",
+          "cost",
+          "carryIn",
+          "mealRate",
+          "averageDayRate",
+          "ratioRate",
+          "pricedDays",
+          "meals",
+          "collected",
+          "outstanding",
+          "refunds",
+          "unallocatedBazar",
+          "unpricedMeals"
+        ],
+        "properties": {
+          "bazar": {
+            "type": "number"
+          },
+          "bills": {
+            "type": "number"
+          },
+          "expense": {
+            "type": "number"
+          },
+          "cost": {
+            "type": "number"
+          },
+          "carryIn": {
+            "type": "number"
+          },
+          "mealRate": {
+            "type": "number"
+          },
+          "averageDayRate": {
+            "type": "number"
+          },
+          "ratioRate": {
+            "type": "number"
+          },
+          "pricedDays": {
+            "type": "number"
+          },
+          "meals": {
+            "type": "number"
+          },
+          "collected": {
+            "type": "number"
+          },
+          "outstanding": {
+            "type": "number"
+          },
+          "refunds": {
+            "type": "number"
+          },
+          "unallocatedBazar": {
+            "type": "number"
+          },
+          "unpricedMeals": {
+            "type": "number"
+          }
+        }
+      },
+      "PaymentsMonth": {
+        "type": "object",
+        "required": [
+          "canManage",
+          "currentUserId",
+          "through",
+          "rateMode",
+          "effectiveRateMode",
+          "rateModeFallbackReason",
+          "categoryLabels",
+          "closing",
+          "members",
+          "days",
+          "payments",
+          "totals",
+          "byType"
+        ],
+        "properties": {
+          "canManage": {
+            "type": "boolean"
+          },
+          "currentUserId": {
+            "type": "string"
+          },
+          "through": {
+            "type": "string",
+            "description": "YYYY-MM-DD"
+          },
+          "rateMode": {
+            "type": "string"
+          },
+          "effectiveRateMode": {
+            "type": "string"
+          },
+          "rateModeFallbackReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "categoryLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "closing": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "closedAt",
+                  "closedThrough",
+                  "closedBy"
+                ],
+                "properties": {
+                  "closedAt": {
+                    "type": "string"
+                  },
+                  "closedThrough": {
+                    "type": "string"
+                  },
+                  "closedBy": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentMember"
+            }
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "date",
+                "meals",
+                "bazar",
+                "charged",
+                "rate",
+                "runningRate",
+                "cost",
+                "buyers"
+              ],
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "meals": {
+                  "type": "number"
+                },
+                "bazar": {
+                  "type": "number"
+                },
+                "charged": {
+                  "type": "number"
+                },
+                "rate": {
+                  "type": "number"
+                },
+                "runningRate": {
+                  "type": "number"
+                },
+                "cost": {
+                  "type": "number"
+                },
+                "buyers": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name",
+                      "amount"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentRow"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/PaymentTotals"
+          },
+          "byType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "PaymentRequest": {
+        "type": "object",
+        "required": [
+          "userId",
+          "amount",
+          "date"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100000000
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        }
+      },
+      "PaymentCreated": {
+        "type": "object",
+        "required": [
+          "payment"
+        ],
+        "properties": {
+          "payment": {
+            "type": "object",
+            "required": [
+              "id",
+              "userId",
+              "userName",
+              "amount",
+              "date"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "userName": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "date": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "PaymentPatchRequest": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        }
+      },
+      "PaymentUpdated": {
+        "type": "object",
+        "required": [
+          "updated"
+        ],
+        "properties": {
+          "updated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PaymentDeleted": {
+        "type": "object",
+        "required": [
+          "deleted"
+        ],
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PaymentReversed": {
+        "type": "object",
+        "required": [
+          "reversed",
+          "amount"
+        ],
+        "properties": {
+          "reversed": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "AdvanceMember": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "balance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "balance": {
+            "type": "number"
+          }
+        }
+      },
+      "AdvanceRow": {
+        "type": "object",
+        "required": [
+          "id",
+          "userId",
+          "userName",
+          "amount",
+          "note",
+          "expenseId",
+          "expenseType",
+          "recordedByName",
+          "reversalOfId",
+          "isReversed",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expenseId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expenseType": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "recordedByName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reversalOfId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isReversed": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "AdvancesList": {
+        "type": "object",
+        "required": [
+          "canManage",
+          "currentUserId",
+          "members",
+          "history"
+        ],
+        "properties": {
+          "canManage": {
+            "type": "boolean"
+          },
+          "currentUserId": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvanceMember"
+            }
+          },
+          "history": {
+            "type": "array",
+            "description": "Latest 100, newest first",
+            "items": {
+              "$ref": "#/components/schemas/AdvanceRow"
+            }
+          }
+        }
+      },
+      "AdvanceRequest": {
+        "type": "object",
+        "required": [
+          "userId",
+          "amount"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100000000
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      },
+      "AdvanceCreated": {
+        "type": "object",
+        "required": [
+          "advance"
+        ],
+        "properties": {
+          "advance": {
+            "type": "object",
+            "required": [
+              "id",
+              "userId",
+              "amount"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "AdvanceReversed": {
+        "type": "object",
+        "required": [
+          "reversed",
+          "amount"
+        ],
+        "properties": {
+          "reversed": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "SettlementTransfer": {
+        "type": "object",
+        "required": [
+          "direction",
+          "counterpartyName",
+          "amount"
+        ],
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "out",
+              "in"
+            ]
+          },
+          "counterpartyName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "SettlementHistoryEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "groupId",
+          "groupName",
+          "monthKey",
+          "method",
+          "actorName",
+          "submittedAt",
+          "mealRate",
+          "meals",
+          "carryIn",
+          "mealCost",
+          "billShare",
+          "totalCost",
+          "bazarPaid",
+          "cashPaid",
+          "dueAtClose",
+          "payableByType",
+          "paidByType",
+          "transfers",
+          "categoryLabels"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "monthKey": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "enum": [
+              "SELF",
+              "SUPERVISOR"
+            ]
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "mealRate": {
+            "type": "number"
+          },
+          "meals": {
+            "type": "number"
+          },
+          "carryIn": {
+            "type": "number"
+          },
+          "mealCost": {
+            "type": "number"
+          },
+          "billShare": {
+            "type": "number"
+          },
+          "totalCost": {
+            "type": "number"
+          },
+          "bazarPaid": {
+            "type": "number"
+          },
+          "cashPaid": {
+            "type": "number"
+          },
+          "dueAtClose": {
+            "type": "number"
+          },
+          "payableByType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "paidByType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "transfers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SettlementTransfer"
+            }
+          },
+          "categoryLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SettlementsMine": {
+        "type": "object",
+        "required": [
+          "submissions"
+        ],
+        "properties": {
+          "submissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SettlementHistoryEntry"
+            }
           }
         }
       }
