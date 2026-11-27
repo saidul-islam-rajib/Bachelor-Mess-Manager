@@ -2,6 +2,32 @@
 
 Written by `qa` each time overall progress passes another 10%. Newest first.
 
+## 2026-11-27: 70% (64/88 done)
+
+### architect
+- Finished: A6 (ADR-005 mobile plan), A7 (ADR-006 push), A8 (ADR-008 logging).
+- In progress: none. Blocked: none.
+
+### fixer
+- Finished: F32-F35 permission guards, F36-F44 mobile contracts, F51 (tracing on auth and membership libs).
+- In progress: remaining bugs and logging rows. Blocked: none.
+
+### android
+- Finished: D1-D4 passes. In progress: D5 in review. Blocked: none.
+
+### ios
+- Finished: I3-I14, I17, I20 (mobile logging), I15 (notifications screen).
+- In progress: I16 profile next. Blocked: none.
+
+### qa
+- Finished: merged F51, I20, I15; root typecheck, lint, allocation 39/39, lib tracing 100/100, mobile tsc, eslint, jest 60/60 pass.
+
+### Try on the iPhone now
+Follow `docs/mobile-on-iphone.md`: Home dashboard, Meals, Money (bazar, bills, payments), Mess (settlement, members), and More > Notifications.
+
+### Owner decisions
+None.
+
 ## 2026-11-27: 60% (25/41 done)
 
 ### architect
