@@ -24,9 +24,26 @@ export const en = {
     serverBad: 'That server did not answer.',
     serverInvalid: 'Enter an address starting with http:// or https://',
   },
-  home: {
-    title: 'Home',
-    welcome: 'Hello, {name}',
+  tabs: {
+    home: 'Home',
+    meals: 'Meals',
+    money: 'Money',
+    mess: 'Mess',
+    more: 'More',
+  },
+  group: {
+    pick: 'Choose mess',
+    active: 'Active mess',
+    none: 'You are not in a group yet.',
+    loadFailed: 'Could not load your messes.',
+  },
+  soon: {
+    meals: 'Meals are coming soon.',
+    money: 'Bazar, bills and payments are coming soon.',
+    mess: 'Members and settlement are coming soon.',
+  },
+  more: {
+    signedInAs: 'Signed in as {name}',
     signOut: 'Sign out',
   },
   dashboard: {
