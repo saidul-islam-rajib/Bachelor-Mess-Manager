@@ -18,6 +18,12 @@ The Bachelor Point app is one Expo codebase for iPhone and Android (ADR-001). Th
 - `usesCleartextTraffic` is not set there: it needs the `expo-build-properties` plugin, which ADR-001 does not allow before a development build exists. Expo Go does not need it. Raise a board task before the first store build.
 - Platform fixes go in `*.android.tsx` files beside the shared screen, never in separate folders.
 
+## Dashboard on Android
+
+- `mobile/src/features/dashboard/DashboardScreen.android.tsx` wraps the shared screen and sets a dark status bar on the white background. It imports the shared file by its full name so it does not import itself.
+- Pull to refresh works as shared: the dashboard `ScrollView` has a `RefreshControl`, and Android shows its own spinner. Changing the spinner colour needs an edit in the shared screen, which ios owns.
+- The hardware back button on the dashboard leaves the app, because the dashboard is the first screen after sign-in. No handler is added.
+
 ## Not checked in the sandbox
 
 The sandbox has no Android SDK or phone, so on-device behaviour is tested by the owner. Agents run only the typecheck, lint and jest checks of ADR-003.
