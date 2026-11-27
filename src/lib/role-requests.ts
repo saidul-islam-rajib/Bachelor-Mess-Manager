@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { USER_ROLES } from '@/lib/constants';
 import { getSiteSettings } from '@/lib/settings-service';
+import { traced } from '@/lib/log';
 
 export const ROLE_REQUEST_STATUS = {
   PENDING: 'PENDING',
@@ -25,7 +26,7 @@ export async function getRolePolicy() {
   };
 }
 
-export async function applyRole(userId: string, role: string, decidedById: string | null) {
+async function applyRoleImpl(userId: string, role: string, decidedById: string | null) {
   await prisma.user.update({
     where: { id: userId },
     data: { role, tokenVersion: { increment: 1 } }
@@ -34,7 +35,7 @@ export async function applyRole(userId: string, role: string, decidedById: strin
   if (decidedById) return;
 }
 
-export async function createRoleRequest(params: {
+async function createRoleRequestImpl(params: {
   userId: string;
   requestedRole: string;
   reason?: string | null;
@@ -106,7 +107,7 @@ export async function createRoleRequest(params: {
   return { ok: true, autoApproved: autoApprove, requestId: request.id };
 }
 
-export async function decideRoleRequest(params: {
+async function decideRoleRequestImpl(params: {
   requestId: string;
   approve: boolean;
   decidedById: string;
@@ -138,3 +139,9 @@ export async function decideRoleRequest(params: {
 
   return { ok: true, userId: request.userId, role: request.requestedRole };
 }
+
+export const applyRole = traced('applyRole', applyRoleImpl);
+
+export const createRoleRequest = traced('createRoleRequest', createRoleRequestImpl);
+
+export const decideRoleRequest = traced('decideRoleRequest', decideRoleRequestImpl);

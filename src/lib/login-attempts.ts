@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { securityConfig } from '@/config';
 import { getSecurityPolicy } from '@/lib/settings-service';
+import { traced } from '@/lib/log';
 
 export const LOGIN_FAILURE_REASONS = {
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
@@ -25,7 +26,7 @@ function minutesAgo(minutes: number): Date {
   return new Date(Date.now() - minutes * 60_000);
 }
 
-export async function recordLoginAttempt(params: {
+async function recordLoginAttemptImpl(params: {
   email: string;
   ipAddress: string;
   userAgent?: string | null;
@@ -43,11 +44,11 @@ export async function recordLoginAttempt(params: {
   });
 }
 
-export async function clearFailedAttempts(email: string) {
+async function clearFailedAttemptsImpl(email: string) {
   await prisma.loginAttempt.deleteMany({ where: { email, successful: false } });
 }
 
-export async function evaluateLoginLock(email: string, ipAddress: string): Promise<LoginLockState> {
+async function evaluateLoginLockImpl(email: string, ipAddress: string): Promise<LoginLockState> {
   const policy = await getSecurityPolicy();
 
   const accountWindowStart = minutesAgo(policy.loginLockoutMinutes);
@@ -150,11 +151,11 @@ export async function listRecentFailures({ skip = 0, take, search }: { skip?: nu
   };
 }
 
-export async function unlockAccount(email: string) {
+async function unlockAccountImpl(email: string) {
   await clearFailedAttempts(email);
 }
 
-export async function pruneLoginAttempts() {
+async function pruneLoginAttemptsImpl() {
   const cutoff = minutesAgo(securityConfig.loginAttemptRetentionDays * 24 * 60);
   const result = await prisma.loginAttempt.deleteMany({ where: { createdAt: { lt: cutoff } } });
   return result.count;
@@ -171,8 +172,20 @@ export async function countRecentRegistrations(ipAddress: string): Promise<numbe
   });
 }
 
-export async function recordRegistrationAttempt(email: string, ipAddress: string) {
+async function recordRegistrationAttemptImpl(email: string, ipAddress: string) {
   await prisma.loginAttempt.create({
     data: { email, ipAddress, successful: true, reason: 'REGISTRATION' }
   });
 }
+
+export const recordLoginAttempt = traced('recordLoginAttempt', recordLoginAttemptImpl);
+
+export const clearFailedAttempts = traced('clearFailedAttempts', clearFailedAttemptsImpl);
+
+export const evaluateLoginLock = traced('evaluateLoginLock', evaluateLoginLockImpl);
+
+export const unlockAccount = traced('unlockAccount', unlockAccountImpl);
+
+export const pruneLoginAttempts = traced('pruneLoginAttempts', pruneLoginAttemptsImpl);
+
+export const recordRegistrationAttempt = traced('recordRegistrationAttempt', recordRegistrationAttemptImpl);

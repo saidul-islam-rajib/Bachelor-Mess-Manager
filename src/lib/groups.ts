@@ -4,12 +4,13 @@ import { invalidatePrefix } from '@/lib/cache';
 import { SESSION_USER_CACHE_PREFIX } from '@/lib/cache-keys';
 import { GROUP_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { strings } from '@/lib/i18n';
+import { traced } from '@/lib/log';
 
 export const MAX_GROUPS_PER_SUPERVISOR = groupConfig.maxGroupsPerSupervisor;
 
 export type JoinCheck = { ok: true } | { ok: false; error: string };
 
-export async function canJoinGroup(userId: string, groupId: string): Promise<JoinCheck> {
+async function canJoinGroupImpl(userId: string, groupId: string): Promise<JoinCheck> {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true, name: true, role: true }
@@ -32,7 +33,7 @@ export async function canJoinGroup(userId: string, groupId: string): Promise<Joi
   return { ok: true };
 }
 
-export async function canJoinGroupSelf(userId: string, groupId: string): Promise<JoinCheck> {
+async function canJoinGroupSelfImpl(userId: string, groupId: string): Promise<JoinCheck> {
   const check = await canJoinGroup(userId, groupId);
   if (check.ok) return check;
 
@@ -47,7 +48,7 @@ export async function canJoinGroupSelf(userId: string, groupId: string): Promise
   };
 }
 
-export async function canCreateGroup(supervisorId: string): Promise<JoinCheck> {
+async function canCreateGroupImpl(supervisorId: string): Promise<JoinCheck> {
   const count = await prisma.group.count({
     where: { supervisorId, status: GROUP_STATUS.ACTIVE }
   });
@@ -57,7 +58,7 @@ export async function canCreateGroup(supervisorId: string): Promise<JoinCheck> {
   return { ok: true };
 }
 
-export async function activateMembership(groupId: string, userId: string) {
+async function activateMembershipImpl(groupId: string, userId: string) {
   const existing = await prisma.membership.findFirst({ where: { groupId, userId } });
 
   if (!existing) {
@@ -84,7 +85,7 @@ export type SupervisionTransfer =
     }
   | { ok: false; error: string };
 
-export async function transferSupervision(params: {
+async function transferSupervisionImpl(params: {
   groupId: string;
   nextSupervisorId: string;
 }): Promise<SupervisionTransfer> {
@@ -192,3 +193,13 @@ export function stayDays(joinedAt: Date, leftAt: Date | null): number {
   const end = leftAt ?? new Date();
   return Math.max(0, Math.floor((end.getTime() - joinedAt.getTime()) / MILLISECONDS_PER_DAY));
 }
+
+export const canJoinGroup = traced('canJoinGroup', canJoinGroupImpl);
+
+export const canJoinGroupSelf = traced('canJoinGroupSelf', canJoinGroupSelfImpl);
+
+export const canCreateGroup = traced('canCreateGroup', canCreateGroupImpl);
+
+export const activateMembership = traced('activateMembership', activateMembershipImpl);
+
+export const transferSupervision = traced('transferSupervision', transferSupervisionImpl);

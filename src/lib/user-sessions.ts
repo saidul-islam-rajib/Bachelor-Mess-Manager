@@ -4,6 +4,7 @@ import { appConfig, dateConfig } from '@/config';
 import { clientIp } from '@/lib/rate-limit';
 import { zonedDayKey } from '@/lib/month';
 import { strings } from '@/lib/i18n';
+import { traced } from '@/lib/log';
 
 export const SESSION_IDLE_GAP_MS = 30 * 60_000;
 export const SESSION_ONLINE_WINDOW_MS = 5 * 60_000;
@@ -150,14 +151,14 @@ export async function touchSession(
   }
 }
 
-export async function closeStaleSessions(userId: string, now = new Date()) {
+async function closeStaleSessionsImpl(userId: string, now = new Date()) {
   await prisma.userSession.updateMany({
     where: { userId, endedAt: null, lastSeenAt: { lt: new Date(now.getTime() - SESSION_IDLE_GAP_MS) } },
     data: { endedAt: now, endedReason: SESSION_END_REASONS.IDLE }
   });
 }
 
-export async function endSession(userId: string, reason: string = SESSION_END_REASONS.LOGOUT) {
+async function endSessionImpl(userId: string, reason: string = SESSION_END_REASONS.LOGOUT) {
   const now = new Date();
   try {
     await prisma.userSession.updateMany({
@@ -532,3 +533,7 @@ export async function listMemberVisits(userId: string, take: number, skip: numbe
 
   return { user, visits, total };
 }
+
+export const closeStaleSessions = traced('closeStaleSessions', closeStaleSessionsImpl);
+
+export const endSession = traced('endSession', endSessionImpl);

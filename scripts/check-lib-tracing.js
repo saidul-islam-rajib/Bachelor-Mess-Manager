@@ -16,7 +16,14 @@ const plan = {
     'markFinalSettlementSettled'
   ],
   closings: ['closeMonth', 'reopenMonth', 'markSettled'],
-  'meal-cost': ['allocateMealCosts']
+  'meal-cost': ['allocateMealCosts'],
+  'password-tokens': ['consumeToken', 'prunePasswordTokens'],
+  'user-sessions': ['closeStaleSessions', 'endSession'],
+  'login-attempts': ['recordLoginAttempt', 'clearFailedAttempts', 'evaluateLoginLock', 'unlockAccount', 'pruneLoginAttempts', 'recordRegistrationAttempt'],
+  'groups': ['canJoinGroup', 'canJoinGroupSelf', 'canCreateGroup', 'activateMembership', 'transferSupervision'],
+  'supervisors': ['addCoSupervisor', 'removeCoSupervisor'],
+  'role-requests': ['applyRole', 'createRoleRequest', 'decideRoleRequest'],
+  'user-permissions': ['replaceOverrides']
 };
 
 let failed = 0;
