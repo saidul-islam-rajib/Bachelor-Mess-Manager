@@ -3,7 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser, requireAdmin } from '@/lib/auth-utils';
 import { USER_STATUS } from '@/lib/constants';
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
-import { activateMembership, canJoinGroup, stayDays } from '@/lib/groups';
+import { activateMembership, canJoinGroup, GROUP_CLOSED_MESSAGE, isGroupWritable, stayDays } from '@/lib/groups';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { listSupervisors, removeCoSupervisor } from '@/lib/supervisors';
 import { normalizeEmail } from '@/lib/validation';
 import { withAudit } from '@/lib/with-audit';
@@ -108,6 +110,13 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
 
     const { userId, isActive } = req.body as { userId?: string; isActive?: boolean };
+    if (!isGroupWritable(group)) {
+      return forbidden(res, GROUP_CLOSED_MESSAGE);
+    }
+    const needed = isActive === true ? PERMISSIONS.MEMBERSHIP_ADD : PERMISSIONS.MEMBERSHIP_REMOVE;
+    if (!hasPermission(sessionUser, needed)) {
+      return forbidden(res, strings.errors.permissionDenied);
+    }
     if (!userId) {
       return badRequest(res, 'User ID is required.');
     }
@@ -148,6 +157,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
     if (!isSelf && !canManage) {
       return forbidden(res, "Only this group's supervisor can remove other members.");
+    }
+    if (!isSelf) {
+      if (!hasPermission(sessionUser, PERMISSIONS.MEMBERSHIP_REMOVE)) {
+        return forbidden(res, strings.errors.permissionDenied);
+      }
+      if (!isGroupWritable(group)) {
+        return forbidden(res, GROUP_CLOSED_MESSAGE);
+      }
     }
     if (targetId === group.supervisorId) {
       return badRequest(
