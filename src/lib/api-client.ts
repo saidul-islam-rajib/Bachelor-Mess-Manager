@@ -1,4 +1,5 @@
 import { strings } from '@/lib/i18n';
+import { logApiFailure } from '@/lib/client-log';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -43,6 +44,7 @@ export async function apiRequest<T = unknown>(path: string, options: RequestOpti
     });
   } catch (error) {
     if ((error as Error).name === 'AbortError') throw error;
+    logApiFailure(method, path, 0, null);
     throw new ApiError(strings.errors.network, 0, null);
   }
 
@@ -54,6 +56,10 @@ export async function apiRequest<T = unknown>(path: string, options: RequestOpti
     } catch {
       payload = null;
     }
+  }
+
+  if (response.status >= 500) {
+    logApiFailure(method, path, response.status, response.headers.get('x-request-id'));
   }
 
   if (!response.ok) {

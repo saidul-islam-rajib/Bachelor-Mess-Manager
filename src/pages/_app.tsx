@@ -9,6 +9,7 @@ import { MonthProvider } from '@/components/MonthProvider';
 import { NotificationsProvider } from '@/components/NotificationsProvider';
 import { CommunityProvider } from '@/components/CommunityProvider';
 import { PwaProvider } from '@/components/PwaProvider';
+import ClientLogger from '@/components/ClientLogger';
 import PresenceTracker from '@/components/PresenceTracker';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import ThemeSync from '@/components/ThemeSync';
@@ -47,6 +48,7 @@ export default function App({ Component, pageProps }: AppProps) {
                   <NotificationsProvider>
                     <CommunityProvider>
                       <PwaProvider>
+                        <ClientLogger />
                         <PresenceTracker />
                         <Layout>
                           <Component {...pageProps} />
