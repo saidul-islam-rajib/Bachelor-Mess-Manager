@@ -8,6 +8,8 @@ import { isValidBillType } from '@/lib/expense-categories';
 import { dayToUtcDate, round2, utcDateToDay } from '@/lib/month';
 import { recordExpenseDeleted, recordExpenseUpdated } from '@/lib/expense-history';
 import { clearPayerCredit, syncPayerCredit } from '@/lib/bill-collections';
+import { hasPermission, PERMISSIONS } from '@/lib/permissions';
+import { strings } from '@/lib/i18n';
 import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { refundAdvanceForBill } from '@/lib/advances';
 import { withAudit } from '@/lib/with-audit';
@@ -37,6 +39,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
 
   if (!(await canManageGroup(bill.groupId, sessionUser))) {
     return forbidden(res, "Only this group's supervisor can change bills.");
+  }
+
+  if (!hasPermission(sessionUser, PERMISSIONS.BILL_MANAGE)) {
+    return forbidden(res, strings.errors.permissionDenied);
   }
 
   if (!isGroupWritable(bill.group)) {
