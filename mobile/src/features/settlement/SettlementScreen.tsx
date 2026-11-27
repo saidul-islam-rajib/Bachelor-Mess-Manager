@@ -219,7 +219,6 @@ export function SettlementScreen() {
           })}
         </View>
       ) : null}
-      <Text style={styles.muted}>{en.settlement.sectionPlaceholder}</Text>
     </ScrollView>
   );
 }
