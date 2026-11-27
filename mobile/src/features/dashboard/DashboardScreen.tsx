@@ -18,7 +18,7 @@ function Tile({ label, value }: { label: string; value: string }) {
 }
 
 export function DashboardScreen() {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const query = useQuery({ queryKey: ['dashboard'], queryFn: fetchDashboard });
   const data = query.data;
   const current = data?.member?.current ?? null;
@@ -67,9 +67,6 @@ export function DashboardScreen() {
         </View>
       ) : null}
 
-      <Pressable accessibilityRole="button" style={styles.button} onPress={() => void signOut()}>
-        <Text style={styles.buttonText}>{en.home.signOut}</Text>
-      </Pressable>
     </ScrollView>
   );
 }
