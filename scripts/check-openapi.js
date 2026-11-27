@@ -87,7 +87,9 @@ function run() {
     ['/api/groups/{id}/closings', ['src', 'pages', 'api', 'groups', '[id]', 'closings.ts'], ['get', 'post']],
     ['/api/closings/{id}', ['src', 'pages', 'api', 'closings', '[id].ts'], ['delete']],
     ['/api/groups/{id}/final-settlement', ['src', 'pages', 'api', 'groups', '[id]', 'final-settlement.ts'], ['get', 'post']],
-    ['/api/settlement/status', ['src', 'pages', 'api', 'settlement', 'status.ts'], ['get']]
+    ['/api/settlement/status', ['src', 'pages', 'api', 'settlement', 'status.ts'], ['get']],
+    ['/api/notifications', ['src', 'pages', 'api', 'notifications', 'index.ts'], ['get', 'patch']],
+    ['/api/notifications/{id}', ['src', 'pages', 'api', 'notifications', '[id].ts'], ['patch']]
   ]) {
     const ops = (spec.paths && spec.paths[apiPath]) || {};
     const src = read(...file);
@@ -97,6 +99,8 @@ function run() {
     check(`${apiPath} contract lists no method the route lacks`, Object.keys(ops).every((m) => new RegExp(`'${m.toUpperCase()}'`).test(src) || m === 'get' && /req\.method === 'GET'|getSessionUser/.test(src) && apiPath === '/api/auth/me'));
     check(`${apiPath} reads the session through getSessionUser`, /getSessionUser\(req/.test(src));
   }
+  const feed = spec.components && spec.components.schemas && spec.components.schemas.NotificationFeed;
+  check('NotificationFeed lists notifications, unreadCount and meta', Boolean(feed && ['notifications', 'unreadCount', 'meta'].every((k) => feed.required.includes(k))));
   const bazar = spec.components && spec.components.schemas && spec.components.schemas.BazarSchedule;
   check('BazarSchedule lists days, members and editable', Boolean(bazar && ['days', 'members', 'editable'].every((k) => bazar.required.includes(k))));
   const expensesMonth = spec.components && spec.components.schemas && spec.components.schemas.ExpensesMonth;
