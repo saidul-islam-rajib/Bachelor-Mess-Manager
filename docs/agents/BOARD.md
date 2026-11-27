@@ -15,6 +15,7 @@ Last progress report: 60%
 | A5 | architect | P1 | done | A2,A3,A4 | Break the accepted ADRs into one-run tasks for android, ios and fixer on this board | | Rewrote D1; added F27, I3-I5, D2 |
 | A6 | architect | P0 | done | | Plan the rest of the mobile app so it matches the web (ADR-005) | agents/architect/A6-mobile-plan | Merged by qa: ADR-005 accepted, plan in notes/A6.md; F36-F45, I6-I18, D3-D6 added |
 | A7 | architect | P2 | done | A6 | ADR-006: remote push to the app (Expo push tokens, token table, sender beside Web Push, what Expo Go can receive, owner Apple account); see ADR-005 | agents/architect/A7-mobile-push | Merged by qa: ADR-006 accepted, Expo push service; follow-ups F46, F47, I19, D7 |
+| A8 | architect | P0 | todo | | ADR-008 logging and tracing across web, API and mobile: structured JSON logs with a request id that the web and the app send as `x-request-id`; every API request logged at start and end with method, path, user id, status, duration and a redacted body; start, end, duration, result and error for the lib functions on money, auth and membership paths; the app logs every API call and every error and sends them to a backend log endpoint so web, iPhone and Android end up in one stream; redaction of password, token, secret, authorization, cookie and OTP fields; log level from env; where logs go in Docker and how the owner and Claude follow them live (`docker compose logs -f app`). Then add one-run rows for fixer and ios with `Depends` set | | |
 | F1 | fixer | P0 | done | | Make `npm run typecheck` and `npm run lint` pass cleanly | | Already clean on agents/integration, no change needed |
 | F2 | fixer | P0 | done | | Audit meal rate and the meal cost split; add one F row per bug found | | Audit only, no code changed; found F7 and F8 |
 | F3 | fixer | P0 | done | | Audit bills, bill collections and vendor-paid bills; add one F row per bug found | | Audit of bills only (bill-collections and vendor-paid not yet read); found F9, F10, F11. Re-audit collections as F12 |
@@ -92,3 +93,4 @@ Last progress report: 60%
 
 ## Messages
 - owner -> fixer (F37-F44): do the mobile contract rows F37 to F44 in order before the other P1 bugs. Each one unblocks an ios screen and an android pass. Then go back to the bugs.
+- owner -> architect (A8): logging is P0. The owner tests on iPhone, Android and web and wants every failure visible in one log stream that Claude can watch and act on.
