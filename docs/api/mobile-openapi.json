@@ -1,0 +1,128 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Bachelor Point mobile API", "version": "1.0.0" },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "summary": "Server health check, public",
+        "responses": {
+          "200": {
+            "description": "Server is up",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } }
+          },
+          "500": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/mobile/v1/auth/login": {
+      "post": {
+        "summary": "Sign in with email and password, sets no cookie",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed in",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } }
+          },
+          "400": { "$ref": "#/components/responses/Error" },
+          "401": { "$ref": "#/components/responses/Error" },
+          "403": { "$ref": "#/components/responses/Error" },
+          "429": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/mobile/v1/auth/refresh": {
+      "post": {
+        "summary": "Exchange a valid bearer token for a new one",
+        "security": [{ "bearer": [] }],
+        "responses": {
+          "200": {
+            "description": "New token",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RefreshResponse" } } }
+          },
+          "401": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/api/mobile/v1/auth/logout": {
+      "post": {
+        "summary": "End the activity session; the app then deletes its token",
+        "security": [{ "bearer": [] }],
+        "responses": {
+          "200": {
+            "description": "Signed out",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ok" } } }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": { "bearer": { "type": "http", "scheme": "bearer" } },
+    "responses": {
+      "Error": {
+        "description": "Error",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["error"],
+        "properties": { "error": { "type": "string" } }
+      },
+      "Ok": {
+        "type": "object",
+        "required": ["ok"],
+        "properties": { "ok": { "type": "boolean" } }
+      },
+      "Health": {
+        "type": "object",
+        "required": ["status", "bootstrap"],
+        "properties": {
+          "status": { "type": "string", "enum": ["ok", "degraded"] },
+          "bootstrap": {
+            "type": "object",
+            "properties": {
+              "completedAt": { "type": ["string", "null"] },
+              "error": { "type": ["string", "null"] }
+            }
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": { "email": { "type": "string" }, "password": { "type": "string" } }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "required": ["token", "expiresAt"],
+        "properties": {
+          "token": { "type": "string" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "required": ["token", "expiresAt", "user"],
+        "properties": {
+          "token": { "type": "string" },
+          "expiresAt": { "type": "string", "format": "date-time" },
+          "user": {
+            "type": "object",
+            "required": ["id", "name", "email", "role"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "email": { "type": "string" },
+              "role": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
