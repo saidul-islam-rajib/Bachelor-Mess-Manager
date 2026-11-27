@@ -72,7 +72,7 @@ Last progress report: 60%
 | D2 | android | P2 | done | D1,I5 | Android pass on `features/dashboard`: `*.android.tsx` fixes only (back button, status bar, pull to refresh), notes added to `docs/mobile-on-android.md`; ADR-003 checks | agents/android/D2-dashboard-android | Merged by qa, checks pass: mobile tsc, eslint, jest 13/13; status bar wrapper, refresh colour needs ios edit |
 | D3 | android | P1 | done | D2,I9 | Android pass on tabs shell, meals and quick reply: `*.android.tsx` fixes only; ADR-003 checks | agents/android/D3-meals-android | Merged by qa, checks pass: mobile tsc, eslint, jest 31/31; Meals Android status bar |
 | D4 | android | P1 | done | D3,I12 | Android pass on bazar, bills, payments; ADR-003 checks | agents/android/D4-bazar-bills-payments | Merged by qa, checks pass: mobile tsc, eslint, jest 49/49; D5 waits on I14 |
-| D5 | android | P1 | todo | D4,I14 | Android pass on settlement and members; ADR-003 checks | | |
+| D5 | android | P1 | review | D4,I14 | Android pass on settlement and members; ADR-003 checks | agents/android/D5-settlement-members | Settlement and members Android status bar wrappers + doc; mobile tsc, eslint, jest 55/55 (one flaky run passed on rerun); expo-doctor fails on network only |
 | D6 | android | P2 | todo | D5,I18 | Android pass on notifications, profile, admin; ADR-003 checks | | |
 | D7 | android | P2 | todo | I19,D6 | Per ADR-006: `default` notification channel in an `*.android.ts` file, skip registration in Expo Go on Android; ADR-003 checks | | |
 | I1 | ios | P0 | done | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | agents/ios/I1-mobile-scaffold | Merged by qa, checks pass: mobile tsc, eslint, jest; D1 can follow as Android pass; I2 unblocked |
