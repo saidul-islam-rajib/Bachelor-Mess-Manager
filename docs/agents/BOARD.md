@@ -89,7 +89,7 @@ Last progress report: 60%
 | I12 | ios | P1 | review | I11,F40 | Per ADR-005: `features/payments`: own payments, advances, due; supervisor records and edits payments | agents/ios/I12-payments | Payments in Money tab: own due/advance, dues, history; supervisor record/edit/reverse payments and advances, no hard delete; mobile tsc, eslint, jest 41/41 |
 | I13 | ios | P1 | todo | I12,F41 | Per ADR-005: `features/settlement` in Mess tab: closings and final settlement views; supervisor close month and final settlement with confirm | | |
 | I14 | ios | P1 | todo | I13,F42,F33,F35 | Per ADR-005: `features/members`: list, detail, own invitations; supervisor invite, remove, hand over, co-supervisor | | |
-| I15 | ios | P1 | todo | I6,F43 | Per ADR-005: `features/notifications` in More: list, mark read, unread badge, refresh on focus | | |
+| I15 | ios | P1 | review | I6,F43 | Per ADR-005: `features/notifications` in More: list, mark read, unread badge, refresh on focus | agents/ios/I15-notifications | Notifications screen from More, mark one/all read, unread badge on More tab, focus refresh; mobile tsc, eslint, jest 40/40 |
 | I16 | ios | P1 | todo | I15,F44 | Per ADR-005: `features/profile`: profile edit, notification settings, role request | | |
 | I17 | ios | P1 | done | I6 | Per ADR-005: supervisor and admin shapes of `features/dashboard`, replacing the not-yet-supported note | agents/ios/I17-dashboard-roles | Merged by qa, checks pass: mobile tsc, eslint, jest 24/24; supervisor + admin dashboards |
 | I18 | ios | P2 | todo | I16,F45 | Per ADR-005: `features/admin` in More: users, role request approvals, permissions, supervisor limits | | |
