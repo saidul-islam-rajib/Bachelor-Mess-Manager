@@ -5,6 +5,7 @@ import { ApiError } from '@/core/api/client';
 import { en, t } from '@/core/i18n/en';
 import { useGroup } from '@/core/providers/group';
 import { theme } from '@/core/theme';
+import { MealInsights } from '@/features/meal-prompts/MealInsights';
 import { closeEditWindow, decideChange, fetchMeals, openEditWindow, saveMeals, withdrawChange } from './api';
 import { daysOfMonth, formatCountdown, monthOf, shiftMonth, todayKey } from './dates';
 import type { EditWindow, MealCounts, MealChangeRequest } from './schemas';
@@ -297,6 +298,8 @@ export function MealsScreen() {
               ))}
             </View>
           ) : null}
+
+          <MealInsights groupId={groupId} month={month} />
 
           {daysOfMonth(month).map((date) => (
             <DayRow
