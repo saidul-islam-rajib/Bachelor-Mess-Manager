@@ -94,7 +94,7 @@ Last progress report: 60%
 | I17 | ios | P1 | done | I6 | Per ADR-005: supervisor and admin shapes of `features/dashboard`, replacing the not-yet-supported note | agents/ios/I17-dashboard-roles | Merged by qa, checks pass: mobile tsc, eslint, jest 24/24; supervisor + admin dashboards |
 | I18 | ios | P2 | todo | I16,F45 | Per ADR-005: `features/admin` in More: users, role request approvals, permissions, supervisor limits | | |
 | I19 | ios | P2 | todo | F46,I15 | Per ADR-006: `expo-notifications`, `EXPO_PROJECT_ID` in `app.config.ts`, register after sign-in, unregister on sign out, tap opens `data.link`; re-read SDK 58 notifications docs first | | |
-| I20 | ios | P0 | todo | F49 | Per ADR-008: `mobile/src/core/log/` buffer and flush to `/api/logs`, `x-request-id` and `api.call`/`api.fail` in `client.ts`, global error handler, React Query caches, root error boundary | | |
+| I20 | ios | P0 | review | F49 | Per ADR-008: `mobile/src/core/log/` buffer and flush to `/api/logs`, `x-request-id` and `api.call`/`api.fail` in `client.ts`, global error handler, React Query caches, root error boundary | agents/ios/I20-mobile-logging | core/log buffer+flush, x-request-id, api.call/api.fail, global handler, query caches, error boundary; mobile tsc, eslint, jest 57/57 |
 | Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
 
 ## Messages
