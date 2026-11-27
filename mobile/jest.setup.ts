@@ -32,3 +32,9 @@ jest.mock('expo-router', () => {
     Link: passthrough,
   };
 });
+
+jest.mock('@/core/log', () => ({
+  ...jest.requireActual('@/core/log'),
+  log: jest.fn(),
+  logError: jest.fn(),
+}));

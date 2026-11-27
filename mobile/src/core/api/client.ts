@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { DEFAULT_API_URL } from '@/core/config';
 import { storage, STORAGE_KEYS } from '@/core/storage';
+import { configureLog, log, newRequestId } from '@/core/log';
 
 export class ApiError extends Error {
   constructor(
@@ -20,6 +21,7 @@ export const setBaseUrl = (url: string) => {
   baseUrl = url;
 };
 export const getBaseUrl = () => baseUrl;
+configureLog(getBaseUrl);
 export const setToken = (value: string | null) => {
   token = value;
 };
@@ -61,15 +63,32 @@ function refreshToken(): Promise<boolean> {
   return refreshing;
 }
 
-function send(path: string, init: { method?: string; body?: unknown; auth?: boolean }) {
-  const headers: Record<string, string> = { Accept: 'application/json' };
+async function send(path: string, init: { method?: string; body?: unknown; auth?: boolean }) {
+  const rid = newRequestId();
+  const method = init.method ?? 'GET';
+  const headers: Record<string, string> = { Accept: 'application/json', 'x-request-id': rid };
   if (init.body !== undefined) headers['Content-Type'] = 'application/json';
   if (init.auth !== false && token) headers.Authorization = `Bearer ${token}`;
-  return fetch(`${baseUrl}${path}`, {
-    method: init.method ?? 'GET',
-    headers,
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
-  });
+  const started = Date.now();
+  try {
+    const res = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers,
+      body: init.body === undefined ? undefined : JSON.stringify(init.body),
+    });
+    const data = { method, path, status: res.status, ms: Date.now() - started };
+    if (res.status >= 500) log('error', 'api.fail', { rid, data });
+    else if (res.status >= 400) log('warn', 'api.fail', { rid, data });
+    else log('info', 'api.call', { rid, data });
+    return res;
+  } catch (error) {
+    log('error', 'api.fail', {
+      rid,
+      msg: error instanceof Error ? error.message : 'network error',
+      data: { method, path, status: 0, ms: Date.now() - started },
+    });
+    throw error;
+  }
 }
 
 export async function request<T>(
