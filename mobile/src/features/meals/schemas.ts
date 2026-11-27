@@ -56,6 +56,8 @@ export const mealSaveResponseSchema = z.object({
 
 export const editWindowResponseSchema = z.object({ window: editWindowSchema });
 
+export const mealChangeResponseSchema = z.object({ request: mealChangeRequest });
+
 export const mealChangeCancelledSchema = z.object({ status: z.literal('CANCELLED') });
 
 export type MealCounts = z.infer<typeof mealCounts>;

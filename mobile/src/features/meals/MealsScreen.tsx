@@ -5,7 +5,7 @@ import { ApiError } from '@/core/api/client';
 import { en, t } from '@/core/i18n/en';
 import { useGroup } from '@/core/providers/group';
 import { theme } from '@/core/theme';
-import { closeEditWindow, fetchMeals, openEditWindow, saveMeals, withdrawChange } from './api';
+import { closeEditWindow, decideChange, fetchMeals, openEditWindow, saveMeals, withdrawChange } from './api';
 import { daysOfMonth, formatCountdown, monthOf, shiftMonth, todayKey } from './dates';
 import type { EditWindow, MealCounts, MealChangeRequest } from './schemas';
 
@@ -103,16 +103,39 @@ function DayRow({
   );
 }
 
-function PendingRow({ request, busy, onWithdraw }: { request: MealChangeRequest; busy: boolean; onWithdraw: (id: string) => void }) {
+function PendingRow({
+  request,
+  busy,
+  review,
+  onWithdraw,
+  onDecide,
+}: {
+  request: MealChangeRequest;
+  busy: boolean;
+  review: boolean;
+  onWithdraw: (id: string) => void;
+  onDecide: (id: string, status: 'APPROVED' | 'REJECTED') => void;
+}) {
   return (
     <View style={styles.pending}>
       <View style={styles.pendingText}>
-        <Text style={styles.date}>{request.date}</Text>
+        <Text style={styles.date}>{review ? t(en.meals.requestLine, { name: request.userName ?? '', date: request.date }) : request.date}</Text>
         <Text style={styles.muted}>{request.summary}</Text>
       </View>
-      <Pressable accessibilityRole="button" disabled={busy} style={styles.withdraw} onPress={() => onWithdraw(request.id)}>
-        <Text style={styles.buttonText}>{en.meals.withdraw}</Text>
-      </Pressable>
+      {review ? (
+        <View style={styles.decide}>
+          <Pressable accessibilityRole="button" disabled={busy} style={styles.withdraw} onPress={() => onDecide(request.id, 'APPROVED')}>
+            <Text style={styles.buttonText}>{en.meals.approve}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" disabled={busy} style={styles.withdraw} onPress={() => onDecide(request.id, 'REJECTED')}>
+            <Text style={styles.buttonText}>{en.meals.reject}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Pressable accessibilityRole="button" disabled={busy} style={styles.withdraw} onPress={() => onWithdraw(request.id)}>
+          <Text style={styles.buttonText}>{en.meals.withdraw}</Text>
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -124,6 +147,7 @@ export function MealsScreen() {
   const [month, setMonth] = useState(monthOf(today));
   const [notice, setNotice] = useState<string | null>(null);
   const [savingDate, setSavingDate] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string | null>(null);
   const client = useQueryClient();
   const key = useMemo(() => ['meals', groupId, month], [groupId, month]);
 
@@ -133,7 +157,8 @@ export function MealsScreen() {
   const fail = (e: unknown) => setNotice(e instanceof ApiError ? e.message : en.meals.actionFailed);
 
   const save = useMutation({
-    mutationFn: ({ date, counts }: { date: string; counts: MealCounts }) => saveMeals(groupId, date, counts),
+    mutationFn: ({ date, counts }: { date: string; counts: MealCounts }) =>
+      saveMeals(groupId, date, counts, data && target !== data.currentUserId ? { userId: target } : {}),
     onMutate: ({ date }) => {
       setSavingDate(date);
       setNotice(null);
@@ -164,15 +189,26 @@ export function MealsScreen() {
     onError: fail,
   });
 
+  const decide = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'APPROVED' | 'REJECTED' }) => decideChange(id, status),
+    onSuccess: (res) => {
+      setNotice(res.request.status === 'APPROVED' ? en.meals.approved : en.meals.rejected);
+      return refresh();
+    },
+    onError: fail,
+  });
+
   const data = query.data;
+  const target = data?.canManage ? (picked ?? data.currentUserId) : (data?.currentUserId ?? '');
   const entries = useMemo(() => {
     const map = new Map<string, MealCounts>();
     for (const e of data?.entries ?? []) {
-      if (e.userId === data?.currentUserId) map.set(e.date, { breakfast: e.breakfast, lunch: e.lunch, dinner: e.dinner });
+      if (e.userId === target) map.set(e.date, { breakfast: e.breakfast, lunch: e.lunch, dinner: e.dinner });
     }
     return map;
-  }, [data]);
-  const mine = (data?.pendingChanges ?? []).filter((r) => r.pending && r.userId === data?.currentUserId);
+  }, [data, target]);
+  const open = (data?.pendingChanges ?? []).filter((r) => r.pending);
+  const mine = data?.canManage ? open : open.filter((r) => r.userId === data?.currentUserId);
   const windowOpen = data?.editWindow.open ?? false;
   const closedGroup = !!data && data.groupStatus !== 'ACTIVE';
 
@@ -227,18 +263,44 @@ export function MealsScreen() {
             </View>
           ) : null}
 
+          {data.canManage && !closedGroup ? (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>{en.meals.editingFor}</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+                {data.members.map((m) => (
+                  <Pressable
+                    key={m.id}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: m.id === target }}
+                    style={[styles.chip, m.id === target && styles.chipOn]}
+                    onPress={() => setPicked(m.id)}
+                  >
+                    <Text style={m.id === target ? styles.saveText : styles.buttonText}>{m.name}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+          ) : null}
+
           {mine.length > 0 ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{en.meals.pending}</Text>
+              <Text style={styles.sectionTitle}>{data.canManage ? en.meals.requests : en.meals.pending}</Text>
               {mine.map((r) => (
-                <PendingRow key={r.id} request={r} busy={withdraw.isPending} onWithdraw={(id) => withdraw.mutate(id)} />
+                <PendingRow
+                  key={r.id}
+                  request={r}
+                  review={data.canManage}
+                  busy={withdraw.isPending || decide.isPending}
+                  onWithdraw={(id) => withdraw.mutate(id)}
+                  onDecide={(id, status) => decide.mutate({ id, status })}
+                />
               ))}
             </View>
           ) : null}
 
           {daysOfMonth(month).map((date) => (
             <DayRow
-              key={date}
+              key={`${target}-${date}`}
               date={date}
               saved={entries.get(date) ?? ZERO}
               today={date === today}
@@ -267,6 +329,10 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '600', color: theme.colors.text },
   pending: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius, padding: theme.spacing.sm },
   pendingText: { flexShrink: 1 },
+  decide: { flexDirection: 'row', gap: theme.spacing.sm },
+  chips: { gap: theme.spacing.sm },
+  chip: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius, paddingVertical: 6, paddingHorizontal: theme.spacing.md },
+  chipOn: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
   withdraw: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius, paddingVertical: 6, paddingHorizontal: theme.spacing.md },
   day: { borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius, padding: theme.spacing.md, gap: theme.spacing.sm },
   today: { borderColor: theme.colors.primary },

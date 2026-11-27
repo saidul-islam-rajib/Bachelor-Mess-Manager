@@ -66,6 +66,13 @@ export const en = {
     needsApproval: 'Past-day changes need your supervisor to approve.',
     noApproval: 'Past-day changes count at once and the mess is told.',
     groupClosed: 'This mess is closed. Meals can no longer change.',
+    editingFor: 'Editing meals for',
+    requests: 'Requests to review',
+    requestLine: '{name} · {date}',
+    approve: 'Approve',
+    reject: 'Reject',
+    approved: 'Request approved.',
+    rejected: 'Request rejected.',
   },
   more: {
     signedInAs: 'Signed in as {name}',
