@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { canManageGroup, getSessionUser } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { reopenMonth } from '@/lib/closings';
+import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -20,12 +21,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, 'Closing ID is required.');
   }
 
-  const closing = await prisma.monthClosing.findUnique({ where: { id }, select: { groupId: true } });
+  const closing = await prisma.monthClosing.findUnique({ where: { id }, select: { groupId: true, group: { select: { status: true } } } });
   if (!closing) {
     return notFound(res, 'That closing no longer exists.');
   }
   if (!(await canManageGroup(closing.groupId, sessionUser))) {
     return forbidden(res, "Only this group's supervisor can reopen a month.");
+  }
+
+  if (!isGroupWritable(closing.group)) {
+    return forbidden(res, GROUP_CLOSED_MESSAGE);
   }
 
   const result = await reopenMonth(id, { id: sessionUser.id, name: sessionUser.name });

@@ -10,6 +10,7 @@ import {
   settleWholeMonth
 } from '@/lib/final-settlement';
 import { strings } from '@/lib/i18n';
+import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -39,6 +40,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   }
 
   if (req.method === 'POST') {
+    if (!isGroupWritable(group)) {
+      return forbidden(res, GROUP_CLOSED_MESSAGE);
+    }
+
     const { action, userId } = req.body as { action?: string; userId?: string };
     const actor = { id: sessionUser.id, name: sessionUser.name };
 
