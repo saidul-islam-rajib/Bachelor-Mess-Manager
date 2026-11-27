@@ -72,7 +72,11 @@ function run() {
     ['/api/expenses/{id}/comments', ['src', 'pages', 'api', 'expenses', '[id]', 'comments.ts'], ['post']],
     ['/api/groups/{id}/bills', ['src', 'pages', 'api', 'groups', '[id]', 'bills.ts'], ['get', 'post']],
     ['/api/bills/{id}', ['src', 'pages', 'api', 'bills', '[id].ts'], ['patch', 'delete']],
-    ['/api/bills/{id}/collections', ['src', 'pages', 'api', 'bills', '[id]', 'collections.ts'], ['post', 'patch', 'delete']]
+    ['/api/bills/{id}/collections', ['src', 'pages', 'api', 'bills', '[id]', 'collections.ts'], ['post', 'patch', 'delete']],
+    ['/api/groups/{id}/payments', ['src', 'pages', 'api', 'groups', '[id]', 'payments.ts'], ['get', 'post']],
+    ['/api/payments/{id}', ['src', 'pages', 'api', 'payments', '[id].ts'], ['patch', 'delete']],
+    ['/api/groups/{id}/advances', ['src', 'pages', 'api', 'groups', '[id]', 'advances.ts'], ['get', 'post', 'delete']],
+    ['/api/settlements/mine', ['src', 'pages', 'api', 'settlements', 'mine.ts'], ['get']]
   ]) {
     const ops = (spec.paths && spec.paths[apiPath]) || {};
     const src = read(...file);
@@ -90,6 +94,12 @@ function run() {
   check('BillsMonth lists bills, members and totals', Boolean(billsMonth && ['bills', 'members', 'totals'].every((k) => billsMonth.required.includes(k))));
   const collectionReq = spec.components && spec.components.schemas && spec.components.schemas.CollectionRequest;
   check('CollectionRequest requires userId and offers toUserId', Boolean(collectionReq && collectionReq.required.includes('userId') && collectionReq.properties.toUserId));
+  const paymentsMonth = spec.components && spec.components.schemas && spec.components.schemas.PaymentsMonth;
+  check('PaymentsMonth lists members, payments and totals', Boolean(paymentsMonth && ['members', 'payments', 'totals'].every((k) => paymentsMonth.required.includes(k))));
+  const advancesList = spec.components && spec.components.schemas && spec.components.schemas.AdvancesList;
+  check('AdvancesList lists members and history', Boolean(advancesList && ['members', 'history'].every((k) => advancesList.required.includes(k))));
+  const settlementsMine = spec.components && spec.components.schemas && spec.components.schemas.SettlementsMine;
+  check('SettlementsMine lists submissions', Boolean(settlementsMine && settlementsMine.required.includes('submissions')));
   const meals = spec.components && spec.components.schemas && spec.components.schemas.MealsMonth;
   check('MealsMonth lists entries, editWindow and pendingChanges', Boolean(meals && ['entries', 'editWindow', 'pendingChanges'].every((k) => meals.required.includes(k))));
   const dash = spec.components && spec.components.schemas && spec.components.schemas.MemberDashboard;
