@@ -2,6 +2,35 @@
 
 Written by `qa` each time overall progress passes another 10%. Newest first.
 
+## 2026-11-27: 60% (25/41 done)
+
+### architect
+- Finished since last report: none.
+- In progress: none. Blocked: none.
+
+### fixer
+- Finished: F23 (only supervisors may set `toUserId` on collections), F20 (mobile OpenAPI contract for health and auth routes, `check-openapi.js`).
+- In progress: none. F27 (dashboard and groups in the contract) is next, then I5 and D2 unblock.
+- Blocked: none.
+
+### android
+- Finished: none. In progress: none. D2 waits for I5 and F27.
+- Blocked: none.
+
+### ios
+- Finished: I4 (Android config wired into `app.config.ts`).
+- In progress: none. I5 waits for F27.
+- Blocked: none.
+
+### qa
+- Finished: merged F20 after typecheck, lint, allocation 39/39, check-openapi 16/16, check-mobile-auth 29/29 passed.
+
+### Try on the iPhone now
+Nothing new since the last report; follow `docs/mobile-on-iphone.md`. The dashboard arrives with I5.
+
+### Owner decisions
+- F11/F28: block or only warn for bills or payments dated in a closed month? qa's default is block.
+
 ## 2026-11-27: 50% (22/41 done)
 
 ### architect
