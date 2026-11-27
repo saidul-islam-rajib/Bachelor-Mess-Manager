@@ -2,6 +2,35 @@
 
 Written by `qa` each time overall progress passes another 10%. Newest first.
 
+## 2026-11-27: 50% (22/41 done)
+
+### architect
+- Finished since last report: A5 (ADRs broken into F20, F21, F25-F27, I3-I5, D2).
+- In progress: none. Blocked: none.
+
+### fixer
+- Finished: F7 (daily charging per day), F9, F10, F13 (closed-group guards, bill edit shares), F14 (POST payment into a closed month rejected), F22 (one fronter offset row per payment, no more 500).
+- In progress: none. F23 (P0) is next.
+- Blocked: none.
+
+### android
+- Finished: D1 (`mobile/config/android.ts`, `docs/mobile-on-android.md`).
+- In progress: none. D2 waits for I5. Blocked: none.
+
+### ios
+- Finished: I2 (iPhone run guide), I3 (refresh once on 401).
+- In progress: none. I4 and I5 queued; I5 waits for F27.
+- Blocked: none.
+
+### qa
+- Finished: merged F14, F22, I3 after typecheck, lint, allocation 39/39, the new checks and mobile tsc, eslint, jest 9/9 passed.
+
+### Try on the iPhone now
+Follow `docs/mobile-on-iphone.md`: run the backend on the laptop, open the app in Expo Go and sign in; an expired token now refreshes silently.
+
+### Owner decisions
+- F11/F28: should bills or payments dated in a closed month be blocked, or only warned? qa's default is block, as F14 does for new payments.
+
 ## 2026-11-26: 40% (15/35 done)
 
 ### architect
