@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { invalidate } from '@/lib/cache';
 import { sessionUserKey } from '@/lib/cache-keys';
 import { PERMISSION_DEFINITIONS, permissionsForRole, type PermissionCode } from '@/lib/permissions';
+import { traced } from '@/lib/log';
 
 export const PERMISSION_EFFECTS = {
   ALLOW: 'ALLOW',
@@ -60,7 +61,7 @@ export async function resolveUserPermissions(userId: string, role: string): Prom
   return effectivePermissions(role, await loadOverrides(userId));
 }
 
-export async function replaceOverrides(params: {
+async function replaceOverridesImpl(params: {
   userId: string;
   role: string;
   overrides: PermissionOverride[];
@@ -114,3 +115,5 @@ export function readOnlyOverridesFor(role: string): PermissionOverride[] {
     (definition) => rolePermissions.has(definition.code) && !readOnly.has(definition.code)
   ).map((definition) => ({ permissionCode: definition.code, effect: PERMISSION_EFFECTS.DENY }));
 }
+
+export const replaceOverrides = traced('replaceOverrides', replaceOverridesImpl);

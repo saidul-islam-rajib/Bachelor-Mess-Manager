@@ -4,6 +4,7 @@ import { SESSION_USER_CACHE_PREFIX } from '@/lib/cache-keys';
 import { GROUP_STATUS, USER_ROLES, USER_STATUS } from '@/lib/constants';
 import { getSupervisorPolicy } from '@/lib/settings-service';
 import { strings } from '@/lib/i18n';
+import { traced } from '@/lib/log';
 
 export type SupervisorSlot = {
   id: string;
@@ -76,7 +77,7 @@ export async function isSupervisorOf(groupId: string, userId: string): Promise<b
   return Boolean(group);
 }
 
-export async function addCoSupervisor(params: {
+async function addCoSupervisorImpl(params: {
   groupId: string;
   userId: string;
   actorId: string;
@@ -137,7 +138,7 @@ export async function addCoSupervisor(params: {
   return { ok: true, user: { id: next.id, name: next.name }, groupName: group.name, promoted, demoted: false };
 }
 
-export async function removeCoSupervisor(params: {
+async function removeCoSupervisorImpl(params: {
   groupId: string;
   userId: string;
 }): Promise<SupervisorChange> {
@@ -195,3 +196,7 @@ export async function groupsOverSupervisorCap(cap: number): Promise<{ id: string
     .map((group) => ({ id: group.id, name: group.name, count: 1 + group._count.coSupervisors }))
     .filter((group) => group.count > cap);
 }
+
+export const addCoSupervisor = traced('addCoSupervisor', addCoSupervisorImpl);
+
+export const removeCoSupervisor = traced('removeCoSupervisor', removeCoSupervisorImpl);

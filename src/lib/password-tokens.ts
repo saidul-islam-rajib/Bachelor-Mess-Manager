@@ -3,6 +3,7 @@ import type { NextApiRequest } from 'next';
 import { prisma } from '@/lib/prisma';
 import { appUrlConfig, passwordTokenConfig } from '@/config';
 import { clientIp } from '@/lib/rate-limit';
+import { traced } from '@/lib/log';
 
 export const TOKEN_PURPOSE = {
   SETUP: 'SETUP',
@@ -80,13 +81,17 @@ export async function findValidToken(token: unknown): Promise<TokenLookup> {
   };
 }
 
-export async function consumeToken(tokenId: string) {
+async function consumeTokenImpl(tokenId: string) {
   await prisma.passwordToken.update({ where: { id: tokenId }, data: { usedAt: new Date() } });
 }
 
-export async function prunePasswordTokens() {
+async function prunePasswordTokensImpl() {
   const result = await prisma.passwordToken.deleteMany({
     where: { OR: [{ expiresAt: { lt: new Date() } }, { usedAt: { not: null } }] }
   });
   return result.count;
 }
+
+export const consumeToken = traced('consumeToken', consumeTokenImpl);
+
+export const prunePasswordTokens = traced('prunePasswordTokens', prunePasswordTokensImpl);
