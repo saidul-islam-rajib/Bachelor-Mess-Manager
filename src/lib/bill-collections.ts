@@ -357,7 +357,7 @@ export function allocateToFronters(
   const allocations: { userId: string; amount: number }[] = [];
   let remaining = toPaisa(amount);
 
-  for (const share of owedBack) {
+  for (const share of owedBack.slice(0, 1)) {
     if (remaining <= 0) break;
     const take = Math.min(remaining, toPaisa(share.advance));
     if (take <= 0) continue;
