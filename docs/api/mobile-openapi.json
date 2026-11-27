@@ -3136,6 +3136,220 @@
           }
         }
       }
+    },
+    "/api/profile": {
+      "patch": {
+        "summary": "Edit the signed-in user's name, phone, theme, password or profile image",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfilePatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilePatchResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/settings": {
+      "get": {
+        "summary": "Site settings: the public fields, or every field for an admin",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Settings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/{id}/profile": {
+      "get": {
+        "summary": "A user's profile and mess history; self, an admin, or someone sharing a mess",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "User id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/role-requests": {
+      "get": {
+        "summary": "Role requests: the caller's own, or all when they can review",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/RoleRequestStatus"
+            }
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "mine",
+                "all"
+              ]
+            },
+            "description": "Defaults to all for reviewers, mine otherwise; all is 403 for others"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleRequestsList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Ask for the supervisor or member role",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoleRequestCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleRequestCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8204,6 +8418,492 @@
         ],
         "properties": {
           "id": {
+            "type": "string"
+          }
+        }
+      },
+      "ProfileUser": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "role",
+          "phone",
+          "profileImage",
+          "theme"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profileImage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ]
+          }
+        }
+      },
+      "ProfilePatchRequest": {
+        "type": "object",
+        "description": "Send only the fields to change; at least one is required. Setting password also needs currentPassword.",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "theme": {
+            "type": "string",
+            "enum": [
+              "system",
+              "light",
+              "dark"
+            ]
+          },
+          "password": {
+            "type": "string"
+          },
+          "currentPassword": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "description": "Base64 data URL of the new profile image; the request body limit is 14 MB"
+          },
+          "removeImage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ProfilePatchResponse": {
+        "type": "object",
+        "required": [
+          "user",
+          "passwordChanged"
+        ],
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/ProfileUser"
+          },
+          "passwordChanged": {
+            "type": "boolean",
+            "description": "When true every existing token for the user stops working (tokenVersion is incremented); the app must sign in again"
+          }
+        }
+      },
+      "SiteSettingsPublic": {
+        "type": "object",
+        "required": [
+          "companyName",
+          "tagline",
+          "address",
+          "contactEmail",
+          "contactPhone",
+          "copyrightOwner",
+          "facebookUrl",
+          "twitterUrl",
+          "newsletterEnabled",
+          "maxProfileImageBytes",
+          "toLetPostLayout"
+        ],
+        "properties": {
+          "companyName": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contactEmail": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "contactPhone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "copyrightOwner": {
+            "type": "string"
+          },
+          "facebookUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "twitterUrl": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "newsletterEnabled": {
+            "type": "boolean"
+          },
+          "maxProfileImageBytes": {
+            "type": "integer"
+          },
+          "toLetPostLayout": {
+            "type": "string",
+            "enum": [
+              "SIGNBOARD",
+              "WALKTHROUGH"
+            ]
+          }
+        }
+      },
+      "SiteSettingsResponse": {
+        "type": "object",
+        "required": [
+          "settings"
+        ],
+        "properties": {
+          "settings": {
+            "description": "Admins get every SiteSettings column, everyone else only the public fields",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SiteSettingsPublic"
+              },
+              {
+                "type": "object",
+                "additionalProperties": true
+              }
+            ]
+          }
+        }
+      },
+      "UserProfileGroup": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "status",
+          "isSupervisor",
+          "isActive",
+          "joinedAt",
+          "leftAt",
+          "stayDays"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isSupervisor": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "leftAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "stayDays": {
+            "type": "integer"
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "required": [
+          "member"
+        ],
+        "properties": {
+          "member": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "email",
+              "phone",
+              "profileImage",
+              "role",
+              "status",
+              "memberSince",
+              "isSelf",
+              "groups"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "phone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "profileImage": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "role": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "memberSince": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "isSelf": {
+                "type": "boolean"
+              },
+              "groups": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/UserProfileGroup"
+                }
+              }
+            }
+          }
+        }
+      },
+      "RoleRequestStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "APPROVED",
+          "REJECTED",
+          "CANCELLED"
+        ]
+      },
+      "RoleRequest": {
+        "type": "object",
+        "required": [
+          "id",
+          "requestedRole",
+          "status",
+          "reason",
+          "decisionNote",
+          "decidedAt",
+          "decidedBy",
+          "createdAt",
+          "user"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "requestedRole": {
+            "type": "string",
+            "enum": [
+              "SUPERVISOR",
+              "MEMBER"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/RoleRequestStatus"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decisionNote": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "decidedBy": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "required": [
+              "id",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "email",
+              "role",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "RoleRequestsList": {
+        "type": "object",
+        "required": [
+          "requests",
+          "meta",
+          "pendingCount",
+          "canReview",
+          "policy"
+        ],
+        "properties": {
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleRequest"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          },
+          "pendingCount": {
+            "type": "integer",
+            "description": "Pending requests across all users; 0 unless canReview"
+          },
+          "canReview": {
+            "type": "boolean"
+          },
+          "policy": {
+            "type": "object",
+            "required": [
+              "autoApproveSupervisor",
+              "allowSelfRoleSwitch"
+            ],
+            "properties": {
+              "autoApproveSupervisor": {
+                "type": "boolean"
+              },
+              "allowSelfRoleSwitch": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "RoleRequestCreate": {
+        "type": "object",
+        "required": [
+          "requestedRole"
+        ],
+        "properties": {
+          "requestedRole": {
+            "type": "string",
+            "enum": [
+              "SUPERVISOR",
+              "MEMBER"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "RoleRequestCreated": {
+        "type": "object",
+        "required": [
+          "requestId",
+          "autoApproved",
+          "message"
+        ],
+        "properties": {
+          "requestId": {
+            "type": "string"
+          },
+          "autoApproved": {
+            "type": "boolean"
+          },
+          "message": {
             "type": "string"
           }
         }
