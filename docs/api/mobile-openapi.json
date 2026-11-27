@@ -3350,6 +3350,36 @@
           }
         }
       }
+    },
+    "/api/logs": {
+      "post": {
+        "summary": "Send client log entries, public, 32 KB, at most 50 entries",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientLogBatch"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Entries written to the server log"
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "413": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -8905,6 +8935,66 @@
           },
           "message": {
             "type": "string"
+          }
+        }
+      },
+      "ClientLogBatch": {
+        "type": "object",
+        "required": [
+          "platform",
+          "entries"
+        ],
+        "properties": {
+          "platform": {
+            "type": "string",
+            "enum": [
+              "web",
+              "ios",
+              "android"
+            ]
+          },
+          "appVersion": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "entries": {
+            "type": "array",
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": [
+                "level",
+                "event"
+              ],
+              "properties": {
+                "ts": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "debug",
+                    "info",
+                    "warn",
+                    "error"
+                  ]
+                },
+                "event": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "rid": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9._-]{8,64}$"
+                },
+                "msg": {
+                  "type": "string",
+                  "maxLength": 1000
+                },
+                "data": {}
+              }
+            }
           }
         }
       }

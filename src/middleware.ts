@@ -28,6 +28,7 @@ const PUBLIC_PATHS = [
   '/api/auth/logout',
   '/api/health',
   '/api/live',
+  '/api/logs',
   '/api/newsletter',
   '/api/settings'
 ];
