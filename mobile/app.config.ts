@@ -1,4 +1,5 @@
 import type { ExpoConfig } from 'expo/config';
+import { androidConfig } from './config/android.ts';
 
 const config: ExpoConfig = {
   name: 'Bachelor Point',
@@ -8,6 +9,7 @@ const config: ExpoConfig = {
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   ios: { supportsTablet: false, bundleIdentifier: 'com.bachelorpoint.app' },
+  android: androidConfig,
   plugins: ['expo-router', 'expo-secure-store'],
   experiments: { typedRoutes: true },
   extra: {
