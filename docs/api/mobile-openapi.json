@@ -2058,6 +2058,648 @@
           }
         }
       }
+    },
+    "/api/groups/{id}/members": {
+      "get": {
+        "summary": "Members of the group with roles, join and leave dates (member or supervisor)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembersList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Deactivate or re-activate a member (supervisor with MEMBERSHIP_REMOVE or MEMBERSHIP_ADD, group open)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberActiveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberActiveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a member, or leave the group when no userId is sent (removing others needs a supervisor with MEMBERSHIP_REMOVE and an open group)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MemberRemoveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberRemoved"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/members/{userId}": {
+      "get": {
+        "summary": "One member's month: money, meals, bazar, duty days, payments (needs PAYMENT_VIEW)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "YYYY-MM, defaults to the current month"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/invitations": {
+      "get": {
+        "summary": "Invitations sent for this group (supervisor)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupInvitationsList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Invite a registered, approved user by email (supervisor with MEMBERSHIP_INVITE)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/invitations": {
+      "get": {
+        "summary": "Pending invitations addressed to the signed-in user",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyInvitationsList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/invitations/{id}": {
+      "patch": {
+        "summary": "Accept or reject an invitation addressed to the signed-in user",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Invitation id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvitationAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationAnswered"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Cancel an invitation (its sender or an admin)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Invitation id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitationCancelled"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/supervisor": {
+      "post": {
+        "summary": "Hand the main supervisor slot to another member (main supervisor or admin only)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupervisorHandoverRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisorHandoverResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/co-supervisors": {
+      "get": {
+        "summary": "Supervisor slots and the policy limit (member or admin)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupervisorState"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a co-supervisor (main supervisor or admin only)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CoSupervisorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoSupervisorAdded"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a co-supervisor (main supervisor or admin only)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoSupervisorRemoved"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5560,6 +6202,919 @@
               "$ref": "#/components/schemas/SettlementHistoryEntry"
             }
           }
+        }
+      },
+      "UserLite": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "SupervisorSlot": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "isPrimary"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "isPrimary": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SupervisorState": {
+        "type": "object",
+        "required": [
+          "supervisors",
+          "maxSupervisors",
+          "siteMaxSupervisors",
+          "overriddenByGroup",
+          "canAddMore"
+        ],
+        "properties": {
+          "supervisors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupervisorSlot"
+            }
+          },
+          "maxSupervisors": {
+            "type": "integer"
+          },
+          "siteMaxSupervisors": {
+            "type": "integer"
+          },
+          "overriddenByGroup": {
+            "type": "boolean"
+          },
+          "canAddMore": {
+            "type": "boolean"
+          }
+        }
+      },
+      "GroupMember": {
+        "type": "object",
+        "required": [
+          "membershipId",
+          "id",
+          "name",
+          "email",
+          "phone",
+          "profileImage",
+          "isActive",
+          "isSupervisor",
+          "isCoSupervisor",
+          "joinedAt",
+          "leftAt",
+          "stayDays"
+        ],
+        "properties": {
+          "membershipId": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profileImage": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isSupervisor": {
+            "type": "boolean"
+          },
+          "isCoSupervisor": {
+            "type": "boolean"
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "leftAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "stayDays": {
+            "type": "integer"
+          }
+        }
+      },
+      "MembersList": {
+        "type": "object",
+        "required": [
+          "canManage",
+          "isAdmin",
+          "supervisors",
+          "members"
+        ],
+        "properties": {
+          "canManage": {
+            "type": "boolean"
+          },
+          "isAdmin": {
+            "type": "boolean"
+          },
+          "supervisors": {
+            "$ref": "#/components/schemas/SupervisorState"
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupMember"
+            }
+          }
+        }
+      },
+      "Membership": {
+        "type": "object",
+        "required": [
+          "id",
+          "groupId",
+          "userId",
+          "isActive",
+          "joinedAt",
+          "leftAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "joinedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "leftAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "MemberActiveRequest": {
+        "type": "object",
+        "required": [
+          "userId",
+          "isActive"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MemberActiveResponse": {
+        "type": "object",
+        "required": [
+          "membership"
+        ],
+        "properties": {
+          "membership": {
+            "$ref": "#/components/schemas/Membership"
+          }
+        }
+      },
+      "MemberRemoveRequest": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Member to remove; omit to leave the group yourself"
+          }
+        }
+      },
+      "MemberRemoved": {
+        "type": "object",
+        "required": [
+          "removed",
+          "left"
+        ],
+        "properties": {
+          "removed": {
+            "type": "boolean"
+          },
+          "left": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MemberDetail": {
+        "type": "object",
+        "required": [
+          "monthKey",
+          "through",
+          "canManage",
+          "isSelf",
+          "currentUserId",
+          "group",
+          "categoryLabels",
+          "member",
+          "money",
+          "meals",
+          "bazarEntries",
+          "dutyDays",
+          "payments",
+          "settlementSubmissions"
+        ],
+        "properties": {
+          "monthKey": {
+            "type": "string"
+          },
+          "through": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "canManage": {
+            "type": "boolean"
+          },
+          "isSelf": {
+            "type": "boolean"
+          },
+          "currentUserId": {
+            "type": "string"
+          },
+          "group": {
+            "type": "object",
+            "required": [
+              "id",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "categoryLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "member": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "email",
+              "phone",
+              "profileImage",
+              "isActive",
+              "joinedAt",
+              "leftAt",
+              "stayDays",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "phone": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "profileImage": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "isActive": {
+                "type": "boolean"
+              },
+              "joinedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "leftAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "stayDays": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string"
+              }
+            }
+          },
+          "money": {
+            "type": "object",
+            "required": [
+              "carryIn",
+              "mealCost",
+              "billShare",
+              "billShareByType",
+              "totalCost",
+              "bazarPaid",
+              "collected",
+              "due"
+            ],
+            "properties": {
+              "carryIn": {
+                "type": "number"
+              },
+              "mealCost": {
+                "type": "number"
+              },
+              "billShare": {
+                "type": "number"
+              },
+              "billShareByType": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "totalCost": {
+                "type": "number"
+              },
+              "bazarPaid": {
+                "type": "number"
+              },
+              "collected": {
+                "type": "number"
+              },
+              "due": {
+                "type": "number"
+              }
+            }
+          },
+          "meals": {
+            "type": "object",
+            "required": [
+              "total",
+              "rate",
+              "days"
+            ],
+            "properties": {
+              "total": {
+                "type": "number"
+              },
+              "rate": {
+                "type": "number"
+              },
+              "days": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "date",
+                    "breakfast",
+                    "lunch",
+                    "dinner",
+                    "total"
+                  ],
+                  "properties": {
+                    "date": {
+                      "type": "string"
+                    },
+                    "breakfast": {
+                      "type": "number"
+                    },
+                    "lunch": {
+                      "type": "number"
+                    },
+                    "dinner": {
+                      "type": "number"
+                    },
+                    "total": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "bazarEntries": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "date",
+                "amount",
+                "note",
+                "items"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                },
+                "note": {
+                  "type": "string"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "name",
+                      "amount"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "dutyDays": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "day",
+                "date"
+              ],
+              "properties": {
+                "day": {
+                  "type": "integer"
+                },
+                "date": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "date",
+                "amount",
+                "status",
+                "billType"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "billType": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "settlementSubmissions": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "Invitation": {
+        "type": "object",
+        "required": [
+          "id",
+          "groupId",
+          "inviteeId",
+          "invitedById",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "inviteeId": {
+            "type": "string"
+          },
+          "invitedById": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "ACCEPTED",
+              "REJECTED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "respondedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "GroupInvitation": {
+        "type": "object",
+        "required": [
+          "id",
+          "groupId",
+          "inviteeId",
+          "invitedById",
+          "status",
+          "createdAt",
+          "invitee"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "inviteeId": {
+            "type": "string"
+          },
+          "invitedById": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "respondedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "invitee": {
+            "$ref": "#/components/schemas/UserLite"
+          }
+        }
+      },
+      "GroupInvitationsList": {
+        "type": "object",
+        "required": [
+          "invitations"
+        ],
+        "properties": {
+          "invitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GroupInvitation"
+            }
+          }
+        }
+      },
+      "InvitationRequest": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "InvitationCreated": {
+        "type": "object",
+        "required": [
+          "invitation",
+          "invitee",
+          "resent",
+          "warning"
+        ],
+        "properties": {
+          "invitation": {
+            "$ref": "#/components/schemas/Invitation"
+          },
+          "invitee": {
+            "$ref": "#/components/schemas/UserLite"
+          },
+          "resent": {
+            "type": "boolean"
+          },
+          "warning": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "MyInvitation": {
+        "type": "object",
+        "required": [
+          "id",
+          "groupId",
+          "status",
+          "createdAt",
+          "group",
+          "inviter"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "group": {
+            "type": "object",
+            "required": [
+              "id",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "inviter": {
+            "$ref": "#/components/schemas/UserLite"
+          }
+        }
+      },
+      "MyInvitationsList": {
+        "type": "object",
+        "required": [
+          "invitations"
+        ],
+        "properties": {
+          "invitations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MyInvitation"
+            }
+          }
+        }
+      },
+      "InvitationAnswerRequest": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "REJECTED"
+            ]
+          }
+        }
+      },
+      "InvitationAnswered": {
+        "type": "object",
+        "required": [
+          "invitation"
+        ],
+        "properties": {
+          "invitation": {
+            "$ref": "#/components/schemas/Invitation"
+          }
+        }
+      },
+      "InvitationCancelled": {
+        "type": "object",
+        "required": [
+          "cancelled"
+        ],
+        "properties": {
+          "cancelled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "SupervisorHandoverRequest": {
+        "type": "object",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          }
+        }
+      },
+      "SupervisorHandoverResponse": {
+        "type": "object",
+        "required": [
+          "supervisor",
+          "previousSupervisor",
+          "promoted",
+          "demoted"
+        ],
+        "properties": {
+          "supervisor": {
+            "$ref": "#/components/schemas/UserLite"
+          },
+          "previousSupervisor": {
+            "$ref": "#/components/schemas/UserLite"
+          },
+          "promoted": {},
+          "demoted": {}
+        }
+      },
+      "CoSupervisorRequest": {
+        "type": "object",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          }
+        }
+      },
+      "CoSupervisorAdded": {
+        "type": "object",
+        "required": [
+          "supervisors",
+          "maxSupervisors",
+          "siteMaxSupervisors",
+          "overriddenByGroup",
+          "canAddMore",
+          "added",
+          "promoted"
+        ],
+        "properties": {
+          "supervisors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupervisorSlot"
+            }
+          },
+          "maxSupervisors": {
+            "type": "integer"
+          },
+          "siteMaxSupervisors": {
+            "type": "integer"
+          },
+          "overriddenByGroup": {
+            "type": "boolean"
+          },
+          "canAddMore": {
+            "type": "boolean"
+          },
+          "added": {
+            "$ref": "#/components/schemas/UserLite"
+          },
+          "promoted": {}
+        }
+      },
+      "CoSupervisorRemoved": {
+        "type": "object",
+        "required": [
+          "supervisors",
+          "maxSupervisors",
+          "siteMaxSupervisors",
+          "overriddenByGroup",
+          "canAddMore",
+          "removed",
+          "demoted"
+        ],
+        "properties": {
+          "supervisors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupervisorSlot"
+            }
+          },
+          "maxSupervisors": {
+            "type": "integer"
+          },
+          "siteMaxSupervisors": {
+            "type": "integer"
+          },
+          "overriddenByGroup": {
+            "type": "boolean"
+          },
+          "canAddMore": {
+            "type": "boolean"
+          },
+          "removed": {
+            "$ref": "#/components/schemas/UserLite"
+          },
+          "demoted": {}
         }
       }
     }

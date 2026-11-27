@@ -76,7 +76,14 @@ function run() {
     ['/api/groups/{id}/payments', ['src', 'pages', 'api', 'groups', '[id]', 'payments.ts'], ['get', 'post']],
     ['/api/payments/{id}', ['src', 'pages', 'api', 'payments', '[id].ts'], ['patch', 'delete']],
     ['/api/groups/{id}/advances', ['src', 'pages', 'api', 'groups', '[id]', 'advances.ts'], ['get', 'post', 'delete']],
-    ['/api/settlements/mine', ['src', 'pages', 'api', 'settlements', 'mine.ts'], ['get']]
+    ['/api/settlements/mine', ['src', 'pages', 'api', 'settlements', 'mine.ts'], ['get']],
+    ['/api/groups/{id}/members', ['src', 'pages', 'api', 'groups', '[id]', 'members.ts'], ['get', 'patch', 'delete']],
+    ['/api/groups/{id}/members/{userId}', ['src', 'pages', 'api', 'groups', '[id]', 'members', '[userId].ts'], ['get']],
+    ['/api/groups/{id}/invitations', ['src', 'pages', 'api', 'groups', '[id]', 'invitations.ts'], ['get', 'post']],
+    ['/api/invitations', ['src', 'pages', 'api', 'invitations', 'index.ts'], ['get']],
+    ['/api/invitations/{id}', ['src', 'pages', 'api', 'invitations', '[id].ts'], ['patch', 'delete']],
+    ['/api/groups/{id}/supervisor', ['src', 'pages', 'api', 'groups', '[id]', 'supervisor.ts'], ['post']],
+    ['/api/groups/{id}/co-supervisors', ['src', 'pages', 'api', 'groups', '[id]', 'co-supervisors.ts'], ['get', 'post', 'delete']]
   ]) {
     const ops = (spec.paths && spec.paths[apiPath]) || {};
     const src = read(...file);
