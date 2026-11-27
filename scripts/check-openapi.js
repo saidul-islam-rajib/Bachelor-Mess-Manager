@@ -47,6 +47,17 @@ function run() {
       check(`${apiPath} is not public in the middleware`, true);
     }
   }
+  for (const [apiPath, file] of [
+    ['/api/reports/dashboard', ['src', 'pages', 'api', 'reports', 'dashboard.ts']],
+    ['/api/groups', ['src', 'pages', 'api', 'groups', 'index.ts']]
+  ]) {
+    check(`${apiPath} is in the contract`, Boolean(spec.paths && spec.paths[apiPath] && spec.paths[apiPath].get));
+    const src = read(...file);
+    check(`${apiPath} reads the session through getSessionUser`, /getSessionUser\(req/.test(src));
+    check(`${apiPath} is not public in the middleware`, !mw.includes(`'${apiPath}'`));
+  }
+  const dash = spec.components && spec.components.schemas && spec.components.schemas.MemberDashboard;
+  check('MemberDashboard lists current and previous', Boolean(dash && dash.required.includes('current') && dash.required.includes('previous')));
   check('middleware makes only /api/mobile/v1/auth public', publicMobile && !/'\/api\/mobile'/.test(mw) && !/'\/api\/mobile\/v1'/.test(mw));
 
   const passed = results.filter((r) => r.passed).length;

@@ -1,6 +1,9 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Bachelor Point mobile API", "version": "1.0.0" },
+  "info": {
+    "title": "Bachelor Point mobile API",
+    "version": "1.0.0"
+  },
   "paths": {
     "/api/health": {
       "get": {
@@ -8,9 +11,17 @@
         "responses": {
           "200": {
             "description": "Server is up",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Health" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
           },
-          "500": { "$ref": "#/components/responses/Error" }
+          "500": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
@@ -19,106 +30,731 @@
         "summary": "Sign in with email and password, sets no cookie",
         "requestBody": {
           "required": true,
-          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginRequest" } } }
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
         },
         "responses": {
           "200": {
             "description": "Signed in",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/LoginResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
           },
-          "400": { "$ref": "#/components/responses/Error" },
-          "401": { "$ref": "#/components/responses/Error" },
-          "403": { "$ref": "#/components/responses/Error" },
-          "429": { "$ref": "#/components/responses/Error" }
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "429": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/mobile/v1/auth/refresh": {
       "post": {
         "summary": "Exchange a valid bearer token for a new one",
-        "security": [{ "bearer": [] }],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "New token",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RefreshResponse" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
           },
-          "401": { "$ref": "#/components/responses/Error" }
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
         }
       }
     },
     "/api/mobile/v1/auth/logout": {
       "post": {
         "summary": "End the activity session; the app then deletes its token",
-        "security": [{ "bearer": [] }],
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
         "responses": {
           "200": {
             "description": "Signed out",
-            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Ok" } } }
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/dashboard": {
+      "get": {
+        "summary": "Dashboard for the signed-in user; shape depends on role",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Dashboard",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dashboard"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups": {
+      "get": {
+        "summary": "Groups visible to the signed-in user",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeInactive",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          },
+          {
+            "name": "paginated",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Groups",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
           }
         }
       }
     }
   },
   "components": {
-    "securitySchemes": { "bearer": { "type": "http", "scheme": "bearer" } },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
     "responses": {
       "Error": {
         "description": "Error",
-        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
       }
     },
     "schemas": {
       "Error": {
         "type": "object",
-        "required": ["error"],
-        "properties": { "error": { "type": "string" } }
+        "required": [
+          "error"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
       },
       "Ok": {
         "type": "object",
-        "required": ["ok"],
-        "properties": { "ok": { "type": "boolean" } }
+        "required": [
+          "ok"
+        ],
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          }
+        }
       },
       "Health": {
         "type": "object",
-        "required": ["status", "bootstrap"],
+        "required": [
+          "status",
+          "bootstrap"
+        ],
         "properties": {
-          "status": { "type": "string", "enum": ["ok", "degraded"] },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "degraded"
+            ]
+          },
           "bootstrap": {
             "type": "object",
             "properties": {
-              "completedAt": { "type": ["string", "null"] },
-              "error": { "type": ["string", "null"] }
+              "completedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "error": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
             }
           }
         }
       },
       "LoginRequest": {
         "type": "object",
-        "required": ["email", "password"],
-        "properties": { "email": { "type": "string" }, "password": { "type": "string" } }
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
       },
       "RefreshResponse": {
         "type": "object",
-        "required": ["token", "expiresAt"],
+        "required": [
+          "token",
+          "expiresAt"
+        ],
         "properties": {
-          "token": { "type": "string" },
-          "expiresAt": { "type": "string", "format": "date-time" }
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
         }
       },
       "LoginResponse": {
         "type": "object",
-        "required": ["token", "expiresAt", "user"],
+        "required": [
+          "token",
+          "expiresAt",
+          "user"
+        ],
         "properties": {
-          "token": { "type": "string" },
-          "expiresAt": { "type": "string", "format": "date-time" },
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
           "user": {
             "type": "object",
-            "required": ["id", "name", "email", "role"],
+            "required": [
+              "id",
+              "name",
+              "email",
+              "role"
+            ],
             "properties": {
-              "id": { "type": "string" },
-              "name": { "type": "string" },
-              "email": { "type": "string" },
-              "role": { "type": "string" }
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Dashboard": {
+        "type": "object",
+        "required": [
+          "role",
+          "month"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "ADMIN",
+              "SUPERVISOR",
+              "MEMBER"
+            ]
+          },
+          "month": {
+            "type": "string"
+          },
+          "admin": {
+            "type": "object"
+          },
+          "supervisor": {
+            "type": "object"
+          },
+          "member": {
+            "$ref": "#/components/schemas/MemberDashboard"
+          }
+        }
+      },
+      "MemberDashboard": {
+        "type": "object",
+        "required": [
+          "group",
+          "pendingInvitations",
+          "finalSettlement",
+          "current",
+          "previous"
+        ],
+        "properties": {
+          "group": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "supervisorId",
+                  "memberCount",
+                  "joinedAt",
+                  "stayDays"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "supervisorId": {
+                    "type": "string"
+                  },
+                  "memberCount": {
+                    "type": "integer"
+                  },
+                  "joinedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "stayDays": {
+                    "type": "integer"
+                  },
+                  "card": {
+                    "type": "object"
+                  }
+                }
+              }
+            ]
+          },
+          "pendingInvitations": {
+            "type": "integer"
+          },
+          "finalSettlement": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "current": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MemberMonth"
+              }
+            ]
+          },
+          "previous": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "month",
+                  "meals",
+                  "totalCost",
+                  "due",
+                  "mealRate",
+                  "groupExpense"
+                ],
+                "properties": {
+                  "month": {
+                    "type": "string"
+                  },
+                  "meals": {
+                    "type": "number"
+                  },
+                  "totalCost": {
+                    "type": "number"
+                  },
+                  "due": {
+                    "type": "number"
+                  },
+                  "mealRate": {
+                    "type": "number"
+                  },
+                  "groupExpense": {
+                    "type": "number"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "MemberMonth": {
+        "type": "object",
+        "required": [
+          "meals",
+          "mealCost",
+          "billShare",
+          "totalCost",
+          "bazarPaid",
+          "collected",
+          "due",
+          "status",
+          "mealRate",
+          "rateMode",
+          "dailyRate",
+          "todayMeals",
+          "groupMeals",
+          "groupExpense",
+          "groupBazar",
+          "groupBills",
+          "byType",
+          "members"
+        ],
+        "properties": {
+          "meals": {
+            "type": "number"
+          },
+          "mealCost": {
+            "type": "number"
+          },
+          "billShare": {
+            "type": "number"
+          },
+          "totalCost": {
+            "type": "number"
+          },
+          "bazarPaid": {
+            "type": "number"
+          },
+          "collected": {
+            "type": "number"
+          },
+          "due": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "mealRate": {
+            "type": "number"
+          },
+          "rateMode": {
+            "type": "string"
+          },
+          "dailyRate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "date",
+                  "rate",
+                  "isToday"
+                ],
+                "properties": {
+                  "date": {
+                    "type": "string"
+                  },
+                  "rate": {
+                    "type": "number"
+                  },
+                  "isToday": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            ]
+          },
+          "todayMeals": {
+            "type": "object",
+            "required": [
+              "breakfast",
+              "lunch",
+              "dinner",
+              "total"
+            ],
+            "properties": {
+              "breakfast": {
+                "type": "number"
+              },
+              "lunch": {
+                "type": "number"
+              },
+              "dinner": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              }
+            }
+          },
+          "groupMeals": {
+            "type": "number"
+          },
+          "groupExpense": {
+            "type": "number"
+          },
+          "groupBazar": {
+            "type": "number"
+          },
+          "groupBills": {
+            "type": "number"
+          },
+          "byType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "meals",
+                "mealCost",
+                "totalCost",
+                "due",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "meals": {
+                  "type": "number"
+                },
+                "mealCost": {
+                  "type": "number"
+                },
+                "totalCost": {
+                  "type": "number"
+                },
+                "due": {
+                  "type": "number"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "GroupList": {
+        "type": "object",
+        "required": [
+          "groups",
+          "meta",
+          "hiddenInactive",
+          "limits"
+        ],
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "supervisor",
+                "status",
+                "memberCount",
+                "supervisorCount",
+                "maxSupervisors",
+                "createdAt"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "supervisor": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "email"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "status": {
+                  "type": "string"
+                },
+                "memberCount": {
+                  "type": "integer"
+                },
+                "supervisorCount": {
+                  "type": "integer"
+                },
+                "maxSupervisors": {
+                  "type": "integer"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "meta": {
+            "type": "object"
+          },
+          "hiddenInactive": {
+            "type": "integer"
+          },
+          "limits": {
+            "type": "object",
+            "required": [
+              "maxGroups",
+              "ownedCount",
+              "canCreate"
+            ],
+            "properties": {
+              "maxGroups": {
+                "type": "integer"
+              },
+              "ownedCount": {
+                "type": "integer"
+              },
+              "canCreate": {
+                "type": "boolean"
+              }
             }
           }
         }
