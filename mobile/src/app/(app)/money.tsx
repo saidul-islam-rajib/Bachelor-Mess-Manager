@@ -1,6 +1,5 @@
-import { en } from '@/core/i18n/en';
-import { PlaceholderScreen } from '@/features/groups/PlaceholderScreen';
+import { BazarScreen } from '@/features/bazar/BazarScreen';
 
 export default function MoneyTab() {
-  return <PlaceholderScreen message={en.soon.money} />;
+  return <BazarScreen />;
 }
