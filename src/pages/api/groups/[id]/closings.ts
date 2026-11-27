@@ -4,6 +4,7 @@ import { canManageGroup, getSessionUser, isGroupMember, requireAdmin } from '@/l
 import { badRequest, conflict, created, forbidden, methodNotAllowed, notFound, ok, unauthorized } from '@/lib/http';
 import { closeMonth, listClosings } from '@/lib/closings';
 import { parseMonth } from '@/lib/month';
+import { GROUP_CLOSED_MESSAGE, isGroupWritable } from '@/lib/groups';
 import { withAudit } from '@/lib/with-audit';
 
 async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -37,6 +38,10 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     if (!canManage) {
       return forbidden(res, "Only this group's supervisor can close a month.");
+    }
+
+    if (!isGroupWritable(group)) {
+      return forbidden(res, GROUP_CLOSED_MESSAGE);
     }
 
     const { month, through, userIds, note, endMembership } = req.body as {
