@@ -1,6 +1,5 @@
-import { en } from '@/core/i18n/en';
-import { PlaceholderScreen } from '@/features/groups/PlaceholderScreen';
+import { MealsScreen } from '@/features/meals/MealsScreen';
 
 export default function MealsTab() {
-  return <PlaceholderScreen message={en.soon.meals} />;
+  return <MealsScreen />;
 }
