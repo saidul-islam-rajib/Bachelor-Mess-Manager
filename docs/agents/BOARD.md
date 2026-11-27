@@ -51,3 +51,4 @@ Last progress report: 50%
 | Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
 
 ## Messages
+- owner -> fixer (F20,F27): do F20 then F27 next, before other bugs. The iPhone dashboard (I5) and Android (D2) wait on them.
