@@ -37,6 +37,12 @@ The Bachelor Point app is one Expo codebase for iPhone and Android (ADR-001). Th
 - All amounts come from the API as shown on iPhone; nothing is recomputed on the device.
 - The hardware back button on the Money tab goes back to the previous tab, then leaves the app; no handler is added.
 
+## Settlement and members on Android
+
+- `SettlementScreen.android.tsx` and `MembersScreen.android.tsx` in `mobile/src/features/<feature>/` wrap the shared screens and set a dark status bar, like the other tabs. The Mess tab (`(app)/mess.tsx`, owned by ios) imports them without an extension, so Metro picks these files on Android.
+- Settlement amounts and balances come from the API as shown on iPhone; nothing is recomputed on the device.
+- The hardware back button on the Mess tab goes back to the previous tab, then leaves the app; no handler is added.
+
 ## Not checked in the sandbox
 
 The sandbox has no Android SDK or phone, so on-device behaviour is tested by the owner. Agents run only the typecheck, lint and jest checks of ADR-003.
