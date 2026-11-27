@@ -1,3 +1,3 @@
-import { HomeScreen } from '@/features/auth/HomeScreen';
+import { DashboardScreen } from '@/features/dashboard/DashboardScreen';
 
-export default HomeScreen;
+export default DashboardScreen;
