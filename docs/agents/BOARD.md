@@ -14,7 +14,7 @@ Last progress report: 60%
 | A4 | architect | P1 | done | A1 | CI/CD and Docker: backend image, mobile build and release lanes, what runs on `agents/*` pushes versus `develop`; ADR-004 | agents/architect/A4-ci-cd | Merged by qa, checks pass: ADR-004 accepted; follow-ups F25, F26 |
 | A5 | architect | P1 | done | A2,A3,A4 | Break the accepted ADRs into one-run tasks for android, ios and fixer on this board | | Rewrote D1; added F27, I3-I5, D2 |
 | A6 | architect | P0 | done | | Plan the rest of the mobile app so it matches the web (ADR-005) | agents/architect/A6-mobile-plan | Merged by qa: ADR-005 accepted, plan in notes/A6.md; F36-F45, I6-I18, D3-D6 added |
-| A7 | architect | P2 | todo | A6 | ADR-006: remote push to the app (Expo push tokens, token table, sender beside Web Push, what Expo Go can receive, owner Apple account); see ADR-005 | | |
+| A7 | architect | P2 | review | A6 | ADR-006: remote push to the app (Expo push tokens, token table, sender beside Web Push, what Expo Go can receive, owner Apple account); see ADR-005 | agents/architect/A7-mobile-push | ADR-006 accepted: Expo push service, `MobilePushToken`, `/api/mobile/v1/push/*`; follow-ups F46, F47, I19, D7 |
 | F1 | fixer | P0 | done | | Make `npm run typecheck` and `npm run lint` pass cleanly | | Already clean on agents/integration, no change needed |
 | F2 | fixer | P0 | done | | Audit meal rate and the meal cost split; add one F row per bug found | | Audit only, no code changed; found F7 and F8 |
 | F3 | fixer | P0 | done | | Audit bills, bill collections and vendor-paid bills; add one F row per bug found | | Audit of bills only (bill-collections and vendor-paid not yet read); found F9, F10, F11. Re-audit collections as F12 |
@@ -60,12 +60,15 @@ Last progress report: 60%
 | F43 | fixer | P1 | todo | A6 | Per ADR-005: contract for notifications (A6 notes row F43) | | |
 | F44 | fixer | P1 | todo | A6 | Per ADR-005: contract for profile, settings, user profile, role requests (A6 notes row F44) | | |
 | F45 | fixer | P2 | todo | A6 | Per ADR-005: contract for admin users, permissions, role request approval, supervisor limits (A6 notes row F45) | | |
+| F46 | fixer | P2 | todo | A7 | Per ADR-006: `MobilePushToken` migration, `POST /api/mobile/v1/push/register` and `unregister`, both in `docs/api/mobile-openapi.json`; ADR-002 checks | | |
+| F47 | fixer | P2 | todo | F46 | Per ADR-006: `src/lib/expo-push.ts` sender, wired into `notifyUsers`, plus `scripts/check-expo-push.js` | | |
 | D1 | android | P1 | done | review | Per ADR-003, Android pass on the existing `mobile/` app (no second scaffold): add `mobile/config/android.ts` (package id, adaptive icon, `usesCleartextTraffic` only in development per ADR-001), fix sign-in with `*.android.tsx` files where needed, write `docs/mobile-on-android.md` (Expo Go on Android against the laptop backend). Do not edit `app.config.ts`; I4 wires it in. Run the ADR-003 checks | agents/android/D1-android-pass | Merged by qa, mobile tsc passes: config/android.ts + docs/mobile-on-android.md; I4 can wire it in |
 | D2 | android | P2 | done | D1,I5 | Android pass on `features/dashboard`: `*.android.tsx` fixes only (back button, status bar, pull to refresh), notes added to `docs/mobile-on-android.md`; ADR-003 checks | agents/android/D2-dashboard-android | Merged by qa, checks pass: mobile tsc, eslint, jest 13/13; status bar wrapper, refresh colour needs ios edit |
 | D3 | android | P1 | todo | D2,I9 | Android pass on tabs shell, meals and quick reply: `*.android.tsx` fixes only; ADR-003 checks | | |
 | D4 | android | P1 | todo | D3,I12 | Android pass on bazar, bills, payments; ADR-003 checks | | |
 | D5 | android | P1 | todo | D4,I14 | Android pass on settlement and members; ADR-003 checks | | |
 | D6 | android | P2 | todo | D5,I18 | Android pass on notifications, profile, admin; ADR-003 checks | | |
+| D7 | android | P2 | todo | I19,D6 | Per ADR-006: `default` notification channel in an `*.android.ts` file, skip registration in Expo Go on Android; ADR-003 checks | | |
 | I1 | ios | P0 | done | A1,A2,A3 | Scaffold the iOS app per ADR-001 and ADR-003, with sign-in against the API | agents/ios/I1-mobile-scaffold | Merged by qa, checks pass: mobile tsc, eslint, jest; D1 can follow as Android pass; I2 unblocked |
 | I2 | ios | P0 | done | I1 | Write `docs/mobile-on-iphone.md`: the owner's steps to run the backend on the laptop and open the app on the iPhone in Expo Go, and keep it true as the app changes| agents/ios/I2-iphone-doc | Merged by qa: iPhone run guide checked against ADR-001 and the mobile app |
 | I3 | ios | P0 | done | I1 | Per ADR-002: on a 401 `src/core/api/client.ts` calls `POST /api/mobile/v1/auth/refresh` once, stores the new token, retries the request, and only then calls `onUnauthorized`; never refresh the refresh or login call. Jest tests with mocked fetch for success, failed refresh, and concurrent 401s sharing one refresh | agents/ios/I3-refresh-on-401 | Merged by qa, checks pass: mobile tsc, eslint, jest 9/9 |
@@ -84,6 +87,7 @@ Last progress report: 60%
 | I16 | ios | P1 | todo | I15,F44 | Per ADR-005: `features/profile`: profile edit, notification settings, role request | | |
 | I17 | ios | P1 | todo | I6 | Per ADR-005: supervisor and admin shapes of `features/dashboard`, replacing the not-yet-supported note | | |
 | I18 | ios | P2 | todo | I16,F45 | Per ADR-005: `features/admin` in More: users, role request approvals, permissions, supervisor limits | | |
+| I19 | ios | P2 | todo | F46,I15 | Per ADR-006: `expo-notifications`, `EXPO_PROJECT_ID` in `app.config.ts`, register after sign-in, unregister on sign out, tap opens `data.link`; re-read SDK 58 notifications docs first | | |
 | Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
 
 ## Messages
