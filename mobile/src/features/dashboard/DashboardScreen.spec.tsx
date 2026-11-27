@@ -57,8 +57,7 @@ describe('DashboardScreen', () => {
     expect(screen.getByText('75.00')).toBeTruthy();
     expect(screen.getByText('12')).toBeTruthy();
     expect(screen.getByText('600.00')).toBeTruthy();
-    const [url] = spy.mock.calls[0] as [string];
-    expect(url).toMatch(/\/api\/reports\/dashboard$/);
+    expect(spy.mock.calls.some(([url]) => /\/api\/reports\/dashboard$/.test(String(url)))).toBe(true);
   });
 
   it('shows a note for roles without a member view', async () => {

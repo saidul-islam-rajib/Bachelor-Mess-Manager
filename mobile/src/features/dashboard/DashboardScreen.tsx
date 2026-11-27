@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { en, t } from '@/core/i18n/en';
 import { useAuth } from '@/core/providers/auth';
 import { theme } from '@/core/theme';
+import { QuickReplyCard } from '@/features/meal-prompts/QuickReplyCard';
 import { fetchDashboard } from './api';
 
 const money = (value: number) => value.toFixed(2);
@@ -31,6 +32,8 @@ export function DashboardScreen() {
       refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} />}
     >
       <Text style={styles.title}>{t(en.dashboard.hello, { name: user?.name ?? '' })}</Text>
+
+      <QuickReplyCard />
 
       {query.isLoading ? <Text style={styles.muted}>{en.common.loading}</Text> : null}
 
