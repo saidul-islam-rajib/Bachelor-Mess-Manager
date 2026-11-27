@@ -3,6 +3,7 @@ export const en = {
     appName: 'Bachelor Point',
     loading: 'Loading…',
     retry: 'Try again',
+    crashed: 'Something went wrong.',
   },
   auth: {
     title: 'Welcome back',
