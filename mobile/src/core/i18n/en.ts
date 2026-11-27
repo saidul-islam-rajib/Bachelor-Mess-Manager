@@ -29,6 +29,20 @@ export const en = {
     welcome: 'Hello, {name}',
     signOut: 'Sign out',
   },
+  dashboard: {
+    hello: 'Hello, {name}',
+    todayRate: "Today's meal rate",
+    latestRate: 'Latest meal rate',
+    rateDate: 'Priced on {date}',
+    noRate: '—',
+    monthRate: 'Month rate',
+    meals: 'Your meals',
+    totalCost: 'Your total cost',
+    balance: 'Your balance due',
+    loadFailed: 'Could not load the dashboard.',
+    noGroup: 'You are not in a group yet.',
+    roleNotSupported: 'This view is not supported for your role yet.',
+  },
 };
 
 export const t = (template: string, vars: Record<string, string> = {}) =>
