@@ -16,7 +16,7 @@ function loadMealCost() {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'lib', 'meal-cost.ts'), 'utf8');
   const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } });
   const module = { exports: {} };
-  new Function('module', 'exports', 'require', outputText)(module, module.exports, () => ({ allocate }));
+  new Function('module', 'exports', 'require', outputText)(module, module.exports, (name) => (name === '@/lib/log' ? { traced: (label, fn) => fn } : { allocate }));
   return module.exports.allocateMealCosts;
 }
 

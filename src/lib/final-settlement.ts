@@ -1,3 +1,4 @@
+import { traced } from '@/lib/log';
 import { closeMonth, markSettled, listClosings, type ClosingSummary } from '@/lib/closings';
 import { buildGroupReport, type GroupReport } from '@/lib/group-report';
 import type { SettlementGroup } from '@/lib/settlement';
@@ -53,7 +54,7 @@ async function findGroupFinalClosing(groupId: string, monthKey: string): Promise
   return closings.find((closing) => closing.scope === 'GROUP' && !closing.reopenedAt) ?? null;
 }
 
-export async function ensureFinalSettlement(
+async function ensureFinalSettlementImpl(
   group: FinalSettlementGroup,
   actor?: { id: string; name: string }
 ): Promise<ClosingSummary | null> {
@@ -72,7 +73,9 @@ export async function ensureFinalSettlement(
   return findGroupFinalClosing(group.id, lastMonthKey);
 }
 
-export async function getFinalSettlement(group: FinalSettlementGroup): Promise<FinalSettlement | null> {
+export const ensureFinalSettlement = traced('ensureFinalSettlement', ensureFinalSettlementImpl);
+
+async function getFinalSettlementImpl(group: FinalSettlementGroup): Promise<FinalSettlement | null> {
   const closing = await ensureFinalSettlement(group);
   if (!closing) return null;
 
@@ -137,7 +140,9 @@ export async function getFinalSettlement(group: FinalSettlementGroup): Promise<F
   };
 }
 
-export async function settleMemberBalance(
+export const getFinalSettlement = traced('getFinalSettlement', getFinalSettlementImpl);
+
+async function settleMemberBalanceImpl(
   group: FinalSettlementGroup,
   userId: string,
   actor: { id: string; name: string }
@@ -208,6 +213,8 @@ export async function settleMemberBalance(
 
   return { ok: true, amount, monthKey: report.monthKey };
 }
+
+export const settleMemberBalance = traced('settleMemberBalance', settleMemberBalanceImpl);
 
 type SettlementTx = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
@@ -289,7 +296,7 @@ function writeSettlementRow(
   });
 }
 
-export async function declareMemberSettled(
+async function declareMemberSettledImpl(
   group: FinalSettlementGroup,
   userId: string,
   actor: { id: string; name: string }
@@ -319,7 +326,9 @@ export async function declareMemberSettled(
   return { ok: true, amount: round2(member.dueAtClose) };
 }
 
-export async function settleWholeMonth(
+export const declareMemberSettled = traced('declareMemberSettled', declareMemberSettledImpl);
+
+async function settleWholeMonthImpl(
   group: FinalSettlementGroup,
   actor: { id: string; name: string }
 ): Promise<{ ok: true; settled: number; monthKey: string } | { ok: false; error: string }> {
@@ -351,7 +360,9 @@ export async function settleWholeMonth(
   return { ok: true, settled: pending.length, monthKey: report.monthKey };
 }
 
-export async function markFinalSettlementSettled(
+export const settleWholeMonth = traced('settleWholeMonth', settleWholeMonthImpl);
+
+async function markFinalSettlementSettledImpl(
   group: FinalSettlementGroup,
   actor: { id: string; name: string }
 ): Promise<{ ok: true } | { ok: false; error: string }> {
@@ -368,3 +379,5 @@ export async function markFinalSettlementSettled(
 
   return markSettled(report.closingId, actor);
 }
+
+export const markFinalSettlementSettled = traced('markFinalSettlementSettled', markFinalSettlementSettledImpl);

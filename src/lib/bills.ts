@@ -1,3 +1,4 @@
+import { traced } from '@/lib/log';
 import { prisma } from '@/lib/prisma';
 import { BILL_TYPE_FILTER, EXPENSE_TYPES, SPLIT_METHODS } from '@/lib/constants';
 import { round2 } from '@/lib/month';
@@ -27,7 +28,7 @@ export function splitEqually(total: number, userIds: string[]): ComputedShare[] 
   });
 }
 
-export async function computeShares(options: {
+async function computeSharesImpl(options: {
   groupId: string;
   total: number;
   splitMethod: string;
@@ -102,7 +103,9 @@ export async function computeShares(options: {
   return { ok: false, error: 'Split method must be EQUAL or CUSTOM.' };
 }
 
-export async function billSharesByUser(groupId: string, start: Date, nextStart: Date) {
+export const computeShares = traced('computeShares', computeSharesImpl);
+
+async function billSharesByUserImpl(groupId: string, start: Date, nextStart: Date) {
   const rows = await prisma.expenseShare.findMany({
     where: {
       expense: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } }
@@ -117,7 +120,9 @@ export async function billSharesByUser(groupId: string, start: Date, nextStart: 
   return byUser;
 }
 
-export async function billTotalsByType(groupId: string, start: Date, nextStart: Date) {
+export const billSharesByUser = traced('billSharesByUser', billSharesByUserImpl);
+
+async function billTotalsByTypeImpl(groupId: string, start: Date, nextStart: Date) {
   const rows = await prisma.expenseEntry.groupBy({
     by: ['type'],
     where: { groupId, type: BILL_TYPE_FILTER, date: { gte: start, lt: nextStart } },
@@ -130,3 +135,5 @@ export async function billTotalsByType(groupId: string, start: Date, nextStart: 
   }
   return byType;
 }
+
+export const billTotalsByType = traced('billTotalsByType', billTotalsByTypeImpl);

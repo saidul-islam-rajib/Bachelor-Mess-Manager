@@ -1,3 +1,4 @@
+import { traced } from '@/lib/log';
 import { prisma } from '@/lib/prisma';
 import { buildSettlement, type SettlementGroup } from '@/lib/settlement';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
@@ -70,7 +71,7 @@ export async function listClosings(groupId: string, monthKey?: string): Promise<
   }));
 }
 
-export async function closeMonth(options: {
+async function closeMonthImpl(options: {
   group: SettlementGroup & { name: string; status: string };
   monthKey: string;
   through?: string;
@@ -177,7 +178,9 @@ export async function closeMonth(options: {
   return { ok: true, closingId: closing.id, lines: targets.length, carriedForward };
 }
 
-export async function reopenMonth(closingId: string, actor: { id: string; name: string }): Promise<CloseResult> {
+export const closeMonth = traced('closeMonth', closeMonthImpl);
+
+async function reopenMonthImpl(closingId: string, actor: { id: string; name: string }): Promise<CloseResult> {
   const closing = await prisma.monthClosing.findUnique({
     where: { id: closingId },
     include: { group: { select: { id: true, name: true } } }
@@ -210,7 +213,9 @@ export async function reopenMonth(closingId: string, actor: { id: string; name: 
   return { ok: true, closingId, lines: 0, carriedForward: 0 };
 }
 
-export async function markSettled(closingId: string, actor: { id: string; name: string }): Promise<CloseResult> {
+export const reopenMonth = traced('reopenMonth', reopenMonthImpl);
+
+async function markSettledImpl(closingId: string, actor: { id: string; name: string }): Promise<CloseResult> {
   const closing = await prisma.monthClosing.findUnique({
     where: { id: closingId },
     include: { group: { select: { id: true, name: true } } }
@@ -245,3 +250,5 @@ export async function markSettled(closingId: string, actor: { id: string; name: 
 
   return { ok: true, closingId, lines: 0, carriedForward: 0 };
 }
+
+export const markSettled = traced('markSettled', markSettledImpl);
