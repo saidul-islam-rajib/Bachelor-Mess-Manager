@@ -35,19 +35,54 @@ export async function loadSavedServer(): Promise<string> {
 
 const errorShape = z.object({ error: z.string() });
 
+const REFRESH_PATH = '/api/mobile/v1/auth/refresh';
+const refreshSchema = z.object({ token: z.string(), expiresAt: z.union([z.string(), z.number()]) });
+
+let refreshing: Promise<boolean> | null = null;
+
+function refreshToken(): Promise<boolean> {
+  if (!refreshing) {
+    refreshing = (async () => {
+      try {
+        const res = await send(REFRESH_PATH, { method: 'POST' });
+        if (!res.ok) return false;
+        const parsed = refreshSchema.safeParse(await res.json().catch(() => null));
+        if (!parsed.success) return false;
+        token = parsed.data.token;
+        await storage.set(STORAGE_KEYS.token, parsed.data.token);
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshing = null;
+      }
+    })();
+  }
+  return refreshing;
+}
+
+function send(path: string, init: { method?: string; body?: unknown; auth?: boolean }) {
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (init.body !== undefined) headers['Content-Type'] = 'application/json';
+  if (init.auth !== false && token) headers.Authorization = `Bearer ${token}`;
+  return fetch(`${baseUrl}${path}`, {
+    method: init.method ?? 'GET',
+    headers,
+    body: init.body === undefined ? undefined : JSON.stringify(init.body),
+  });
+}
+
 export async function request<T>(
   path: string,
   schema: z.ZodType<T>,
   init: { method?: string; body?: unknown; auth?: boolean } = {},
 ): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' };
-  if (init.body !== undefined) headers['Content-Type'] = 'application/json';
-  if (init.auth !== false && token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${baseUrl}${path}`, {
-    method: init.method ?? 'GET',
-    headers,
-    body: init.body === undefined ? undefined : JSON.stringify(init.body),
-  });
+  let res = await send(path, init);
+  if (res.status === 401 && init.auth !== false && path !== REFRESH_PATH && token) {
+    if (await refreshToken()) {
+      res = await send(path, init);
+    }
+  }
   const json: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     if (res.status === 401 && init.auth !== false) onUnauthorized?.();
