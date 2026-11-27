@@ -147,6 +147,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       return badRequest(res, 'That member does not belong to this group.');
     }
 
+    const closing = await prisma.monthClosing.findFirst({
+      where: { groupId, monthKey: date.slice(0, 7), reopenedAt: null },
+      select: { id: true }
+    });
+    if (closing) {
+      return badRequest(res, strings.errors.paymentMonthClosed);
+    }
+
     const payment = await prisma.paymentStatus.create({
       data: {
         userId,
