@@ -56,7 +56,7 @@ Last progress report: 60%
 | F39 | fixer | P1 | done | A6 | Per ADR-005: contract for bills and collections (A6 notes row F39) | agents/fixer/F39-bills-contract | Merged by qa, checks pass: bills + collections contract, check-openapi 112/112; I11 contract part ready |
 | F41 | fixer | P1 | review | A6 | Per ADR-005: contract for closings, final settlement, settlement status (A6 notes row F41) | agents/fixer/F41-settlement-contract | Contract only; check-openapi 186/186, typecheck, lint, allocation 39/39; I13 contract part ready |
 | F40 | fixer | P1 | done | A6 | Per ADR-005: contract for payments, advances, `settlements/mine` (A6 notes row F40) | agents/fixer/F40-payments-contract | Merged by qa, checks pass: payments/advances/settlements-mine contract, check-openapi 191/191; I12 contract part ready |
-| F42 | fixer | P1 | todo | A6 | Per ADR-005: contract for members, invitations, supervisor, co-supervisors (A6 notes row F42) | | |
+| F42 | fixer | P1 | review | A6 | Per ADR-005: contract for members, invitations, supervisor, co-supervisors (A6 notes row F42) | agents/fixer/F42-members-contract | Contract only; check-openapi 245/245, typecheck, lint, allocation 39/39; I14 contract part ready |
 | F43 | fixer | P1 | todo | A6 | Per ADR-005: contract for notifications (A6 notes row F43) | | |
 | F44 | fixer | P1 | todo | A6 | Per ADR-005: contract for profile, settings, user profile, role requests (A6 notes row F44) | | |
 | F45 | fixer | P2 | todo | A6 | Per ADR-005: contract for admin users, permissions, role request approval, supervisor limits (A6 notes row F45) | | |
