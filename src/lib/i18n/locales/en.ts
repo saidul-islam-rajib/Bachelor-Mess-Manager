@@ -243,6 +243,7 @@ const en = {
     nothingToUpdate: 'Nothing to update.',
     adminOnly: 'Only admins can perform this action.',
     permissionDenied: 'Your account does not have permission to do that. Ask an admin if you need it.',
+    paymentMonthClosed: 'That month is closed, so payments dated in it cannot be recorded. Reopen the month first.',
     supervisorOnly: "Only this group's supervisor can perform this action.",
     notGroupMember: 'You are not a member of this group.',
     loadFailed: (what: string) => `Could not load ${what}.`,
