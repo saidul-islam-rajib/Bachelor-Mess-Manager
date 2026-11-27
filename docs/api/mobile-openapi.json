@@ -579,6 +579,234 @@
         }
       }
     },
+    "/api/meal-prompts": {
+      "get": {
+        "summary": "Own meal prompts for a day, one per active group",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+            },
+            "description": "Day key; defaults to the prompt lead day"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealPromptsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Answer a meal prompt (quick reply)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MealPromptAnswerRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealPromptAnswerResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/meal-plan": {
+      "get": {
+        "summary": "Own weekly meal plan",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealPlanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Save own weekly meal plan (needs MEAL_PLAN_MANAGE)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MealPlanSaveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealPlanSaveResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/meal-summary": {
+      "get": {
+        "summary": "Month meal summary with rate, days and members",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MealSummary"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/api/groups/{id}/bazar-schedule": {
       "get": {
         "summary": "Duty roster for a month: who shops each day, members and whether it can be edited",
@@ -2064,6 +2292,417 @@
               },
               "locked": {
                 "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "PromptCard": {
+        "type": "object",
+        "required": [
+          "groupId",
+          "groupName",
+          "date",
+          "counts",
+          "planned",
+          "answer",
+          "respondedAt"
+        ],
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/MealCounts"
+          },
+          "planned": {
+            "$ref": "#/components/schemas/MealCounts"
+          },
+          "answer": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "YES",
+              "NO",
+              "CUSTOM",
+              null
+            ]
+          },
+          "respondedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "MealPromptsResponse": {
+        "type": "object",
+        "required": [
+          "date",
+          "prompts"
+        ],
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "prompts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PromptCard"
+            }
+          }
+        }
+      },
+      "MealPromptAnswerRequest": {
+        "type": "object",
+        "required": [
+          "groupId",
+          "date",
+          "answer"
+        ],
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "answer": {
+            "type": "string",
+            "enum": [
+              "YES",
+              "NO",
+              "CUSTOM"
+            ]
+          },
+          "counts": {
+            "$ref": "#/components/schemas/MealCounts",
+            "description": "Used with CUSTOM"
+          }
+        }
+      },
+      "MealPromptAnswerResponse": {
+        "type": "object",
+        "required": [
+          "saved",
+          "counts",
+          "summary"
+        ],
+        "properties": {
+          "saved": {
+            "type": "boolean"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/MealCounts"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "MealPlanDay": {
+        "type": "object",
+        "required": [
+          "weekday",
+          "enabled",
+          "breakfast",
+          "lunch",
+          "dinner"
+        ],
+        "properties": {
+          "weekday": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6,
+            "description": "0 is Sunday"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "breakfast": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "lunch": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "dinner": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10
+          }
+        }
+      },
+      "MealPlan": {
+        "type": "object",
+        "required": [
+          "isActive",
+          "startDate",
+          "days"
+        ],
+        "properties": {
+          "isActive": {
+            "type": "boolean"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "days": {
+            "type": "array",
+            "minItems": 7,
+            "maxItems": 7,
+            "items": {
+              "$ref": "#/components/schemas/MealPlanDay"
+            }
+          }
+        }
+      },
+      "MealPlanResponse": {
+        "type": "object",
+        "required": [
+          "plan"
+        ],
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/MealPlan"
+          }
+        }
+      },
+      "MealPlanSaveRequest": {
+        "type": "object",
+        "required": [
+          "days"
+        ],
+        "properties": {
+          "isActive": {
+            "type": "boolean",
+            "description": "Defaults to true"
+          },
+          "days": {
+            "type": "array",
+            "minItems": 7,
+            "maxItems": 7,
+            "items": {
+              "$ref": "#/components/schemas/MealPlanDay"
+            }
+          },
+          "overwriteEdited": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MealPlanSaveResponse": {
+        "type": "object",
+        "required": [
+          "plan",
+          "filled"
+        ],
+        "properties": {
+          "plan": {
+            "$ref": "#/components/schemas/MealPlan"
+          },
+          "filled": {
+            "type": "integer",
+            "description": "Upcoming days filled from the plan"
+          }
+        }
+      },
+      "MealSummaryDay": {
+        "type": "object",
+        "required": [
+          "date",
+          "meals",
+          "expense",
+          "perMealPrice",
+          "runningRate",
+          "buyers"
+        ],
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "meals": {
+            "type": "number"
+          },
+          "expense": {
+            "type": "number"
+          },
+          "perMealPrice": {
+            "type": "number"
+          },
+          "runningRate": {
+            "type": "number"
+          },
+          "buyers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "amount"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "MealSummaryMember": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email",
+          "meals",
+          "breakfasts",
+          "lunches",
+          "dinners",
+          "cost",
+          "paid",
+          "balance",
+          "isActive"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "meals": {
+            "type": "number"
+          },
+          "breakfasts": {
+            "type": "number"
+          },
+          "lunches": {
+            "type": "number"
+          },
+          "dinners": {
+            "type": "number"
+          },
+          "cost": {
+            "type": "number"
+          },
+          "paid": {
+            "type": "number"
+          },
+          "balance": {
+            "type": "number"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MealSummary": {
+        "type": "object",
+        "required": [
+          "rateMode",
+          "through",
+          "weights",
+          "days",
+          "members",
+          "totals"
+        ],
+        "properties": {
+          "rateMode": {
+            "type": "string"
+          },
+          "through": {
+            "type": "string"
+          },
+          "weights": {
+            "type": "object",
+            "required": [
+              "breakfast",
+              "lunch",
+              "dinner"
+            ],
+            "properties": {
+              "breakfast": {
+                "type": "number"
+              },
+              "lunch": {
+                "type": "number"
+              },
+              "dinner": {
+                "type": "number"
+              }
+            }
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealSummaryDay"
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MealSummaryMember"
+            }
+          },
+          "totals": {
+            "type": "object",
+            "required": [
+              "expense",
+              "meals",
+              "cost",
+              "mealRate",
+              "averageDayRate",
+              "pricedDays",
+              "memberCount"
+            ],
+            "properties": {
+              "expense": {
+                "type": "number"
+              },
+              "meals": {
+                "type": "number"
+              },
+              "cost": {
+                "type": "number"
+              },
+              "mealRate": {
+                "type": "number"
+              },
+              "averageDayRate": {
+                "type": "number"
+              },
+              "pricedDays": {
+                "type": "number"
+              },
+              "memberCount": {
+                "type": "number"
               }
             }
           }
