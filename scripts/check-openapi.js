@@ -83,7 +83,11 @@ function run() {
     ['/api/invitations', ['src', 'pages', 'api', 'invitations', 'index.ts'], ['get']],
     ['/api/invitations/{id}', ['src', 'pages', 'api', 'invitations', '[id].ts'], ['patch', 'delete']],
     ['/api/groups/{id}/supervisor', ['src', 'pages', 'api', 'groups', '[id]', 'supervisor.ts'], ['post']],
-    ['/api/groups/{id}/co-supervisors', ['src', 'pages', 'api', 'groups', '[id]', 'co-supervisors.ts'], ['get', 'post', 'delete']]
+    ['/api/groups/{id}/co-supervisors', ['src', 'pages', 'api', 'groups', '[id]', 'co-supervisors.ts'], ['get', 'post', 'delete']],
+    ['/api/groups/{id}/closings', ['src', 'pages', 'api', 'groups', '[id]', 'closings.ts'], ['get', 'post']],
+    ['/api/closings/{id}', ['src', 'pages', 'api', 'closings', '[id].ts'], ['delete']],
+    ['/api/groups/{id}/final-settlement', ['src', 'pages', 'api', 'groups', '[id]', 'final-settlement.ts'], ['get', 'post']],
+    ['/api/settlement/status', ['src', 'pages', 'api', 'settlement', 'status.ts'], ['get']]
   ]) {
     const ops = (spec.paths && spec.paths[apiPath]) || {};
     const src = read(...file);
@@ -107,6 +111,10 @@ function run() {
   check('AdvancesList lists members and history', Boolean(advancesList && ['members', 'history'].every((k) => advancesList.required.includes(k))));
   const settlementsMine = spec.components && spec.components.schemas && spec.components.schemas.SettlementsMine;
   check('SettlementsMine lists submissions', Boolean(settlementsMine && settlementsMine.required.includes('submissions')));
+  const closing = spec.components && spec.components.schemas && spec.components.schemas.Closing;
+  check('Closing lists scope and lines', Boolean(closing && ['scope', 'lines'].every((k) => closing.required.includes(k))));
+  const finalSettlement = spec.components && spec.components.schemas && spec.components.schemas.FinalSettlement;
+  check('FinalSettlement lists members, settleUp and allClear', Boolean(finalSettlement && ['members', 'settleUp', 'allClear'].every((k) => finalSettlement.required.includes(k))));
   const meals = spec.components && spec.components.schemas && spec.components.schemas.MealsMonth;
   check('MealsMonth lists entries, editWindow and pendingChanges', Boolean(meals && ['entries', 'editWindow', 'pendingChanges'].every((k) => meals.required.includes(k))));
   const dash = spec.components && spec.components.schemas && spec.components.schemas.MemberDashboard;
