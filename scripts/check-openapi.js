@@ -64,6 +64,12 @@ function run() {
     ['/api/meal-prompts', ['src', 'pages', 'api', 'meal-prompts', 'index.ts'], ['get', 'post']],
     ['/api/groups/{id}/meal-plan', ['src', 'pages', 'api', 'groups', '[id]', 'meal-plan.ts'], ['get', 'put']],
     ['/api/groups/{id}/meal-summary', ['src', 'pages', 'api', 'groups', '[id]', 'meal-summary.ts'], ['get']],
+    ['/api/groups/{id}/bazar-schedule', ['src', 'pages', 'api', 'groups', '[id]', 'bazar-schedule.ts'], ['get', 'put']],
+    ['/api/groups/{id}/bazar-summary', ['src', 'pages', 'api', 'groups', '[id]', 'bazar-summary.ts'], ['get']],
+    ['/api/groups/{id}/expenses', ['src', 'pages', 'api', 'groups', '[id]', 'expenses.ts'], ['get', 'post']],
+    ['/api/expenses/{id}', ['src', 'pages', 'api', 'expenses', '[id].ts'], ['patch', 'delete']],
+    ['/api/groups/{id}/categories', ['src', 'pages', 'api', 'groups', '[id]', 'categories.ts'], ['get']],
+    ['/api/expenses/{id}/comments', ['src', 'pages', 'api', 'expenses', '[id]', 'comments.ts'], ['post']],
     ['/api/groups/{id}/bills', ['src', 'pages', 'api', 'groups', '[id]', 'bills.ts'], ['get', 'post']],
     ['/api/bills/{id}', ['src', 'pages', 'api', 'bills', '[id].ts'], ['patch', 'delete']],
     ['/api/bills/{id}/collections', ['src', 'pages', 'api', 'bills', '[id]', 'collections.ts'], ['post', 'patch', 'delete']]
@@ -76,6 +82,10 @@ function run() {
     check(`${apiPath} contract lists no method the route lacks`, Object.keys(ops).every((m) => new RegExp(`'${m.toUpperCase()}'`).test(src) || m === 'get' && /req\.method === 'GET'|getSessionUser/.test(src) && apiPath === '/api/auth/me'));
     check(`${apiPath} reads the session through getSessionUser`, /getSessionUser\(req/.test(src));
   }
+  const bazar = spec.components && spec.components.schemas && spec.components.schemas.BazarSchedule;
+  check('BazarSchedule lists days, members and editable', Boolean(bazar && ['days', 'members', 'editable'].every((k) => bazar.required.includes(k))));
+  const expensesMonth = spec.components && spec.components.schemas && spec.components.schemas.ExpensesMonth;
+  check('ExpensesMonth lists expenses and members', Boolean(expensesMonth && ['expenses', 'members'].every((k) => expensesMonth.required.includes(k))));
   const billsMonth = spec.components && spec.components.schemas && spec.components.schemas.BillsMonth;
   check('BillsMonth lists bills, members and totals', Boolean(billsMonth && ['bills', 'members', 'totals'].every((k) => billsMonth.required.includes(k))));
   const collectionReq = spec.components && spec.components.schemas && spec.components.schemas.CollectionRequest;
