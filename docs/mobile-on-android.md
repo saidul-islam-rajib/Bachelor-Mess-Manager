@@ -24,6 +24,13 @@ The Bachelor Point app is one Expo codebase for iPhone and Android (ADR-001). Th
 - Pull to refresh works as shared: the dashboard `ScrollView` has a `RefreshControl`, and Android shows its own spinner. Changing the spinner colour needs an edit in the shared screen, which ios owns.
 - The hardware back button on the dashboard leaves the app, because the dashboard is the first screen after sign-in. No handler is added.
 
+## Meals and quick reply on Android
+
+- `mobile/src/features/meals/MealsScreen.android.tsx` wraps the shared screen and sets a dark status bar, like the dashboard. The Meals tab route imports `MealsScreen` without an extension, so Metro picks this file on Android.
+- The quick reply card sits on Home inside the dashboard, so it already runs under the dashboard's Android wrapper. No separate file is needed.
+- Pull to refresh and the horizontal day chips work as shared. The hardware back button on a tab goes back to the previous tab, then leaves the app; no handler is added.
+- The tabs shell (`(app)/_layout.tsx`) is owned by ios. No Android-only change was needed there.
+
 ## Not checked in the sandbox
 
 The sandbox has no Android SDK or phone, so on-device behaviour is tested by the owner. Agents run only the typecheck, lint and jest checks of ADR-003.
