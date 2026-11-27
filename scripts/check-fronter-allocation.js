@@ -18,6 +18,7 @@ function load() {
   const module = { exports: {} };
   const stub = new Proxy({}, { get: () => () => ({}) });
   const stubs = {
+    '@/lib/log': { traced: (name, fn) => fn },
     '@/lib/month': { round2: (n) => Math.round(n * 100) / 100, dayToUtcDate: (d) => new Date(d), utcDateToDay: (d) => d }
   };
   const req = (name) => stubs[name] || stub;

@@ -21,6 +21,7 @@ function loadSplitEqually() {
   });
   const module = { exports: {} };
   const stubs = {
+    '@/lib/log': { traced: (name, fn) => fn },
     '@/lib/prisma': { prisma: {} },
     '@/lib/constants': { BILL_TYPE_FILTER: {}, EXPENSE_TYPES: { BAZAR: 'BAZAR' }, SPLIT_METHODS: { EQUAL: 'EQUAL', CUSTOM: 'CUSTOM' } },
     '@/lib/month': { round2: (n) => Math.round(n * 100) / 100 }

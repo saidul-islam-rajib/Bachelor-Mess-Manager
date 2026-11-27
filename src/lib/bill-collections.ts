@@ -1,3 +1,4 @@
+import { traced } from '@/lib/log';
 import { prisma } from '@/lib/prisma';
 import { BILL_TYPE_FILTER, EXPENSE_TYPES, PAYMENT_STATUS } from '@/lib/constants';
 import { dayToUtcDate, round2 } from '@/lib/month';
@@ -144,7 +145,7 @@ export type ReversalResult =
 
 /// The ledger is append-only. Correcting a mistake writes an opposite row rather
 /// than removing the original, so both the entry and the correction stay visible.
-export async function reversePayment(params: {
+async function reversePaymentImpl(params: {
   paymentId: string;
   actorId: string;
   groupId?: string;
@@ -228,6 +229,8 @@ export async function reversePayment(params: {
   return { ok: true, amount: round2(original.amountPaid), userId: original.userId };
 }
 
+export const reversePayment = traced('reversePayment', reversePaymentImpl);
+
 async function paymentFamilyIds(paymentId: string): Promise<string[]> {
   const ids = new Set<string>([paymentId]);
   let frontier = [paymentId];
@@ -257,7 +260,7 @@ async function paymentFamilyIds(paymentId: string): Promise<string[]> {
 
 export type HardDeleteResult = { ok: true; count: number } | { ok: false; error: string };
 
-export async function hardDeletePayment(params: {
+async function hardDeletePaymentImpl(params: {
   paymentId: string;
   groupId?: string;
 }): Promise<HardDeleteResult> {
@@ -296,9 +299,11 @@ export async function hardDeletePayment(params: {
   return { ok: true, count: familyIds.length };
 }
 
+export const hardDeletePayment = traced('hardDeletePayment', hardDeletePaymentImpl);
+
 export type UpdatePaymentResult = { ok: true } | { ok: false; error: string };
 
-export async function updatePaymentDetails(params: {
+async function updatePaymentDetailsImpl(params: {
   paymentId: string;
   groupId?: string;
   amount?: number;
@@ -344,6 +349,8 @@ export async function updatePaymentDetails(params: {
   await prisma.paymentStatus.update({ where: { id: paymentId }, data });
   return { ok: true };
 }
+
+export const updatePaymentDetails = traced('updatePaymentDetails', updatePaymentDetailsImpl);
 
 export function allocateToFronters(
   shares: { userId: string; advance: number }[],
@@ -504,7 +511,7 @@ export type GroupBillCollectionTotals = {
   outstanding: number;
 };
 
-export async function groupBillCollectionTotals(
+async function groupBillCollectionTotalsImpl(
   groupId: string,
   start: Date,
   nextStart: Date
@@ -541,3 +548,5 @@ export async function groupBillCollectionTotals(
 
   return { perMember, collected, outstanding };
 }
+
+export const groupBillCollectionTotals = traced('groupBillCollectionTotals', groupBillCollectionTotalsImpl);

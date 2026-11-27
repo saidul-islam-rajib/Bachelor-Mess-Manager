@@ -1,3 +1,4 @@
+import { traced } from '@/lib/log';
 import { prisma } from '@/lib/prisma';
 import { round2 } from '@/lib/month';
 import { shareStatus } from '@/lib/bill-collections';
@@ -65,7 +66,7 @@ export async function listAdvances(groupId: string, limit = 100): Promise<Advanc
   }));
 }
 
-export async function recordAdvanceDeposit(params: {
+async function recordAdvanceDepositImpl(params: {
   groupId: string;
   userId: string;
   amount: number;
@@ -84,9 +85,11 @@ export async function recordAdvanceDeposit(params: {
   });
 }
 
+export const recordAdvanceDeposit = traced('recordAdvanceDeposit', recordAdvanceDepositImpl);
+
 export type AdvanceReversalResult = { ok: true; amount: number; userId: string } | { ok: false; error: string };
 
-export async function reverseAdvanceDeposit(params: {
+async function reverseAdvanceDepositImpl(params: {
   advanceId: string;
   actorId: string;
   groupId?: string;
@@ -135,10 +138,12 @@ export async function reverseAdvanceDeposit(params: {
   return { ok: true, amount: round2(original.amount), userId: original.userId };
 }
 
+export const reverseAdvanceDeposit = traced('reverseAdvanceDeposit', reverseAdvanceDepositImpl);
+
 /// Called from inside the same transaction that creates a bill's shares. Any member
 /// with an advance balance has their share auto-paid from it (up to what's available),
 /// leaving a normal bill collection row so /bills reads exactly like a manual "mark paid".
-export async function applyAdvanceToShares(
+async function applyAdvanceToSharesImpl(
   tx: TransactionClient,
   params: {
     groupId: string;
@@ -199,10 +204,12 @@ export async function applyAdvanceToShares(
   }
 }
 
+export const applyAdvanceToShares = traced('applyAdvanceToShares', applyAdvanceToSharesImpl);
+
 /// Called before a bill is deleted. Any advance that bill auto-consumed goes back
 /// into the member's balance, so deleting a mistaken bill doesn't quietly shrink
 /// their wallet with no trace of why.
-export async function refundAdvanceForBill(
+async function refundAdvanceForBillImpl(
   tx: TransactionClient,
   params: { expenseId: string; actorId: string }
 ): Promise<void> {
@@ -226,3 +233,5 @@ export async function refundAdvanceForBill(
     });
   }
 }
+
+export const refundAdvanceForBill = traced('refundAdvanceForBill', refundAdvanceForBillImpl);

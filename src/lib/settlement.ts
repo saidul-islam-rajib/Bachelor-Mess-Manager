@@ -1,3 +1,4 @@
+import { traced } from '@/lib/log';
 import { prisma } from '@/lib/prisma';
 import { cached } from '@/lib/cache';
 import { BILL_TYPE_FILTER, GENERAL_PAYMENT_TYPE, MEAL_RATE_MODES, PAYMENT_STATUS } from '@/lib/constants';
@@ -189,7 +190,7 @@ async function loadCarryIn(groupId: string, monthKey: string): Promise<Map<strin
   return carry;
 }
 
-export async function buildSettlement(
+async function buildSettlementImpl(
   group: SettlementGroup,
   monthKey?: string,
   options: { through?: string } = {}
@@ -197,6 +198,8 @@ export async function buildSettlement(
   const cacheKey = `settlement:${group.id}:${monthKey ?? ''}:${options.through ?? ''}`;
   return cached(cacheKey, 0, () => buildSettlementUncached(group, monthKey, options));
 }
+
+export const buildSettlement = traced('buildSettlement', buildSettlementImpl);
 
 async function buildSettlementUncached(
   group: SettlementGroup,

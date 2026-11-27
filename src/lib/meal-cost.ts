@@ -1,6 +1,7 @@
+import { traced } from '@/lib/log';
 import { allocate } from '@/lib/settlement';
 
-export function allocateMealCosts(
+function allocateMealCostsImpl(
   memberCount: number,
   totalBazarPaisa: number,
   daily: boolean,
@@ -44,3 +45,5 @@ export function allocateMealCosts(
 
   return costs;
 }
+
+export const allocateMealCosts = traced('allocateMealCosts', allocateMealCostsImpl);
