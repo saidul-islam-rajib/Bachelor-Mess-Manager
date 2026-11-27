@@ -85,7 +85,7 @@ Last progress report: 60%
 | I14 | ios | P1 | todo | I13,F42,F33,F35 | Per ADR-005: `features/members`: list, detail, own invitations; supervisor invite, remove, hand over, co-supervisor | | |
 | I15 | ios | P1 | todo | I6,F43 | Per ADR-005: `features/notifications` in More: list, mark read, unread badge, refresh on focus | | |
 | I16 | ios | P1 | todo | I15,F44 | Per ADR-005: `features/profile`: profile edit, notification settings, role request | | |
-| I17 | ios | P1 | review | I6 | Per ADR-005: supervisor and admin shapes of `features/dashboard`, replacing the not-yet-supported note | agents/ios/I17-dashboard-roles | Supervisor totals + dues list, admin counts; mobile tsc, eslint, jest 21/21. Contract types supervisor/admin as bare objects; schema follows route source |
+| I17 | ios | P1 | done | I6 | Per ADR-005: supervisor and admin shapes of `features/dashboard`, replacing the not-yet-supported note | agents/ios/I17-dashboard-roles | Merged by qa, checks pass: mobile tsc, eslint, jest 24/24; supervisor + admin dashboards |
 | I18 | ios | P2 | todo | I16,F45 | Per ADR-005: `features/admin` in More: users, role request approvals, permissions, supervisor limits | | |
 | I19 | ios | P2 | todo | F46,I15 | Per ADR-006: `expo-notifications`, `EXPO_PROJECT_ID` in `app.config.ts`, register after sign-in, unregister on sign out, tap opens `data.link`; re-read SDK 58 notifications docs first | | |
 | Q1 | qa | P1 | done | | Turn `requirements.md` and `docs/*.md` into an acceptance checklist at `docs/agents/ACCEPTANCE.md`, and add rows for any gaps | | Checklist written; gaps already covered by F5-F18, no new rows |
