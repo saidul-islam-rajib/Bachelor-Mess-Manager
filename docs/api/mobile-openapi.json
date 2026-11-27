@@ -2058,6 +2058,290 @@
           }
         }
       }
+    },
+    "/api/groups/{id}/closings": {
+      "get": {
+        "summary": "Month closings of a group, newest first, at most 24",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClosingList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Close a month (supervisor only, group must be active)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseMonthRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloseMonthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/closings/{id}": {
+      "delete": {
+        "summary": "Reopen a closed month (supervisor only, group must be active)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Closing id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClosingReopened"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/groups/{id}/final-settlement": {
+      "get": {
+        "summary": "Final settlement of the last closed month; settlement is null when none exists",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinalSettlementResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Settle a member, settle everyone or mark the month settled; returns the refreshed settlement",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinalSettlementActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinalSettlementResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/settlement/status": {
+      "get": {
+        "summary": "Groups where the caller still has to settle or close; shouldRedirect drives the settle prompt",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettlementStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -5561,6 +5845,525 @@
             }
           }
         }
+      },
+      "ClosingLine": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "carryIn": {
+            "type": "number"
+          },
+          "mealCount": {
+            "type": "number"
+          },
+          "mealCost": {
+            "type": "number"
+          },
+          "billShare": {
+            "type": "number"
+          },
+          "bazarPaid": {
+            "type": "number"
+          },
+          "cashPaid": {
+            "type": "number"
+          },
+          "carryOut": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "userId",
+          "userName",
+          "carryIn",
+          "mealCount",
+          "mealCost",
+          "billShare",
+          "bazarPaid",
+          "cashPaid",
+          "carryOut"
+        ]
+      },
+      "Closing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "monthKey": {
+            "type": "string"
+          },
+          "closedThrough": {
+            "type": "string"
+          },
+          "closedAt": {
+            "type": "string"
+          },
+          "closedBy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reopenedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "settledAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "settledBy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "GROUP",
+              "MEMBERS"
+            ]
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ClosingLine"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "monthKey",
+          "closedThrough",
+          "closedAt",
+          "closedBy",
+          "note",
+          "reopenedAt",
+          "settledAt",
+          "settledBy",
+          "scope",
+          "lines"
+        ]
+      },
+      "ClosingList": {
+        "type": "object",
+        "properties": {
+          "canManage": {
+            "type": "boolean"
+          },
+          "closings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Closing"
+            }
+          }
+        },
+        "required": [
+          "canManage",
+          "closings"
+        ]
+      },
+      "CloseMonthRequest": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}$"
+          },
+          "through": {
+            "type": "string",
+            "description": "Day key YYYY-MM-DD"
+          },
+          "userIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 300
+          },
+          "endMembership": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CloseMonthResponse": {
+        "type": "object",
+        "properties": {
+          "closingId": {
+            "type": "string"
+          },
+          "members": {
+            "type": "integer"
+          },
+          "carriedForward": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "closingId",
+          "members",
+          "carriedForward"
+        ]
+      },
+      "ClosingReopened": {
+        "type": "object",
+        "properties": {
+          "reopened": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "reopened"
+        ]
+      },
+      "FinalSettlementMember": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "meals": {
+            "type": "number"
+          },
+          "carryIn": {
+            "type": "number"
+          },
+          "mealCost": {
+            "type": "number"
+          },
+          "billShare": {
+            "type": "number"
+          },
+          "billShareByType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "totalCost": {
+            "type": "number"
+          },
+          "payableByType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "bazarPaid": {
+            "type": "number"
+          },
+          "cashPaid": {
+            "type": "number"
+          },
+          "paidByType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "dueAtClose": {
+            "type": "number"
+          },
+          "closeStatus": {
+            "type": "string"
+          },
+          "liveDue": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isCurrentMember": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "meals",
+          "carryIn",
+          "mealCost",
+          "billShare",
+          "billShareByType",
+          "totalCost",
+          "payableByType",
+          "bazarPaid",
+          "cashPaid",
+          "paidByType",
+          "dueAtClose",
+          "closeStatus",
+          "liveDue",
+          "status",
+          "isCurrentMember"
+        ]
+      },
+      "SettleTransfer": {
+        "type": "object",
+        "properties": {
+          "fromUserId": {
+            "type": "string"
+          },
+          "fromName": {
+            "type": "string"
+          },
+          "toUserId": {
+            "type": "string"
+          },
+          "toName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "fromUserId",
+          "fromName",
+          "toUserId",
+          "toName",
+          "amount"
+        ]
+      },
+      "FinalSettlement": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "closingId": {
+            "type": "string"
+          },
+          "monthKey": {
+            "type": "string"
+          },
+          "closedThrough": {
+            "type": "string"
+          },
+          "closedBy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "settledAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "settledBy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mealRate": {
+            "type": "number"
+          },
+          "totals": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "categoryLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FinalSettlementMember"
+            }
+          },
+          "settleUp": {
+            "type": "object",
+            "properties": {
+              "transfers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/SettleTransfer"
+                }
+              },
+              "unmatched": {
+                "type": "number"
+              },
+              "surplus": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "transfers",
+              "unmatched",
+              "surplus"
+            ]
+          },
+          "allClear": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "groupId",
+          "groupName",
+          "closingId",
+          "monthKey",
+          "closedThrough",
+          "closedBy",
+          "settledAt",
+          "settledBy",
+          "mealRate",
+          "totals",
+          "categoryLabels",
+          "members",
+          "settleUp",
+          "allClear"
+        ]
+      },
+      "FinalSettlementResponse": {
+        "type": "object",
+        "required": [
+          "canManage",
+          "settlement"
+        ],
+        "properties": {
+          "canManage": {
+            "type": "boolean"
+          },
+          "settlement": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FinalSettlement"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "FinalSettlementActionRequest": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "settleMember",
+              "settleAll",
+              "markSettled"
+            ],
+            "description": "settleMember: a member settles self, or a supervisor declares userId settled; settleAll and markSettled are supervisor only"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Only with settleMember"
+          }
+        }
+      },
+      "SettlementStatusGroup": {
+        "type": "object",
+        "properties": {
+          "groupId": {
+            "type": "string"
+          },
+          "groupName": {
+            "type": "string"
+          },
+          "monthKey": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "MEMBER",
+              "MANAGER"
+            ]
+          },
+          "due": {
+            "type": "number"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "allClear": {
+            "type": "boolean"
+          },
+          "settledAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shouldRedirect": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "groupId",
+          "groupName",
+          "monthKey",
+          "role",
+          "due",
+          "status",
+          "allClear",
+          "settledAt",
+          "shouldRedirect"
+        ]
+      },
+      "SettlementStatus": {
+        "type": "object",
+        "properties": {
+          "shouldRedirect": {
+            "type": "boolean"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SettlementStatusGroup"
+            }
+          }
+        },
+        "required": [
+          "shouldRedirect",
+          "groups"
+        ]
       }
     }
   }
