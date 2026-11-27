@@ -1,6 +1,7 @@
 import { describeAdminOutcome, ensureAdministrator, type AdminBootstrapOutcome } from '@/lib/bootstrap/admin';
 import { publishPendingAnnouncements } from '@/lib/community';
 import { syncRolesAndPermissions, type RoleSyncResult } from '@/lib/bootstrap/roles';
+import { log } from '@/lib/log';
 import { getSiteSettings } from '@/lib/settings-service';
 
 export type BootstrapStatus = {
@@ -44,7 +45,7 @@ async function runBootstrap() {
       error: null
     };
   } catch (error) {
-    console.error('[bootstrap] application bootstrap failed', error);
+    log.error('bootstrap.error', { error });
 
     globalForBootstrap.applicationBootstrapStatus = {
       ...EMPTY_STATUS,

@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { readBearerToken, readMobileClaims, readSessionClaims, SESSION_COOKIE_NAME } from '@/lib/session';
 import { IDENTITY_COOKIE, readIdentityClaims } from '@/lib/identity';
+import { emit } from '@/lib/log';
 import { ROUTES } from '@/lib/routes';
 
 const PUBLIC_PATHS = [
@@ -67,6 +68,7 @@ export function middleware(req: NextRequest) {
   }
 
   if (isApi) {
+    emit('warn', 'api.denied', { method: req.method, path: pathname });
     return NextResponse.json({ error: 'You must be signed in.' }, { status: 401 });
   }
 
