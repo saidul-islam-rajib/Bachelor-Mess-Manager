@@ -806,6 +806,395 @@
           }
         }
       }
+    },
+    "/api/groups/{id}/bills": {
+      "get": {
+        "summary": "Bills of a month with shares, collections and totals (needs BILL_VIEW)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bills",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillsMonth"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Record a bill and split it (supervisor with BILL_MANAGE, group must be open)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Group id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/bills/{id}": {
+      "patch": {
+        "summary": "Edit a bill; an amount change on an equal split keeps the existing share holders",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bill id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BillPatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillUpdated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a bill and refund advances applied to it",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bill id"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillDeleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api/bills/{id}/collections": {
+      "post": {
+        "summary": "Record who paid toward a bill. Members record only their own payment; toUserId is supervisor-only",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bill id"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Change amount or date of a collection entry (supervisor with PAYMENT_RECORD)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bill id"
+          },
+          {
+            "name": "collectionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Collection entry id on this bill"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CollectionPatchRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionUpdated"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Reverse a collection entry, or remove it with hard=true",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Bill id"
+          },
+          {
+            "name": "collectionId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Collection entry id on this bill"
+          },
+          {
+            "name": "hard",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true"
+              ]
+            },
+            "description": "true removes the row instead of reversing it"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reversed or deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionRemoved"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Error"
+          },
+          "401": {
+            "$ref": "#/components/responses/Error"
+          },
+          "403": {
+            "$ref": "#/components/responses/Error"
+          },
+          "404": {
+            "$ref": "#/components/responses/Error"
+          },
+          "409": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2237,6 +2626,667 @@
                 "type": "number"
               }
             }
+          }
+        }
+      },
+      "BillCollection": {
+        "type": "object",
+        "required": [
+          "id",
+          "amount",
+          "date",
+          "recordedAt",
+          "recordedByName",
+          "isReversal",
+          "isReversed",
+          "isLinked",
+          "toUserName",
+          "fromUserName",
+          "fromAdvance",
+          "fromPayer"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "recordedAt": {
+            "type": "string"
+          },
+          "recordedByName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isReversal": {
+            "type": "boolean"
+          },
+          "isReversed": {
+            "type": "boolean"
+          },
+          "isLinked": {
+            "type": "boolean"
+          },
+          "toUserName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fromUserName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fromAdvance": {
+            "type": "boolean"
+          },
+          "fromPayer": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BillShare": {
+        "type": "object",
+        "required": [
+          "userId",
+          "userName",
+          "amount",
+          "paid",
+          "outstanding",
+          "advance",
+          "status",
+          "isShare",
+          "collections"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "paid": {
+            "type": "number"
+          },
+          "outstanding": {
+            "type": "number"
+          },
+          "advance": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isShare": {
+            "type": "boolean"
+          },
+          "collections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillCollection"
+            }
+          }
+        }
+      },
+      "Bill": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "amount",
+          "date",
+          "note",
+          "isReceived",
+          "splitMethod",
+          "payer",
+          "shares",
+          "collected",
+          "uncollected",
+          "advance",
+          "isFullyCollected",
+          "unpaidMemberCount"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "note": {
+            "type": "string"
+          },
+          "isReceived": {
+            "type": "boolean"
+          },
+          "splitMethod": {
+            "type": "string",
+            "enum": [
+              "EQUAL",
+              "CUSTOM"
+            ]
+          },
+          "payer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillShare"
+            }
+          },
+          "collected": {
+            "type": "number"
+          },
+          "uncollected": {
+            "type": "number"
+          },
+          "advance": {
+            "type": "number"
+          },
+          "isFullyCollected": {
+            "type": "boolean"
+          },
+          "unpaidMemberCount": {
+            "type": "integer"
+          }
+        }
+      },
+      "BillMember": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "email"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "BillTotals": {
+        "type": "object",
+        "required": [
+          "total",
+          "settled",
+          "outstanding",
+          "collected",
+          "uncollected",
+          "byType",
+          "byMember",
+          "dueByMember"
+        ],
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "settled": {
+            "type": "number"
+          },
+          "outstanding": {
+            "type": "number"
+          },
+          "collected": {
+            "type": "number"
+          },
+          "uncollected": {
+            "type": "number"
+          },
+          "byType": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "byMember": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "dueByMember": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "BillsMonth": {
+        "type": "object",
+        "required": [
+          "canManage",
+          "canRecordOwn",
+          "currentUserId",
+          "categories",
+          "categoryLabels",
+          "bills",
+          "members",
+          "totals"
+        ],
+        "properties": {
+          "canManage": {
+            "type": "boolean"
+          },
+          "canRecordOwn": {
+            "type": "boolean"
+          },
+          "currentUserId": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "categoryLabels": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "bills": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Bill"
+            }
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillMember"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/BillTotals"
+          }
+        }
+      },
+      "BillShareInput": {
+        "type": "object",
+        "required": [
+          "userId",
+          "amount"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      },
+      "BillRequest": {
+        "type": "object",
+        "required": [
+          "type",
+          "amount",
+          "date"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "A cost type from the group category list"
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "note": {
+            "type": "string"
+          },
+          "splitMethod": {
+            "type": "string",
+            "enum": [
+              "EQUAL",
+              "CUSTOM"
+            ]
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillShareInput"
+            },
+            "description": "Required for CUSTOM, must add up to amount"
+          },
+          "isReceived": {
+            "type": "boolean"
+          },
+          "payerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "BillSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "amount",
+          "date",
+          "note",
+          "isReceived",
+          "splitMethod",
+          "shares"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "note": {
+            "type": "string"
+          },
+          "isReceived": {
+            "type": "boolean"
+          },
+          "splitMethod": {
+            "type": "string",
+            "enum": [
+              "EQUAL",
+              "CUSTOM"
+            ]
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "userId",
+                "amount"
+              ],
+              "properties": {
+                "userId": {
+                  "type": "string"
+                },
+                "userName": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      },
+      "BillCreated": {
+        "type": "object",
+        "required": [
+          "bill"
+        ],
+        "properties": {
+          "bill": {
+            "$ref": "#/components/schemas/BillSummary"
+          }
+        }
+      },
+      "BillUpdated": {
+        "type": "object",
+        "required": [
+          "bill"
+        ],
+        "properties": {
+          "bill": {
+            "$ref": "#/components/schemas/BillSummary"
+          }
+        }
+      },
+      "BillDeleted": {
+        "type": "object",
+        "required": [
+          "deleted"
+        ],
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        }
+      },
+      "BillPatchRequest": {
+        "type": "object",
+        "description": "Any subset of fields; at least one is required",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "note": {
+            "type": "string"
+          },
+          "splitMethod": {
+            "type": "string",
+            "enum": [
+              "EQUAL",
+              "CUSTOM"
+            ]
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillShareInput"
+            }
+          },
+          "isReceived": {
+            "type": "boolean"
+          },
+          "payerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "CollectionRequest": {
+        "type": "object",
+        "required": [
+          "userId"
+        ],
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Member who paid; members can only send their own id"
+          },
+          "amount": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Required unless settle is true"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "settle": {
+            "type": "boolean",
+            "description": "Pay the whole outstanding share"
+          },
+          "toUserId": {
+            "type": "string",
+            "description": "Supervisor only: member who received the money"
+          }
+        }
+      },
+      "CollectionCreated": {
+        "type": "object",
+        "required": [
+          "collection",
+          "totals"
+        ],
+        "properties": {
+          "collection": {
+            "type": "object",
+            "required": [
+              "id",
+              "userId",
+              "userName",
+              "amount",
+              "date",
+              "toUserId",
+              "toUserName"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "userName": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "date": {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+              },
+              "toUserId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "toUserName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "totals": {
+            "type": "object",
+            "required": [
+              "collected",
+              "outstanding",
+              "unpaidMemberCount",
+              "isFullyCollected"
+            ],
+            "properties": {
+              "collected": {
+                "type": "number"
+              },
+              "outstanding": {
+                "type": "number"
+              },
+              "unpaidMemberCount": {
+                "type": "integer"
+              },
+              "isFullyCollected": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "CollectionPatchRequest": {
+        "type": "object",
+        "description": "Any subset of fields",
+        "properties": {
+          "amount": {
+            "type": "number"
+          },
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          }
+        }
+      },
+      "CollectionUpdated": {
+        "type": "object",
+        "required": [
+          "updated"
+        ],
+        "properties": {
+          "updated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CollectionRemoved": {
+        "type": "object",
+        "description": "deleted for hard=true, otherwise reversed with the reversed amount",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          },
+          "reversed": {
+            "type": "boolean"
+          },
+          "amount": {
+            "type": "number"
           }
         }
       }

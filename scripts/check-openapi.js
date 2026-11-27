@@ -63,7 +63,10 @@ function run() {
     ['/api/auth/me', ['src', 'pages', 'api', 'auth', 'me.ts'], ['get']],
     ['/api/meal-prompts', ['src', 'pages', 'api', 'meal-prompts', 'index.ts'], ['get', 'post']],
     ['/api/groups/{id}/meal-plan', ['src', 'pages', 'api', 'groups', '[id]', 'meal-plan.ts'], ['get', 'put']],
-    ['/api/groups/{id}/meal-summary', ['src', 'pages', 'api', 'groups', '[id]', 'meal-summary.ts'], ['get']]
+    ['/api/groups/{id}/meal-summary', ['src', 'pages', 'api', 'groups', '[id]', 'meal-summary.ts'], ['get']],
+    ['/api/groups/{id}/bills', ['src', 'pages', 'api', 'groups', '[id]', 'bills.ts'], ['get', 'post']],
+    ['/api/bills/{id}', ['src', 'pages', 'api', 'bills', '[id].ts'], ['patch', 'delete']],
+    ['/api/bills/{id}/collections', ['src', 'pages', 'api', 'bills', '[id]', 'collections.ts'], ['post', 'patch', 'delete']]
   ]) {
     const ops = (spec.paths && spec.paths[apiPath]) || {};
     const src = read(...file);
@@ -73,6 +76,10 @@ function run() {
     check(`${apiPath} contract lists no method the route lacks`, Object.keys(ops).every((m) => new RegExp(`'${m.toUpperCase()}'`).test(src) || m === 'get' && /req\.method === 'GET'|getSessionUser/.test(src) && apiPath === '/api/auth/me'));
     check(`${apiPath} reads the session through getSessionUser`, /getSessionUser\(req/.test(src));
   }
+  const billsMonth = spec.components && spec.components.schemas && spec.components.schemas.BillsMonth;
+  check('BillsMonth lists bills, members and totals', Boolean(billsMonth && ['bills', 'members', 'totals'].every((k) => billsMonth.required.includes(k))));
+  const collectionReq = spec.components && spec.components.schemas && spec.components.schemas.CollectionRequest;
+  check('CollectionRequest requires userId and offers toUserId', Boolean(collectionReq && collectionReq.required.includes('userId') && collectionReq.properties.toUserId));
   const meals = spec.components && spec.components.schemas && spec.components.schemas.MealsMonth;
   check('MealsMonth lists entries, editWindow and pendingChanges', Boolean(meals && ['entries', 'editWindow', 'pendingChanges'].every((k) => meals.required.includes(k))));
   const dash = spec.components && spec.components.schemas && spec.components.schemas.MemberDashboard;
