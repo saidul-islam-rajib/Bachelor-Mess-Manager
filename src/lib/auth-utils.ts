@@ -236,6 +236,18 @@ export async function canManageGroup(groupId: string, user: { id: string; role: 
   return Boolean(group);
 }
 
+export async function isMainSupervisor(groupId: string, user: { id: string; role: string } | null) {
+  if (!user) return false;
+  if (requireAdmin(user)) return true;
+
+  const group = await prisma.group.findFirst({
+    where: { id: groupId, supervisorId: user.id },
+    select: { id: true }
+  });
+
+  return Boolean(group);
+}
+
 export async function getActiveMembership(userId: string) {
   return prisma.membership.findFirst({
     where: { userId, isActive: true },

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { canManageGroup, getSessionUser } from '@/lib/auth-utils';
+import { getSessionUser, isMainSupervisor } from '@/lib/auth-utils';
 import { badRequest, conflict, forbidden, methodNotAllowed, ok, unauthorized } from '@/lib/http';
 import { transferSupervision } from '@/lib/groups';
 import { NOTIFICATION_TYPES } from '@/lib/constants';
@@ -23,7 +23,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     return badRequest(res, 'Group ID is required.');
   }
 
-  if (!(await canManageGroup(groupId, sessionUser))) {
+  if (!(await isMainSupervisor(groupId, sessionUser))) {
     return forbidden(res, strings.groups.handoverOnlySupervisor);
   }
 
