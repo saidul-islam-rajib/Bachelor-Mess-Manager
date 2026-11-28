@@ -101,17 +101,16 @@ Members are charged from the day rates — each day's share is split across that
 Bazar whose entire span had no meals cannot be placed this way. It falls to the same pooling step that `MONTHLY` uses
 and is spread across every meal in the window, so nothing is dropped.
 
-### The headline rate is the average of the daily rates
+### The headline rate is total bazar divided by total meals
 
-In `DAILY` mode `totals.mealRate` is the **unweighted mean** of the day rates — `(41.60 + 69.33 + 104.00 + 69.33 +
-104.00) / 5 = ৳77.65` above. `totals.ratioRate` carries the old figure (`total bazar ÷ total meals`, ৳69.33) alongside
-it, and `totals.pricedDays` says how many days went into the mean.
+In `DAILY` mode `totals.mealRate` equals `totals.ratioRate`: `total bazar ÷ total meals`, ৳69.33 in the example above.
+`totals.averageDayRate` carries the unweighted mean of the day rates (`(41.60 + 69.33 + 104.00 + 69.33 + 104.00) / 5 =
+৳77.65`) as a reference figure, and `totals.pricedDays` says how many days went into that mean.
 
-The two differ whenever meals per day vary: the ratio is the mean weighted by each day's meal count, the headline is
-not. That is deliberate — it is the number a supervisor quotes when asked "what's the rate this month?", and averaging
-the days they can see on the table is what they expect it to mean.
+The two differ whenever meals per day vary: the ratio is the mean weighted by each day's meal count, the average is
+not. The headline uses the ratio because it is the one number that ties the month's spend to the month's meals.
 
-**It is a reporting figure, not a charging figure.** `average rate × your meals` will not equal your cost, and it must
+**Neither is a charging figure.** `headline rate × your meals` will not equal your cost in `DAILY` mode, and it must
 not: charging that way would collect a different amount than the mess spent. Conservation comes from the per-day
 allocation, and the UI says so rather than leaving people to discover the gap.
 
@@ -119,7 +118,7 @@ In `MONTHLY` mode nothing changed — `totals.mealRate` is still `total bazar ÷
 A group that wants day-by-day rates has to be set to `DAILY` in Members → Group settings.
 
 Verified by `npm run test:rate`, which reproduces the scenario above and asserts the day rates genuinely vary, that a
-2-meal day is dearer than a 5-meal day, that the headline equals the mean of the rates shown, and that the day charges
+2-meal day is dearer than a 5-meal day, that the headline equals total bazar over total meals and `averageDayRate` equals the mean of the rates shown, and that the day charges
 add back to ৳1040 to the paisa.
 
 ## Member-wise breakdown
