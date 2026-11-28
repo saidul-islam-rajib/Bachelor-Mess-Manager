@@ -18,6 +18,9 @@ export function MoreScreen() {
           {unread > 0 ? `${en.more.notifications} (${unread})` : en.more.notifications}
         </Text>
       </Pressable>
+      <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.push('/(app)/profile')}>
+        <Text style={styles.buttonText}>{en.more.profile}</Text>
+      </Pressable>
       <Pressable accessibilityRole="button" style={styles.button} onPress={() => void signOut()}>
         <Text style={styles.buttonText}>{en.more.signOut}</Text>
       </Pressable>
