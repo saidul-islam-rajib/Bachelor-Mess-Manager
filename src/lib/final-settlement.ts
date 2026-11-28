@@ -176,7 +176,9 @@ async function settleMemberBalanceImpl(
 
   const dueDate = dayToUtcDate(report.closedThrough);
 
-  await prisma.$transaction(async (tx) => {
+  const written = await runSettlementTransaction(async (tx) => {
+    await recordSettlementSubmission(tx, { report, member, method: 'SELF', actor });
+
     for (const leg of legs) {
       const legAmount = round2(leg.amount);
       const payerRow = await tx.paymentStatus.create({
@@ -207,9 +209,8 @@ async function settleMemberBalanceImpl(
         }
       });
     }
-
-    await recordSettlementSubmission(tx, { report, member, method: 'SELF', actor });
   });
+  if (!written.ok) return written;
 
   return { ok: true, amount, monthKey: report.monthKey };
 }
@@ -247,9 +248,8 @@ async function recordSettlementSubmission(
 ) {
   const { report, member, method, actor } = params;
 
-  await tx.settlementSubmission.upsert({
-    where: { closingId_userId: { closingId: report.closingId, userId: member.id } },
-    create: {
+  await tx.settlementSubmission.create({
+    data: {
       userId: member.id,
       groupId: report.groupId,
       closingId: report.closingId,
@@ -272,9 +272,25 @@ async function recordSettlementSubmission(
       transfers: submissionTransfers(report, member.id),
       submittedAt: new Date(),
       publishedAt: new Date()
-    },
-    update: {}
+    }
   });
+}
+
+const UNIQUE_VIOLATION = 'P2002';
+const ALREADY_SETTLED_ERROR = 'That balance was just settled by someone else.';
+
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { code?: string }).code === UNIQUE_VIOLATION;
+}
+
+async function runSettlementTransaction(work: (tx: SettlementTx) => Promise<void>): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await prisma.$transaction(work);
+    return { ok: true };
+  } catch (error) {
+    if (isUniqueViolation(error)) return { ok: false, error: ALREADY_SETTLED_ERROR };
+    throw error;
+  }
 }
 
 function writeSettlementRow(
@@ -318,10 +334,11 @@ async function declareMemberSettledImpl(
   }
 
   const dueDate = dayToUtcDate(report.closedThrough);
-  await prisma.$transaction(async (tx) => {
-    await writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id });
+  const written = await runSettlementTransaction(async (tx) => {
     await recordSettlementSubmission(tx, { report, member, method: 'SUPERVISOR', actor });
+    await writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id });
   });
+  if (!written.ok) return written;
 
   return { ok: true, amount: round2(member.dueAtClose) };
 }
@@ -344,12 +361,13 @@ async function settleWholeMonthImpl(
   const pending = report.members.filter((member) => Math.abs(Math.round(member.dueAtClose * 100)) >= 1);
 
   if (pending.length > 0) {
-    await prisma.$transaction(async (tx) => {
+    const written = await runSettlementTransaction(async (tx) => {
       for (const member of pending) {
-        await writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id });
         await recordSettlementSubmission(tx, { report, member, method: 'SUPERVISOR', actor });
+        await writeSettlementRow(tx, { groupId: group.id, member, dueDate, actorId: actor.id });
       }
     });
+    if (!written.ok) return written;
   }
 
   const marked = await markSettled(report.closingId, actor);
