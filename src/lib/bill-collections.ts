@@ -332,6 +332,9 @@ async function updatePaymentDetailsImpl(params: {
     if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100_000_000) {
       return { ok: false, error: 'Amount must be a non-zero number under 100,000,000.' };
     }
+    if (amount < 0 && original.amountPaid >= 0) {
+      return { ok: false, error: 'Amount must be a positive number. Reverse the payment to correct it.' };
+    }
     data.amountPaid = round2(amount);
   }
 
