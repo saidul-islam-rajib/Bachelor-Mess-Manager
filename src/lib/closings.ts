@@ -97,16 +97,6 @@ async function closeMonthImpl(options: {
   const scopedUserIds = options.userIds?.filter(Boolean) ?? [];
   const partial = scopedUserIds.length > 0;
 
-  const existing = await prisma.monthClosing.findMany({
-    where: { groupId: group.id, monthKey: key, reopenedAt: null },
-    include: { lines: { select: { userId: true } } }
-  });
-
-  const alreadyClosed = new Set<string>();
-  for (const closing of existing) {
-    for (const line of closing.lines) alreadyClosed.add(line.userId);
-  }
-
   const settlement = await buildSettlement(group, key, { through: throughDay });
 
   const candidates = partial
@@ -117,13 +107,22 @@ async function closeMonthImpl(options: {
     return { ok: false, error: 'There is nobody to close for that month.' };
   }
 
-  const targets = candidates.filter((member) => !alreadyClosed.has(member.id));
-  if (targets.length === 0) {
-    return { ok: false, error: 'Everyone selected has already been closed for this month.' };
-  }
-
   const now = new Date();
-  const closing = await prisma.$transaction(async (tx) => {
+  const outcome = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "Group" WHERE "id" = ${group.id} FOR UPDATE`;
+
+    const existing = await tx.monthClosing.findMany({
+      where: { groupId: group.id, monthKey: key, reopenedAt: null },
+      include: { lines: { select: { userId: true } } }
+    });
+    const alreadyClosed = new Set<string>();
+    for (const closing of existing) {
+      for (const line of closing.lines) alreadyClosed.add(line.userId);
+    }
+
+    const targets = candidates.filter((member) => !alreadyClosed.has(member.id));
+    if (targets.length === 0) return null;
+
     const row = await tx.monthClosing.create({
       data: {
         groupId: group.id,
@@ -156,8 +155,13 @@ async function closeMonthImpl(options: {
       });
     }
 
-    return row;
+    return { row, targets };
   });
+
+  if (!outcome) {
+    return { ok: false, error: 'Everyone selected has already been closed for this month.' };
+  }
+  const { row: closing, targets } = outcome;
 
   const carriedForward = targets.reduce((total, member) => total + member.due, 0);
 
