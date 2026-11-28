@@ -15,11 +15,11 @@ function check(name, passed) {
 
 report('--- Payment edit amount ---');
 
-const guard = body.search(/amount < 0 && original\.amountPaid >= 0/);
-check('zero amount is rejected', /amount === 0/.test(body));
+const guard = body.search(/rounded < 0 && original\.amountPaid >= 0/);
+check('zero amount is rejected', /Math\.abs\(rounded\) < 0\.01/.test(body));
 check(
   'negative amount is rejected unless the row is already a refund',
-  /amount < 0 && original\.amountPaid >= 0[\s\S]{0,120}ok: false/.test(body)
+  /rounded < 0 && original\.amountPaid >= 0[\s\S]{0,120}ok: false/.test(body)
 );
 check('negative guard runs before the amount is written', guard !== -1 && guard < body.indexOf('data.amountPaid'));
 
