@@ -16,6 +16,7 @@ export default function AppLayout() {
       <Tabs.Screen name="mess" options={{ title: en.tabs.mess }} />
       <Tabs.Screen name="more" options={{ title: en.tabs.more, tabBarBadge: unread > 0 ? unread : undefined }} />
       <Tabs.Screen name="notifications" options={{ title: en.notifications.title, href: null }} />
+      <Tabs.Screen name="profile" options={{ title: en.profile.title, href: null }} />
     </Tabs>
   );
 }
