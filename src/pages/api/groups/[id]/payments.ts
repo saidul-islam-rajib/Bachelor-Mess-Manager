@@ -136,8 +136,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return badRequest(res, 'A valid date (YYYY-MM-DD) is required.');
     }
-    const value = Number(amount);
-    if (!Number.isFinite(value) || value <= 0) {
+    const value = round2(Number(amount));
+    if (!Number.isFinite(value) || value < 0.01) {
       return badRequest(res, 'Amount must be a positive number.');
     }
     if (value > 100_000_000) {
@@ -159,8 +159,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
       data: {
         userId,
         groupId,
-        amountDue: round2(value),
-        amountPaid: round2(value),
+        amountDue: value,
+        amountPaid: value,
         status: PAYMENT_STATUS.PAID,
         dueDate: dayToUtcDate(date),
         publishedAt: new Date()

@@ -329,10 +329,11 @@ async function updatePaymentDetailsImpl(params: {
   const data: { amountPaid?: number; dueDate?: Date } = {};
 
   if (amount !== undefined) {
-    if (!Number.isFinite(amount) || amount === 0 || Math.abs(amount) > 100_000_000) {
+    const rounded = round2(amount);
+    if (!Number.isFinite(rounded) || Math.abs(rounded) < 0.01 || Math.abs(rounded) > 100_000_000) {
       return { ok: false, error: 'Amount must be a non-zero number under 100,000,000.' };
     }
-    data.amountPaid = round2(amount);
+    data.amountPaid = rounded;
   }
 
   if (date !== undefined) {
